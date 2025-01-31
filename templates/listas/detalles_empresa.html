@@ -3,20 +3,18 @@
 {% block title %}Detalles de la Empresa {% endblock %}
 
 {% block content %}
-
-    <h1 class="my-4">{{ empresa.nombre }}</h1>
-    <p><strong>RUT:</strong> {{ empresa.rut }}</p>
-    <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
-    <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
-    <div class="container">
-        <div class="mt-4">
-            <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning">Editar Empresa</a>
-            <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger">Eliminar Empresa</a>
-            <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
+<div class="container">
+    <h1 class="my-4 text-center">{{ empresa.nombre }}</h1>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <p><strong>RUT:</strong> {{ empresa.rut }}</p>
+            <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
+            <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
         </div>
-    
+    </div>
+
     <h3>Supervisores</h3>
-    <ul class="list-group">
+    <ul class="list-group mb-4">
         {% for supervisor in supervisores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ supervisor.username }}
@@ -28,8 +26,8 @@
         {% endfor %}
     </ul>
 
-    <h3 class="mt-4">Trabajadores</h3>
-    <ul class="list-group">
+    <h3>Trabajadores</h3>
+    <ul class="list-group mb-4">
         {% for trabajador in trabajadores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ trabajador.username }}
@@ -41,6 +39,10 @@
         {% endfor %}
     </ul>
 
-    
+    <div class="d-grid gap-2">
+        <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning">Editar Empresa</a>
+        <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger">Eliminar Empresa</a>
+        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
+    </div>
 </div>
 {% endblock %}

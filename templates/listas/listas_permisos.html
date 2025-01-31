@@ -4,15 +4,22 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="my-4">Lista de Permisos</h1>
-    <div class="list-group">
+    <h1 class="my-4 text-center">Lista de Permisos</h1>
+    <div class="row">
         {% for permiso in permisos %}
-            <div class="list-group-item">
-                <h2 class="h5">{{ permiso.nombre }}</h2>
-                <p>{{ permiso.descripcion }}</p>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 card-title">{{ permiso.nombre }}</h2>
+                        <p class="card-text">{{ permiso.descripcion }}</p>
+                    </div>
+                </div>
             </div>
         {% endfor %}
     </div>
-    <a href="{% url 'lista_empresas' %}" class="btn btn-secondary mt-4">Volver a Lista de Empresas</a>
+    <div class="d-grid gap-2 mt-4">
+        <a href="{% url 'crear_permiso' %}" class="btn btn-success">Crear Permiso</a>
+        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
+    </div>
 </div>
 {% endblock %}

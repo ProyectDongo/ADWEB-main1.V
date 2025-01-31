@@ -4,18 +4,26 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="my-4">Lista de Empresas</h1>
-    <div class="list-group">
+    <h1 class="my-4 text-center">Lista de Empresas</h1>
+    <div class="d-grid gap-2 mt-4">
+        <a href="{% url 'crear_empresa' %}" class="btn btn-success">Crear Empresa</a>
+    </div>
+    <br>
+    <div class="row">
         {% for empresa in empresas %}
-            <div class="list-group-item">
-                <h2 class="h5">{{ empresa.nombre }}</h2>
-                <p><strong>RUT:</strong> {{ empresa.rut }}</p>
-                <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
-                <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
-                <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-primary">Detalles</a>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 card-title">{{ empresa.nombre }}</h2>
+                        <p class="card-text"><strong>RUT:</strong> {{ empresa.rut }}</p>
+                        <p class="card-text"><strong>Dirección:</strong> {{ empresa.direccion }}</p>
+                        <p class="card-text"><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+                        <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-primary">Detalles</a>
+                    </div>
+                </div>
             </div>
         {% endfor %}
     </div>
-    <a href="{% url 'crear_empresa' %}" class="btn btn-success mt-4">Crear Empresa</a>
+   
 </div>
 {% endblock %}
