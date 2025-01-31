@@ -1,0 +1,23 @@
+{% extends "central.html" %}
+
+{% block title %}Crear Administrador{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card w-50 shadow-lg">
+        <div class="card-body">
+            <h1 class="card-title text-center my-4">Crear Administrador</h1>
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <a href="{% url 'redirect_after_login' %}" class="btn btn-secondary">Volver</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

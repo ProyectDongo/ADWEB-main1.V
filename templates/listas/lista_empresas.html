@@ -1,0 +1,21 @@
+{% extends "central.html" %}
+
+{% block title %}Lista de Empresas {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Lista de Empresas</h1>
+    <div class="list-group">
+        {% for empresa in empresas %}
+            <div class="list-group-item">
+                <h2 class="h5">{{ empresa.nombre }}</h2>
+                <p><strong>RUT:</strong> {{ empresa.rut }}</p>
+                <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
+                <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+                <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-primary">Detalles</a>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'crear_empresa' %}" class="btn btn-success mt-4">Crear Empresa</a>
+</div>
+{% endblock %}

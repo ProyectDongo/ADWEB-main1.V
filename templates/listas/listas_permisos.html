@@ -1,0 +1,18 @@
+{% extends "central.html" %}
+
+{% block title %}Lista de Permisos {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Lista de Permisos</h1>
+    <div class="list-group">
+        {% for permiso in permisos %}
+            <div class="list-group-item">
+                <h2 class="h5">{{ permiso.nombre }}</h2>
+                <p>{{ permiso.descripcion }}</p>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'lista_empresas' %}" class="btn btn-secondary mt-4">Volver a Lista de Empresas</a>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "central.html" %}
+
+{% block title %}Eliminar Empresa {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Eliminar Empresa</h1>
+    <p>¿Estás seguro de que deseas eliminar la empresa <strong>{{ empresa.nombre }}</strong> y todo su contenido?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
