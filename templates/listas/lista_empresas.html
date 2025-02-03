@@ -5,8 +5,19 @@
 {% block content %}
 <div class="container">
     <h1 class="my-4 text-center">Lista de Empresas</h1>
+    
+    <!-- Formulario de búsqueda -->
+    <form method="get" action="{% url 'lista_empresas' %}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o RUT" value="{{ query }}">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        </div>
+    </form>
+    
     <div class="d-grid gap-2 mt-4">
-        <a href="{% url 'crear_empresa' %}" class="btn btn-success">Crear Empresa</a>
+        {% if puede_crear_empresa %}
+            <a href="{% url 'crear_empresa' %}" class="btn btn-success">Crear Empresa</a>
+        {% endif %}
     </div>
     <br>
     <div class="row">
@@ -18,12 +29,15 @@
                         <p class="card-text"><strong>RUT:</strong> {{ empresa.rut }}</p>
                         <p class="card-text"><strong>Dirección:</strong> {{ empresa.direccion }}</p>
                         <p class="card-text"><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
-                        <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-primary">Detalles</a>
+                        {% if puede_ver_detalles_empresa %}
+                            <div class="d-flex justify-content-center">
+                                <a href="{% url 'detalles_empresa' empresa.id %}" class="btn btn-primary">Detalles</a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
-   
 </div>
 {% endblock %}

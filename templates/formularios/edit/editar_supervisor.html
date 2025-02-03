@@ -10,6 +10,10 @@
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary">Guardar</button>
     </form>
-    <a href="{% url 'detalles_empresa' empresa_id %}" class="btn btn-secondary mt-4">Volver</a>
+    {% if user.role == "admin" %}
+        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary mt-4">Volver</a>
+    {% else %}
+        <a href="{% url 'detalles_empresa' supervisor.empresa.id %}" class="btn btn-secondary mt-4">Volver</a>
+    {% endif %}
 </div>
 {% endblock %}

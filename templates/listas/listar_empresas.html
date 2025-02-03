@@ -1,0 +1,46 @@
+{% extends "central.html" %}
+
+{% block title %}Listar Empresas {% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Empresas</h1>
+    
+    <!-- Formulario de búsqueda -->
+    <form method="get" action="{% url 'listar_empresas' %}" class="mb-4">
+        <div class="row">
+            <div class="col-md-10">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de empresa" value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </div>
+    </form>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empresa in empresas %}
+                <tr>
+                    <td>{{ empresa.nombre }}</td>
+                    <td>{{ empresa.rut }}</td>
+                    <td>{{ empresa.direccion }}</td>
+                    <td>{{ empresa.telefono }}</td>
+                    <td>
+                        <a href="{% url 'actualizar_limites' empresa.id %}" class="btn btn-secondary btn-sm">Actualizar Límites</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

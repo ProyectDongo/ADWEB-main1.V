@@ -13,14 +13,28 @@
         </div>
     </div>
 
+    <!-- Formulario de búsqueda -->
+    <form method="get" action="{% url 'detalles_empresa' empresa.id %}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ query }}">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+        </div>
+    </form>
+
     <h3>Supervisores</h3>
     <ul class="list-group mb-4">
         {% for supervisor in supervisores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ supervisor.username }}
                 <div>
-                    <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-warning btn-sm">Editar</a>
-                    <a href="{% url 'eliminar_usuario' supervisor.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                    {% for permiso in permisos_usuario %}
+                        {% if permiso.nombre == "editar_supervisor" %}
+                            <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-warning btn-sm">Editar</a>
+                        {% endif %}
+                        {% if permiso.nombre == "eliminar_usuario" %}
+                            <a href="{% url 'eliminar_usuario' supervisor.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </li>
         {% endfor %}
@@ -32,17 +46,31 @@
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 {{ trabajador.username }}
                 <div>
-                    <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-warning btn-sm">Editar</a>
-                    <a href="{% url 'eliminar_usuario' trabajador.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                    {% for permiso in permisos_usuario %}
+                        {% if permiso.nombre == "editar_trabajador" %}
+                            <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-warning btn-sm">Editar</a>
+                        {% endif %}
+                        {% if permiso.nombre == "eliminar_usuario" %}
+                            <a href="{% url 'eliminar_usuario' trabajador.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </li>
         {% endfor %}
     </ul>
 
-    <div class="d-grid gap-2">
-        <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning">Editar Empresa</a>
-        <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger">Eliminar Empresa</a>
-        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
-    </div>
+    <div class="d-grid gap-2 mt-4">
+        {% for permiso in permisos_usuario %}
+            {% if permiso.nombre == "editar_empresa" %}
+                <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning">Editar Empresa</a>
+            {% endif %}
+            {% if permiso.nombre == "eliminar_empresa" %}
+                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger">Eliminar Empresa</a>
+            {% endif %}
+        {% endfor %}
+        {% if user.role != "supervisor" %}
+        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
+    {% endif %}
+</div>
 </div>
 {% endblock %}

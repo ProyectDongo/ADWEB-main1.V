@@ -1,12 +1,53 @@
-
 {% extends "central.html" %}
 
-{% block title %}Home supervisor {% endblock %}
+{% block title %}Home Supervisor {% endblock %}
 
 {% block content %}
-<body>
-    <h1>Bienvenido, supervisor {{ user.username }}</h1>
-   
-
-</body>
+<div class="container">
+    <h1 class="my-4">Bienvenido, supervisor {{ user.username }}</h1>
+    <h2>Reportes de Entradas y Salidas</h2>
+    
+    <!-- Formulario de búsqueda -->
+    <form method="get" action="{% url 'supervisor_home' %}" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </div>
+    </form>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Trabajador</th>
+                <th>Hora de Entrada</th>
+                <th>Hora de Salida</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entrada in entradas %}
+                <tr>
+                    <td>{{ entrada.trabajador.username }}</td>
+                    <td>{{ entrada.hora_entrada }}</td>
+                    <td>{{ entrada.hora_salida }}</td>
+                    <td>
+                        {% if not entrada.permitir_otra_entrada %}
+                            <a href="{% url 'habilitar_otra_entrada' entrada.id %}" class="btn btn-warning btn-sm">Habilitar Otra Entrada</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

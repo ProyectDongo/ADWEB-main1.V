@@ -2,54 +2,98 @@
   <div class="sidebar-sticky pt-3">
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a class="nav-link active" href="{% url 'lista_empresas' %}">
-          <span data-feather="home"></span> HOME
-        </a>  
-      </li>
-
-      {% for permiso in user_permisos %}
-        
-        {% if permiso.nombre == "crear_empresa" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_empresa' %}">
-            <span data-feather="bar-chart-2"></span> Crear Empresa
+        {% if role == "admin" %}
+          <a class="nav-link active" href="{% url 'admin_home' %}">
+            <span data-feather="home"></span> Home
           </a>
+        {% elif role == "supervisor" %}
+          <a class="nav-link active" href="{% url 'supervisor_home' %}">
+            <span data-feather="home"></span> Home
+          </a>
+        {% elif role == "trabajador" %}
+          <a class="nav-link active" href="{% url 'trabajador_home' %}">
+            <span data-feather="home"></span> Home
+          </a>
+        {% endif %}
+        {% if permiso.nombre == "lista_empresas" %}
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'lista_empresas' %}">
+            <span data-feather="home"></span> lista de empresas
+          </a>  
         </li>
         {% endif %}
-
-        {% if permiso.nombre == "crear_permiso" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_permiso' %}">
-            <span data-feather="file"></span> Crear Permiso
-          </a>
-        </li>
-        {% endif %}
-
-        {% if permiso.nombre == "crear_admin" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_admin' %}">
-            <span data-feather="user-plus"></span> Crear Admin
-          </a>
-        </li>
-        {% endif %}
-
-        {% if permiso.nombre == "crear_supervisor" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_supervisor' %}">
-            <span data-feather="user-check"></span> Crear Supervisor
-          </a>
-        </li>
-        {% endif %}
-
-        {% if permiso.nombre == "crear_trabajador" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_trabajador' %}">
-            <span data-feather="user-plus"></span> Crear Trabajador
-          </a>
-        </li>
-        {% endif %}
-        
-      {% endfor %}
+        {% for permiso in user_permisos %}
+          {% if permiso.nombre == "crear_empresa" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_empresa' %}">
+                <span data-feather="bar-chart-2"></span> Crear Empresa
+              </a>
+          </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "detalles_empresa" and role != "admin" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'detalles_empresa' empresa.id %}">
+                <span data-feather="bar-chart-2"></span> Ver Empresa
+              </a>
+          </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "crear_permiso" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_permiso' %}">
+                <span data-feather="file"></span> Crear Permiso
+              </a>
+          </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "crear_admin" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_admin' %}">
+                <span data-feather="user-plus"></span> Crear Admin
+              </a>
+          </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "crear_supervisor" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_supervisor' %}">
+                <span data-feather="user-check"></span> Crear Supervisor
+              </a>
+          </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "crear_trabajador" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_trabajador' %}">
+                <span data-feather="user-plus"></span> Crear Trabajador
+              </a>
+            </li>
+            <br>
+          {% endif %}
+          {% if permiso.nombre == "lista_permisos" %}
+          <li class="nav-item">
+              <a class="nav-link" href="{% url 'lista_permisos' %}">
+                <span data-feather="user-plus"></span> lista de permisos
+              </a>
+          </li>
+            <br>
+            {% if user.role == "admin" %}
+            <li class="nav-item">
+              <a class="nav-link active" href="{% url 'listar_empresas' %}">
+                <span data-feather="bar-chart-2"></span> Actualizar Empresas
+              </a>  
+            </li>
+          {% endif %}
+          {% endif %}
+          {% if permiso.nombre == "lista_empresas" %}
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'lista_empresas' %}">
+              <span data-feather="bar-chart-2"></span> lista de empresas
+            </a>  
+          </li>
+          {% endif %}
+        {% endfor %}
     </ul>
   </div>
 </nav>

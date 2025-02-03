@@ -12,7 +12,9 @@
                 {{ form.as_p }}
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary">Guardar</button>
-                    <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
+                    {% if user.role != "supervisor" %}
+                        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
+                    {% endif %}
                 </div>
             </form>
         </div>

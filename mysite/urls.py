@@ -47,12 +47,20 @@ urlpatterns = [
     
     #lista permisos
     path('detalles_empresa/<int:empresa_id>/', views.detalles_empresa, name='detalles_empresa'),
-    path('editar_supervisor/<int:user_id>/', views.editar_supervisor, name='editar_supervisor'),
-    path('editar_trabajador/<int:user_id>/', views.editar_trabajador, name='editar_trabajador'),
+    path('detalles_empresa/', views.detalles_empresa, name='detalles_empresa'),
     path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
 
     # Editar y eliminar empresa
     path('editar_empresa/<int:empresa_id>/', views.editar_empresa, name='editar_empresa'),
     path('eliminar_empresa/<int:empresa_id>/', views.eliminar_empresa, name='eliminar_empresa'),
+
+    # habilitar otra entrada
+    path('habilitar_otra_entrada/<int:entrada_id>/', views.habilitar_otra_entrada, name='habilitar_otra_entrada'),
+    # estas 2 son de la misma funcion
+    path('actualizar_limites/<int:empresa_id>/', views.actualizar_limites, name='actualizar_limites'),
+    path('listar_empresas/', views.listar_empresas, name='listar_empresas'),
+    path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
+    path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
+
 
 ]

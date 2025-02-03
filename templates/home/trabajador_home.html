@@ -1,0 +1,33 @@
+{% extends "central.html" %}
+
+{% block title %}Home Trabajador {% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center" style="min-height: 100vh;">
+    <div class="card w-75 shadow-lg mt-5">
+        <div class="card-body text-center">
+            <h1 class="card-title my-4">Bienvenido, {{ user.username }}</h1>
+            <p class="card-text">Estamos encantados de verte de nuevo. Por favor, registra tu entrada para comenzar tu jornada laboral.</p>
+            <hr>
+            <h2 class="my-4">Registrar Entrada</h2>
+            {% if messages %}
+                <div class="alert alert-warning" role="alert">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <form method="post" class="w-50 mx-auto">
+                {% csrf_token %}
+                <button type="submit" name="entrada" class="btn btn-primary btn-lg mt-3">Registrar Entrada</button>
+            </form>
+            <hr>
+            <h2 class="my-4">Registrar Salida</h2>
+            <form method="post" class="w-50 mx-auto">
+                {% csrf_token %}
+                <button type="submit" name="salida" class="btn btn-secondary btn-lg mt-3">Registrar Salida</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
