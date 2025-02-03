@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import logout
+from .decorators import permiso_requerido
 # Create your views here.
 from django.contrib.auth.decorators import login_required
 from .forms import EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm
@@ -56,6 +57,7 @@ def logout_view(request):
 
 # redirige a la apgin para crear empresas
 @login_required
+@permiso_requerido("crear_empresa")
 def crear_empresa(request):
     if request.method == 'POST':
         form = EmpresaForm(request.POST)
@@ -68,6 +70,7 @@ def crear_empresa(request):
 
 #redirige a la pagina para crear permisos
 @login_required
+@permiso_requerido("crear_permiso")
 def crear_permiso(request):
     if request.method == 'POST':
         form = PermisoForm(request.POST)
@@ -80,6 +83,7 @@ def crear_permiso(request):
 
 #redirige a la pagina para crear admins
 @login_required
+@permiso_requerido("crear_admin")
 def crear_admin(request):
     if request.method == 'POST':
         form = AdminForm(request.POST)
@@ -92,6 +96,7 @@ def crear_admin(request):
 
 #redirige a la pagina para crear supervisores
 @login_required
+@permiso_requerido("crear_supervisor")
 def crear_supervisor(request):
     if request.method == 'POST':
         form = SupervisorForm(request.POST)
@@ -103,7 +108,9 @@ def crear_supervisor(request):
     return render(request, 'formularios/crear/crear_supervisor.html', {'form': form})
 
 #redirige a la pagina para crear trabajadores
+
 @login_required
+@permiso_requerido("crear_trabajador")
 def crear_trabajador(request):
     if request.method == 'POST':
         form = TrabajadorForm(request.POST)
@@ -115,7 +122,9 @@ def crear_trabajador(request):
     return render(request, 'formularios/crear/crear_trabajador.html', {'form': form})
 
 #redirige a la pagina de lista de usuarios  
+
 @login_required
+
 def lista_empresas(request):
     empresas = RegistroEmpresas.objects.all()
     context = {
@@ -185,6 +194,7 @@ def eliminar_empresa(request, empresa_id):
 
 #lista los permisos
 @login_required
+@permiso_requerido("lista_permisos")
 def lista_permisos(request):
     permisos = RegistroPermisos.objects.all()
     return render(request, 'listas/listas_permisos.html', {'permisos': permisos})

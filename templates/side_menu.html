@@ -3,79 +3,53 @@
     <ul class="nav flex-column">
       <li class="nav-item">
         <a class="nav-link active" href="{% url 'lista_empresas' %}">
-          <span data-feather="home"></span>
-          HOME <span class="sr-only">(current)</span>
+          <span data-feather="home"></span> HOME
         </a>  
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'crear_empresa' %}">
-          <span data-feather="bar-chart-2"></span>
-          Crear_Empresa
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'crear_permiso' %}">
-          <span data-feather="file"></span>
-          Crear_Permiso
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'lista_permisos' %}">
-          <span data-feather="file-text"></span>
-          Lista_Permisos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'crear_admin' %}">
-          <span data-feather="users"></span>
-          Crear_Admin
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'crear_supervisor' %}">
-          <span data-feather="users"></span>
-          Crear_Supervisor
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{% url 'crear_trabajador' %}">
-          <span data-feather="users"></span>
-          Crear_Trabajador
-        </a>
-      </li>
-    </ul>
 
-    <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-      <span>Saved reports</span>
-      <a class="d-flex align-items-center text-muted" href="#" aria-label="Add a new report">
-        <span data-feather="plus-circle"></span>
-      </a>
-    </h6>
-    <ul class="nav flex-column mb-2">
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <span data-feather="file-text"></span>
-          Current month
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <span data-feather="file-text"></span>
-          Last quarter
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <span data-feather="file-text"></span>
-          Social engagement
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <span data-feather="file-text"></span>
-          Year-end sale
-        </a>
-      </li>
+      {% for permiso in user_permisos %}
+        
+        {% if permiso.nombre == "crear_empresa" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'crear_empresa' %}">
+            <span data-feather="bar-chart-2"></span> Crear Empresa
+          </a>
+        </li>
+        {% endif %}
+
+        {% if permiso.nombre == "crear_permiso" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'crear_permiso' %}">
+            <span data-feather="file"></span> Crear Permiso
+          </a>
+        </li>
+        {% endif %}
+
+        {% if permiso.nombre == "crear_admin" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'crear_admin' %}">
+            <span data-feather="user-plus"></span> Crear Admin
+          </a>
+        </li>
+        {% endif %}
+
+        {% if permiso.nombre == "crear_supervisor" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'crear_supervisor' %}">
+            <span data-feather="user-check"></span> Crear Supervisor
+          </a>
+        </li>
+        {% endif %}
+
+        {% if permiso.nombre == "crear_trabajador" %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'crear_trabajador' %}">
+            <span data-feather="user-plus"></span> Crear Trabajador
+          </a>
+        </li>
+        {% endif %}
+        
+      {% endfor %}
     </ul>
   </div>
 </nav>

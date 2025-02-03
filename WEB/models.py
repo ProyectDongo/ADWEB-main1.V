@@ -36,6 +36,7 @@ class Usuario(AbstractUser):
         blank=True,
         related_name='usuario_permissions'
     )
+    
 
     def __str__(self):
         return f"{self.username} ({self.get_rol_display()})"

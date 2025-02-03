@@ -22,6 +22,7 @@ from WEB import views
 
 urlpatterns = [
     # Ruta para el login
+    path('', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
     path('logout/', views.logout_view, name='logout'),
     # Ruta para el logout
