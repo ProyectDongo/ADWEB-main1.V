@@ -1,12 +1,68 @@
-<nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+<style>
+  /* Barra de navegación */
+.navbar {
+  background-color: #343a40; /* Color de fondo oscuro */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  border-bottom: 1px solid #6c757d; /* Borde sutil al pie de la barra */
+}
+
+/* Estilo para el nombre de usuario */
+.navbar .navbar-text {
+  font-size: 1.4rem; /* Tamaño más grande para el nombre de usuario */
+  font-weight: 600; /* Negrita para mayor énfasis */
+  color: #ffffff; /* Blanco para el texto */
+  text-align: center; /* Centrar el nombre de usuario */
+}
+
+/* Estilo para el nombre de usuario cuando pasa el mouse */
+.navbar .navbar-text:hover {
+  color: #f8d00f; /* Color dorado al pasar el mouse */
+  cursor: pointer;
+}
+
+/* Botón de cierre de sesión */
+.navbar .nav-item .nav-link {
+  font-size: 1.1rem; /* Tamaño de texto moderado */
+  color: #ffffff !important; /* Blanco para el texto */
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
+}
+
+/* Estilo del botón al pasar el mouse */
+.navbar .nav-item .nav-link:hover {
+  background-color: #f8d00f; /* Color dorado al pasar el mouse */
+  color: #343a40; /* Texto oscuro para contraste */
+}
+
+/* Fondo al pasar el mouse */
+.navbar .nav-item .nav-link:focus,
+.navbar .nav-item .nav-link:active {
+  background-color: #f8d00f; /* Color dorado cuando se hace clic */
+  color: #343a40; /* Texto oscuro */
+}
+
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
   <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Company name</a>
-  <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-    
-  </button>
   
-  <ul class="navbar-nav px-3">
-    <li class="nav-item text-nowrap">
-      <a class="nav-link" href="{% url 'logout' %}">Sign out</a>
-    </li>
-  </ul>
+  <!-- Botón para el menú en móviles -->
+  <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation"></button>
+
+  <div class="navbar-collapse collapse w-100 d-flex justify-content-between">
+    <!-- Mostrar el nombre del usuario centrado a la izquierda -->
+    <span class="navbar-text mx-3" id="user-name">
+      {{ user.username }}
+    </span>
+
+    <!-- Menú de navegación y botón de cierre de sesión al lado derecho -->
+    <ul class="navbar-nav px-3">
+      <li class="nav-item text-nowrap">
+        <a class="nav-link" href="{% url 'logout' %}">
+          Sign out
+        </a>
+      </li>
+    </ul>
+  </div>
 </nav>

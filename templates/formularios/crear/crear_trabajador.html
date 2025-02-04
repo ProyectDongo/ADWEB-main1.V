@@ -1,22 +1,119 @@
 {% extends "central.html" %}
-
-{% block title %}Crear Trabajador {% endblock %}
+{% load static %}
+{% block title %}Crear Supervisor{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-    <div class="card w-50">
-        <div class="card-body">
-            <h1 class="card-title text-center my-4">Crear Trabajador</h1>
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    {% if user.role != "supervisor" %}
-                        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver</a>
-                    {% endif %}
+{% block css-page %}
+<link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}"> 
+{% endblock %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-person-badge me-2"></i>Crear Trabajador</h2>
                 </div>
-            </form>
+                
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Usuario y Empresa -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input type="text" class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                                    id="{{ form.username.id_for_label }}" name="{{ form.username.name }}" 
+                                    value="{{ form.username.value }}" required>
+                             <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+                             {% if form.username.errors %}
+                             <div class="invalid-feedback">
+                                 {{ form.username.errors|first }}
+                             </div>
+                             {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <select name="empresa" class="form-select" id="{{ form.empresa.id_for_label }}">
+                                        {% for empresa in form.empresa.field.queryset %}
+                                            <option value="{{ empresa.id }}" {% if form.empresa.value == empresa.id %}selected{% endif %}>
+                                                {{ empresa.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="{{ form.empresa.id_for_label }}">Empresa</label>
+                                    {% if form.empresa.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.empresa.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Contraseñas -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input type="password" name="password1" class="form-control" id="{{ form.password1.id_for_label }}" required>
+                                    <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+                                    {% if form.password1.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.password1.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input type="password" name="password2" class="form-control" id="{{ form.password2.id_for_label }}" required>
+                                    <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
+                                    {% if form.password2.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.password2.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Permisos -->
+                            <div class="col-12">
+                                <div class="mb-4">
+                                    <label class="form-label">Permisos</label>
+                                    <div>
+                                        {% for permiso in form.permisos.field.queryset %}
+                                            <div class="form-check">
+                                                <input type="checkbox" name="permisos[]" value="{{ permiso.id }}" 
+                                                       class="form-check-input" id="permiso_{{ permiso.id }}"
+                                                       {% if permiso.id in form.permisos.value %}checked{% endif %}>
+                                                <label class="form-check-label" for="permiso_{{ permiso.id }}">{{ permiso.nombre }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if form.permisos.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.permisos.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+
+                        <!-- Botones -->
+                        <div class="mt-5 border-top pt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'lista_empresas' %}" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-2"></i>Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -59,6 +59,7 @@ urlpatterns = [
     # estas 2 son de la misma funcion
     path('actualizar_limites/<int:empresa_id>/', views.actualizar_limites, name='actualizar_limites'),
     path('listar_empresas/', views.listar_empresas, name='listar_empresas'),
+    
     path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
     path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
 

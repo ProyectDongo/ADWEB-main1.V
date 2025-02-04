@@ -7,32 +7,65 @@ from .models import Usuario, RegistroEmpresas, RegistroPermisos,RegistroEntrada
 class EmpresaForm(forms.ModelForm):
     class Meta:
         model = RegistroEmpresas
-        fields = ['rut', 'nombre', 'direccion', 'telefono']
-
+        fields = [
+            'rut', 'nombre', 'giro', 'direccion', 'numero', 'oficina',
+            'region', 'provincia', 'comuna', 'telefono', 'celular',
+            'email', 'web', 'vigente', 'estado', 'rut_representante',
+            'nombre_representante', 'nombre_contacto', 'celular_contacto',
+            'mail_contacto', 'plan_contratado'
+        ]
+        widgets = {
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'giro': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero': forms.NumberInput(attrs={'class': 'form-control'}),
+            'oficina': forms.TextInput(attrs={'class': 'form-control'}),
+            'region': forms.Select(attrs={'class': 'form-control'}),
+            'provincia': forms.Select(attrs={'class': 'form-control'}),
+            'comuna': forms.Select(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'celular': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'web': forms.URLInput(attrs={'class': 'form-control'}),
+            'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'estado': forms.Select(attrs={'class': 'form-control'}),
+            'rut_representante': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre_representante': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre_contacto': forms.TextInput(attrs={'class': 'form-control'}),
+            'celular_contacto': forms.TextInput(attrs={'class': 'form-control'}),
+            'mail_contacto': forms.EmailInput(attrs={'class': 'form-control'}),
+            'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
+        }
 #forms para los registros de permisos
 class PermisoForm(forms.ModelForm):
     class Meta:
         model = RegistroPermisos
         fields = ['nombre', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
+        }
 
 #forms para los registros de usuarios admin
 class AdminForm(UserCreationForm):
-    permisos = forms.ModelMultipleChoiceField(
-        queryset=RegistroPermisos.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
-
     class Meta:
         model = Usuario
-        fields = ['username', 'password1', 'password2', 'permisos']
+        fields = ['username', 'password1', 'password2']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
+        }
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.role = 'admin'
         if commit:
             user.save()
-            self.save_m2m()  # Guarda los permisos (relación ManyToMany)
+            # Asignar todos los permisos personalizados existentes
+            user.permisos.set(RegistroPermisos.objects.all())
+            self.save_m2m()
         return user
 
 #forms para los registros de usuarios supervisor
@@ -47,6 +80,8 @@ class SupervisorForm(UserCreationForm):
     class Meta:
         model = Usuario
         fields = ['username', 'password1', 'password2', 'empresa', 'permisos']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),  }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -69,6 +104,8 @@ class TrabajadorForm(UserCreationForm):
     class Meta:
         model = Usuario
         fields = ['username', 'password1', 'password2', 'empresa', 'permisos']
+        wibgets = {
+                'username': forms.TextInput(attrs={'class': 'form-control'}), }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)

@@ -1,21 +1,64 @@
 {% extends "central.html" %}
+{% load static %}
 
-{% block title %}Crear Permiso {% endblock %}
+{% block title %}Crear Permiso{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
-    <div class="card w-50">
-        <div class="card-body">
-            <h1 class="card-title text-center my-4">Crear Permiso</h1>
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    <a href="{% url 'lista_permisos' %}" class="btn btn-secondary">Volver</a>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <!-- Encabezado -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="h4 mb-0"><i class="bi bi-key me-2"></i>Crear Permiso</h2>
                 </div>
-            </form>
+                
+                <!-- Cuerpo del Formulario -->
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Nombre del Permiso -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.nombre }}
+                                    <label for="{{ form.nombre.id_for_label }}">Nombre del Permiso</label>
+                                    {% if form.nombre.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.nombre.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.descripcion }}
+                                    <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                                    {% if form.descripcion.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.descripcion.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="mt-5 border-top pt-4 d-flex justify-content-between">
+                            <a href="{% url 'lista_permisos' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-2"></i>Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
+

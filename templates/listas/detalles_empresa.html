@@ -1,76 +1,108 @@
 {% extends "central.html" %}
 
-{% block title %}Detalles de la Empresa {% endblock %}
+{% block title %}Detalles de la Empresa{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4 text-center">{{ empresa.nombre }}</h1>
-    <div class="card shadow-sm mb-4">
+<div class="container py-5">
+    <!-- Encabezado de la empresa -->
+    <div class="text-center bg-primary text-white p-4 rounded shadow">
+        <h1 class="fw-bold">{{ empresa.nombre }}</h1>
+    </div>
+
+    <!-- Datos de la Empresa -->
+    <div class="card shadow-lg mt-4">
         <div class="card-body">
-            <p><strong>RUT:</strong> {{ empresa.rut }}</p>
-            <p><strong>Dirección:</strong> {{ empresa.direccion }}</p>
-            <p><strong>Teléfono:</strong> {{ empresa.telefono }}</p>
+            <h4 class="text-primary fw-bold">Datos de la Empresa</h4>
+            <hr>
+            <p><strong>📌 RUT:</strong> {{ empresa.rut }}</p>
+            <p><strong>📍 Dirección:</strong> {{ empresa.direccion }}</p>
+            <p><strong>📞 Teléfono:</strong> {{ empresa.telefono }}</p>
         </div>
     </div>
 
-    <!-- Formulario de búsqueda -->
-    <form method="get" action="{% url 'detalles_empresa' empresa.id %}" class="mb-4">
-        <div class="input-group">
+    <!-- Formulario de Búsqueda -->
+    <div class="mt-4">
+        <form method="get" action="{% url 'detalles_empresa' empresa.id %}" class="input-group shadow-sm">
             <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ query }}">
-            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
-        </div>
-    </form>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Buscar</button>
+        </form>
+    </div>
 
-    <h3>Supervisores</h3>
-    <ul class="list-group mb-4">
-        {% for supervisor in supervisores %}
+    <!-- Lista de Supervisores -->
+    <div class="mt-5">
+        <h3 class="text-primary fw-bold">Supervisores</h3>
+        <ul class="list-group shadow-sm">
+            {% for supervisor in supervisores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ supervisor.username }}
+                <span class="fw-bold">{{ supervisor.username }}</span>
                 <div>
                     {% for permiso in permisos_usuario %}
                         {% if permiso.nombre == "editar_supervisor" %}
-                            <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
                         {% endif %}
                         {% if permiso.nombre == "eliminar_usuario" %}
-                            <a href="{% url 'eliminar_usuario' supervisor.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            <a href="{% url 'eliminar_usuario' supervisor.id %}" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
                         {% endif %}
                     {% endfor %}
                 </div>
             </li>
-        {% endfor %}
-    </ul>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">No hay supervisores registrados.</li>
+            {% endfor %}
+        </ul>
+    </div>
 
-    <h3>Trabajadores</h3>
-    <ul class="list-group mb-4">
-        {% for trabajador in trabajadores %}
+    <!-- Lista de Trabajadores -->
+    <div class="mt-5">
+        <h3 class="text-primary fw-bold">Trabajadores</h3>
+        <ul class="list-group shadow-sm">
+            {% for trabajador in trabajadores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ trabajador.username }}
+                <span class="fw-bold">{{ trabajador.username }}</span>
                 <div>
                     {% for permiso in permisos_usuario %}
                         {% if permiso.nombre == "editar_trabajador" %}
-                            <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-warning btn-sm">Editar</a>
+                            <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
                         {% endif %}
                         {% if permiso.nombre == "eliminar_usuario" %}
-                            <a href="{% url 'eliminar_usuario' trabajador.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            <a href="{% url 'eliminar_usuario' trabajador.id %}" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
                         {% endif %}
                     {% endfor %}
                 </div>
             </li>
-        {% endfor %}
-    </ul>
+            {% empty %}
+            <li class="list-group-item text-muted text-center">No hay trabajadores registrados.</li>
+            {% endfor %}
+        </ul>
+    </div>
 
-    <div class="d-grid gap-2 mt-4">
+    <!-- Botones de Acciones -->
+    <div class="d-grid gap-3 mt-4">
         {% for permiso in permisos_usuario %}
             {% if permiso.nombre == "editar_empresa" %}
-                <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning">Editar Empresa</a>
+                <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning shadow">
+                    <i class="bi bi-gear"></i> Editar Empresa
+                </a>
             {% endif %}
             {% if permiso.nombre == "eliminar_empresa" %}
-                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger">Eliminar Empresa</a>
+                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger shadow">
+                    <i class="bi bi-trash"></i> Eliminar Empresa
+                </a>
             {% endif %}
         {% endfor %}
         {% if user.role != "supervisor" %}
-        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
-    {% endif %}
-</div>
+            <a href="{% url 'lista_empresas' %}" class="btn btn-secondary shadow">
+                <i class="bi bi-arrow-left"></i> Volver a Lista de Empresas
+            </a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
