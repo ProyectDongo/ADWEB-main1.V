@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm,UserChangeForm
-from .models import Usuario, RegistroEmpresas, RegistroPermisos,RegistroEntrada
+from .models import Usuario, RegistroEmpresas, RegistroPermisos,RegistroEntrada, VigenciaPlan, Plan,Provincia, Comuna, Region
+
 
 
 # forms para los registros de empresas 
@@ -37,6 +38,29 @@ class EmpresaForm(forms.ModelForm):
             'mail_contacto': forms.EmailInput(attrs={'class': 'form-control'}),
             'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['provincia'].queryset = Provincia.objects.none()
+        self.fields['comuna'].queryset = Comuna.objects.none()
+
+        if 'region' in self.data:
+            try:
+                region_id = int(self.data.get('region'))
+                self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk:
+            self.fields['provincia'].queryset = self.instance.region.provincia_set.all()
+
+        if 'provincia' in self.data:
+            try:
+                provincia_id = int(self.data.get('provincia'))
+                self.fields['comuna'].queryset = Comuna.objects.filter(provincia_id=provincia_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk:
+            self.fields['comuna'].queryset = self.instance.provincia.comuna_set.all()
 #forms para los registros de permisos
 class PermisoForm(forms.ModelForm):
     class Meta:
@@ -194,3 +218,34 @@ class LimiteEmpresaForm(forms.ModelForm):
             'limite_supervisores': forms.NumberInput(attrs={'class': 'form-control'}),
             'limite_trabajadores': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+# las formas de los planes y empresas
+class PlanVigenciaForm(forms.ModelForm):
+    indefinido = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        label='Plan Indefinido'
+    )
+
+    class Meta:
+        model = VigenciaPlan
+        fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'indefinido', 'descuento']
+        widgets = {
+            'fecha_fin': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'descuento': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '100',
+                'step': '0.01'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['fecha_fin'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('indefinido') and cleaned_data.get('fecha_fin'):
+            raise forms.ValidationError("No puede tener fecha fin si el plan es indefinido")
+        return cleaned_data

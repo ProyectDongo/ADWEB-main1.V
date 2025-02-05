@@ -3,6 +3,28 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Max
+from django.utils import timezone
+
+# clase para las regiones, provincias y comunas
+class Region(models.Model):
+    nombre = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.nombre
+
+class Provincia(models.Model):
+    nombre = models.CharField(max_length=100)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.region})"
+
+class Comuna(models.Model):
+    nombre = models.CharField(max_length=100)
+    provincia = models.ForeignKey(Provincia, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.provincia})"
 
 # estos son los registros de los planes
 class Plan(models.Model):
@@ -16,25 +38,6 @@ class Plan(models.Model):
     def __str__(self):
         return f"{self.nombre} (S: {self.max_supervisores}, T: {self.max_trabajadores})"
 
-
-    def crear_planes_base(cls):
-        planes = [
-            ("Plan Básico", 2, 10, 50000),
-            ("Plan Intermedio", 4, 20, 80000),
-            ("Plan Premium", 4, 50, 120000)
-        ]
-        
-        for nombre, sup, trab, valor in planes:
-            codigo = nombre.upper().replace(" ", "_")
-            cls.objects.get_or_create(
-                nombre=nombre,
-                defaults={
-                    'max_supervisores': sup,
-                    'max_trabajadores': trab,
-                    'valor': valor,
-                    'codigo': codigo
-                }
-            )
 # estos son los registro de las empresas
 class RegistroEmpresas(models.Model):
     ESTADO_CHOICES = [
@@ -52,9 +55,9 @@ class RegistroEmpresas(models.Model):
     direccion = models.CharField(max_length=200, default='Dirección Empresa')
     numero = models.CharField(max_length=20, default='0')
     oficina = models.CharField(max_length=20, blank=True, default='Oficina')
-    region = models.CharField(max_length=100, default='Región')
-    provincia = models.CharField(max_length=100, default='Provincia')
-    comuna = models.CharField(max_length=100, default='Comuna')
+    region = models.ForeignKey(Region, on_delete=models.PROTECT)
+    provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
+    comuna = models.ForeignKey(Comuna, on_delete=models.PROTECT)
     telefono = models.CharField(max_length=20, default='0000000230')
     celular = models.CharField(max_length=20, blank=True, default='000000012')
     email = models.EmailField(blank=True, default='email@empresa.com')
@@ -92,6 +95,8 @@ class RegistroEmpresas(models.Model):
             self.limite_trabajadores = self.plan_contratado.max_trabajadores
         
         super().save(*args, **kwargs)
+
+
     
 #estos los registros todos
 
@@ -147,5 +152,31 @@ def notificar_registro_entrada(sender, instance, created, **kwargs):
     if created:
         print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
 
-
-
+#plan vigencia
+class VigenciaPlan(models.Model):
+    TIPO_DURACION = [
+        ('indefinido', 'Indefinido'),
+        ('mensual', 'Mensual'),
+    ]
+    
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='vigencias')
+    plan = models.ForeignKey(Plan, on_delete=models.PROTECT)
+    fecha_inicio = models.DateField(default=timezone.now)
+    fecha_fin = models.DateField(null=True, blank=True)
+    indefinido = models.BooleanField(default=False)
+    monto_plan = models.DecimalField(max_digits=10, decimal_places=2)
+    descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    monto_final = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.empresa} - {self.plan} ({self.fecha_inicio} al {self.fecha_fin or 'Indefinido'})"
+    
+    def calcular_monto(self):
+        descuento_decimal = self.descuento / 100
+        return self.monto_plan * (1 - descuento_decimal)
+    
+    def save(self, *args, **kwargs):
+        if not self.monto_plan:
+            self.monto_plan = self.plan.valor
+        self.monto_final = self.calcular_monto()
+        super().save(*args, **kwargs)

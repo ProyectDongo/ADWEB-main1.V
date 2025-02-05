@@ -202,6 +202,42 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const regionSelect = document.getElementById('id_region');
+        const provinciaSelect = document.getElementById('id_provincia');
+        const comunaSelect = document.getElementById('id_comuna');
+    
+        // Cargar provincias cuando cambia la región
+        regionSelect.addEventListener('change', function() {
+            const regionId = this.value;
+            provinciaSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/get_provincias/?region_id=${regionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+                    data.forEach(provincia => {
+                        provinciaSelect.innerHTML += `<option value="${provincia.id}">${provincia.nombre}</option>`;
+                    });
+                    comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
+                });
+        });
+    
+        // Cargar comunas cuando cambia la provincia
+        provinciaSelect.addEventListener('change', function() {
+            const provinciaId = this.value;
+            comunaSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/get_comunas/?provincia_id=${provinciaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
+                    data.forEach(comuna => {
+                        comunaSelect.innerHTML += `<option value="${comuna.id}">${comuna.nombre}</option>`;
+                    });
+                });
+        });
+    });
+    </script>
 
 <style>
     .form-floating {

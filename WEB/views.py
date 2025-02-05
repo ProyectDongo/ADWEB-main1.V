@@ -2,12 +2,15 @@ from django.shortcuts import render,redirect
 from django.contrib.auth import logout
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
-from .forms import LimiteEmpresaForm,RegistroSalidaForm,RegistroEntradaForm,EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm
-from .models import RegistroEmpresas,Usuario,RegistroPermisos,RegistroEntrada
+from .forms import LimiteEmpresaForm,RegistroSalidaForm,RegistroEntradaForm,EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm,PlanVigenciaForm
+from .models import RegistroEmpresas,Usuario,RegistroPermisos,RegistroEntrada,Plan
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
+from django.views.generic import ListView
 from django.utils import timezone
+from django.http import JsonResponse
+from .models import Provincia, Comuna
 
 
 
@@ -18,7 +21,7 @@ def redirect_after_login(request):
     print("Redirigiendo después del login...")
     if not hasattr(request.user, 'role'):
         print("Error: Usuario no tiene un rol definido")
-        return redirect('pagina_por_defecto')  # Página genérica si el rol no existe
+        return redirect('login')  # Redirigir al login si el rol no existe
     
     role = request.user.role
     print(f"Usuario autenticado: {request.user.username}, Rol: {role}")
@@ -33,8 +36,8 @@ def redirect_after_login(request):
         print("Redirigiendo a trabajador_home")
         return redirect('trabajador_home')
 
-    print("Redirigiendo a página por defecto")
-    return redirect('pagina_por_defecto')
+    print("Error: Rol no reconocido")
+    return redirect('login')
 
 #requiere estar logueado
 #luego redirige a la pagina de inicio correspondiente al rol del usuario
@@ -222,57 +225,6 @@ def crear_trabajador(request):
     return render(request, 'formularios/crear/crear_trabajador.html', {'form': form})
 
 
-#redirige a la pagina de lista de usuarios  
-@login_required
-@permiso_requerido("lista_empresas")
-def lista_empresas(request):
-    query = request.GET.get('q')
-    if query:
-        empresas = RegistroEmpresas.objects.filter(
-            Q(nombre__icontains=query) | Q(rut__icontains=query)
-        )
-    else:
-        empresas = RegistroEmpresas.objects.all()
-    
-    permisos_usuario = request.user.permisos.all()
-    puede_crear_empresa = permisos_usuario.filter(nombre="crear_empresa").exists()
-    puede_ver_detalles_empresa = permisos_usuario.filter(nombre="detalles_empresa").exists()
-    
-    return render(request, 'listas/lista_empresas.html', {
-        'empresas': empresas,
-        'query': query,
-        'puede_crear_empresa': puede_crear_empresa,
-        'puede_ver_detalles_empresa': puede_ver_detalles_empresa
-    })
-#redirige a la pagina de detalles de la empresa
-
-
-@login_required
-@permiso_requerido("detalles_empresa")
-def detalles_empresa(request, empresa_id=None):
-    if request.user.role == 'admin' and empresa_id is None:
-        # Si el usuario es admin y no se proporciona empresa_id, redirigir a lista_empresas
-        return redirect('lista_empresas')
-    
-    # Si no es admin o se proporciona empresa_id, obtener la empresa específica
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    query = request.GET.get('q')
-    if query:
-        supervisores = empresa.usuarios.filter(role='supervisor', username__icontains=query)
-        trabajadores = empresa.usuarios.filter(role='trabajador', username__icontains=query)
-    else:
-        supervisores = empresa.usuarios.filter(role='supervisor')
-        trabajadores = empresa.usuarios.filter(role='trabajador')
-    
-    permisos_usuario = request.user.permisos.all()
-    context = {
-        'empresa': empresa,
-        'supervisores': supervisores,
-        'trabajadores': trabajadores,
-        'query': query,
-        'permisos_usuario': permisos_usuario,
-    }
-    return render(request, 'listas/detalles_empresa.html', context)
 
 #redirige a la pagina para editar supervisores
 @login_required
@@ -320,14 +272,7 @@ def eliminar_usuario(request, user_id):
         return redirect('lista_empresas')
 
 #eliminas empresas
-@login_required
-def eliminar_empresa(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    if request.method == 'POST':
-        empresa.delete()
-        messages.success(request, 'La empresa y todo su contenido han sido eliminados.')
-        return redirect('lista_empresas')
-    return render(request, 'eliminar/eliminar_empresa.html', {'empresa': empresa})
+
 
 #lista los permisos
 @login_required
@@ -336,22 +281,7 @@ def lista_permisos(request):
     return render(request, 'listas/listas_permisos.html', {'permisos': permisos})
 
 #edita empresas
-@login_required
-def editar_empresa(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    if request.method == 'POST':
-        form = EmpresaForm(request.POST, instance=empresa)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'La empresa ha sido actualizada.')
-            return redirect('detalles_empresa', empresa_id=empresa.id)
-    else:
-        form = EmpresaForm(instance=empresa)
-    return render(request, 'formularios/edit/editar_empresa.html', {'form': form, 'empresa': empresa})
 
-@login_required
-def base_view(request):
-    return render(request, 'base.html', {'role': request.user.role})
 
 
 #redirige a la pagina para actualizar los limites de la empresa
@@ -379,3 +309,61 @@ def listar_empresas(request):
     return render(request, 'listas/listar_empresas.html', {'empresas': empresas})
 
 # estas 2 anteriores rigen 1 funcion 
+
+
+# todo esto manejara las empresas
+def lista_empresas(request):
+    empresas = RegistroEmpresas.objects.all()
+    return render(request, 'listas/lista_empresas.html', {'empresas': empresas})
+
+def detalle_empresa(request, pk):
+    empresa = get_object_or_404(RegistroEmpresas, pk=pk)
+    return render(request, 'detalle_empresa.html', {'empresa': empresa})
+
+def editar_empresa(request, pk):
+    empresa = get_object_or_404(RegistroEmpresas, pk=pk)
+    if request.method == 'POST':
+        form = EmpresaForm(request.POST, instance=empresa)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_empresas')
+    else:
+        form = EmpresaForm(instance=empresa)
+    return render(request, 'empresa_form.html', {'form': form})
+
+def eliminar_empresa(request, pk):
+    empresa = get_object_or_404(RegistroEmpresas, pk=pk)
+    if request.method == 'POST':
+        empresa.delete()
+        return redirect('lista_empresas')
+    return render(request, 'confirmar_eliminar.html', {'empresa': empresa})
+
+class MantenimientoPlanes(ListView):
+    model = Plan
+    template_name = 'mantenimiento_planes.html'
+    context_object_name = 'planes'
+
+def vigencia_planes(request):
+    if request.method == 'POST':
+        form = PlanVigenciaForm(request.POST)
+        if form.is_valid():
+            vigencia = form.save(commit=False)
+            vigencia.monto_final = vigencia.calcular_monto()
+            vigencia.save()
+            return redirect('lista_empresas')
+    else:
+        form = PlanVigenciaForm()
+    return render(request, 'empresas/vigencia_planes.html', {'form': form})
+
+
+def get_provincias(request):
+    region_id = request.GET.get('region_id')
+    provincias = Provincia.objects.filter(region_id=region_id).values('id', 'nombre')
+    return JsonResponse(list(provincias), safe=False)
+
+def get_comunas(request):
+    provincia_id = request.GET.get('provincia_id')
+    comunas = Comuna.objects.filter(provincia_id=provincia_id).values('id', 'nombre')
+    return JsonResponse(list(comunas), safe=False)
+
+#hasta aqui todo lo de las empresas

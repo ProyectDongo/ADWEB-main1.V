@@ -11,6 +11,6 @@ def permiso_requerido(nombre_permiso):
                 return view_func(request, *args, **kwargs)
             else:
                 messages.error(request, "No tienes permiso para acceder a esta página.")
-                return redirect('pagina_por_defecto')  # Redirige a una página segura
+                return redirect('login')  # Redirige a una página segura
         return _wrapped_view
     return decorator

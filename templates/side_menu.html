@@ -55,16 +55,14 @@
       </li>
 
       <!-- Lista de Empresas -->
-      {% for permiso in user_permisos %}
-        {% if permiso.nombre == "lista_empresas" %}
+    
+      
         <li class="nav-item">
           <a class="nav-link" href="{% url 'lista_empresas' %}">
             <span data-feather="briefcase"></span> Lista de Empresas
           </a>  
         </li>
-        {% endif %}
-      {% endfor %}
-
+      
       <!-- Configuración de Software -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware" role="button" aria-expanded="false" aria-controls="configuracionSoftware">
@@ -72,81 +70,61 @@
         </a>
         <div class="collapse" id="configuracionSoftware">
           <ul class="nav flex-column ms-3">
-            {% for permiso in user_permisos %}
-              {% if permiso.nombre == "crear_empresa" %}
+          
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_empresa' %}">
                   <span data-feather="plus-circle"></span> Crear Empresa
                 </a>
               </li>
-              {% endif %}
-              {% if permiso.nombre == "crear_admin" %}
+         
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_admin' %}">
                   <span data-feather="user-plus"></span> Crear Administrador
                 </a>
               </li>
-              {% endif %}
-              {% if permiso.nombre == "crear_supervisor" %}
+             
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_supervisor' %}">
                   <span data-feather="user-check"></span> Crear Supervisor
                 </a>
               </li>
-              {% endif %}
-              {% if permiso.nombre == "crear_trabajador" %}
+         
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_trabajador' %}">
                   <span data-feather="user-plus"></span> Crear Trabajador
                 </a>
               </li>
-              {% endif %}
-            {% endfor %}
+           
           </ul>
         </div>
       </li>
 
       <!-- Otras opciones basadas en permisos -->
-      {% for permiso in user_permisos %}
-        {% if permiso.nombre == "detalles_empresa" and role != "admin" %}
+     
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'detalles_empresa' empresa.id %}">
+        
             <span data-feather="bar-chart-2"></span> Ver Empresa
           </a>
         </li>
-        {% endif %}
-
-        {% if permiso.nombre == "crear_permiso" %}
+     
         <li class="nav-item">
           <a class="nav-link" href="{% url 'crear_permiso' %}">
             <span data-feather="file"></span> Crear Opciones del Sistema
           </a>
         </li>
-        {% endif %}
-
-        {% if permiso.nombre == "lista_permisos" %}
+        
         <li class="nav-item">
           <a class="nav-link" href="{% url 'lista_permisos' %}">
             <span data-feather="list"></span> Lista de Permisos
           </a>
         </li>
-        {% if user.role == "admin" %}
+      
         <li class="nav-item">
           <a class="nav-link active" href="{% url 'listar_empresas' %}">
             <span data-feather="bar-chart-2"></span> Actualizar Empresas
           </a>  
         </li>
-        {% endif %}
-        {% endif %}
-
-        {% if permiso.nombre == "lista_empresas" %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'lista_empresas' %}">
-            <span data-feather="briefcase"></span> Lista de Empresas
-          </a>  
-        </li>
-        {% endif %}
-      {% endfor %}
+      
     </ul>
   </div>
 </nav>

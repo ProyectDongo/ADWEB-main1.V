@@ -1,0 +1,153 @@
+<style>
+    #sidebarMenu {
+      margin-top: 20px;
+      background-color: #f8f9fa; /* Color de fondo más claro y moderno */
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); /* Sombra lateral */
+      border-radius: 8px; /* Bordes redondeados */
+      padding: 10px;
+    }
+  
+    .nav-link {
+      color: #333;
+      padding: 10px;
+      border-radius: 5px;
+      transition: all 0.3s ease-in-out;
+    }
+  
+  
+    .nav-link:hover {
+      background-color: #e9ecef;
+      color: #000;
+      transform: scale(1.05);
+    }
+  
+    .sidebar-sticky {
+      padding: 15px;
+    }
+  
+    .collapse ul {
+      padding-left: 15px;
+    }
+  
+    .nav-item {
+      margin-bottom: 5px;
+    }
+  </style>
+  
+  <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+    <div class="sidebar-sticky pt-3">
+      <ul class="nav flex-column">
+        <!-- Home según el rol -->
+        <li class="nav-item">
+          {% if role == "admin" %}
+            <a class="nav-link active" href="{% url 'admin_home' %}">
+              <span data-feather="home"></span> Home
+            </a>
+          {% elif role == "supervisor" %}
+            <a class="nav-link active" href="{% url 'supervisor_home' %}">
+              <span data-feather="home"></span> Home
+            </a>
+          {% elif role == "trabajador" %}
+            <a class="nav-link active" href="{% url 'trabajador_home' %}">
+              <span data-feather="home"></span> Home
+            </a>
+          {% endif %}
+        </li>
+  
+        <!-- Lista de Empresas -->
+        {% for permiso in user_permisos %}
+          {% if permiso.nombre == "lista_empresas" %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'lista_empresas' %}">
+              <span data-feather="briefcase"></span> Lista de Empresas
+            </a>  
+          </li>
+          {% endif %}
+        {% endfor %}
+  
+        <!-- Configuración de Software -->
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware" role="button" aria-expanded="false" aria-controls="configuracionSoftware">
+            <span data-feather="settings"></span> Configuración de Software
+          </a>
+          <div class="collapse" id="configuracionSoftware">
+            <ul class="nav flex-column ms-3">
+              {% for permiso in user_permisos %}
+                {% if permiso.nombre == "crear_empresa" %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'crear_empresa' %}">
+                    <span data-feather="plus-circle"></span> Crear Empresa
+                  </a>
+                </li>
+                {% endif %}
+                {% if permiso.nombre == "crear_admin" %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'crear_admin' %}">
+                    <span data-feather="user-plus"></span> Crear Administrador
+                  </a>
+                </li>
+                {% endif %}
+                {% if permiso.nombre == "crear_supervisor" %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'crear_supervisor' %}">
+                    <span data-feather="user-check"></span> Crear Supervisor
+                  </a>
+                </li>
+                {% endif %}
+                {% if permiso.nombre == "crear_trabajador" %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'crear_trabajador' %}">
+                    <span data-feather="user-plus"></span> Crear Trabajador
+                  </a>
+                </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        </li>
+  
+        <!-- Otras opciones basadas en permisos -->
+        {% for permiso in user_permisos %}
+          {% if permiso.nombre == "detalles_empresa" and role != "admin" %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'detalles_empresa' empresa.id %}">
+              <span data-feather="bar-chart-2"></span> Ver Empresa
+            </a>
+          </li>
+          {% endif %}
+  
+          {% if permiso.nombre == "crear_permiso" %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'crear_permiso' %}">
+              <span data-feather="file"></span> Crear Opciones del Sistema
+            </a>
+          </li>
+          {% endif %}
+  
+          {% if permiso.nombre == "lista_permisos" %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'lista_permisos' %}">
+              <span data-feather="list"></span> Lista de Permisos
+            </a>
+          </li>
+          {% if user.role == "admin" %}
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'listar_empresas' %}">
+              <span data-feather="bar-chart-2"></span> Actualizar Empresas
+            </a>  
+          </li>
+          {% endif %}
+          {% endif %}
+  
+          {% if permiso.nombre == "lista_empresas" %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'lista_empresas' %}">
+              <span data-feather="briefcase"></span> Lista de Empresas
+            </a>  
+          </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </nav>
+  

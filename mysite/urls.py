@@ -46,8 +46,7 @@ urlpatterns = [
     path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
     
     #lista permisos
-    path('detalles_empresa/<int:empresa_id>/', views.detalles_empresa, name='detalles_empresa'),
-    path('detalles_empresa/', views.detalles_empresa, name='detalles_empresa'),
+     path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
     path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
 
     # Editar y eliminar empresa
@@ -63,5 +62,11 @@ urlpatterns = [
     path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
     path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
 
-
+    # Rutas para las entradas para la empresa
+    path('vigencia_planes/', views.vigencia_planes, name='vigencia_planes'),
+    
+    # Rutas para las entradas para la empresa
+    path('api/get_provincias/', views.get_provincias, name='get_provincias'),
+    path('api/get_comunas/', views.get_comunas, name='get_comunas'),
+    
 ]
