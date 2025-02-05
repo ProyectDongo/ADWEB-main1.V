@@ -10,13 +10,17 @@ def crear_permiso(nombre, descripcion=""):
 
 def crear_permisos_predeterminados():
     permisos = [
-        ("crearpermisos.py", "Permiso para gestionar permisos"),
         ("crear_empresa", "Permiso para crear empresas"),
         ("crear_permiso", "Permiso para crear permisos"),
         ("crear_admin", "Permiso para crear administradores"),
         ("crear_supervisor", "Permiso para crear supervisores"),
         ("crear_trabajador", "Permiso para crear trabajadores"),
-        ("listar_permisos", "Permiso para listar permisos"),
+        ("lista_permisos", "Permiso para listar permisos"),
+        ("eliminar_empresa", "Permiso para eliminar empresas"),
+        ("detalles_empresa", "Permiso para ver detalles de empresas"),
+        ("lista_empresas", "Permiso para listar empresas"),
+        ("editar_supervisor", "permiso para editar supervisores"),
+        ("editar_trabajador", "permiso para editar trabajadores"),
     ]
     for nombre, descripcion in permisos:
         crear_permiso(nombre, descripcion)

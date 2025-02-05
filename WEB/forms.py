@@ -221,6 +221,7 @@ class LimiteEmpresaForm(forms.ModelForm):
 
 # las formas de los planes y empresas
 class PlanVigenciaForm(forms.ModelForm):
+    precio_original = forms.IntegerField(required=True)  # Añadir este campo
     indefinido = forms.BooleanField(
         required=False,
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -231,12 +232,15 @@ class PlanVigenciaForm(forms.ModelForm):
         model = VigenciaPlan
         fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'indefinido', 'descuento']
         widgets = {
+            'empresa': forms.Select(attrs={'class': 'form-select'}),
+            'plan': forms.Select(attrs={'class': 'form-select'}),
+            'fecha_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'fecha_fin': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'descuento': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
                 'max': '100',
-                'step': '0.01'
+                'step': '1'
             }),
         }
 
@@ -246,6 +250,14 @@ class PlanVigenciaForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get('indefinido') and cleaned_data.get('fecha_fin'):
+        indefinido = cleaned_data.get('indefinido')
+        fecha_fin = cleaned_data.get('fecha_fin')
+        descuento = cleaned_data.get('descuento')
+
+        if indefinido and fecha_fin:
             raise forms.ValidationError("No puede tener fecha fin si el plan es indefinido")
+
+        if descuento is not None and (descuento < 0 or descuento > 100):
+            raise forms.ValidationError("El descuento debe estar entre 0 y 100")
+
         return cleaned_data

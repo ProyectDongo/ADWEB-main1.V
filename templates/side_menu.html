@@ -54,15 +54,6 @@
         {% endif %}
       </li>
 
-      <!-- Lista de Empresas -->
-    
-      
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'lista_empresas' %}">
-            <span data-feather="briefcase"></span> Lista de Empresas
-          </a>  
-        </li>
-      
       <!-- Configuración de Software -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware" role="button" aria-expanded="false" aria-controls="configuracionSoftware">
@@ -73,7 +64,7 @@
           
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_empresa' %}">
-                  <span data-feather="plus-circle"></span> Crear Empresa
+                  <i class="bi bi-building me-2"></i> Crear Empresa
                 </a>
               </li>
          
@@ -99,31 +90,68 @@
         </div>
       </li>
 
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas" role="button" aria-expanded="false" aria-controls="configuracionEmpresas">
+          <i class="bi bi-building me-2"></i> Configuración de Empresas
+        </a>
+        <div class="collapse" id="configuracionEmpresas">
+          <ul class="nav flex-column ms-3">
+          
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'listar_empresas' %}">
+                  <i class="bi bi-building me-2"></i> Actualizar Empresas
+              </a>
+            </li>
+         
+               <!-- Lista de Empresas -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'lista_empresas' %}">
+                <i class="bi bi-building me-2"></i> Lista de Empresas
+              </a>  
+            </li>
+             
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'vigencia_planes' %}">
+                  <i class="bi bi-building me-2"></i> Vigencia de Planes
+                </a>
+              </li>
+         
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'listar_planes' %}">
+                  <i class="bi bi-building me-2"></i> Lista de Planes
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'empresas_vigentes' %}">
+                  <i class="bi bi-building me-2"></i> Lista de Empresas Vigentes
+                </a>
+              </li>
+           
+          </ul>
+        </div>
+      </li>
+
       <!-- Otras opciones basadas en permisos -->
-     
-        <li class="nav-item">
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos" role="button" aria-expanded="false" aria-controls="ConfiguraciónPermisos">
+          <i class="bi bi-key me-2"></i> Configuración de Permisos
+        </a>
+        <div class="collapse" id="configuracionPermisos">
+          <ul class="nav flex-column ms-3">
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'crear_permiso' %}">
+                <i class="bi bi-key me-2"></i>Crear Opciones del Sistema
+              </a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'lista_permisos' %}">
+                <i class="bi bi-key me-2"></i> Lista de Permisos
+              </a>
+            </li>
+          
         
-            <span data-feather="bar-chart-2"></span> Ver Empresa
-          </a>
-        </li>
-     
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'crear_permiso' %}">
-            <span data-feather="file"></span> Crear Opciones del Sistema
-          </a>
-        </li>
-        
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'lista_permisos' %}">
-            <span data-feather="list"></span> Lista de Permisos
-          </a>
-        </li>
-      
-        <li class="nav-item">
-          <a class="nav-link active" href="{% url 'listar_empresas' %}">
-            <span data-feather="bar-chart-2"></span> Actualizar Empresas
-          </a>  
-        </li>
       
     </ul>
   </div>

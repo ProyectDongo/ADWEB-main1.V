@@ -46,12 +46,10 @@ urlpatterns = [
     path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
     
     #lista permisos
-     path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
+   
     path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
 
-    # Editar y eliminar empresa
-    path('editar_empresa/<int:empresa_id>/', views.editar_empresa, name='editar_empresa'),
-    path('eliminar_empresa/<int:empresa_id>/', views.eliminar_empresa, name='eliminar_empresa'),
+   
 
     # habilitar otra entrada
     path('habilitar_otra_entrada/<int:entrada_id>/', views.habilitar_otra_entrada, name='habilitar_otra_entrada'),
@@ -69,4 +67,18 @@ urlpatterns = [
     path('api/get_provincias/', views.get_provincias, name='get_provincias'),
     path('api/get_comunas/', views.get_comunas, name='get_comunas'),
     
-]
+    path('empresa_form/', views.editar_empresa, name='empresa_form'),
+   # Editar y eliminar empresa
+    path('editar_empresa/<int:pk>/', views.editar_empresa, name='editar_empresa'),
+    path('eliminar_empresa/<int:pk>/', views.eliminar_empresa, name='eliminar_empresa'),
+    path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
+    path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
+    path('listar_planes/', views.listar_planes, name='listar_planes'),
+    path('generar_boleta/<int:empresa_id>/', views.generar_boleta, name='generar_boleta'),
+    
+    
+    
+    
+    
+    
+    ] 

@@ -172,11 +172,14 @@ class VigenciaPlan(models.Model):
         return f"{self.empresa} - {self.plan} ({self.fecha_inicio} al {self.fecha_fin or 'Indefinido'})"
     
     def calcular_monto(self):
+        if self.plan.valor is None:
+            raise ValueError("El plan no tiene un valor definido.")
+
         descuento_decimal = self.descuento / 100
-        return self.monto_plan * (1 - descuento_decimal)
-    
+        self.monto_plan = self.plan.valor
+        self.monto_final = self.monto_plan * (1 - descuento_decimal)
+        return self.monto_final
+
     def save(self, *args, **kwargs):
-        if not self.monto_plan:
-            self.monto_plan = self.plan.valor
-        self.monto_final = self.calcular_monto()
+        self.calcular_monto()
         super().save(*args, **kwargs)

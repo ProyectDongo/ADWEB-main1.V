@@ -124,11 +124,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function calcularPrecioFinal() {
-        let precioOriginal = parseFloat(precioOriginalInput.value) || 0;
-        let descuento = parseFloat(descuentoInput.value) || 0;
-        let precioFinal = precioOriginal * (1 - descuento / 100);
-        precioFinalInput.value = precioFinal.toFixed(2);
-    }
+    let precioOriginal = parseFloat(document.getElementById("precio_original").value) || 0;
+    let descuento = parseFloat(descuentoInput.value) || 0;
+    let precioFinal = precioOriginal * (1 - descuento / 100);
+    document.getElementById("precio_final").value = precioFinal.toFixed(2);
+}
 
     function validarFormulario(event) {
         if (precioOriginalInput.value === "" || isNaN(precioOriginalInput.value) || 

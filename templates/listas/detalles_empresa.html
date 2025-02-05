@@ -17,12 +17,39 @@
             <p><strong>📌 RUT:</strong> {{ empresa.rut }}</p>
             <p><strong>📍 Dirección:</strong> {{ empresa.direccion }}</p>
             <p><strong>📞 Teléfono:</strong> {{ empresa.telefono }}</p>
+            <p><strong>📧 Email:</strong> {{ empresa.email }}</p>
+            <p><strong>🌐 Sitio Web:</strong> <a href="{{ empresa.web }}" target="_blank">{{ empresa.web }}</a></p>
+            <p><strong>📅 Fecha de Ingreso:</strong> {{ empresa.fecha_ingreso }}</p>
+            <p><strong>📊 Plan Contratado:</strong> {{ empresa.plan_contratado.nombre }}</p>
+            <p><strong>🔄 Estado:</strong> {{ empresa.estado }}</p>
+            <p><strong>✅ Vigente:</strong> {{ empresa.vigente|yesno:"Sí,No" }}</p>
+        </div>
+    </div>
+
+    <!-- Representante Legal -->
+    <div class="card shadow-lg mt-4">
+        <div class="card-body">
+            <h4 class="text-primary fw-bold">Representante Legal</h4>
+            <hr>
+            <p><strong>📌 RUT:</strong> {{ empresa.rut_representante }}</p>
+            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_representante }}</p>
+        </div>
+    </div>
+
+    <!-- Contacto -->
+    <div class="card shadow-lg mt-4">
+        <div class="card-body">
+            <h4 class="text-primary fw-bold">Contacto</h4>
+            <hr>
+            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_contacto }}</p>
+            <p><strong>📞 Celular:</strong> {{ empresa.celular_contacto }}</p>
+            <p><strong>📧 Email:</strong> {{ empresa.mail_contacto }}</p>
         </div>
     </div>
 
     <!-- Formulario de Búsqueda -->
     <div class="mt-4">
-        <form method="get" action="{% url 'detalles_empresa' empresa.id %}" class="input-group shadow-sm">
+        <form method="get" action="{% url 'detalle_empresa' empresa.id %}" class="input-group shadow-sm">
             <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ query }}">
             <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Buscar</button>
         </form>
@@ -35,23 +62,10 @@
             {% for supervisor in supervisores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span class="fw-bold">{{ supervisor.username }}</span>
-                <div>
-                    {% for permiso in permisos_usuario %}
-                        {% if permiso.nombre == "editar_supervisor" %}
-                            <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-outline-warning btn-sm">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a>
-                        {% endif %}
-                        {% if permiso.nombre == "eliminar_usuario" %}
-                            <a href="{% url 'eliminar_usuario' supervisor.id %}" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                <span>{{ supervisor.email }}</span>
             </li>
             {% empty %}
-            <li class="list-group-item text-muted text-center">No hay supervisores registrados.</li>
+            <li class="list-group-item text-center">No hay supervisores registrados.</li>
             {% endfor %}
         </ul>
     </div>
@@ -63,46 +77,12 @@
             {% for trabajador in trabajadores %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span class="fw-bold">{{ trabajador.username }}</span>
-                <div>
-                    {% for permiso in permisos_usuario %}
-                        {% if permiso.nombre == "editar_trabajador" %}
-                            <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-outline-warning btn-sm">
-                                <i class="bi bi-pencil"></i> Editar
-                            </a>
-                        {% endif %}
-                        {% if permiso.nombre == "eliminar_usuario" %}
-                            <a href="{% url 'eliminar_usuario' trabajador.id %}" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                <span>{{ trabajador.email }}</span>
             </li>
             {% empty %}
-            <li class="list-group-item text-muted text-center">No hay trabajadores registrados.</li>
+            <li class="list-group-item text-center">No hay trabajadores registrados.</li>
             {% endfor %}
         </ul>
-    </div>
-
-    <!-- Botones de Acciones -->
-    <div class="d-grid gap-3 mt-4">
-        {% for permiso in permisos_usuario %}
-            {% if permiso.nombre == "editar_empresa" %}
-                <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning shadow">
-                    <i class="bi bi-gear"></i> Editar Empresa
-                </a>
-            {% endif %}
-            {% if permiso.nombre == "eliminar_empresa" %}
-                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger shadow">
-                    <i class="bi bi-trash"></i> Eliminar Empresa
-                </a>
-            {% endif %}
-        {% endfor %}
-        {% if user.role != "supervisor" %}
-            <a href="{% url 'lista_empresas' %}" class="btn btn-secondary shadow">
-                <i class="bi bi-arrow-left"></i> Volver a Lista de Empresas
-            </a>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

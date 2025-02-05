@@ -1,0 +1,47 @@
+{% extends "central.html" %}
+
+{% block title %}Empresas Vigentes{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Empresas Vigentes</h1>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre Empresa</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Indefinido</th>
+                    <th>Monto Plan</th>
+                    <th>Descuento</th>
+                    <th>Monto Final</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empresa in empresas_vigentes %}
+                    {% for vigencia in empresa.vigencias.all %}
+                    <tr>
+                        <td>{{ empresa.nombre }}</td>
+                        <td>{{ vigencia.fecha_inicio }}</td>
+                        <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                        <td>{{ vigencia.indefinido|yesno:"Sí,No" }}</td>
+                        <td>{{ vigencia.monto_plan }}</td>
+                        <td>{{ vigencia.descuento }}%</td>
+                        <td>{{ vigencia.monto_final }}</td>
+                        <td>
+                            <a href="{% url 'generar_boleta' empresa.id %}" class="btn btn-primary">Generar Boleta</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No hay empresas vigentes.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

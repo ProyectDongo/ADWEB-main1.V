@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Boleta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .header, .footer {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Boleta</h1>
+            <p>Empresa: {{ empresa.nombre }}</p>
+        </div>
+        <div class="content">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Indefinido</th>
+                        <th>Monto Plan</th>
+                        <th>Descuento</th>
+                        <th>Monto Final</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vigencia in vigencias %}
+                    <tr>
+                        <td>{{ vigencia.fecha_inicio }}</td>
+                        <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                        <td>{{ vigencia.indefinido|yesno:"Sí,No" }}</td>
+                        <td>{{ vigencia.monto_plan }}</td>
+                        <td>{{ vigencia.descuento }}%</td>
+                        <td>{{ vigencia.monto_final }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">
+            <p>Gracias por su preferencia.</p>
+        </div>
+    </div>
+</body>
+</html>

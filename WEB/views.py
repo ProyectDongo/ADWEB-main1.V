@@ -1,9 +1,10 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import logout
+from django.conf import settings
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from .forms import LimiteEmpresaForm,RegistroSalidaForm,RegistroEntradaForm,EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm,PlanVigenciaForm
-from .models import RegistroEmpresas,Usuario,RegistroPermisos,RegistroEntrada,Plan
+from .models import RegistroEmpresas,Usuario,RegistroPermisos,RegistroEntrada,Plan,Region,Provincia,Comuna,VigenciaPlan
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
@@ -11,8 +12,31 @@ from django.views.generic import ListView
 from django.utils import timezone
 from django.http import JsonResponse
 from .models import Provincia, Comuna
+from django.template.loader import render_to_string
+import pdfkit
+from django.http import HttpResponse
 
+pdfkit_config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
 
+#get provincias,comunas y regiones :D
+
+def get_comunas(request):
+    provincia_id = request.GET.get('provincia_id')
+    if provincia_id:
+        comunas = Comuna.objects.filter(provincia_id=provincia_id).values('id', 'nombre')
+        return JsonResponse(list(comunas), safe=False)
+    return JsonResponse({'error': 'No provincia_id provided'}, status=400)
+
+def get_provincias(request):
+    region_id = request.GET.get('region_id')
+    if region_id:
+        provincias = Provincia.objects.filter(region_id=region_id).values('id', 'nombre')
+        return JsonResponse(list(provincias), safe=False)
+    return JsonResponse({'error': 'No region_id provided'}, status=400)
+
+def get_regiones(request):
+    regiones = Region.objects.all().values('id', 'nombre')
+    return JsonResponse(list(regiones), safe=False)
 
 
 #redirige a la pagina por defecto
@@ -318,7 +342,7 @@ def lista_empresas(request):
 
 def detalle_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
-    return render(request, 'detalle_empresa.html', {'empresa': empresa})
+    return render(request, 'listas/detalles_empresa.html', {'empresa': empresa})
 
 def editar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
@@ -329,41 +353,70 @@ def editar_empresa(request, pk):
             return redirect('lista_empresas')
     else:
         form = EmpresaForm(instance=empresa)
-    return render(request, 'empresa_form.html', {'form': form})
+    return render(request, 'empresas/empresa_form.html', {'form': form})
 
 def eliminar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
     if request.method == 'POST':
         empresa.delete()
         return redirect('lista_empresas')
-    return render(request, 'confirmar_eliminar.html', {'empresa': empresa})
+    return render(request, 'eliminar/eliminar_empresa.html', {'empresa': empresa})
 
 class MantenimientoPlanes(ListView):
     model = Plan
     template_name = 'mantenimiento_planes.html'
     context_object_name = 'planes'
 
+def listar_planes(request):
+    planes = Plan.objects.all()
+    return render(request, 'empresas/listar_planes.html', {'planes': planes})
+
 def vigencia_planes(request):
+    plan_id = request.GET.get('plan_id')
+    plan = None
+    if plan_id:
+        plan = Plan.objects.get(id=plan_id)
+    
     if request.method == 'POST':
         form = PlanVigenciaForm(request.POST)
         if form.is_valid():
-            vigencia = form.save(commit=False)
-            vigencia.monto_final = vigencia.calcular_monto()
-            vigencia.save()
-            return redirect('lista_empresas')
+            vigencia_plan = form.save(commit=False)
+            if plan:
+                vigencia_plan.plan = plan
+            try:
+                vigencia_plan.calcular_monto()
+                vigencia_plan.save()
+                return redirect('listar_planes')
+            except ValueError as e:
+                form.add_error(None, str(e))
     else:
-        form = PlanVigenciaForm()
-    return render(request, 'empresas/vigencia_planes.html', {'form': form})
-
-
-def get_provincias(request):
-    region_id = request.GET.get('region_id')
-    provincias = Provincia.objects.filter(region_id=region_id).values('id', 'nombre')
-    return JsonResponse(list(provincias), safe=False)
-
-def get_comunas(request):
-    provincia_id = request.GET.get('provincia_id')
-    comunas = Comuna.objects.filter(provincia_id=provincia_id).values('id', 'nombre')
-    return JsonResponse(list(comunas), safe=False)
+        form = PlanVigenciaForm(initial={'plan': plan})
+    
+    return render(request, 'empresas/vigencia_planes.html', {'form': form, 'plan': plan})
 
 #hasta aqui todo lo de las empresas
+
+#redirige a la pagina para listar las empresas vigentes , eliminar a futuro?
+# pdfkit_config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
+
+
+def empresas_vigentes(request):
+    empresas_vigentes = RegistroEmpresas.objects.prefetch_related('vigencias').all()
+    context = {
+        'empresas_vigentes': empresas_vigentes,
+    }
+    return render(request, 'empresas/empresas_vigente.html', context)
+
+def generar_boleta(request, empresa_id):
+    empresa = RegistroEmpresas.objects.get(id=empresa_id)
+    vigencias = empresa.vigencias.all()
+    context = {
+        'empresa': empresa,
+        'vigencias': vigencias,
+    }
+    html_string = render_to_string('boletas/boleta.html', context)
+    pdf = pdfkit.from_string(html_string, False)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="boleta_{empresa.nombre}.pdf"'
+    return response
+

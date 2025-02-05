@@ -13,6 +13,14 @@ from django.conf import settings
 import os
 from pathlib import Path
 
+
+
+# Ruta a wkhtmltopdf
+if os.name == 'nt':  # Windows
+    WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+else:  # Unix
+    WKHTMLTOPDF_PATH = '/usr/local/bin/wkhtmltopdf'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

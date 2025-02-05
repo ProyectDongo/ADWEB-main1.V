@@ -1,0 +1,220 @@
+{% extends "central.html" %}
+
+{% block title %}Crear Empresa {% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-building me-2"></i>EDITAR EMPRESA</h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Sección Información Principal -->
+                        <div class="mb-5">
+                            <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>Información Principal</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.rut }}
+                                        <label for="id_rut">RUT Empresa</label>
+                                        <div class="invalid-feedback">
+                                            {{ form.rut.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.nombre }}
+                                        <label for="id_nombre">Razón Social</label>
+                                        <div class="invalid-feedback">
+                                            {{ form.nombre.errors }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.giro }}
+                                        <label for="id_giro">Giro Comercial</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.telefono }}
+                                        <label for="id_telefono">Teléfono Fijo</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.region }}
+                                        <label for="id_region">Región</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.provincia }}
+                                        <label for="id_provincia">Provincia</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.comuna }}
+                                        <label for="id_comuna">Comuna</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <div class="form-floating">
+                                        {{ form.direccion }}
+                                        <label for="id_direccion">Dirección</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        {{ form.numero }}
+                                        <label for="id_numero">Número</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="form-floating">
+                                        {{ form.oficina }}
+                                        <label for="id_oficina">Oficina</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Contacto -->
+                        <div class="mb-5">
+                            <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.nombre_contacto }}
+                                        <label for="id_nombre_contacto">Nombre Contacto</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.celular_contacto }}
+                                        <label for="id_celular_contacto">Celular Contacto</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        {{ form.mail_contacto }}
+                                        <label for="id_mail_contacto">Email Contacto</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Representante Legal -->
+                        <div class="mb-5">
+                            <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>Representante Legal</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.rut_representante }}
+                                        <label for="id_rut_representante">RUT Representante</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.nombre_representante }}
+                                        <label for="id_nombre_representante">Nombre Representante</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Plan y Estado -->
+                        <div class="mb-5">
+                            <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Plan y Estado</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.plan_contratado }}
+                                        <label for="id_plan_contratado">Plan Contratado</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        {{ form.estado }}
+                                        <label for="id_estado">Estado</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch mt-3">
+                                        {{ form.vigente }}
+                                        <label class="form-check-label" for="id_vigente">Vigente</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.email }}
+                                        <label for="id_email">Email Corporativo</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.web }}
+                                        <label for="id_web">Sitio Web</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="mt-5 border-top pt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'lista_empresas' %}" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-2"></i>Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+{% endblock %}
