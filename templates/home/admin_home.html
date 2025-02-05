@@ -1,56 +1,41 @@
 {% extends "central.html" %}
 
-{% block title %}Home Administrador {% endblock %}
+{% block title %}Bienvenido Administrador{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4">Bienvenido, administrador {{ user.username }}</h1>
-    <h2>Reportes de Entradas y Salidas</h2>
-    
-    <!-- Formulario de búsqueda -->
-    <form method="get" action="{% url 'admin_home' %}" class="mb-4">
-        <div class="row">
-            <div class="col-md-4">
-                <input type="text" name="q" class="form-control" placeholder="Buscar por nombre o empresa" value="{{ request.GET.q }}">
-            </div>
-            <div class="col-md-3">
-                <input type="date" name="fecha_inicio" class="form-control" value="{{ request.GET.fecha_inicio }}">
-            </div>
-            <div class="col-md-3">
-                <input type="date" name="fecha_fin" class="form-control" value="{{ request.GET.fecha_fin }}">
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-primary" type="submit">Buscar</button>
+<div class="container py-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h1 class="card-title display-5">Bienvenido, Administrador {{ user.username }}!</h1>
+            <p class="card-text lead">
+                Este sistema te permite gestionar el control de asistencia de múltiples empresas, junto con sus supervisores y trabajadores.
+            </p>
+            <hr>
+            <h4>Instrucciones para comenzar:</h4>
+            <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item">
+                    <strong>Registrar Empresas:</strong> Agrega y administra las empresas que forman parte del sistema.
+                </li>
+                <li class="list-group-item">
+                    <strong>Asignar Supervisores:</strong> Designa a los supervisores responsables de cada empresa.
+                </li>
+                <li class="list-group-item">
+                    <strong>Control de Asistencia:</strong> Consulta y registra las entradas y salidas de los trabajadores.
+                </li>
+                <li class="list-group-item">
+                    <strong>Generar Reportes:</strong> Visualiza reportes detallados para analizar la asistencia y detectar inconsistencias.
+                </li>
+            </ul>
+            <p>
+                Utiliza el menú de navegación o los botones a continuación para acceder a las secciones clave del sistema.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{% url 'listar_empresas' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-building"></i> Gestión de Empresas
+                </a>
+                
             </div>
         </div>
-    </form>
-    
-    {% for empresa, entradas in entradas_por_empresa.items %}
-        <h3>{{ empresa }}</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Trabajador</th>
-                    <th>Hora de Entrada</th>
-                    <th>Hora de Salida</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entrada in entradas %}
-                    <tr>
-                        <td>{{ entrada.trabajador.username }}</td>
-                        <td>{{ entrada.hora_entrada }}</td>
-                        <td>{{ entrada.hora_salida }}</td>
-                        <td>
-                            {% if not entrada.permitir_otra_entrada %}
-                                <a href="{% url 'habilitar_otra_entrada' entrada.id %}" class="btn btn-warning btn-sm">Habilitar Otra Entrada</a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endfor %}
+    </div>
 </div>
 {% endblock %}

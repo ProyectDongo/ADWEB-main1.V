@@ -41,11 +41,10 @@ urlpatterns = [
     path('crear_supervisor/', views.crear_supervisor, name='crear_supervisor'),
     path('crear_trabajador/', views.crear_trabajador, name='crear_trabajador'),
 
-    #lista empresas
-    path('lista_empresas/', views.lista_empresas, name='lista_empresas'),
+    #lista permisos
     path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
     
-    #lista permisos
+ 
    
     path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
 

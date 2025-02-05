@@ -1,25 +1,31 @@
 {% extends "central.html" %}
 
-{% block title %}Lista de Permisos {% endblock %}
+{% block title %}Lista de Permisos{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4 text-center">Lista de Permisos</h1>
-    <div class="row">
-        {% for permiso in permisos %}
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h2 class="h5 card-title">{{ permiso.nombre }}</h2>
-                        <p class="card-text">{{ permiso.descripcion }}</p>
-                    </div>
-                </div>
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header text-center">
+            <h1 class="h4 mb-0">Lista de Permisos</h1>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for permiso in permisos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">{{ permiso.nombre }}</h5>
+                            <p class="mb-0">{{ permiso.descripcion }}</p>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-center">No hay permisos disponibles.</li>
+                {% endfor %}
+            </ul>
+            <div class="d-flex justify-content-end mt-4 gap-2">
+                <a href="{% url 'crear_permiso' %}" class="btn btn-success">Crear Permiso</a>
+                <a href="{% url 'listar_empresas' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
             </div>
-        {% endfor %}
-    </div>
-    <div class="d-grid gap-2 mt-4">
-        <a href="{% url 'crear_permiso' %}" class="btn btn-success">Crear Permiso</a>
-        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
+        </div>
     </div>
 </div>
 {% endblock %}
