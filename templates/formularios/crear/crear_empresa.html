@@ -428,7 +428,28 @@
     guardarBtn.addEventListener("click", validarFormulario);
     indefinidoCheckbox.addEventListener("change", toggleFechaFin);
 });
-    </script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Script para secciones plegables
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const icon = toggle.querySelector('i');
+            icon.classList.toggle('bi-chevron-down');
+            icon.classList.toggle('bi-chevron-up');
+        });
+    });
+
+    // Script para sincronizar planes
+    const planEmpresa = document.getElementById('id_plan_contratado');
+    const planVigencia = document.getElementById('id_plan');
+    
+    if(planEmpresa && planVigencia) {
+        planVigencia.addEventListener('change', function() {
+            planEmpresa.value = this.value;
+        });
+    }
+});
+</script>
 
 <style>
     .form-floating {
