@@ -1,0 +1,799 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WEB.views &mdash; MiProyecto  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MiProyecto
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contenidos:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Módulos</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MiProyecto</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WEB.views</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WEB.views</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Módulo de vistas para el sistema de gestión empresarial.</span>
+
+<span class="sd">Incluye funcionalidades para:</span>
+<span class="sd">- Gestión de ubicaciones geográficas (regiones, provincias, comunas)</span>
+<span class="sd">- Autenticación y redirección de usuarios</span>
+<span class="sd">- Vistas principales para diferentes roles</span>
+<span class="sd">- Registro de entradas/salidas de trabajadores</span>
+<span class="sd">- CRUD completo para empresas, usuarios y permisos</span>
+<span class="sd">- Gestión de planes y vigencias</span>
+<span class="sd">- Generación de reportes (actualmente en desarrollo)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">render</span><span class="p">,</span> <span class="n">redirect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.contrib.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">logout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">permiso_requerido</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.contrib.auth.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">login_required</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">LimiteEmpresaForm</span><span class="p">,</span> <span class="n">RegistroSalidaForm</span><span class="p">,</span> <span class="n">RegistroEntradaForm</span><span class="p">,</span> <span class="n">EmpresaForm</span><span class="p">,</span> <span class="n">PermisoForm</span><span class="p">,</span> <span class="n">AdminForm</span><span class="p">,</span> <span class="n">SupervisorForm</span><span class="p">,</span> <span class="n">TrabajadorForm</span><span class="p">,</span> <span class="n">SupervisorEditForm</span><span class="p">,</span> <span class="n">TrabajadorEditForm</span><span class="p">,</span> <span class="n">PlanVigenciaForm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RegistroEmpresas</span><span class="p">,</span> <span class="n">Usuario</span><span class="p">,</span> <span class="n">RegistroPermisos</span><span class="p">,</span> <span class="n">RegistroEntrada</span><span class="p">,</span> <span class="n">Plan</span><span class="p">,</span> <span class="n">Region</span><span class="p">,</span> <span class="n">Provincia</span><span class="p">,</span> <span class="n">Comuna</span><span class="p">,</span> <span class="n">VigenciaPlan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_object_or_404</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.contrib</span><span class="w"> </span><span class="kn">import</span> <span class="n">messages</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.db.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Q</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.views.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListView</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">JsonResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.template.loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_to_string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">HttpResponse</span>
+
+<span class="c1"># =====================</span>
+<span class="c1"># Vistas de Utilidades</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="get_comunas">
+<a class="viewcode-back" href="../../modules.html#WEB.views.get_comunas">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_comunas</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Obtiene las comunas de una provincia específica en formato JSON.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest con parámetro GET &#39;provincia_id&#39;</span>
+<span class="sd">    :return: JsonResponse con lista de comunas o mensaje de error</span>
+<span class="sd">    :rtype: JsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">provincia_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;provincia_id&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">provincia_id</span><span class="p">:</span>
+        <span class="n">comunas</span> <span class="o">=</span> <span class="n">Comuna</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">provincia_id</span><span class="o">=</span><span class="n">provincia_id</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;nombre&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">comunas</span><span class="p">),</span> <span class="n">safe</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;No provincia_id provided&#39;</span><span class="p">},</span> <span class="n">status</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_provincias">
+<a class="viewcode-back" href="../../modules.html#WEB.views.get_provincias">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_provincias</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Obtiene las provincias de una región específica en formato JSON.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest con parámetro GET &#39;region_id&#39;</span>
+<span class="sd">    :return: JsonResponse con lista de provincias o mensaje de error</span>
+<span class="sd">    :rtype: JsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">region_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region_id&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">region_id</span><span class="p">:</span>
+        <span class="n">provincias</span> <span class="o">=</span> <span class="n">Provincia</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">region_id</span><span class="o">=</span><span class="n">region_id</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;nombre&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">provincias</span><span class="p">),</span> <span class="n">safe</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;No region_id provided&#39;</span><span class="p">},</span> <span class="n">status</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_regiones">
+<a class="viewcode-back" href="../../modules.html#WEB.views.get_regiones">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_regiones</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Obtiene todas las regiones disponibles en formato JSON.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: JsonResponse con lista de regiones</span>
+<span class="sd">    :rtype: JsonResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">regiones</span> <span class="o">=</span> <span class="n">Region</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;nombre&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">regiones</span><span class="p">),</span> <span class="n">safe</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># Vistas de Autenticación</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="redirect_after_login">
+<a class="viewcode-back" href="../../modules.html#WEB.views.redirect_after_login">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">redirect_after_login</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Redirige al usuario a la vista correspondiente según su rol después del login.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest con usuario autenticado</span>
+<span class="sd">    :return: HttpResponseRedirect a la vista correspondiente</span>
+<span class="sd">    :raises Redirect: Si el usuario no tiene rol definido o es inválido</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="s1">&#39;role&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span>
+    
+    <span class="n">role</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;admin_home&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;supervisor&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;supervisor_home&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;trabajador&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;trabajador_home&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="logout_view">
+<a class="viewcode-back" href="../../modules.html#WEB.views.logout_view">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">logout_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cierra la sesión del usuario y redirige al login.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Redirección a la página de login</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logout</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># Vistas Principales</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="admin_home">
+<a class="viewcode-back" href="../../modules.html#WEB.views.admin_home">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">admin_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista principal del administrador con filtros avanzados.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de template con datos agrupados por empresa</span>
+<span class="sd">    </span>
+<span class="sd">    Parámetros GET aceptados:</span>
+<span class="sd">    - q: Término de búsqueda (nombre de trabajador o empresa)</span>
+<span class="sd">    - fecha_inicio: Fecha inicial para filtrar entradas</span>
+<span class="sd">    - fecha_fin: Fecha final para filtrar entradas</span>
+<span class="sd">    - empresa_id: ID de empresa específica para filtrar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">fecha_inicio</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fecha_inicio&#39;</span><span class="p">)</span>
+    <span class="n">fecha_fin</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fecha_fin&#39;</span><span class="p">)</span>
+    <span class="n">empresa_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;empresa_id&#39;</span><span class="p">)</span>
+    
+    <span class="n">empresas</span> <span class="o">=</span> <span class="n">RegistroEmpresas</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">entradas</span> <span class="o">=</span> <span class="n">RegistroEntrada</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">empresa_id</span><span class="p">:</span>
+        <span class="n">entradas</span> <span class="o">=</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">trabajador__empresa_id</span><span class="o">=</span><span class="n">empresa_id</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+        <span class="n">entradas</span> <span class="o">=</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">Q</span><span class="p">(</span><span class="n">trabajador__username__icontains</span><span class="o">=</span><span class="n">query</span><span class="p">)</span> <span class="o">|</span> 
+            <span class="n">Q</span><span class="p">(</span><span class="n">trabajador__empresa__nombre__icontains</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+        <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">fecha_inicio</span> <span class="ow">and</span> <span class="n">fecha_fin</span><span class="p">:</span>
+        <span class="n">entradas</span> <span class="o">=</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">hora_entrada__range</span><span class="o">=</span><span class="p">[</span><span class="n">fecha_inicio</span><span class="p">,</span> <span class="n">fecha_fin</span><span class="p">])</span>
+    
+    <span class="n">entradas_por_empresa</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">empresa</span><span class="o">.</span><span class="n">nombre</span><span class="p">:</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">trabajador__empresa</span><span class="o">=</span><span class="n">empresa</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">empresa</span> <span class="ow">in</span> <span class="n">empresas</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;home/admin_home.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;entradas_por_empresa&#39;</span><span class="p">:</span> <span class="n">entradas_por_empresa</span><span class="p">,</span>
+        <span class="s1">&#39;empresas&#39;</span><span class="p">:</span> <span class="n">empresas</span><span class="p">,</span>
+        <span class="s1">&#39;selected_empresa_id&#39;</span><span class="p">:</span> <span class="n">empresa_id</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="supervisor_home">
+<a class="viewcode-back" href="../../modules.html#WEB.views.supervisor_home">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">supervisor_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista principal del supervisor con filtros para su empresa asignada.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest de usuario con rol supervisor</span>
+<span class="sd">    :return: Renderizado de template con registros filtrados</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;supervisor&#39;</span><span class="p">:</span>
+        <span class="n">empresa_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">empresa_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;detalles_empresa&#39;</span><span class="p">,</span> <span class="n">empresa_id</span><span class="o">=</span><span class="n">empresa_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">fecha_inicio</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fecha_inicio&#39;</span><span class="p">)</span>
+    <span class="n">fecha_fin</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fecha_fin&#39;</span><span class="p">)</span>
+    
+    <span class="n">entradas</span> <span class="o">=</span> <span class="n">RegistroEntrada</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">trabajador__empresa</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+        <span class="n">entradas</span> <span class="o">=</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Q</span><span class="p">(</span><span class="n">trabajador__username__icontains</span><span class="o">=</span><span class="n">query</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">fecha_inicio</span> <span class="ow">and</span> <span class="n">fecha_fin</span><span class="p">:</span>
+        <span class="n">entradas</span> <span class="o">=</span> <span class="n">entradas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">hora_entrada__range</span><span class="o">=</span><span class="p">[</span><span class="n">fecha_inicio</span><span class="p">,</span> <span class="n">fecha_fin</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;home/supervisor_home.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;entradas&#39;</span><span class="p">:</span> <span class="n">entradas</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="trabajador_home">
+<a class="viewcode-back" href="../../modules.html#WEB.views.trabajador_home">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trabajador_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista principal del trabajador para registro de entradas/salidas.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest de usuario con rol trabajador</span>
+<span class="sd">    :return: Renderizado de template con formularios correspondientes</span>
+<span class="sd">    </span>
+<span class="sd">    Maneja dos tipos de POST:</span>
+<span class="sd">    - &#39;entrada&#39;: Registra hora de entrada con validación de 6 horas</span>
+<span class="sd">    - &#39;salida&#39;: Registra hora de salida si existe entrada sin cerrar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;entrada&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">:</span>
+            <span class="n">hace_seis_horas</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">timezone</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+            <span class="n">ultima_entrada</span> <span class="o">=</span> <span class="n">RegistroEntrada</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">trabajador</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                <span class="n">hora_entrada__gte</span><span class="o">=</span><span class="n">hace_seis_horas</span><span class="p">,</span>
+                <span class="n">permitir_otra_entrada</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">ultima_entrada</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;Usted ya ha registrado su entrada. Vuelva en 6 horas o comuníquese con su supervisor.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;trabajador_home&#39;</span><span class="p">)</span>
+            
+            <span class="n">form_entrada</span> <span class="o">=</span> <span class="n">RegistroEntradaForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">form_entrada</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+                <span class="n">entrada</span> <span class="o">=</span> <span class="n">form_entrada</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">entrada</span><span class="o">.</span><span class="n">trabajador</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span>
+                <span class="n">entrada</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;Entrada registrada exitosamente.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;trabajador_home&#39;</span><span class="p">)</span>
+                
+        <span class="k">elif</span> <span class="s1">&#39;salida&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">:</span>
+            <span class="n">entrada_sin_salida</span> <span class="o">=</span> <span class="n">RegistroEntrada</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">trabajador</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                <span class="n">hora_salida__isnull</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">entrada_sin_salida</span><span class="p">:</span>
+                <span class="n">entrada_sin_salida</span><span class="o">.</span><span class="n">hora_salida</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                <span class="n">entrada_sin_salida</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;Salida registrada exitosamente.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;trabajador_home&#39;</span><span class="p">)</span>
+            
+            <span class="n">messages</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;No hay una entrada sin salida registrada.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;trabajador_home&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;home/trabajador_home.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;form_entrada&#39;</span><span class="p">:</span> <span class="n">RegistroEntradaForm</span><span class="p">(),</span>
+        <span class="s1">&#39;form_salida&#39;</span><span class="p">:</span> <span class="n">RegistroSalidaForm</span><span class="p">()</span>
+    <span class="p">})</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># Gestión de Registros</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="habilitar_otra_entrada">
+<a class="viewcode-back" href="../../modules.html#WEB.views.habilitar_otra_entrada">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">habilitar_otra_entrada</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">entrada_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Permite a un supervisor o admin habilitar otra entrada antes de 6 horas.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param entrada_id: ID del registro de entrada</span>
+<span class="sd">    :return: Redirección a supervisor_home con mensaje de estado</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entrada</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">RegistroEntrada</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">entrada_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span> <span class="ow">or</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;supervisor&#39;</span> <span class="ow">and</span> <span class="n">entrada</span><span class="o">.</span><span class="n">trabajador</span><span class="o">.</span><span class="n">empresa</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span><span class="p">):</span>
+        <span class="n">entrada</span><span class="o">.</span><span class="n">permitir_otra_entrada</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">entrada</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;Se ha habilitado el registro de otra entrada antes de las 6 horas.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;No tienes permiso para realizar esta acción.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;supervisor_home&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># CRUD de Empresas</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="crear_empresa">
+<a class="viewcode-back" href="../../modules.html#WEB.views.crear_empresa">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;crear_empresa&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crear_empresa</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para creación de nuevas empresas.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EmpresaForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EmpresaForm</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/crear/crear_empresa.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="listar_empresas">
+<a class="viewcode-back" href="../../modules.html#WEB.views.listar_empresas">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">listar_empresas</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lista todas las empresas registradas con capacidad de búsqueda.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de template con lista de empresas</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">empresas</span> <span class="o">=</span> <span class="n">RegistroEmpresas</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">query</span><span class="p">:</span>
+        <span class="n">empresas</span> <span class="o">=</span> <span class="n">empresas</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">nombre__icontains</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/listar_empresas.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;empresas&#39;</span><span class="p">:</span> <span class="n">empresas</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="detalle_empresa">
+<a class="viewcode-back" href="../../modules.html#WEB.views.detalle_empresa">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detalle_empresa</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Muestra el detalle completo de una empresa específica.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param pk: ID de la empresa</span>
+<span class="sd">    :return: Renderizado de template con detalles de la empresa</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresa</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">RegistroEmpresas</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/detalles_empresa.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;empresa&#39;</span><span class="p">:</span> <span class="n">empresa</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="editar_empresa">
+<a class="viewcode-back" href="../../modules.html#WEB.views.editar_empresa">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">editar_empresa</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para edición de información de una empresa existente.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param pk: ID de la empresa a editar</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresa</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">RegistroEmpresas</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EmpresaForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">empresa</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">EmpresaForm</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">empresa</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/empresa_form.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="eliminar_empresa">
+<a class="viewcode-back" href="../../modules.html#WEB.views.eliminar_empresa">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">eliminar_empresa</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para eliminación de una empresa existente.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param pk: ID de la empresa a eliminar</span>
+<span class="sd">    :return: Confirmación de eliminación o redirección</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresa</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">RegistroEmpresas</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">empresa</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/eliminar_empresa.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;empresa&#39;</span><span class="p">:</span> <span class="n">empresa</span><span class="p">})</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># CRUD de Usuarios</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="crear_permiso">
+<a class="viewcode-back" href="../../modules.html#WEB.views.crear_permiso">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;crear_permiso&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crear_permiso</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para creación de nuevos permisos de usuario.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">PermisoForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_permisos&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">PermisoForm</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/crear/crear_permiso.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="crear_admin">
+<a class="viewcode-back" href="../../modules.html#WEB.views.crear_admin">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;crear_admin&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crear_admin</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para creación de nuevos usuarios administradores.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">AdminForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">AdminForm</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/crear/crear_admin.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="crear_supervisor">
+<a class="viewcode-back" href="../../modules.html#WEB.views.crear_supervisor">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;crear_supervisor&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crear_supervisor</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para creación de nuevos usuarios supervisores.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">SupervisorForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">supervisor</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">supervisor</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;supervisor&#39;</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+                <span class="n">supervisor</span><span class="o">.</span><span class="n">empresa</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span>
+            <span class="n">supervisor</span><span class="o">.</span><span class="n">set_password</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s1">&#39;password1&#39;</span><span class="p">])</span>
+            <span class="n">supervisor</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save_m2m</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">SupervisorForm</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/crear/crear_supervisor.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="crear_trabajador">
+<a class="viewcode-back" href="../../modules.html#WEB.views.crear_trabajador">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;crear_trabajador&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">crear_trabajador</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para creación de nuevos usuarios trabajadores.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">TrabajadorForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">trabajador</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">trabajador</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;trabajador&#39;</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+                <span class="n">trabajador</span><span class="o">.</span><span class="n">empresa</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">empresa</span>
+            <span class="n">trabajador</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save_m2m</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;detalles_empresa&#39;</span><span class="p">,</span> <span class="n">empresa_id</span><span class="o">=</span><span class="n">trabajador</span><span class="o">.</span><span class="n">empresa</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">TrabajadorForm</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/crear/crear_trabajador.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="editar_supervisor">
+<a class="viewcode-back" href="../../modules.html#WEB.views.editar_supervisor">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">editar_supervisor</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para edición de usuarios supervisores.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param pk: ID del supervisor a editar</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Usuario</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">SupervisorEditForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">supervisor</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;detalles_empresa&#39;</span><span class="p">,</span> <span class="n">empresa_id</span><span class="o">=</span><span class="n">supervisor</span><span class="o">.</span><span class="n">empresa</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">SupervisorEditForm</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">supervisor</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/edit/editar_supervisor.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">,</span> <span class="s1">&#39;supervisor&#39;</span><span class="p">:</span> <span class="n">supervisor</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="editar_trabajador">
+<a class="viewcode-back" href="../../modules.html#WEB.views.editar_trabajador">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;editar_trabajador&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">editar_trabajador</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para edición de usuarios trabajadores.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param pk: ID del trabajador a editar</span>
+<span class="sd">    :return: Renderizado de formulario o redirección tras éxito</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">trabajador</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Usuario</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">TrabajadorEditForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">trabajador</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s1">&#39;admin&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;detalles_empresa&#39;</span><span class="p">,</span> <span class="n">empresa_id</span><span class="o">=</span><span class="n">trabajador</span><span class="o">.</span><span class="n">empresa</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">TrabajadorEditForm</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">trabajador</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;formularios/edit/editar_trabajador.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">,</span> <span class="s1">&#39;trabajador&#39;</span><span class="p">:</span> <span class="n">trabajador</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="eliminar_usuario">
+<a class="viewcode-back" href="../../modules.html#WEB.views.eliminar_usuario">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="nd">@permiso_requerido</span><span class="p">(</span><span class="s2">&quot;eliminar_usuario&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eliminar_usuario</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista para eliminación de usuarios.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param user_id: ID del usuario a eliminar</span>
+<span class="sd">    :return: Redirección a lista correspondiente</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">usuario</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Usuario</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="n">empresa_id</span> <span class="o">=</span> <span class="n">usuario</span><span class="o">.</span><span class="n">empresa</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">usuario</span><span class="o">.</span><span class="n">empresa</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">usuario</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">empresa_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;detalles_empresa&#39;</span><span class="p">,</span> <span class="n">empresa_id</span><span class="o">=</span><span class="n">empresa_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;lista_empresas&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># Gestión de Planes</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="MantenimientoPlanes">
+<a class="viewcode-back" href="../../modules.html#WEB.views.MantenimientoPlanes">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MantenimientoPlanes</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vista basada en clase para el mantenimiento de planes.</span>
+<span class="sd">    </span>
+<span class="sd">    Atributos:</span>
+<span class="sd">        model (Plan): Modelo utilizado</span>
+<span class="sd">        template_name (str): Ruta del template</span>
+<span class="sd">        context_object_name (str): Nombre del objeto en el contexto</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Plan</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;mantenimiento_planes.html&#39;</span>
+    <span class="n">context_object_name</span> <span class="o">=</span> <span class="s1">&#39;planes&#39;</span></div>
+
+
+<div class="viewcode-block" id="vigencia_planes">
+<a class="viewcode-back" href="../../modules.html#WEB.views.vigencia_planes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">vigencia_planes</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gestiona la vigencia de los planes con cálculo automático de montos.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de formulario de vigencia de planes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plan_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;plan_id&#39;</span><span class="p">)</span>
+    <span class="n">plan</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">plan_id</span><span class="p">:</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="n">Plan</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">plan_id</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">PlanVigenciaForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">vigencia_plan</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">plan</span><span class="p">:</span>
+                <span class="n">vigencia_plan</span><span class="o">.</span><span class="n">plan</span> <span class="o">=</span> <span class="n">plan</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vigencia_plan</span><span class="o">.</span><span class="n">calcular_monto</span><span class="p">()</span>
+                <span class="n">vigencia_plan</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;listar_planes&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">form</span><span class="o">.</span><span class="n">add_error</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">PlanVigenciaForm</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;plan&#39;</span><span class="p">:</span> <span class="n">plan</span><span class="p">})</span>
+    
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/vigencia_planes.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">,</span> <span class="s1">&#39;plan&#39;</span><span class="p">:</span> <span class="n">plan</span><span class="p">})</span></div>
+
+
+<span class="c1"># =====================</span>
+<span class="c1"># Reportes y Exportación</span>
+<span class="c1"># =====================</span>
+
+<div class="viewcode-block" id="empresas_vigentes">
+<a class="viewcode-back" href="../../modules.html#WEB.views.empresas_vigentes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">empresas_vigentes</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Muestra listado de empresas con planes vigentes.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de template con empresas vigentes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresas_vigentes</span> <span class="o">=</span> <span class="n">RegistroEmpresas</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s1">&#39;vigencias&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;empresas_vigentes&#39;</span><span class="p">:</span> <span class="n">empresas_vigentes</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/empresas_vigente.html&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="generar_boleta">
+<a class="viewcode-back" href="../../modules.html#WEB.views.generar_boleta">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generar_boleta</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">empresa_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Genera una boleta en PDF para una empresa (actualmente deshabilitado).</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param empresa_id: ID de la empresa</span>
+<span class="sd">    :return: HttpResponse con PDF generado (en desarrollo)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresa</span> <span class="o">=</span> <span class="n">RegistroEmpresas</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">empresa_id</span><span class="p">)</span>
+    <span class="n">vigencias</span> <span class="o">=</span> <span class="n">empresa</span><span class="o">.</span><span class="n">vigencias</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;empresa&#39;</span><span class="p">:</span> <span class="n">empresa</span><span class="p">,</span>
+        <span class="s1">&#39;vigencias&#39;</span><span class="p">:</span> <span class="n">vigencias</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="c1"># Implementación futura de generación de PDF</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Generación de PDF actualmente deshabilitada&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="lista_permisos">
+<a class="viewcode-back" href="../../modules.html#WEB.views.lista_permisos">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lista_permisos</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lista todos los permisos registrados.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de template con lista de permisos</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">permisos</span> <span class="o">=</span> <span class="n">RegistroPermisos</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;listas/listas_permisos.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;permisos&#39;</span><span class="p">:</span> <span class="n">permisos</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="actualizar_limites">
+<a class="viewcode-back" href="../../modules.html#WEB.views.actualizar_limites">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">actualizar_limites</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">empresa_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Actualiza los límites de supervisores y trabajadores de una empresa.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :param empresa_id: ID de la empresa</span>
+<span class="sd">    :return: Renderizado de template con formulario de actualización de límites</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">empresa</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">RegistroEmpresas</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">empresa_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">LimiteEmpresaForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="n">empresa</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;Límites actualizados exitosamente.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;listar_empresas&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">LimiteEmpresaForm</span><span class="p">(</span><span class="n">instance</span><span class="o">=</span><span class="n">empresa</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/actualizar_limites.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;form&#39;</span><span class="p">:</span> <span class="n">form</span><span class="p">,</span> <span class="s1">&#39;empresa&#39;</span><span class="p">:</span> <span class="n">empresa</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="listar_planes">
+<a class="viewcode-back" href="../../modules.html#WEB.views.listar_planes">[docs]</a>
+<span class="nd">@login_required</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">listar_planes</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lista todos los planes registrados.</span>
+<span class="sd">    </span>
+<span class="sd">    :param request: HttpRequest</span>
+<span class="sd">    :return: Renderizado de template con lista de planes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">planes</span> <span class="o">=</span> <span class="n">Plan</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;empresas/listar_planes.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;planes&#39;</span><span class="p">:</span> <span class="n">planes</span><span class="p">})</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tu Nombre.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
