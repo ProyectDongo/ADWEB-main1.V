@@ -262,27 +262,36 @@ def habilitar_otra_entrada(request, entrada_id):
 # =====================
 
 @login_required
-@permiso_requerido("crear_empresa")
+@transaction.atomic
 def crear_empresa(request):
     """
-    Vista para creación de nuevas empresas.
-    
-    :param request: HttpRequest
-    :return: Renderizado de formulario o redirección tras éxito
+    Vista combinada para crear empresa y su vigencia de plan
+    Maneja dos formularios en una sola transacción
     """
     if request.method == 'POST':
-        form = EmpresaForm(request.POST)
-        if form.is_valid():
-            try:
-                form.save()
-                return redirect('listar_empresas')
-            except IntegrityError:
-                # Maneja errores de unicidad no capturados por el formulario
-                form.add_error('codigo_cliente', 'Este código ya existe')
+        empresa_form = EmpresaForm(request.POST)
+        vigencia_form = PlanVigenciaForm(request.POST)
+        
+        if empresa_form.is_valid() and vigencia_form.is_valid():
+            # Guardar empresa primero
+            empresa = empresa_form.save(commit=False)
+            empresa.plan_contratado = vigencia_form.cleaned_data['plan']
+            empresa.save()
+            
+            # Crear vigencia del plan asociada
+            vigencia_plan = vigencia_form.save(commit=False)
+            vigencia_plan.empresa = empresa
+            vigencia_plan.save()
+            
+            return redirect('listar_empresas')
     else:
-        form = EmpresaForm()
-    
-    return render(request, 'formularios/crear/crear_empresa.html', {'form': form})
+        empresa_form = EmpresaForm()
+        vigencia_form = PlanVigenciaForm()
+
+    return render(request, 'formularios/crear/crear_empresa.html', {
+        'form': empresa_form,
+        'vigencia_form': vigencia_form
+    })
             
 
 @login_required
