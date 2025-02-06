@@ -1,0 +1,44 @@
+{% extends "central.html" %}
+
+{% block title %}Crear Plan{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Crear Plan</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.nombre.label_tag }}
+            {{ form.nombre }}
+            <div class="invalid-feedback">{{ form.nombre.errors }}</div>
+        </div>
+        <div class="mb-3">
+            {{ form.max_supervisores.label_tag }}
+            {{ form.max_supervisores }}
+            <div class="invalid-feedback">{{ form.max_supervisores.errors }}</div>
+        </div>
+        <div class="mb-3">
+            {{ form.max_trabajadores.label_tag }}
+            {{ form.max_trabajadores }}
+            <div class="invalid-feedback">{{ form.max_trabajadores.errors }}</div>
+        </div>
+        <div class="mb-3">
+            {{ form.valor.label_tag }}
+            {{ form.valor }}
+            <div class="invalid-feedback">{{ form.valor.errors }}</div>
+        </div>
+        <div class="mb-3">
+            {{ form.codigo.label_tag }}
+            {{ form.codigo }}
+            <div class="invalid-feedback">{{ form.codigo.errors }}</div>
+        </div>
+        <div class="form-check mb-3">
+            {{ form.activo }}
+            {{ form.activo.label_tag }}
+            <div class="invalid-feedback">{{ form.activo.errors }}</div>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="{% url 'listar_planes' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

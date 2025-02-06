@@ -16,7 +16,7 @@ from django.contrib.auth import logout
 from django.conf import settings
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
-from .forms import LimiteEmpresaForm, RegistroSalidaForm, RegistroEntradaForm, EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm, PlanVigenciaForm
+from .forms import LimiteEmpresaForm, RegistroSalidaForm, RegistroEntradaForm, EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm, PlanVigenciaForm,PlanForm
 from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-
+from django.db import IntegrityError
 # =====================
 # Vistas de Utilidades
 # =====================
@@ -273,11 +273,17 @@ def crear_empresa(request):
     if request.method == 'POST':
         form = EmpresaForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('lista_empresas')
+            try:
+                form.save()
+                return redirect('listar_empresas')
+            except IntegrityError:
+                # Maneja errores de unicidad no capturados por el formulario
+                form.add_error('codigo_cliente', 'Este código ya existe')
     else:
         form = EmpresaForm()
+    
     return render(request, 'formularios/crear/crear_empresa.html', {'form': form})
+            
 
 @login_required
 def listar_empresas(request):
@@ -335,7 +341,7 @@ def eliminar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
     if request.method == 'POST':
         empresa.delete()
-        return redirect('lista_empresas')
+        return redirect('listar_empresas')
     return render(request, 'empresas/eliminar_empresa.html', {'empresa': empresa})
 
 # =====================
@@ -489,7 +495,7 @@ def eliminar_usuario(request, user_id):
     if empresa_id:
         return redirect('detalles_empresa', empresa_id=empresa_id)
     else:
-        return redirect('lista_empresas')
+        return redirect('listar_empresas')
 
 # =====================
 # Gestión de Planes
@@ -529,7 +535,7 @@ def vigencia_planes(request):
             try:
                 vigencia_plan.calcular_monto()
                 vigencia_plan.save()
-                return redirect('listar_planes')
+                return redirect('empresas_vigentes')
             except ValueError as e:
                 form.add_error(None, str(e))
     else:
@@ -612,3 +618,30 @@ def listar_planes(request):
     """
     planes = Plan.objects.all()
     return render(request, 'empresas/listar_planes.html', {'planes': planes})
+
+@login_required
+def crear_plan(request):
+    """
+    Vista para crear un nuevo plan.
+    
+    :param request: HttpRequest
+    :return: Renderizado de template con formulario de creación de plan
+    """
+    if request.method == 'POST':
+        form = PlanForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Plan creado exitosamente.')
+            return redirect('listar_planes')
+    else:
+        form = PlanForm()
+    return render(request, 'formularios/crear/crear_plan.html', {'form': form})
+login_required
+def configuracion_home(request):
+    """
+    Vista para la página de configuración del home.
+    
+    :param request: HttpRequest
+    :return: Renderizado del template de configuración del home
+    """
+    return render(request, 'home/configuracion_home.html')

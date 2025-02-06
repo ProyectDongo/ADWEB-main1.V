@@ -31,34 +31,32 @@ class EmpresaForm(forms.ModelForm):
     class Meta:
         model = RegistroEmpresas
         fields = [
-            'rut', 'nombre', 'giro', 'direccion', 'numero', 'oficina',
+            'codigo_cliente','rut', 'nombre', 'giro', 'direccion', 'numero', 'oficina',
             'region', 'provincia', 'comuna', 'telefono', 'celular',
             'email', 'web', 'vigente', 'estado', 'rut_representante',
             'nombre_representante', 'nombre_contacto', 'celular_contacto',
             'mail_contacto', 'plan_contratado'
         ]
+       
         widgets = {
-            'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'giro': forms.TextInput(attrs={'class': 'form-control'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
-            'numero': forms.NumberInput(attrs={'class': 'form-control'}),
-            'oficina': forms.TextInput(attrs={'class': 'form-control'}),
+            'codigo_cliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código Cliente'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Empresa'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón Social'}),
+            'giro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Giro Comercial'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono Fijo'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Corporativo'}),
+            'web': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Sitio Web'}),
             'region': forms.Select(attrs={'class': 'form-control'}),
             'provincia': forms.Select(attrs={'class': 'form-control'}),
             'comuna': forms.Select(attrs={'class': 'form-control'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
-            'celular': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'web': forms.URLInput(attrs={'class': 'form-control'}),
-            'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
+            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número'}),
+            'oficina': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Oficina'}),
             'estado': forms.Select(attrs={'class': 'form-control'}),
-            'rut_representante': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre_representante': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre_contacto': forms.TextInput(attrs={'class': 'form-control'}),
-            'celular_contacto': forms.TextInput(attrs={'class': 'form-control'}),
-            'mail_contacto': forms.EmailInput(attrs={'class': 'form-control'}),
+            'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
+            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Representante'}),
+            'nombre_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Representante'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -75,8 +73,18 @@ class EmpresaForm(forms.ModelForm):
             - Maneja tanto creación como edición de instancias
         """
         super().__init__(*args, **kwargs)
-        self.fields['provincia'].queryset = Provincia.objects.none()
-        self.fields['comuna'].queryset = Comuna.objects.none()
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            if field.required:
+                field.widget.attrs['placeholder'] = f'{field.label} *'
+            else:
+                field.widget.attrs['placeholder'] = field.label
+            if field_name in self.errors:
+                field.widget.attrs['class'] += ' is-invalid'
+
+        # Eliminar valores iniciales
+            field.initial = None
+
 
         # Lógica para actualización dinámica de provincias
         if 'region' in self.data:
@@ -523,3 +531,26 @@ class PlanVigenciaForm(forms.ModelForm):
             )
 
         return cleaned_data
+class PlanForm(forms.ModelForm):
+    """
+    Formulario para crear y actualizar planes.
+    """
+    class Meta:
+        model = Plan
+        fields = ['nombre', 'max_supervisores', 'max_trabajadores', 'valor', 'codigo', 'activo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del Plan'}),
+            'max_supervisores': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Supervisores'}),
+            'max_trabajadores': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Trabajadores'}),
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Valor del Plan'}),
+            'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código del Plan'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'nombre': 'Nombre del Plan',
+            'max_supervisores': 'Máximo de Supervisores',
+            'max_trabajadores': 'Máximo de Trabajadores',
+            'valor': 'Valor del Plan',
+            'codigo': 'Código del Plan',
+            'activo': 'Activo',
+        }

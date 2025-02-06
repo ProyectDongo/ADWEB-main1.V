@@ -47,7 +47,7 @@ class RegistroEmpresas(models.Model):
     ]
     
     # Información principal
-    codigo_cliente = models.CharField(max_length=20, unique=True, blank=True)
+    codigo_cliente = models.CharField(max_length=20, unique=True)
     fecha_ingreso = models.DateField(auto_now_add=True)
     rut = models.CharField(max_length=12, unique=True, default='00000000-0')
     nombre = models.CharField(max_length=100, default='Nombre Empresa')
@@ -62,7 +62,7 @@ class RegistroEmpresas(models.Model):
     celular = models.CharField(max_length=20, blank=True, default='000000012')
     email = models.EmailField(blank=True, default='email@empresa.com')
     web = models.URLField(blank=True, default='http://www.empresa.com')
-    vigente = models.BooleanField(default=True)
+    vigente = models.BooleanField(default=True,blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
     
     # Representante Legal

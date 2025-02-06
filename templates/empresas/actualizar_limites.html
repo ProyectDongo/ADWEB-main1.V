@@ -11,6 +11,9 @@
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="btn btn-primary btn-lg mt-3">Actualizar Límites</button>
+                <div class="mt-4">
+                    <a href="{% url 'listar_empresas' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+                </div>
             </form>
         </div>
     </div>

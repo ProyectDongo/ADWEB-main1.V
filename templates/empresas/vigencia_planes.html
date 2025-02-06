@@ -32,7 +32,7 @@
                                 <div class="form-floating">
                                     <select name="plan" class="form-select {% if form.plan.errors %}is-invalid{% endif %}" id="{{ form.plan.id_for_label }}">
                                         {% for plan in form.plan.field.queryset %}
-                                            <option value="{{ plan.id }}" {% if form.plan.value == plan.id %}selected{% endif %}>
+                                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if form.plan.value == plan.id %}selected{% endif %}>
                                                 {{ plan.nombre }}
                                             </option>
                                         {% endfor %}
@@ -53,14 +53,14 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-floating d-flex align-items-center">
+                                <div class="form-floating">
                                     <input type="date" id="fecha_fin" name="fecha_fin" class="form-control {% if form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ form.fecha_fin.value|default_if_none:'' }}">
                                     <label>Fecha Fin (Opcional)</label>
                                     <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
-                                    <div class="form-check ms-2">
-                                        <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido">
-                                        <label class="form-check-label" for="indefinido">Indefinido</label>
-                                    </div>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido">
+                                    <label class="form-check-label" for="indefinido">Indefinido</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -82,6 +82,7 @@
                                     <div class="invalid-feedback">{{ form.precio_original.errors }}</div>
                                 </div>
                             </div>
+                            
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" id="precio_final" name="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
@@ -124,11 +125,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function calcularPrecioFinal() {
-    let precioOriginal = parseFloat(document.getElementById("precio_original").value) || 0;
-    let descuento = parseFloat(descuentoInput.value) || 0;
-    let precioFinal = precioOriginal * (1 - descuento / 100);
-    document.getElementById("precio_final").value = precioFinal.toFixed(2);
-}
+        let precioOriginal = parseFloat(precioOriginalInput.value) || 0;
+        let descuento = parseFloat(descuentoInput.value) || 0;
+        let precioFinal = precioOriginal * (1 - descuento / 100);
+        precioFinalInput.value = precioFinal.toFixed(2);
+    }
 
     function validarFormulario(event) {
         if (precioOriginalInput.value === "" || isNaN(precioOriginalInput.value) || 
@@ -145,6 +146,19 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             fechaFinInput.removeAttribute("disabled");
         }
+    }
+
+    // Listener para actualizar precio_original al seleccionar un plan
+    const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
+    if (planSelect) {
+        planSelect.addEventListener("change", function() {
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            let planValor = selectedOption.getAttribute("data-valor") || "";
+            // Reemplazar la coma decimal por punto
+            planValor = planValor.replace(',', '.');
+            precioOriginalInput.value = planValor;
+            calcularPrecioFinal();
+        });
     }
 
     descuentoInput.addEventListener("input", calcularPrecioFinal);

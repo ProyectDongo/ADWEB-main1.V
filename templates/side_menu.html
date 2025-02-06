@@ -1,6 +1,6 @@
 <style>
   #sidebarMenu {
-    margin-top: 20px;
+    margin-top: 60px;
     background-color: #f8f9fa; /* Color de fondo más claro y moderno */
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); /* Sombra lateral */
     border-radius: 8px; /* Bordes redondeados */
@@ -75,7 +75,7 @@
          
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'crear_trabajador' %}">
-                  <span data-feather="user-plus"></span> Crear Trabajador
+                  <span data-feather="user-plus"></span> Crear Usuario
                 </a>
               </li>
            
@@ -85,15 +85,19 @@
 
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas" role="button" aria-expanded="false" aria-controls="configuracionEmpresas">
-          <i class="bi bi-building me-2"></i> Configuración de Empresas
+          <i class="bi bi-building me-2"></i> clientes
         </a>
         <div class="collapse" id="configuracionEmpresas">
           <ul class="nav flex-column ms-3">
           
             <li class="nav-item">
               <a class="nav-link" href="{% url 'listar_empresas' %}">
-                  <i class="bi bi-building me-2"></i> Empresas
+                  <i class="bi bi-building me-2"></i> Lista clientes
               </a>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'listar_planes' %}">
+                    <i class="bi bi-building me-2"></i> Planes
+                </a>
             </li>
           </ul>
         </div>

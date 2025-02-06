@@ -74,8 +74,11 @@ urlpatterns = [
     path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
     path('listar_planes/', views.listar_planes, name='listar_planes'),
     path('generar_boleta/<int:empresa_id>/', views.generar_boleta, name='generar_boleta'),
-    
-    
+    # Rutas para los planes
+    path('crear_plan/', views.crear_plan, name='crear_plan'), 
+
+    # ruta configuracion
+    path('configuracion_home/', views.configuracion_home, name='configuracion_home'),
     
     
     

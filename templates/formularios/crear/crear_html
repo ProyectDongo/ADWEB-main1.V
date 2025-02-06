@@ -1,0 +1,422 @@
+{% extends "central.html" %}
+
+{% block title %}Crear Empresa y Plan{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-building me-2"></i>Registro Completo de Empresa</h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Sección Información Principal -->
+                        <div class="mb-4 border rounded">
+                            <div class="p-3 border-bottom cursor-pointer" data-bs-toggle="collapse" href="#infoPrincipal">
+                                <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información Principal</h4>
+                            </div>
+                            <div class="collapse show p-3" id="infoPrincipal">
+                                <div class="row g-3">
+                                    <!-- Campos existentes de empresa... -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.rut }}
+                                                <label for="id_rut">RUT Empresa</label>
+                                                <div class="invalid-feedback">
+                                                    {{ form.rut.errors }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.nombre }}
+                                                <label for="id_nombre">Razón Social</label>
+                                                <div class="invalid-feedback">
+                                                    {{ form.nombre.errors }}
+                                                </div>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.giro }}
+                                                <label for="id_giro">Giro Comercial</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.telefono }}
+                                                <label for="id_telefono">Teléfono Fijo</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                {{ form.region }}
+                                                <label for="id_region">Región</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                {{ form.provincia }}
+                                                <label for="id_provincia">Provincia</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-4">
+                                            <div class="form-floating">
+                                                {{ form.comuna }}
+                                                <label for="id_comuna">Comuna</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-8">
+                                            <div class="form-floating">
+                                                {{ form.direccion }}
+                                                <label for="id_direccion">Dirección</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-2">
+                                            <div class="form-floating">
+                                                {{ form.numero }}
+                                                <label for="id_numero">Número</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-2">
+                                            <div class="form-floating">
+                                                {{ form.oficina }}
+                                                <label for="id_oficina">Oficina</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+        
+                                <!-- Sección Contacto -->
+                                <div class="mb-5">
+                                    <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h4>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.nombre_contacto }}
+                                                <label for="id_nombre_contacto">Nombre Contacto</label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.celular_contacto }}
+                                                <label for="id_celular_contacto">Celular Contacto</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-12">
+                                            <div class="form-floating">
+                                                {{ form.mail_contacto }}
+                                                <label for="id_mail_contacto">Email Contacto</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+        
+                                <!-- Sección Representante Legal -->
+                                <div class="mb-5">
+                                    <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>Representante Legal</h4>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.rut_representante }}
+                                                <label for="id_rut_representante">RUT Representante</label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.nombre_representante }}
+                                                <label for="id_nombre_representante">Nombre Representante</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+        
+                                <!-- Sección Plan y Estado -->
+                                <div class="mb-5">
+                                    <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Plan y Estado</h4>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.plan_contratado }}
+                                                <label for="id_plan_contratado">Plan Contratado</label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-3">
+                                            <div class="form-floating">
+                                                {{ form.estado }}
+                                                <label for="id_estado">Estado</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-3">
+                                            <div class="form-check form-switch mt-3">
+                                                {{ form.vigente }}
+                                                <label class="form-check-label" for="id_vigente">Vigente</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.email }}
+                                                <label for="id_email">Email Corporativo</label>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.web }}
+                                                <label for="id_web">Sitio Web</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Vigencia del Plan (Nueva) -->
+                        <div class="mb-4 border rounded">
+                            <div class="p-3 border-bottom cursor-pointer" data-bs-toggle="collapse" href="#vigenciaPlan">
+                                <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Vigencia del Plan</h4>
+                            </div>
+                            <div class="collapse show p-3" id="vigenciaPlan">
+                
+                                <div class="card-body p-4">
+                                    <form method="post" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select name="empresa" class="form-select {% if form.empresa.errors %}is-invalid{% endif %}" id="{{ form.empresa.id_for_label }}">
+                                                        {% for empresa in form.empresa.field.queryset %}
+                                                            <option value="{{ empresa.id }}" {% if form.empresa.value == empresa.id %}selected{% endif %}>
+                                                                {{ empresa.nombre }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <label>Empresa</label>
+                                                    <div class="invalid-feedback">{{ form.empresa.errors }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <select name="plan" class="form-select {% if form.plan.errors %}is-invalid{% endif %}" id="{{ form.plan.id_for_label }}">
+                                                        {% for plan in form.plan.field.queryset %}
+                                                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if form.plan.value == plan.id %}selected{% endif %}>
+                                                                {{ plan.nombre }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <label>Plan Contratado</label>
+                                                    <div class="invalid-feedback">{{ form.plan.errors }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control {% if form.fecha_inicio.errors %}is-invalid{% endif %}"
+                                                           value="{{ form.fecha_inicio.value|default_if_none:'' }}" required>
+                                                    <label>Fecha Inicio</label>
+                                                    <div class="invalid-feedback">{{ form.fecha_inicio.errors }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control {% if form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ form.fecha_fin.value|default_if_none:'' }}">
+                                                    <label>Fecha Fin (Opcional)</label>
+                                                    <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
+                                                </div>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido">
+                                                    <label class="form-check-label" for="indefinido">Indefinido</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-floating">
+                                                    <input type="number" id="descuento" name="descuento" class="form-control {% if form.descuento.errors %}is-invalid{% endif %}"
+                                                           min="0" max="100" value="{{ form.descuento.value|default_if_none:'' }}" required>
+                                                    <label>% Descuento (0-100)</label>
+                                                    <div class="invalid-feedback">{{ form.descuento.errors }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="number" id="precio_original" name="precio_original" class="form-control {% if form.precio_original.errors %}is-invalid{% endif %}"
+                                                           placeholder="Precio Original" required>
+                                                    <label>Precio Original</label>
+                                                    <div class="invalid-feedback">{{ form.precio_original.errors }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" id="precio_final" name="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
+                                                    <label>Precio con Descuento</label>
+                                                </div>
+                                            </div>
+                                        </div>
+            
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Botones -->
+                        <div class="mt-4 border-top pt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'listar_empresas' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Guardar Todo
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Scripts combinados -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Script para secciones plegables
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const icon = toggle.querySelector('i');
+            icon.classList.toggle('bi-chevron-down');
+            icon.classList.toggle('bi-chevron-up');
+        });
+    });
+
+    // Script para sincronizar planes
+    const planEmpresa = document.getElementById('id_plan_contratado');
+    const planVigencia = document.getElementById('id_plan');
+    
+    if(planEmpresa && planVigencia) {
+        planVigencia.addEventListener('change', function() {
+            planEmpresa.value = this.value;
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        const regionSelect = document.getElementById('id_region');
+        const provinciaSelect = document.getElementById('id_provincia');
+        const comunaSelect = document.getElementById('id_comuna');
+    
+        // Cargar provincias cuando cambia la región
+        regionSelect.addEventListener('change', function() {
+            const regionId = this.value;
+            provinciaSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/get_provincias/?region_id=${regionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+                    data.forEach(provincia => {
+                        provinciaSelect.innerHTML += `<option value="${provincia.id}">${provincia.nombre}</option>`;
+                    });
+                    comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
+                });
+        });
+    
+        // Cargar comunas cuando cambia la provincia
+        provinciaSelect.addEventListener('change', function() {
+            const provinciaId = this.value;
+            comunaSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/get_comunas/?provincia_id=${provinciaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
+                    data.forEach(comuna => {
+                        comunaSelect.innerHTML += `<option value="${comuna.id}">${comuna.nombre}</option>`;
+                    });
+                });
+        });
+    });
+    // Resto de scripts...
+});
+    document.addEventListener("DOMContentLoaded", function() {
+    const descuentoInput = document.getElementById("descuento");
+    const precioOriginalInput = document.getElementById("precio_original");
+    const precioFinalInput = document.getElementById("precio_final");
+    const guardarBtn = document.getElementById("guardar-btn");
+    const fechaInicioInput = document.getElementById("fecha_inicio");
+    const fechaFinInput = document.getElementById("fecha_fin");
+    const indefinidoCheckbox = document.getElementById("indefinido");
+
+    // Establecer la fecha de inicio con la fecha actual si no tiene valor
+    if (!fechaInicioInput.value) {
+        let today = new Date().toISOString().split('T')[0];
+        fechaInicioInput.value = today;
+    }
+
+    function calcularPrecioFinal() {
+        let precioOriginal = parseFloat(precioOriginalInput.value) || 0;
+        let descuento = parseFloat(descuentoInput.value) || 0;
+        let precioFinal = precioOriginal * (1 - descuento / 100);
+        precioFinalInput.value = precioFinal.toFixed(2);
+    }
+
+    function validarFormulario(event) {
+        if (precioOriginalInput.value === "" || isNaN(precioOriginalInput.value) || 
+            descuentoInput.value === "" || isNaN(descuentoInput.value)) {
+            event.preventDefault();
+            alert("Por favor, ingrese valores válidos para el precio y el descuento.");
+        }
+    }
+
+    function toggleFechaFin() {
+        if (indefinidoCheckbox.checked) {
+            fechaFinInput.value = "";
+            fechaFinInput.setAttribute("disabled", "true");
+        } else {
+            fechaFinInput.removeAttribute("disabled");
+        }
+    }
+
+    // Listener para actualizar precio_original al seleccionar un plan
+    const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
+    if (planSelect) {
+        planSelect.addEventListener("change", function() {
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            let planValor = selectedOption.getAttribute("data-valor") || "";
+            // Reemplazar la coma decimal por punto
+            planValor = planValor.replace(',', '.');
+            precioOriginalInput.value = planValor;
+            calcularPrecioFinal();
+        });
+    }
+
+    descuentoInput.addEventListener("input", calcularPrecioFinal);
+    precioOriginalInput.addEventListener("input", calcularPrecioFinal);
+    guardarBtn.addEventListener("click", validarFormulario);
+    indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+});
+</script>
+{% endblock %}

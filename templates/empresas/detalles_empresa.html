@@ -4,89 +4,261 @@
 
 {% block content %}
 <div class="container py-5">
-    <!-- Encabezado de la empresa -->
-    <div class="text-center bg-primary text-white p-4 rounded shadow">
-        <h1 class="fw-bold">{{ empresa.nombre }}</h1>
-    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-building me-2"></i>{{ empresa.nombre }}</h2>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Sección Información Principal -->
+                    <div class="mb-4 border border-dark rounded p-3">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>Información Principal</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.codigo_cliente }}" readonly>
+                                    <label>Código Cliente</label>
+                                </div>
+                            </div>
 
-    <!-- Datos de la Empresa -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Datos de la Empresa</h4>
-            <hr>
-            <p><strong>📌 RUT:</strong> {{ empresa.rut }}</p>
-            <p><strong>📍 Dirección:</strong> {{ empresa.direccion }}</p>
-            <p><strong>📞 Teléfono:</strong> {{ empresa.telefono }}</p>
-            <p><strong>📧 Email:</strong> {{ empresa.email }}</p>
-            <p><strong>🌐 Sitio Web:</strong> <a href="{{ empresa.web }}" target="_blank">{{ empresa.web }}</a></p>
-            <p><strong>📅 Fecha de Ingreso:</strong> {{ empresa.fecha_ingreso }}</p>
-            <p><strong>📊 Plan Contratado:</strong> {{ empresa.plan_contratado.nombre }}</p>
-            <p><strong>🔄 Estado:</strong> {{ empresa.estado }}</p>
-            <p><strong>✅ Vigente:</strong> {{ empresa.vigente|yesno:"Sí,No" }}</p>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.rut }}" readonly>
+                                    <label>RUT Empresa</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.nombre }}" readonly>
+                                    <label>Razón Social</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.giro }}" readonly>
+                                    <label>Giro Comercial</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.telefono }}" readonly>
+                                    <label>Teléfono Fijo</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.region }}" readonly>
+                                    <label>Región</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.provincia }}" readonly>
+                                    <label>Provincia</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.comuna }}" readonly>
+                                    <label>Comuna</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.direccion }}" readonly>
+                                    <label>Dirección</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.numero }}" readonly>
+                                    <label>Número</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.oficina }}" readonly>
+                                    <label>Oficina</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Contacto -->
+                    <div class="mb-4 border border-dark rounded p-3">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.nombre_contacto }}" readonly>
+                                    <label>Nombre Contacto</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.celular_contacto }}" readonly>
+                                    <label>Celular Contacto</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" value="{{ empresa.mail_contacto }}" readonly>
+                                    <label>Email Contacto</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Representante Legal -->
+                    <div class="mb-4 border border-dark rounded p-3">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>Representante Legal</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.rut_representante }}" readonly>
+                                    <label>RUT Representante</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.nombre_representante }}" readonly>
+                                    <label>Nombre Representante</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Plan y Estado -->
+                    <div class="mb-4 border border-dark rounded p-3">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Plan y Estado</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.plan_contratado.nombre }}" readonly>
+                                    <label>Plan Contratado</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" value="{{ empresa.get_estado_display }}" readonly>
+                                    <label>Estado</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="form-check form-switch mt-3">
+                                    <input type="checkbox" class="form-check-input" disabled {% if empresa.vigente %}checked{% endif %}>
+                                    <label class="form-check-label">Vigente</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" value="{{ empresa.email }}" readonly>
+                                    <label>Email Corporativo</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="url" class="form-control" value="{{ empresa.web }}" readonly>
+                                    <label>Sitio Web</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Listas de Supervisores y Trabajadores -->
+                    <div class="mb-4 border border-dark rounded p-3">
+                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-people me-2"></i>Personal</h4>
+                        
+                        <div class="row g-3">
+                            <!-- Formulario de Búsqueda -->
+                            <div class="col-12">
+                                <form method="get" class="input-group shadow-sm">
+                                    <input type="text" name="q" class="form-control" 
+                                           placeholder="Buscar por nombre de usuario" 
+                                           value="{{ query }}">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Supervisores -->
+                            <div class="col-md-6">
+                                <h5 class="text-primary mt-4">Supervisores</h5>
+                                <ul class="list-group shadow-sm">
+                                    {% for supervisor in supervisores %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">{{ supervisor.username }}</span>
+                                        <span>{{ supervisor.email }}</span>
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item text-center">No hay supervisores</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <!-- Trabajadores -->
+                            <div class="col-md-6">
+                                <h5 class="text-primary mt-4">Trabajadores</h5>
+                                <ul class="list-group shadow-sm">
+                                    {% for trabajador in trabajadores %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">{{ trabajador.username }}</span>
+                                        <span>{{ trabajador.email }}</span>
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item text-center">No hay trabajadores</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Volver -->
+                    <div class="mt-5 border-top pt-4">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'listar_empresas' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Volver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <!-- Representante Legal -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Representante Legal</h4>
-            <hr>
-            <p><strong>📌 RUT:</strong> {{ empresa.rut_representante }}</p>
-            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_representante }}</p>
-        </div>
-    </div>
-
-    <!-- Contacto -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Contacto</h4>
-            <hr>
-            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_contacto }}</p>
-            <p><strong>📞 Celular:</strong> {{ empresa.celular_contacto }}</p>
-            <p><strong>📧 Email:</strong> {{ empresa.mail_contacto }}</p>
-        </div>
-    </div>
-
-    <!-- Formulario de Búsqueda -->
-    <div class="mt-4">
-        <form method="get" action="{% url 'detalle_empresa' empresa.id %}" class="input-group shadow-sm">
-            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ query }}">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Buscar</button>
-        </form>
-    </div>
-
-    <!-- Lista de Supervisores -->
-    <div class="mt-5">
-        <h3 class="text-primary fw-bold">Supervisores</h3>
-        <ul class="list-group shadow-sm">
-            {% for supervisor in supervisores %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span class="fw-bold">{{ supervisor.username }}</span>
-                <span>{{ supervisor.email }}</span>
-            </li>
-            {% empty %}
-            <li class="list-group-item text-center">No hay supervisores registrados.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <!-- Lista de Trabajadores -->
-    <div class="mt-5">
-        <h3 class="text-primary fw-bold">Trabajadores</h3>
-        <ul class="list-group shadow-sm">
-            {% for trabajador in trabajadores %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span class="fw-bold">{{ trabajador.username }}</span>
-                <span>{{ trabajador.email }}</span>
-            </li>
-            {% empty %}
-            <li class="list-group-item text-center">No hay trabajadores registrados.</li>
-            {% endfor %}
-        </ul>
-        <!-- Botón de Volver -->
-    <div class="mt-4">
-        <a href="{% url 'listar_empresas' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
-    </div>
     </div>
 </div>
+
+<style>
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+    .form-control:read-only {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    .list-group-item {
+        transition: all 0.3s ease;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
 {% endblock %}
