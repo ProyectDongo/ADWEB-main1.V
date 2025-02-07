@@ -26,7 +26,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from django.db import IntegrityError
+from django.db import IntegrityError,transaction
 # =====================
 # Vistas de Utilidades
 # =====================
@@ -260,40 +260,35 @@ def habilitar_otra_entrada(request, entrada_id):
 # =====================
 # CRUD de Empresas
 # =====================
-
-@login_required
-@transaction.atomic
 def crear_empresa(request):
     """
-    Vista combinada para crear empresa y su vigencia de plan
-    Maneja dos formularios en una sola transacción
+    Vista unificada para crear una empresa y la vigencia de su plan.
+    Se usan dos formularios que se procesan en conjunto.
     """
     if request.method == 'POST':
         empresa_form = EmpresaForm(request.POST)
         vigencia_form = PlanVigenciaForm(request.POST)
-        
         if empresa_form.is_valid() and vigencia_form.is_valid():
-            # Guardar empresa primero
+            # Guardar la empresa sin el campo de plan (se asigna más adelante)
             empresa = empresa_form.save(commit=False)
+            empresa.save()
+            # Se asigna el plan seleccionado en el formulario de vigencia
             empresa.plan_contratado = vigencia_form.cleaned_data['plan']
             empresa.save()
             
-            # Crear vigencia del plan asociada
+            # Guardar la vigencia asociada a la empresa recién creada
             vigencia_plan = vigencia_form.save(commit=False)
             vigencia_plan.empresa = empresa
+            vigencia_plan.calcular_monto()  # Calcula monto_plan y monto_final
             vigencia_plan.save()
-            
             return redirect('listar_empresas')
     else:
         empresa_form = EmpresaForm()
         vigencia_form = PlanVigenciaForm()
-
     return render(request, 'formularios/crear/crear_empresa.html', {
-        'form': empresa_form,
-        'vigencia_form': vigencia_form
+        'empresa_form': empresa_form,
+        'vigencia_form': vigencia_form,
     })
-            
-
 @login_required
 def listar_empresas(request):
     """
@@ -550,7 +545,8 @@ def vigencia_planes(request):
     else:
         form = PlanVigenciaForm(initial={'plan': plan})
     
-    return render(request, 'empresas/vigencia_planes.html', {'form': form, 'plan': plan})
+    return render(request, 'empresas/vigencia_planes.html', {'vigencia_form': vigencia_form, 'plan': plan})
+
 
 # =====================
 # Reportes y Exportación
@@ -645,7 +641,7 @@ def crear_plan(request):
     else:
         form = PlanForm()
     return render(request, 'formularios/crear/crear_plan.html', {'form': form})
-login_required
+@login_required
 def configuracion_home(request):
     """
     Vista para la página de configuración del home.
