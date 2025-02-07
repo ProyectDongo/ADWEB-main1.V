@@ -1,89 +1,176 @@
 {% extends "central.html" %}
+{% load crispy_forms_tags %}
 
 {% block title %}Detalles de la Empresa{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <!-- Encabezado de la empresa -->
-    <div class="text-center bg-primary text-white p-4 rounded shadow">
-        <h1 class="fw-bold">{{ empresa.nombre }}</h1>
-    </div>
-
-    <!-- Datos de la Empresa -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Datos de la Empresa</h4>
-            <hr>
-            <p><strong>📌 RUT:</strong> {{ empresa.rut }}</p>
-            <p><strong>📍 Dirección:</strong> {{ empresa.direccion }}</p>
-            <p><strong>📞 Teléfono:</strong> {{ empresa.telefono }}</p>
-            <p><strong>📧 Email:</strong> {{ empresa.email }}</p>
-            <p><strong>🌐 Sitio Web:</strong> <a href="{{ empresa.web }}" target="_blank">{{ empresa.web }}</a></p>
-            <p><strong>📅 Fecha de Ingreso:</strong> {{ empresa.fecha_ingreso }}</p>
-            <p><strong>📊 Plan Contratado:</strong> {{ empresa.plan_contratado.nombre }}</p>
-            <p><strong>🔄 Estado:</strong> {{ empresa.estado }}</p>
-            <p><strong>✅ Vigente:</strong> {{ empresa.vigente|yesno:"Sí,No" }}</p>
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Encabezado y botón Guardar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
+            <button type="submit" name="guardar" class="btn btn-success btn-lg">
+                <i class="bi bi-save"></i> Guardar Cambios
+            </button>
         </div>
-    </div>
 
-    <!-- Representante Legal -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Representante Legal</h4>
-            <hr>
-            <p><strong>📌 RUT:</strong> {{ empresa.rut_representante }}</p>
-            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_representante }}</p>
-        </div>
-    </div>
-
-    <!-- Contacto -->
-    <div class="card shadow-lg mt-4">
-        <div class="card-body">
-            <h4 class="text-primary fw-bold">Contacto</h4>
-            <hr>
-            <p><strong>👤 Nombre:</strong> {{ empresa.nombre_contacto }}</p>
-            <p><strong>📞 Celular:</strong> {{ empresa.celular_contacto }}</p>
-            <p><strong>📧 Email:</strong> {{ empresa.mail_contacto }}</p>
-        </div>
-    </div>
-
-    <!-- Formulario de Búsqueda -->
-    <div class="mt-4">
-        <form method="get" action="{% url 'detalle_empresa' empresa.id %}" class="input-group shadow-sm">
-            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de usuario" value="{{ query }}">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Buscar</button>
-        </form>
-    </div>
-
-    <!-- Lista de Supervisores -->
-    <div class="mt-5">
-        <h3 class="text-primary fw-bold">Supervisores</h3>
-        <ul class="list-group shadow-sm">
-            {% for supervisor in supervisores %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span class="fw-bold">{{ supervisor.username }}</span>
-                <span>{{ supervisor.email }}</span>
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Generales</button>
             </li>
-            {% empty %}
-            <li class="list-group-item text-center">No hay supervisores registrados.</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <!-- Lista de Trabajadores -->
-    <div class="mt-5">
-        <h3 class="text-primary fw-bold">Trabajadores</h3>
-        <ul class="list-group shadow-sm">
-            {% for trabajador in trabajadores %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span class="fw-bold">{{ trabajador.username }}</span>
-                <span>{{ trabajador.email }}</span>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#representante" type="button" role="tab">Representante</button>
             </li>
-            {% empty %}
-            <li class="list-group-item text-center">No hay trabajadores registrados.</li>
-            {% endfor %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">Personal</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial</button>
+            </li>
         </ul>
-       
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content" id="myTabContent">
+            
+            <!-- Pestaña Datos Generales -->
+            <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Información Básica</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.nombre|as_crispy_field }}
+                                {{ form.rut|as_crispy_field }}
+                                {{ form.direccion|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.telefono|as_crispy_field }}
+                                {{ form.email|as_crispy_field }}
+                                {{ form.web|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Representante Legal -->
+            <div class="tab-pane fade" id="representante" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Datos del Representante</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.rut_representante|as_crispy_field }}
+                                {{ form.nombre_representante|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Personal -->
+            <div class="tab-pane fade" id="personal" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Contacto y Personal</h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form.nombre_contacto|as_crispy_field }}
+                                {{ form.celular_contacto|as_crispy_field }}
+                                {{ form.mail_contacto|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <h5 class="text-primary mt-4">Supervisores</h5>
+                        <ul class="list-group">
+                            {% for supervisor in supervisores %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ supervisor.get_full_name }}
+                                <span class="badge bg-primary">{{ supervisor.email }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <h5 class="text-primary mt-4">Trabajadores</h5>
+                        <ul class="list-group">
+                            {% for trabajador in trabajadores %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ trabajador.get_full_name }}
+                                <span class="badge bg-primary">{{ trabajador.email }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Historial y Configuración -->
+            <div class="tab-pane fade" id="historial" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Historial de Cambios</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th>Cambio Realizado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cambio in historial %}
+                                    <tr>
+                                        <td>{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ cambio.usuario.get_full_name }}</td>
+                                        <td>{{ cambio.descripcion }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">No hay registros de cambios</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Botón de Eliminación -->
+                        <div class="mt-5 border-top pt-4">
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
+                                <i class="bi bi-trash"></i> Eliminar Empresa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmDelete" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro que deseas eliminar permanentemente esta empresa y todos sus datos asociados?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" name="eliminar" class="btn btn-danger">
+                        Sí, Eliminar Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

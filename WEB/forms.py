@@ -35,7 +35,7 @@ class EmpresaForm(forms.ModelForm):
             'region', 'provincia', 'comuna', 'telefono', 'celular',
             'email', 'web', 'vigente', 'estado', 'rut_representante',
             'nombre_representante', 'nombre_contacto', 'celular_contacto',
-            'mail_contacto', 'plan_contratado'
+            'mail_contacto', 
         ]
        
         widgets = {
@@ -461,7 +461,7 @@ class PlanVigenciaForm(forms.ModelForm):
         __init__: Hace opcional el campo fecha_fin
         clean: Valida consistencia entre campos
     """
-    precio_original = forms.IntegerField(
+    precio_original = forms.DecimalField(
         required=True,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         help_text="Precio base del plan sin descuentos"

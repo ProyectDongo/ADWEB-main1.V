@@ -1,264 +1,299 @@
 {% extends "central.html" %}
+{% load crispy_forms_tags %}
 
 {% block title %}Detalles de la Empresa{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0 text-center"><i class="bi bi-building me-2"></i>{{ empresa.nombre }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error en el formulario!</strong> Corrige los siguientes errores:
+            <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ field|title }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        
+        <!-- Encabezado y botón Guardar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
+            <button type="submit" name="guardar" class="btn btn-success btn-lg">
+                <i class="bi bi-save"></i> Guardar Cambios
+            </button>
+        </div>
+
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Generales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">contacto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#representante" type="button" role="tab">Representante</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab">Plan </button>
+            </li>
+            
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">Personal</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial</button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content" id="myTabContent">
+            
+            <!-- Pestaña Datos Generales -->
+            <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Información Básica</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                    {{ form.codigo_cliente|as_crispy_field }}
+                                    {{ form.nombre|as_crispy_field }}
+                                    {{ form.rut|as_crispy_field }}
+                                    {{ form.giro|as_crispy_field }}
+                                    {{ form.direccion|as_crispy_field }}
+                                    {{ form.numero|as_crispy_field }}
+                                    {{ form.oficina|as_crispy_field }}
+
+                            </div>
+                            <div class="col-md-6">
+                                    {{ form.region|as_crispy_field }}
+                                    {{ form.provincia|as_crispy_field }}
+                                    {{ form.comuna|as_crispy_field }}
+                                    {{ form.telefono|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="card-body p-4">
-                    <!-- Sección Información Principal -->
-                    <div class="mb-4 border border-dark rounded p-3">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>Información Principal</h4>
-                        <div class="row g-3">
+            </div>
+            <!-- Pestaña contacto -->
+            <div class="tab-pane fade" id="contacto" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Contacto</h4>
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.codigo_cliente }}" readonly>
-                                    <label>Código Cliente</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.rut }}" readonly>
-                                    <label>RUT Empresa</label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.nombre }}" readonly>
-                                    <label>Razón Social</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.giro }}" readonly>
-                                    <label>Giro Comercial</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.telefono }}" readonly>
-                                    <label>Teléfono Fijo</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.region }}" readonly>
-                                    <label>Región</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.provincia }}" readonly>
-                                    <label>Provincia</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.comuna }}" readonly>
-                                    <label>Comuna</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-8">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.direccion }}" readonly>
-                                    <label>Dirección</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.numero }}" readonly>
-                                    <label>Número</label>
-                                </div>
-                            </div>
-
-                            <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.oficina }}" readonly>
-                                    <label>Oficina</label>
-                                </div>
+                                {{ form.nombre_contacto|as_crispy_field }}
+                                {{ form.celular_contacto|as_crispy_field }}
+                                {{ form.mail_contacto|as_crispy_field }}
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Sección Contacto -->
-                    <div class="mb-4 border border-dark rounded p-3">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h4>
-                        <div class="row g-3">
+            <!-- Pestaña Representante Legal -->
+            <div class="tab-pane fade" id="plan" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Plan y estado</h4>
+                        <div class="row">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.nombre_contacto }}" readonly>
-                                    <label>Nombre Contacto</label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.celular_contacto }}" readonly>
-                                    <label>Celular Contacto</label>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <input type="email" class="form-control" value="{{ empresa.mail_contacto }}" readonly>
-                                    <label>Email Contacto</label>
-                                </div>
+                                {{ form.estado|as_crispy_field }}
+                                {{ form.vigente|as_crispy_field}}
+                                {{ form.email|as_crispy_field }}
+                                {{ form.web|as_crispy_field }}
                             </div>
                         </div>
                     </div>
-
-                    <!-- Sección Representante Legal -->
-                    <div class="mb-4 border border-dark rounded p-3">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>Representante Legal</h4>
-                        <div class="row g-3">
+                </div>
+            </div>
+            <!-- plan y estado -->
+            <div class="tab-pane fade" id="representante" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Datos del Representante</h4>
+                        <div class="row">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.rut_representante }}" readonly>
-                                    <label>RUT Representante</label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.nombre_representante }}" readonly>
-                                    <label>Nombre Representante</label>
-                                </div>
+                                {{ form.rut_representante|as_crispy_field }}
+                                {{ form.nombre_representante|as_crispy_field }}
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Sección Plan y Estado -->
-                    <div class="mb-4 border border-dark rounded p-3">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-clipboard-check me-2"></i>Plan y Estado</h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.plan_contratado.nombre }}" readonly>
-                                    <label>Plan Contratado</label>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-3">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" value="{{ empresa.get_estado_display }}" readonly>
-                                    <label>Estado</label>
-                                </div>
-                            </div>
 
-                            <div class="col-md-3">
-                                <div class="form-check form-switch mt-3">
-                                    <input type="checkbox" class="form-check-input" disabled {% if empresa.vigente %}checked{% endif %}>
-                                    <label class="form-check-label">Vigente</label>
-                                </div>
-                            </div>
+            
+            <div class="tab-pane fade" id="personal" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4"> Personal</h4>
+                        <h5 class="text-primary mt-4">Supervisores</h5>
+                        <ul class="list-group">
+                            {% for supervisor in supervisores %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ supervisor.get_full_name }}
+                                <span class="badge bg-primary">{{ supervisor.email }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
 
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="email" class="form-control" value="{{ empresa.email }}" readonly>
-                                    <label>Email Corporativo</label>
-                                </div>
-                            </div>
+                        <h5 class="text-primary mt-4">Trabajadores</h5>
+                        <ul class="list-group">
+                            {% for trabajador in trabajadores %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ trabajador.get_full_name }}
+                                <span class="badge bg-primary">{{ trabajador.email }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
 
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="url" class="form-control" value="{{ empresa.web }}" readonly>
-                                    <label>Sitio Web</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Listas de Supervisores y Trabajadores -->
-                    <div class="mb-4 border border-dark rounded p-3">
-                        <h4 class="mb-4 border-bottom pb-2"><i class="bi bi-people me-2"></i>Personal</h4>
-                        
-                        <div class="row g-3">
-                            <!-- Formulario de Búsqueda -->
-                            <div class="col-12">
-                                <form method="get" class="input-group shadow-sm">
-                                    <input type="text" name="q" class="form-control" 
-                                           placeholder="Buscar por nombre de usuario" 
-                                           value="{{ query }}">
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="bi bi-search"></i> Buscar
-                                    </button>
-                                </form>
-                            </div>
-
-                            <!-- Supervisores -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mt-4">Supervisores</h5>
-                                <ul class="list-group shadow-sm">
-                                    {% for supervisor in supervisores %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">{{ supervisor.username }}</span>
-                                        <span>{{ supervisor.email }}</span>
-                                    </li>
+                    </div>  
+                </div>
+            </div>
+            <!-- Pestaña Historial y Configuración -->
+            <div class="tab-pane fade" id="historial" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Historial de Cambios</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th>Cambio Realizado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cambio in historial %}
+                                    <tr>
+                                        <td>{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ cambio.usuario.get_full_name }}</td>
+                                        <td>{{ cambio.descripcion }}</td>
+                                    </tr>
                                     {% empty %}
-                                    <li class="list-group-item text-center">No hay supervisores</li>
+                                    <tr>
+                                        <td colspan="3" class="text-center">No hay registros de cambios</td>
+                                    </tr>
                                     {% endfor %}
-                                </ul>
-                            </div>
-
-                            <!-- Trabajadores -->
-                            <div class="col-md-6">
-                                <h5 class="text-primary mt-4">Trabajadores</h5>
-                                <ul class="list-group shadow-sm">
-                                    {% for trabajador in trabajadores %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">{{ trabajador.username }}</span>
-                                        <span>{{ trabajador.email }}</span>
-                                    </li>
-                                    {% empty %}
-                                    <li class="list-group-item text-center">No hay trabajadores</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
 
-                    <!-- Botón de Volver -->
-                    <div class="mt-5 border-top pt-4">
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'listar_empresas' %}" class="btn btn-outline-secondary px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Volver
-                            </a>
+                        <!-- Botón de Eliminación -->
+                        <div class="mt-5 border-top pt-4">
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
+                                <i class="bi bi-trash"></i> Eliminar Empresa
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="confirmDelete" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro que deseas eliminar permanentemente esta empresa y todos sus datos asociados?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" name="eliminar" class="btn btn-danger">
+                        Sí, Eliminar Definitivamente
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mt-4">
+    <a href="{% url 'listar_empresas' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left me-2"></i> Volver
+    </a>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    const regionSelect = document.getElementById('id_region');
+    const provinciaSelect = document.getElementById('id_provincia');
+    const comunaSelect = document.getElementById('id_comuna');
+
+    // Cargar provincias al cambiar región
+    function cargarProvincias() {
+        if (regionSelect.value) {
+            fetch(`/api/get_provincias/?region_id=${regionSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
+                    data.forEach(p => {
+                        provinciaSelect.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+                    });
+                    provinciaSelect.dispatchEvent(new Event('change'));
+                });
+        }
+    }
+
+    // Cargar comunas al cambiar provincia
+    provinciaSelect.addEventListener('change', function() {
+        if (this.value) {
+            fetch(`/api/get_comunas/?provincia_id=${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
+                    data.forEach(c => {
+                        comunaSelect.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+                    });
+                });
+        }
+    });
+
+    // Inicializar valores si existen
+    {% if empresa.region %}
+        regionSelect.value = "{{ empresa.region.id }}";
+        cargarProvincias();
+        setTimeout(() => {
+            provinciaSelect.value = "{{ empresa.provincia.id }}";
+            provinciaSelect.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                comunaSelect.value = "{{ empresa.comuna.id }}";
+            }, 300);
+        }, 300);
+    {% endif %}
+});
+</script>
 <style>
-    .form-floating {
+    .select2-container {
+        width: 100% !important;
         margin-bottom: 1rem;
     }
-    .form-control:read-only {
-        background-color: #f8f9fa;
-        border-color: #dee2e6;
+    .tab-pane {
+        padding: 20px 0;
     }
-    .list-group-item {
+    .card {
+        border-radius: 15px;
+    }
+    .nav-tabs .nav-link {
+        font-weight: 500;
         transition: all 0.3s ease;
     }
-    .list-group-item:hover {
-        background-color: #f8f9fa;
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid #0d6efd;
     }
 </style>
 {% endblock %}

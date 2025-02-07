@@ -1,6 +1,6 @@
 <style>
   #sidebarMenu {
-    margin-top: 60px;
+    margin-top: 130px;
     background-color: #f8f9fa; /* Color de fondo más claro y moderno */
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); /* Sombra lateral */
     border-radius: 8px; /* Bordes redondeados */
@@ -31,6 +31,12 @@
 
   .nav-item {
     margin-bottom: 5px;
+  }
+  #clientes{
+    font-size: 20px;
+  }
+  #permisos{
+    font-size: 20px ;
   }
 </style>
 
@@ -85,18 +91,18 @@
 
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas" role="button" aria-expanded="false" aria-controls="configuracionEmpresas">
-          <i class="bi bi-building me-2"></i> clientes
+          <i class="bi bi-building me-2" id="clientes"></i> clientes
         </a>
         <div class="collapse" id="configuracionEmpresas">
           <ul class="nav flex-column ms-3">
           
             <li class="nav-item">
               <a class="nav-link" href="{% url 'listar_empresas' %}">
-                  <i class="bi bi-building me-2"></i> Lista clientes
+                  <i class="bi bi-building me-2" id="clientes" ></i> Lista clientes
               </a>
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'listar_planes' %}">
-                    <i class="bi bi-building me-2"></i> Planes
+                    <i class="bi bi-building me-2" id="clientes" ></i> Planes
                 </a>
             </li>
           </ul>
@@ -106,20 +112,20 @@
       <!-- Otras opciones basadas en permisos -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos" role="button" aria-expanded="false" aria-controls="ConfiguraciónPermisos">
-          <i class="bi bi-key me-2"></i> Configuración de Permisos
+          <i class="bi bi-key me-2" id="permisos"></i> Configuración de Permisos
         </a>
         <div class="collapse" id="configuracionPermisos">
           <ul class="nav flex-column ms-3">
 
             <li class="nav-item">
               <a class="nav-link" href="{% url 'crear_permiso' %}">
-                <i class="bi bi-key me-2"></i>Crear Opciones del Sistema
+                <i class="bi bi-key me-2" id="permisos" ></i>Crear Opciones del Sistema
               </a>
             </li>
             
             <li class="nav-item">
               <a class="nav-link" href="{% url 'lista_permisos' %}">
-                <i class="bi bi-key me-2"></i> Lista de Permisos
+                <i class="bi bi-key me-2" id="permisos" ></i> Lista de Permisos
               </a>
             </li>
           

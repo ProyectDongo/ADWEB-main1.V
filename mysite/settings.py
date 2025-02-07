@@ -48,10 +48,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'WEB',
     'crispy_forms',
+    'crispy_bootstrap5',
 
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 
 MIDDLEWARE = [

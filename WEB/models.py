@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Max
 from django.utils import timezone
+from django.conf import settings
+
 
 # clase para las regiones, provincias y comunas
 class Region(models.Model):
@@ -183,3 +185,16 @@ class VigenciaPlan(models.Model):
     def save(self, *args, **kwargs):
         self.calcular_monto()
         super().save(*args, **kwargs)
+
+class HistorialCambios(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    descripcion = models.TextField()
+
+    class Meta:
+        verbose_name_plural = "Historial de Cambios"
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.fecha} - {self.usuario} - {self.empresa}"

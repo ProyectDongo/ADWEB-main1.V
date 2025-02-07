@@ -1,70 +1,120 @@
 {% load static %}
 <style>
-  /* Barra de navegación */
+  /* Reset básico */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  /* Estilo del navbar */
   .navbar {
-    background-color: rgb(0, 106, 255) !important; /* Color de fondo oscuro */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-    border-bottom: 1px solid #6c757d; /* Borde sutil al pie de la barra */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(0, 106, 255, 0.707);
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Sombra uniforme */
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  /* Estilo para el nombre de usuario */
-  .navbar .navbar-text {
-    font-size: 1.4rem; /* Tamaño más grande para el nombre de usuario */
-    font-weight: 600; /* Negrita para mayor énfasis */
-    color: #ffffff; /* Blanco para el texto */
-   text-align: left; /* Margen derecho para separación */
-   
+  /* Logo */
+  .navbar .logo {
+    height: 110px; /* Ajusta según convenga */
   }
 
-  /* Estilo para el nombre de usuario cuando pasa el mouse */
-  .navbar .navbar-text:hover {
-    color: #f8d00f; /* Color dorado al pasar el mouse */
+  /* Contenedor de elementos de navegación */
+  .navbar .nav-items {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Nombre de usuario */
+  .navbar .user-name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-right: 100px;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  .navbar .user-name:hover {
+    color: #f8d00f;
+  }
+
+  /* Enlace de Cerrar Sesión */
+  .navbar .logout {
+    font-size: 1.1rem;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .navbar .logout:hover,
+  .navbar .logout:focus {
+    background-color: #f8d00f;
+    color: #343a40;
+  }
+
+  /* Botón de menú para móviles (ícono hamburguesa) */
+  .navbar .menu-toggle {
+    display: none;
+    font-size: 1.5rem;
+    color: #ffffff;
+    background: none;
+    border: none;
     cursor: pointer;
   }
 
-  /* Botón de cierre de sesión */
-  .navbar .nav-item .nav-link {
-    font-size: 1.1rem; /* Tamaño de texto moderado */
-    color: #ffffff !important; /* Blanco para el texto */
-    padding: 10px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Transición suave */
-  }
-
-  /* Estilo del botón al pasar el mouse */
-  .navbar .nav-item .nav-link:hover {
-    background-color: #f8d00f; /* Color dorado al pasar el mouse */
-    color: #343a40; /* Texto oscuro para contraste */
-  }
-
-  /* Fondo al pasar el mouse */
-  .navbar .nav-item .nav-link:focus,
-  .navbar .nav-item .nav-link:active {
-    background-color: #f8d00f; /* Color dorado cuando se hace clic */
-    color: #343a40; /* Texto oscuro */
+  /* Responsive: ajustes para pantallas pequeñas */
+  @media (max-width: 768px) {
+    .navbar {
+      flex-wrap: wrap;
+    }
+    .navbar .menu-toggle {
+      display: block;
+    }
+    /* Ocultamos inicialmente los elementos de navegación */
+    .navbar .nav-items {
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      display: none;
+      margin-top: 10px;
+    }
+    /* Al activar el menú se muestran */
+    .navbar .nav-items.active {
+      display: flex;
+    }
+    .navbar .user-name {
+      margin: 10px 0;
+    }
+    .navbar .logout {
+      width: 100%;
+      text-align: left;
+      padding: 10px 0;
+    }
   }
 </style>
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-  <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">
-    <img src="{% static 'png/logo.png' %}" alt="Logo" style="height: 60px; margin-right: 10px;">
-  
-  </a>
-  
-  <!-- Botón para el menú en móviles -->
-  <div class="navbar-collapse collapse w-100 d-flex justify-content-between">
-    <!-- Mostrar el nombre del usuario centrado a la izquierda -->
-    <span class="navbar-text mx-3" id="user-name">
-      {{ user.username }}
-    </span>
-
-    <!-- Menú de navegación y botón de cierre de sesión al lado derecho -->
-    <ul class="navbar-nav px-3">
-      <li class="nav-item text-nowrap">
-        <a class="nav-link" href="{% url 'logout' %}">
-          Cerrar Sesión
-        </a>
-      </li>
-    </ul>
+<nav class="navbar">
+  <img src="{% static 'png/logo.png' %}" alt="Logo" class="logo">
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div class="nav-items" id="nav-items">
+    <span class="user-name" id="user-name">{{ user.username }}</span>
+    <a href="{% url 'logout' %}" class="logout">Cerrar Sesión</a>
   </div>
 </nav>
+
+<script>
+  function toggleMenu(){
+    var navItems = document.getElementById('nav-items');
+    navItems.classList.toggle('active');
+  }
+</script>

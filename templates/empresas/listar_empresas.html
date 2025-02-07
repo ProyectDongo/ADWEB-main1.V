@@ -5,12 +5,11 @@
 {% block content %}
 <div class="container py-5">
     <div class="card shadow-sm">
-        <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center">
-            <h1 class="mb-3 mb-md-0 h4 text-center text-md-start">Lista de Empresas</h1>
+        <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
+            <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Empresas</h1>
             <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
                 <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
                     <i class="bi bi-plus-lg"></i> Crear Empresa
-                </a>
                 </a>
                 <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
                     <i class="bi bi-list"></i> Lista de Planes
@@ -22,13 +21,15 @@
         </div>
         <div class="card-body">
             <div class="mb-4">
-                <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa...">
+                <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
             </div>
             <div class="table-responsive">
                 <table class="table table-striped table-hover mb-0">
                     <thead class="thead-dark">
                         <tr>
-                            <th>codigo cliente</th>
+                            <th>Código Cliente</th>
+                            <th>Estado</th>
+                            <th> Vigente</th>
                             <th>Nombre</th>
                             <th>RUT</th>
                             <th>Dirección</th>
@@ -40,6 +41,22 @@
                         {% for empresa in empresas %}
                         <tr>
                             <th>{{ empresa.codigo_cliente }}</th>
+                            <th> 
+                             {% if empresa.estado == 'aldia' %}
+                                <span class="badge bg-success">AL DIA</span>
+                                {% elif empresa.estado == 'atrasado' %}
+                                <span class="badge bg-warning"> ATRASADO</span>
+                               {% else %}
+                                <span class="badge bg-danger">SUSPENDIDO</span>
+                                {% endif %}
+                            </th>
+                            <th>
+                                {% if empresa.vigente == 1 %}
+                                <span class="badge bg-success">SI</span>
+                                {% else %}
+                                <span class="badge bg-danger">NO</span>
+                                {% endif %}
+                            </th>
                             <td>{{ empresa.nombre }}</td>
                             <td>{{ empresa.rut }}</td>
                             <td>{{ empresa.direccion }}</td>
@@ -47,9 +64,6 @@
                             <td class="d-flex flex-wrap justify-content-center">
                                 <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1" title="Ver Detalles">
                                     <i class="bi bi-eye"></i> VER
-                                </a>
-                                <a href="{% url 'editar_empresa' empresa.id %}" class="btn btn-warning btn-sm mx-1 my-1" title="Editar Empresa">
-                                    <i class="bi bi-pencil"></i> EDIT
                                 </a>
                                 <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1" title="Eliminar Empresa">
                                     <i class="bi bi-trash"></i> DEL
@@ -61,7 +75,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">No hay empresas disponibles.</td>
+                            <td colspan="6" class="text-center">No hay empresas disponibles.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -76,8 +90,10 @@
         const searchValue = this.value.toLowerCase();
         const rows = document.querySelectorAll('#empresa-list tr');
         rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const match = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchValue));
+            const codigoCliente = row.querySelector('th').textContent.toLowerCase();
+            const nombre = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const rut = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
             row.style.display = match ? '' : 'none';
         });
     });

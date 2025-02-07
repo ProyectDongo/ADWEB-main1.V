@@ -1,44 +1,113 @@
 {% extends "central.html" %}
+{% load static %}
 
 {% block title %}Crear Plan{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <h1 class="mb-4">Crear Plan</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            {{ form.nombre.label_tag }}
-            {{ form.nombre }}
-            <div class="invalid-feedback">{{ form.nombre.errors }}</div>
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <!-- Encabezado -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="h4 mb-0"><i class="bi bi-card-checklist me-2"></i>Crear Plan</h2>
+                </div>
+                
+                <!-- Cuerpo del Formulario -->
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Nombre -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.nombre }}
+                                    <label for="{{ form.nombre.id_for_label }}">Nombre</label>
+                                    {% if form.nombre.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.nombre.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Máximo Supervisores -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.max_supervisores }}
+                                    <label for="{{ form.max_supervisores.id_for_label }}">Máximo Supervisores</label>
+                                    {% if form.max_supervisores.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.max_supervisores.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Máximo Trabajadores -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.max_trabajadores }}
+                                    <label for="{{ form.max_trabajadores.id_for_label }}">Máximo Trabajadores</label>
+                                    {% if form.max_trabajadores.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.max_trabajadores.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Valor -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.valor }}
+                                    <label for="{{ form.valor.id_for_label }}">Valor</label>
+                                    {% if form.valor.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.valor.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Código -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    {{ form.codigo }}
+                                    <label for="{{ form.codigo.id_for_label }}">Código</label>
+                                    {% if form.codigo.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.codigo.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activo (checkbox) -->
+                        <div class="form-check mt-3">
+                            {{ form.activo }}
+                            <label class="form-check-label" for="{{ form.activo.id_for_label }}">Activo</label>
+                            {% if form.activo.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.activo.errors|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Botones -->
+                        <div class="mt-5 border-top pt-4 d-flex justify-content-between">
+                            <a href="{% url 'listar_planes' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-2"></i>Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            {{ form.max_supervisores.label_tag }}
-            {{ form.max_supervisores }}
-            <div class="invalid-feedback">{{ form.max_supervisores.errors }}</div>
-        </div>
-        <div class="mb-3">
-            {{ form.max_trabajadores.label_tag }}
-            {{ form.max_trabajadores }}
-            <div class="invalid-feedback">{{ form.max_trabajadores.errors }}</div>
-        </div>
-        <div class="mb-3">
-            {{ form.valor.label_tag }}
-            {{ form.valor }}
-            <div class="invalid-feedback">{{ form.valor.errors }}</div>
-        </div>
-        <div class="mb-3">
-            {{ form.codigo.label_tag }}
-            {{ form.codigo }}
-            <div class="invalid-feedback">{{ form.codigo.errors }}</div>
-        </div>
-        <div class="form-check mb-3">
-            {{ form.activo }}
-            {{ form.activo.label_tag }}
-            <div class="invalid-feedback">{{ form.activo.errors }}</div>
-        </div>
-        <button type="submit" class="btn btn-success">Guardar</button>
-        <a href="{% url 'listar_planes' %}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    </div>
 </div>
 {% endblock %}

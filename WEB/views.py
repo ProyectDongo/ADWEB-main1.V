@@ -17,7 +17,7 @@ from django.conf import settings
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from .forms import LimiteEmpresaForm, RegistroSalidaForm, RegistroEntradaForm, EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm, PlanVigenciaForm,PlanForm
-from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan
+from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan,HistorialCambios
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
@@ -26,7 +26,8 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from django.db import IntegrityError,transaction
+from django.db import IntegrityError
+
 # =====================
 # Vistas de Utilidades
 # =====================
@@ -260,35 +261,38 @@ def habilitar_otra_entrada(request, entrada_id):
 # =====================
 # CRUD de Empresas
 # =====================
+
+@login_required
 def crear_empresa(request):
-    """
-    Vista unificada para crear una empresa y la vigencia de su plan.
-    Se usan dos formularios que se procesan en conjunto.
-    """
     if request.method == 'POST':
         empresa_form = EmpresaForm(request.POST)
         vigencia_form = PlanVigenciaForm(request.POST)
+        
+        # Eliminar el campo 'empresa' del formulario de vigencia
+        vigencia_form.fields.pop('empresa', None)
+        
         if empresa_form.is_valid() and vigencia_form.is_valid():
-            # Guardar la empresa sin el campo de plan (se asigna más adelante)
             empresa = empresa_form.save(commit=False)
-            empresa.save()
-            # Se asigna el plan seleccionado en el formulario de vigencia
+            # Asignar el plan desde el formulario de vigencia
             empresa.plan_contratado = vigencia_form.cleaned_data['plan']
             empresa.save()
             
-            # Guardar la vigencia asociada a la empresa recién creada
             vigencia_plan = vigencia_form.save(commit=False)
             vigencia_plan.empresa = empresa
-            vigencia_plan.calcular_monto()  # Calcula monto_plan y monto_final
             vigencia_plan.save()
+            
             return redirect('listar_empresas')
     else:
         empresa_form = EmpresaForm()
         vigencia_form = PlanVigenciaForm()
+        vigencia_form.fields.pop('empresa', None)  # También en GET para evitar error en template
+
     return render(request, 'formularios/crear/crear_empresa.html', {
         'empresa_form': empresa_form,
-        'vigencia_form': vigencia_form,
+        'vigencia_form': vigencia_form
     })
+            
+
 @login_required
 def listar_empresas(request):
     """
@@ -305,17 +309,42 @@ def listar_empresas(request):
     
     return render(request, 'empresas/listar_empresas.html', {'empresas': empresas})
 
+@login_required
 def detalle_empresa(request, pk):
-    """
-    Muestra el detalle completo de una empresa específica.
-    
-    :param request: HttpRequest
-    :param pk: ID de la empresa
-    :return: Renderizado de template con detalles de la empresa
-    """
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
-    return render(request, 'empresas/detalles_empresa.html', {'empresa': empresa})
+    historial = HistorialCambios.objects.filter(empresa=empresa).order_by('-fecha')[:10]
+    supervisores = empresa.usuarios.filter(groups__name='Supervisor')  # Ajusta según tu modelo
+    trabajadores = empresa.usuarios.filter(groups__name='Trabajador')  # Ajusta según tu modelo
 
+    if request.method == 'POST':
+        if 'guardar' in request.POST:
+            form = EmpresaForm(request.POST, instance=empresa)
+            if form.is_valid():
+                form.save()
+                # Registrar en historial
+                HistorialCambios.objects.create(
+                    empresa=empresa,
+                    usuario=request.user,
+                    descripcion="Modificación de datos empresariales"
+                )
+                messages.success(request, 'Cambios guardados exitosamente!')
+                return redirect('detalle_empresa', pk=pk)
+                
+        elif 'eliminar' in request.POST:
+            empresa.delete()
+            messages.success(request, 'Empresa eliminada correctamente')
+            return redirect('listar_empresas')
+
+    else:
+        form = EmpresaForm(instance=empresa)
+
+    return render(request, 'empresas/detalles_empresa.html', {
+        'empresa': empresa,
+        'form': form,
+        'supervisores': supervisores,
+        'trabajadores': trabajadores,
+        'historial': historial
+    })
 def editar_empresa(request, pk):
     """
     Vista para edición de información de una empresa existente.
@@ -545,8 +574,7 @@ def vigencia_planes(request):
     else:
         form = PlanVigenciaForm(initial={'plan': plan})
     
-    return render(request, 'empresas/vigencia_planes.html', {'vigencia_form': vigencia_form, 'plan': plan})
-
+    return render(request, 'empresas/vigencia_planes.html', {'form': form, 'plan': plan})
 
 # =====================
 # Reportes y Exportación
@@ -641,7 +669,7 @@ def crear_plan(request):
     else:
         form = PlanForm()
     return render(request, 'formularios/crear/crear_plan.html', {'form': form})
-@login_required
+login_required
 def configuracion_home(request):
     """
     Vista para la página de configuración del home.
