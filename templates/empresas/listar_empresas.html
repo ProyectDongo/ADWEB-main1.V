@@ -63,13 +63,13 @@
                             <td>{{ empresa.telefono }}</td>
                             <td class="d-flex flex-wrap justify-content-center">
                                 <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1" title="Ver Detalles">
-                                    <i class="bi bi-eye"></i> VER
+                                    <i class="bi bi-eye"></i> VER / EDITAR
                                 </a>
                                 <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1" title="Eliminar Empresa">
                                     <i class="bi bi-trash"></i> DEL
                                 </a>
-                                <a href="{% url 'actualizar_limites' empresa.id %}" class="btn btn-secondary btn-sm mx-1 my-1" title="Actualizar Límites">
-                                    <i class="bi bi-sliders"></i> LIM.
+                                <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1"  title = "Vigencia de Planes">
+                                    <i class="bi bi-cloud-download-fill"></i> Asociar Plan
                                 </a>
                             </td>
                         </tr>

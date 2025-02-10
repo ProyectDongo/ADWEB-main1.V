@@ -160,7 +160,7 @@ class VigenciaPlan(models.Model):
         ('indefinido', 'Indefinido'),
         ('mensual', 'Mensual'),
     ]
-    
+    codigo_plan= models.CharField(max_length=20, unique=True)
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='vigencias')
     plan = models.ForeignKey(Plan, on_delete=models.PROTECT)
     fecha_inicio = models.DateField(default=timezone.now)

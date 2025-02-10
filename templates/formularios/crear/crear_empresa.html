@@ -226,6 +226,14 @@
                     </div>
                   </div>
                   <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ vigencia_form.codigo_plan}}
+                        <label for="{{ vigencia_form.codigo_plan.id_for_label }}">Código Plan</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-4">
                     <div class="col-md-4">
                       <div class="form-floating">
                         <input type="date" name="fecha_inicio" id="id_fecha_inicio" class="form-control {% if vigencia_form.fecha_inicio.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_inicio.value|default_if_none:'' }}" required>

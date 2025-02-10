@@ -36,6 +36,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+
 
 # Application definition
 
@@ -57,6 +61,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django_session_timeout.middleware.SessionTimeoutMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -64,7 +69,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
     ]
-
+SESSION_EXPIRE_SECONDS =  1200 # 20 minutos
+SESSION_TIMEOUT_REDIRECT = 'login'
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [

@@ -313,8 +313,10 @@ def listar_empresas(request):
 def detalle_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
     historial = HistorialCambios.objects.filter(empresa=empresa).order_by('-fecha')[:10]
-    supervisores = empresa.usuarios.filter(groups__name='Supervisor')  # Ajusta según tu modelo
-    trabajadores = empresa.usuarios.filter(groups__name='Trabajador')  # Ajusta según tu modelo
+    
+     # Filtrar usuarios por grupo y empresa
+    supervisores = Usuario.objects.filter(role='Supervisor', empresa_id=pk)
+    trabajadores = Usuario.objects.filter(role='Trabajador', empresa_id=pk)
 
     if request.method == 'POST':
         if 'guardar' in request.POST:
@@ -412,7 +414,7 @@ def crear_admin(request):
         form = AdminForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('lista_empresas')
+            return redirect('home')
     else:
         form = AdminForm()
     return render(request, 'formularios/crear/crear_admin.html', {'form': form})
@@ -436,7 +438,7 @@ def crear_supervisor(request):
             supervisor.set_password(form.cleaned_data['password1'])
             supervisor.save()
             form.save_m2m()
-            return redirect('lista_empresas')
+            return redirect('configuracion_home')
     else:
         form = SupervisorForm(user=request.user)
     return render(request, 'formularios/crear/crear_supervisor.html', {'form': form})
@@ -580,18 +582,58 @@ def vigencia_planes(request):
 # Reportes y Exportación
 # =====================
 
+from django.shortcuts import render
+from .models import RegistroEmpresas
+
 def empresas_vigentes(request):
+    # Inicia con todos los registros de VigenciaPlan y carga la empresa relacionada.
+    qs = VigenciaPlan.objects.select_related('empresa').all()
+
+    # Obtén los parámetros de búsqueda desde la URL
+    empresa_id = request.GET.get('empresa_id')
+    codigo_plan = request.GET.get('codigo_plan')
+    codigo_cliente = request.GET.get('codigo_cliente')
+
+    # Filtrar por el valor de la clave foránea 'empresa_id'
+    if empresa_id:
+        qs = qs.filter(empresa_id=empresa_id)
+    
+    # Filtrar por código de plan (se permite búsqueda parcial, insensible a mayúsculas)
+    if codigo_plan:
+        qs = qs.filter(codigo_plan__icontains=codigo_plan)
+    
+    # Filtrar por código cliente, que está en el modelo relacionado (RegistroEmpresas)
+    if codigo_cliente:
+        qs = qs.filter(empresa__codigo_cliente__icontains=codigo_cliente)
+
+    context = {
+        'vigencias': qs,
+        'search_params': {
+            'empresa_id': empresa_id,
+            'codigo_plan': codigo_plan,
+            'codigo_cliente': codigo_cliente,
+        }
+    }
+    return render(request, 'empresas/empresas_vigente.html', context )
+
+
+def vigencia_planes(request, pk):
     """
-    Muestra listado de empresas con planes vigentes.
+    Vista para la gestión de vigencias de planes.
     
     :param request: HttpRequest
-    :return: Renderizado de template con empresas vigentes
+    :return: Renderizado de template con formulario de vigencia de planes
     """
-    empresas_vigentes = RegistroEmpresas.objects.prefetch_related('vigencias').all()
-    context = {
-        'empresas_vigentes': empresas_vigentes,
-    }
-    return render(request, 'empresas/empresas_vigente.html', context)
+    if request.method == 'POST':
+        form = PlanVigenciaForm(request.POST)
+        if form.is_valid():
+            vigencia = form.save(commit=False)
+            vigencia.calcular_monto()
+            vigencia.save()
+            return redirect('empresas_vigentes')
+    else:
+        form = PlanVigenciaForm()
+    return render(request, 'empresas/vigencia_planes.html', {'form': form})
 
 def generar_boleta(request, empresa_id):
     """
@@ -678,3 +720,5 @@ def configuracion_home(request):
     :return: Renderizado del template de configuración del home
     """
     return render(request, 'home/configuracion_home.html')
+
+

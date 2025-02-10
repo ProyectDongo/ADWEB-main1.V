@@ -7,6 +7,14 @@
 <div class="container py-5">
     <form method="post">
         {% csrf_token %}
+        {% if messages %}
+        <div id="message-container" class="alert alert-success alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
         {% if form.errors %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <strong>Error en el formulario!</strong> Corrige los siguientes errores:
@@ -126,10 +134,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-
-            
+            </div>            
             <div class="tab-pane fade" id="personal" role="tabpanel">
                 <div class="card shadow">
                     <div class="card-body">
@@ -138,17 +143,15 @@
                         <ul class="list-group">
                             {% for supervisor in supervisores %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ supervisor.get_full_name }}
-                                <span class="badge bg-primary">{{ supervisor.email }}</span>
+                                {{ supervisor.username }} - {{ supervisor.role }}
                             </li>
                             {% endfor %}
                         </ul>
-
                         <h5 class="text-primary mt-4">Trabajadores</h5>
                         <ul class="list-group">
-                            {% for trabajador in trabajadores %}
+                            {% for trabajador in trabajador %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ trabajador.get_full_name }}
+                                {{ trabajador.username }} - {{ trabajador.role }}
                                 <span class="badge bg-primary">{{ trabajador.email }}</span>
                             </li>
                             {% endfor %}
@@ -230,52 +233,57 @@
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-    const regionSelect = document.getElementById('id_region');
-    const provinciaSelect = document.getElementById('id_provincia');
-    const comunaSelect = document.getElementById('id_comuna');
+        const regionSelect = document.getElementById('id_region');
+        const provinciaSelect = document.getElementById('id_provincia');
+        const comunaSelect = document.getElementById('id_comuna');
 
-    // Cargar provincias al cambiar región
-    function cargarProvincias() {
-        if (regionSelect.value) {
-            fetch(`/api/get_provincias/?region_id=${regionSelect.value}`)
-                .then(response => response.json())
-                .then(data => {
+        // Función para cargar provincias usando async/await
+        async function cargarProvincias() {
+            if (regionSelect.value) {
+                try {
+                    const response = await fetch(`/api/get_provincias/?region_id=${regionSelect.value}`);
+                    const data = await response.json();
                     provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
                     data.forEach(p => {
                         provinciaSelect.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
                     });
-                    provinciaSelect.dispatchEvent(new Event('change'));
-                });
+                } catch (error) {
+                    console.error('Error cargando provincias:', error);
+                }
+            }
         }
-    }
 
-    // Cargar comunas al cambiar provincia
-    provinciaSelect.addEventListener('change', function() {
-        if (this.value) {
-            fetch(`/api/get_comunas/?provincia_id=${this.value}`)
-                .then(response => response.json())
-                .then(data => {
+        // Función para cargar comunas usando async/await
+        async function cargarComunas() {
+            if (provinciaSelect.value) {
+                try {
+                    const response = await fetch(`/api/get_comunas/?provincia_id=${provinciaSelect.value}`);
+                    const data = await response.json();
                     comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';
                     data.forEach(c => {
                         comunaSelect.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
                     });
-                });
+                } catch (error) {
+                    console.error('Error cargando comunas:', error);
+                }
+            }
         }
-    });
 
-    // Inicializar valores si existen
-    {% if empresa.region %}
-        regionSelect.value = "{{ empresa.region.id }}";
-        cargarProvincias();
-        setTimeout(() => {
-            provinciaSelect.value = "{{ empresa.provincia.id }}";
-            provinciaSelect.dispatchEvent(new Event('change'));
-            setTimeout(() => {
+        // Event listeners
+        regionSelect.addEventListener('change', cargarProvincias);
+        provinciaSelect.addEventListener('change', cargarComunas);
+
+        // Inicializar valores si existen
+        {% if empresa.region %}
+            (async () => {
+                regionSelect.value = "{{ empresa.region.id }}";
+                await cargarProvincias();
+                provinciaSelect.value = "{{ empresa.provincia.id }}";
+                await cargarComunas();
                 comunaSelect.value = "{{ empresa.comuna.id }}";
-            }, 300);
-        }, 300);
-    {% endif %}
-});
+            })();
+        {% endif %}
+    });
 </script>
 <style>
     .select2-container {

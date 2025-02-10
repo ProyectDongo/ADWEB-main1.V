@@ -80,6 +80,7 @@ urlpatterns = [
     # ruta configuracion
     path('configuracion_home/', views.configuracion_home, name='configuracion_home'),
     
+    path('vigencia_planes/<int:pk>/', views.vigencia_planes, name='vigencia_planes'),
     
     
     

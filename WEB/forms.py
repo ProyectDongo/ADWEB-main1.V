@@ -475,10 +475,11 @@ class PlanVigenciaForm(forms.ModelForm):
 
     class Meta:
         model = VigenciaPlan
-        fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'indefinido', 'descuento']
+        fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'indefinido', 'descuento', 'codigo_plan']
         widgets = {
             'empresa': forms.Select(attrs={'class': 'form-select'}),
             'plan': forms.Select(attrs={'class': 'form-select'}),
+            'codigo_plan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código del Plan'}),
             'fecha_inicio': forms.DateInput(attrs={
                 'type': 'date',
                 'class': 'form-control',
