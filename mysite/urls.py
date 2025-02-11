@@ -31,7 +31,7 @@ urlpatterns = [
     path('accounts/redirect/', views.redirect_after_login, name='redirect_after_login'),
     # Rutas para las páginas de inicio de admin, supervisor y trabajador
     path('admin/home/', views.admin_home, name='admin_home'),
-    path('supervisor/home/', views.supervisor_home, name='supervisor_home'),
+    path('supervisor/<int:empresa_id>/', views.supervisor_home, name='supervisor_home'),
     path('trabajador/home/', views.trabajador_home, name='trabajador_home'),
 
     # Rutas para crear empresas, permisos, admins, supervisores y trabajadores

@@ -198,10 +198,15 @@
                         </div>
 
                         <!-- Botón de Eliminación -->
+                         
                         <div class="mt-5 border-top pt-4">
+                            {% for permiso in user_permisos %}
+                            {% if permiso.nombre == "eliminar_empresa" %}
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
                                 <i class="bi bi-trash"></i> Eliminar Empresa
                             </button>
+                            {% endif %}
+                            {% endfor %}
                         </div>
                     </div>
                 </div>

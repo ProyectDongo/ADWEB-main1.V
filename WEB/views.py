@@ -156,27 +156,17 @@ def admin_home(request):
     })
 
 @login_required
-def supervisor_home(request):
-    """
-    Vista principal del supervisor con filtros para su empresa asignada.
-    
-    :param request: HttpRequest de usuario con rol supervisor
-    :return: Renderizado de template con registros filtrados
-    """
+def supervisor_home(request,empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    supervisores = empresa.usuarios.filter(role='supervisor')
+    trabajadores = empresa.usuarios.filter(role='trabajador')
+    context = {
+        'empresa': empresa,
+        'supervisores': supervisores,
+        'trabajadores': trabajadores,
+    }
+    return render(request, 'home/supervisor_home.html', context)
 
-    query = request.GET.get('q')
-    fecha_inicio = request.GET.get('fecha_inicio')
-    fecha_fin = request.GET.get('fecha_fin')
-    
-    entradas = RegistroEntrada.objects.filter(trabajador__empresa=request.user.empresa)
-    
-    if query:
-        entradas = entradas.filter(Q(trabajador__username__icontains=query))
-    
-    if fecha_inicio and fecha_fin:
-        entradas = entradas.filter(hora_entrada__range=[fecha_inicio, fecha_fin])
-    
-    return render(request, 'home/supervisor_home.html', {'entradas': entradas})
 
 @login_required
 def trabajador_home(request):
@@ -793,3 +783,5 @@ def eliminar_trabajador(request, trabajador_id):
     trabajador.delete()
     messages.success(request, 'Trabajador eliminado exitosamente.')
     return redirect('detalle_empresa', pk=empresa_id)
+
+    
