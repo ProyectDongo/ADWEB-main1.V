@@ -176,12 +176,8 @@ class SupervisorForm(UserCreationForm):
     Formulario para creación de supervisores con permisos limitados.
     
     Attributes:
-        empresa (ModelChoiceField): Selector de empresa asociada
-        permisos (ModelMultipleChoiceField): Selector múltiple de permisos
-    
-    Methods:
-        __init__: Personaliza los querysets según el usuario creador
-        save: Asigna el rol 'supervisor' al guardar
+        empresa (ModelChoiceField): Selector de empresa asociada.
+        permisos (ModelMultipleChoiceField): Selector múltiple de permisos.
     """
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
@@ -199,18 +195,21 @@ class SupervisorForm(UserCreationForm):
         fields = ['username', 'password1', 'password2', 'empresa', 'permisos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
+
         }
 
     def __init__(self, *args, **kwargs):
         """
         Inicializa el formulario con restricciones de permisos y empresas.
-        
+
         Args:
-            user (Usuario): Usuario que crea el supervisor (obtenido de kwargs)
-        
+            user (Usuario): Usuario que crea el supervisor (se extrae de kwargs).
+            
         Behavior:
-            - Para no-admins: Restringe a su empresa y permisos asignados
-            - Para admins: Permite todas las empresas y permisos
+            - Para no-admin: Se restringe la empresa y los permisos disponibles.
+            - Para admin: Se muestran todas las empresas y permisos.
         """
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -221,13 +220,15 @@ class SupervisorForm(UserCreationForm):
             self.fields['permisos'].queryset = RegistroPermisos.objects.all()
 
     def save(self, commit=True):
-        """Guarda el usuario con rol de supervisor y permisos asignados."""
-        user = super().save(commit=False)
-        user.role = 'supervisor'
+        """
+        Guarda el usuario asignándole el rol 'supervisor' y los permisos seleccionados.
+        """
+        usuario = super().save(commit=False)
+        usuario.role = 'supervisor'
         if commit:
-            user.save()
-            self.save_m2m()
-        return user
+            usuario.save()
+            self.save_m2m()  # Asigna las relaciones ManyToMany (permisos)
+        return usuario
 
 class TrabajadorForm(UserCreationForm):
     """
@@ -555,3 +556,4 @@ class PlanForm(forms.ModelForm):
             'codigo': 'Código del Plan',
             'activo': 'Activo',
         }
+

@@ -163,11 +163,6 @@ def supervisor_home(request):
     :param request: HttpRequest de usuario con rol supervisor
     :return: Renderizado de template con registros filtrados
     """
-    if request.user.role == 'supervisor':
-        empresa_id = request.user.empresa.id if request.user.empresa else None
-        if empresa_id:
-            return redirect('detalles_empresa', empresa_id=empresa_id)
-        return redirect('lista_empresas')
 
     query = request.GET.get('q')
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -263,7 +258,18 @@ def habilitar_otra_entrada(request, entrada_id):
 # =====================
 
 @login_required
+@permiso_requerido("crear_empresa")
 def crear_empresa(request):
+    """
+    Vista para crear una nueva empresa junto con la vigencia de su plan.
+
+    Esta vista permite a los usuarios autenticados crear una nueva empresa y asignar la vigencia de su plan.
+    Si la solicitud es un POST, se validan y guardan los formularios de empresa y vigencia. Si es GET, se muestran
+    los formularios vacíos para la creación.
+
+    :param request: HttpRequest
+    :return: Renderizado del template 'formularios/crear/crear_empresa.html' con los formularios de creación
+    """
     if request.method == 'POST':
         empresa_form = EmpresaForm(request.POST)
         vigencia_form = PlanVigenciaForm(request.POST)
@@ -291,9 +297,9 @@ def crear_empresa(request):
         'empresa_form': empresa_form,
         'vigencia_form': vigencia_form
     })
-            
 
 @login_required
+@permiso_requerido("vista_empresas")
 def listar_empresas(request):
     """
     Lista todas las empresas registradas con capacidad de búsqueda.
@@ -310,18 +316,35 @@ def listar_empresas(request):
     return render(request, 'empresas/listar_empresas.html', {'empresas': empresas})
 
 @login_required
+
 def detalle_empresa(request, pk):
+    """
+    Vista para mostrar y editar los detalles de una empresa específica.
+
+    Esta vista permite a los usuarios autenticados ver y editar los detalles de una empresa específica.
+    También permite eliminar la empresa si se solicita. Además, muestra un historial de cambios recientes
+    y una lista de supervisores y trabajadores asociados a la empresa.
+
+    :param request: HttpRequest
+    :param pk: ID de la empresa a mostrar y editar
+    :return: Renderizado del template 'empresas/detalles_empresa.html' con los detalles de la empresa
+    """
+    # Obtener el objeto RegistroEmpresas o devolver un 404 si no existe
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
+    
+    # Obtener el historial de cambios recientes para la empresa
     historial = HistorialCambios.objects.filter(empresa=empresa).order_by('-fecha')[:10]
     
-     # Filtrar usuarios por grupo y empresa
+    # Filtrar usuarios por grupo y empresa
     supervisores = Usuario.objects.filter(role='Supervisor', empresa_id=pk)
     trabajadores = Usuario.objects.filter(role='Trabajador', empresa_id=pk)
 
     if request.method == 'POST':
         if 'guardar' in request.POST:
+            # Si se solicita guardar, crear un formulario con los datos enviados y la instancia de la empresa
             form = EmpresaForm(request.POST, instance=empresa)
             if form.is_valid():
+                # Si el formulario es válido, guardar los cambios
                 form.save()
                 # Registrar en historial
                 HistorialCambios.objects.create(
@@ -329,17 +352,24 @@ def detalle_empresa(request, pk):
                     usuario=request.user,
                     descripcion="Modificación de datos empresariales"
                 )
+                # Mostrar un mensaje de éxito
                 messages.success(request, 'Cambios guardados exitosamente!')
+                # Redirigir a la vista de detalles de la empresa
                 return redirect('detalle_empresa', pk=pk)
                 
         elif 'eliminar' in request.POST:
+            # Si se solicita eliminar, eliminar la empresa
             empresa.delete()
+            # Mostrar un mensaje de éxito
             messages.success(request, 'Empresa eliminada correctamente')
+            # Redirigir a la lista de empresas
             return redirect('listar_empresas')
 
     else:
+        # Si la solicitud es GET, crear un formulario con la instancia de la empresa
         form = EmpresaForm(instance=empresa)
 
+    # Renderizar el template con la empresa, el formulario, los supervisores, los trabajadores y el historial
     return render(request, 'empresas/detalles_empresa.html', {
         'empresa': empresa,
         'form': form,
@@ -347,24 +377,10 @@ def detalle_empresa(request, pk):
         'trabajadores': trabajadores,
         'historial': historial
     })
-def editar_empresa(request, pk):
-    """
-    Vista para edición de información de una empresa existente.
-    
-    :param request: HttpRequest
-    :param pk: ID de la empresa a editar
-    :return: Renderizado de formulario o redirección tras éxito
-    """
-    empresa = get_object_or_404(RegistroEmpresas, pk=pk)
-    if request.method == 'POST':
-        form = EmpresaForm(request.POST, instance=empresa)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_empresas')
-    else:
-        form = EmpresaForm(instance=empresa)
-    return render(request, 'empresas/empresa_form.html', {'form': form})
 
+
+
+@login_required
 def eliminar_empresa(request, pk):
     """
     Vista para eliminación de una empresa existente.
@@ -423,21 +439,12 @@ def crear_admin(request):
 @permiso_requerido("crear_supervisor")
 def crear_supervisor(request):
     """
-    Vista para creación de nuevos usuarios supervisores.
-    
-    :param request: HttpRequest
-    :return: Renderizado de formulario o redirección tras éxito
+    Vista para la creación de supervisores.
     """
     if request.method == 'POST':
         form = SupervisorForm(request.POST, user=request.user)
         if form.is_valid():
-            supervisor = form.save(commit=False)
-            supervisor.role = 'supervisor'
-            if request.user.role != 'admin':
-                supervisor.empresa = request.user.empresa
-            supervisor.set_password(form.cleaned_data['password1'])
-            supervisor.save()
-            form.save_m2m()
+            form.save()  # Aquí se asigna el rol y se guardan los permisos seleccionados
             return redirect('configuracion_home')
     else:
         form = SupervisorForm(user=request.user)
@@ -462,7 +469,7 @@ def crear_trabajador(request):
             trabajador.save()
             form.save_m2m()
             if request.user.role == 'admin':
-                return redirect('lista_empresas')
+                return redirect('listar_empresas')
             else:
                 return redirect('detalles_empresa', empresa_id=trabajador.empresa.id)
     else:
@@ -470,6 +477,7 @@ def crear_trabajador(request):
     return render(request, 'formularios/crear/crear_trabajador.html', {'form': form})
 
 @login_required
+@permiso_requerido("editar_supervisor")
 def editar_supervisor(request, pk):
     """
     Vista para edición de usuarios supervisores.
@@ -483,10 +491,8 @@ def editar_supervisor(request, pk):
         form = SupervisorEditForm(request.POST, instance=supervisor, user=request.user)
         if form.is_valid():
             form.save()
-            if request.user.role == 'admin':
-                return redirect('lista_empresas')
-            else:
-                return redirect('detalles_empresa', empresa_id=supervisor.empresa.id)
+            return redirect('detalle_empresa', pk=supervisor.empresa.id)
+
     else:
         form = SupervisorEditForm(instance=supervisor, user=request.user)
     return render(request, 'formularios/edit/editar_supervisor.html', {'form': form, 'supervisor': supervisor})
@@ -495,27 +501,23 @@ def editar_supervisor(request, pk):
 @permiso_requerido("editar_trabajador")
 def editar_trabajador(request, pk):
     """
-    Vista para edición de usuarios trabajadores.
-    
-    :param request: HttpRequest
-    :param pk: ID del trabajador a editar
-    :return: Renderizado de formulario o redirección tras éxito
+    Vista para la edición de un trabajador.
     """
     trabajador = get_object_or_404(Usuario, pk=pk)
     if request.method == 'POST':
         form = TrabajadorEditForm(request.POST, instance=trabajador, user=request.user)
         if form.is_valid():
             form.save()
-            if request.user.role == 'admin':
-                return redirect('lista_empresas')
-            else:
-                return redirect('detalles_empresa', empresa_id=trabajador.empresa.id)
+            # Redirige siempre a la página de detalles de la empresa
+            return redirect('detalle_empresa', pk=trabajador.empresa.id)
     else:
         form = TrabajadorEditForm(instance=trabajador, user=request.user)
-    return render(request, 'formularios/edit/editar_trabajador.html', {'form': form, 'trabajador': trabajador})
+    return render(request, 'formularios/edit/editar_trabajador.html', {
+        'form': form,
+        'trabajador': trabajador
+    })
 
 @login_required
-@permiso_requerido("eliminar_usuario")
 def eliminar_usuario(request, user_id):
     """
     Vista para eliminación de usuarios.
@@ -549,6 +551,7 @@ class MantenimientoPlanes(ListView):
     template_name = 'mantenimiento_planes.html'
     context_object_name = 'planes'
 
+@login_required
 def vigencia_planes(request):
     """
     Gestiona la vigencia de los planes con cálculo automático de montos.
@@ -582,10 +585,22 @@ def vigencia_planes(request):
 # Reportes y Exportación
 # =====================
 
-from django.shortcuts import render
-from .models import RegistroEmpresas
-
+@login_required
 def empresas_vigentes(request):
+    """
+    Vista para listar las vigencias de los planes de las empresas con capacidad de búsqueda y filtrado.
+
+    Esta vista obtiene todos los registros de VigenciaPlan y carga la empresa relacionada. Permite filtrar
+    los resultados por empresa, código de plan y código de cliente.
+
+    Parámetros GET aceptados:
+    - empresa_id: ID de la empresa para filtrar las vigencias.
+    - codigo_plan: Código del plan para filtrar las vigencias (búsqueda parcial, insensible a mayúsculas).
+    - codigo_cliente: Código del cliente para filtrar las vigencias (búsqueda parcial, insensible a mayúsculas).
+
+    :param request: HttpRequest
+    :return: Renderizado del template 'empresas/empresas_vigente.html' con el contexto de las vigencias filtradas.
+    """
     # Inicia con todos los registros de VigenciaPlan y carga la empresa relacionada.
     qs = VigenciaPlan.objects.select_related('empresa').all()
 
@@ -604,7 +619,7 @@ def empresas_vigentes(request):
     
     # Filtrar por código cliente, que está en el modelo relacionado (RegistroEmpresas)
     if codigo_cliente:
-        qs = qs.filter(empresa__codigo_cliente__icontains=codigo_cliente)
+        qs = qs.filter(empresa__codigo_cliente__icontains = codigo_cliente)
 
     context = {
         'vigencias': qs,
@@ -614,9 +629,9 @@ def empresas_vigentes(request):
             'codigo_cliente': codigo_cliente,
         }
     }
-    return render(request, 'empresas/empresas_vigente.html', context )
+    return render(request, 'empresas/empresas_vigente.html', context)
 
-
+@login_required
 def vigencia_planes(request, pk):
     """
     Vista para la gestión de vigencias de planes.
@@ -652,7 +667,9 @@ def generar_boleta(request, empresa_id):
     # Implementación futura de generación de PDF
     return HttpResponse("Generación de PDF actualmente deshabilitada")
 
+
 @login_required
+@permiso_requerido("lista_permisos")
 def lista_permisos(request):
     """
     Lista todos los permisos registrados.
@@ -684,6 +701,7 @@ def actualizar_limites(request, empresa_id):
     return render(request, 'empresas/actualizar_limites.html', {'form': form, 'empresa': empresa})
 
 @login_required
+@permiso_requerido("vista_planes")
 def listar_planes(request):
     """
     Lista todos los planes registrados.
@@ -695,6 +713,7 @@ def listar_planes(request):
     return render(request, 'empresas/listar_planes.html', {'planes': planes})
 
 @login_required
+@permiso_requerido("crear_plan")
 def crear_plan(request):
     """
     Vista para crear un nuevo plan.
@@ -722,3 +741,55 @@ def configuracion_home(request):
     return render(request, 'home/configuracion_home.html')
 
 
+
+@login_required
+@permiso_requerido("editar_vigencia")
+def editar_vigencia_plan(request, plan_id):
+    """
+    Vista para editar la vigencia de un plan existente.
+
+    Esta vista permite a los usuarios autenticados editar los detalles de la vigencia de un plan específico.
+    Si la solicitud es un POST, se valida y guarda el formulario. Si es GET, se muestra el formulario con los
+    datos actuales del plan.
+
+    :param request: HttpRequest
+    :param plan_id: ID de la vigencia del plan a editar
+    :return: Renderizado del template 'empresas/editar_vigencia_plan.html' con el formulario de edición
+    """
+    # Obtener el objeto VigenciaPlan o devolver un 404 si no existe
+    plan = get_object_or_404(VigenciaPlan, id=plan_id)
+    
+    if request.method == 'POST':
+        # Si la solicitud es POST, crear un formulario con los datos enviados y la instancia del plan
+        form = PlanVigenciaForm(request.POST, instance=plan)
+        if form.is_valid():
+            # Si el formulario es válido, guardar los cambios
+            form.save()
+            # Mostrar un mensaje de éxito
+            messages.success(request, 'Plan actualizado exitosamente.')
+            # Redirigir a la lista de empresas
+            return redirect('empresas_vigentes')
+    else:
+        # Si la solicitud es GET, crear un formulario con la instancia del plan
+        form = PlanVigenciaForm(instance=plan)
+    
+    # Renderizar el template con el formulario y el plan
+    return render(request, 'empresas/editar_vigencia_plan.html', {'form': form, 'plan': plan})
+
+@login_required
+@permiso_requerido("eliminar_supervisor")
+def eliminar_supervisor(request, supervisor_id):
+    supervisor = get_object_or_404(Usuario, id=supervisor_id, role='Supervisor')
+    empresa_id = supervisor.empresa_id
+    supervisor.delete()
+    messages.success(request, 'Supervisor eliminado exitosamente.')
+    return redirect('detalle_empresa', pk=empresa_id)
+
+@login_required
+@permiso_requerido("eliminar_trabajador")
+def eliminar_trabajador(request, trabajador_id):
+    trabajador = get_object_or_404(Usuario, id=trabajador_id, role='Trabajador')
+    empresa_id = trabajador.empresa_id
+    trabajador.delete()
+    messages.success(request, 'Trabajador eliminado exitosamente.')
+    return redirect('detalle_empresa', pk=empresa_id)

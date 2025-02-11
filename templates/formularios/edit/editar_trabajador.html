@@ -1,19 +1,135 @@
 {% extends "central.html" %}
+{% load static %}
 
-{% block title %}Editar Trabajador {% endblock %}
+{% block title %}Editar Trabajador{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4">Editar Trabajador</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Guardar</button>
-    </form>
-    {% if user.role == "admin" %}
-        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary mt-4">Volver</a>
-    {% else %}
-        <a href="{% url 'detalles_empresa' trabajador.empresa.id %}" class="btn btn-secondary mt-4">Volver</a>
-    {% endif %}
+{% block css-page %}
+<link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}">
+{% endblock %}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h2 class="h4 mb-0 text-center">
+            <i class="bi bi-person-badge me-2"></i>Editar Trabajador
+          </h2>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+              <!-- Nombre de usuario -->
+              <div class="col-md-6">
+                <div class="form-floating mb-4">
+                  <input type="text" name="{{ form.username.name }}" 
+                         id="{{ form.username.id_for_label }}" 
+                         value="{{ form.username.value|default_if_none:'' }}" 
+                         class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                         placeholder="Nombre de usuario" required>
+                  <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+                  {% if form.username.errors %}
+                    <div class="invalid-feedback">
+                      {{ form.username.errors|first }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- Empresa -->
+              <div class="col-md-6">
+                <div class="form-floating mb-4">
+                  <select name="{{ form.empresa.name }}" class="form-select" id="{{ form.empresa.id_for_label }}">
+                    {% for empresa in form.empresa.field.queryset %}
+                      <option value="{{ empresa.id }}" 
+                        {% if form.empresa.value == empresa.id %}selected{% endif %}>
+                        {{ empresa.nombre }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <label for="{{ form.empresa.id_for_label }}">Empresa</label>
+                  {% if form.empresa.errors %}
+                    <div class="invalid-feedback">
+                      {{ form.empresa.errors|first }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- Contraseñas (opcional para actualización) -->
+              <div class="col-md-6">
+                <div class="form-floating mb-4">
+                  <input type="password" name="password1" 
+                         class="form-control {% if form.password1.errors %}is-invalid{% endif %}" 
+                         id="{{ form.password1.id_for_label }}" 
+                         placeholder="Nueva contraseña">
+                  <label for="{{ form.password1.id_for_label }}">Nueva Contraseña</label>
+                  {% if form.password1.errors %}
+                    <div class="invalid-feedback">
+                      {{ form.password1.errors|first }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="form-floating mb-4">
+                  <input type="password" name="password2" 
+                         class="form-control {% if form.password2.errors %}is-invalid{% endif %}" 
+                         id="{{ form.password2.id_for_label }}" 
+                         placeholder="Confirmar nueva contraseña">
+                  <label for="{{ form.password2.id_for_label }}">Confirmar Nueva Contraseña</label>
+                  {% if form.password2.errors %}
+                    <div class="invalid-feedback">
+                      {{ form.password2.errors|first }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <!-- Permisos -->
+              <div class="col-12">
+                <div class="mb-4">
+                  <label class="form-label">Permisos</label>
+                  <div>
+                    {% for permiso in form.permisos.field.queryset %}
+                      <div class="form-check">
+                        <input type="checkbox" name="permisos[]" value="{{ permiso.id }}" 
+                               class="form-check-input" id="permiso_{{ permiso.id }}"
+                               {% if permiso.id in form.permisos.value %}checked{% endif %}>
+                        <label class="form-check-label" for="permiso_{{ permiso.id }}">
+                          {{ permiso.nombre }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                  {% if form.permisos.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.permisos.errors|first }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Botones -->
+            <div class="mt-5 border-top pt-4">
+              <div class="d-flex justify-content-between">
+                <a href="{% url 'detalle_empresa' trabajador.empresa.id %}" class="btn btn-outline-secondary px-4">
+                  <i class="bi bi-arrow-left me-2"></i>Volver
+                </a>
+                <button type="submit" class="btn btn-primary px-4">
+                  <i class="bi bi-save me-2"></i>Guardar Cambios
+                </button>
+              </div>
+            </div>
+            
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

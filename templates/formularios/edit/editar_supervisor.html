@@ -1,19 +1,27 @@
 {% extends "central.html" %}
 
-{% block title %}Editar Supervisor {% endblock %}
+{% block title %}Editar Supervisor{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4">Editar Supervisor</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Guardar</button>
-    </form>
-    {% if user.role == "admin" %}
-        <a href="{% url 'lista_empresas' %}" class="btn btn-secondary mt-4">Volver</a>
-    {% else %}
-        <a href="{% url 'detalles_empresa' supervisor.empresa.id %}" class="btn btn-secondary mt-4">Volver</a>
-    {% endif %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-person-badge me-2"></i>Editar Supervisor</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'detalle_empresa' supervisor.empresa.id %}" class="btn btn-secondary">Volver</a>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

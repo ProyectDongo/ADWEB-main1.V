@@ -29,7 +29,7 @@
 
     <div class="card shadow-sm">
         <div class="card-header text-white" style="background-color:rgba(0, 106, 255, 0.707);">
-            <h1 class="mb-0">Empresas Vigentes</h1>
+            <h1 class="mb-0">Planes Vigentes</h1>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -66,7 +66,7 @@
                                     <a href="{% url 'generar_boleta' vigencia.empresa.id %}" class="btn btn-primary btn-sm">
                                         Generar Boleta
                                     </a>
-                                    <a href="{% url 'vigencia_planes' vigencia.empresa.id %}" class="btn btn-primary btn-sm">
+                                    <a href="{% url 'editar_vigencia_plan' vigencia.id %}" class="btn btn-primary btn-sm">
                                         Editar
                                     </a>
                                 </td>

@@ -1,3 +1,4 @@
+
 {% extends "central.html" %}
 
 {% block title %}Lista de Empresas{% endblock %}
@@ -29,7 +30,7 @@
                         <tr>
                             <th>Código Cliente</th>
                             <th>Estado</th>
-                            <th> Vigente</th>
+                            <th>Vigente</th>
                             <th>Nombre</th>
                             <th>RUT</th>
                             <th>Dirección</th>
@@ -75,7 +76,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center">No hay empresas disponibles.</td>
+                            <td colspan="8" class="text-center">No hay empresas disponibles.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -91,8 +92,12 @@
         const rows = document.querySelectorAll('#empresa-list tr');
         rows.forEach(row => {
             const codigoCliente = row.querySelector('th').textContent.toLowerCase();
-            const nombre = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const rut = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const estado = row.querySelector('th:nth-child(2)').textContent.toLowerCase();
+            const vigente = row.querySelector('th:nth-child(3)').textContent.toLowerCase();
+            const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            const rut = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+            const direccion = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
+            const telefono = row.querySelector('td:nth-child(7)').textContent.toLowerCase();
             const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
             row.style.display = match ? '' : 'none';
         });

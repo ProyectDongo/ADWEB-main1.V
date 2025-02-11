@@ -1,0 +1,13 @@
+{% extends "central.html" %}
+{% block title %}Editar Vigencia Plan{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center">Editar Vigencia Plan</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

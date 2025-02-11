@@ -41,23 +41,31 @@ urlpatterns = [
     path('crear_supervisor/', views.crear_supervisor, name='crear_supervisor'),
     path('crear_trabajador/', views.crear_trabajador, name='crear_trabajador'),
 
+    # Rutas para editar  supervisores y trabajadores
+    path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
+    path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
+    path('eliminar_supervisor/<int:supervisor_id>/', views.eliminar_supervisor, name='eliminar_supervisor'),
+    path('eliminar_trabajador/<int:trabajador_id>/', views.eliminar_trabajador, name='eliminar_trabajador'),
+
+
+
     #lista permisos
     path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
-    
- 
-   
+
+    #lista admins
     path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
-
-   
-
     # habilitar otra entrada
     path('habilitar_otra_entrada/<int:entrada_id>/', views.habilitar_otra_entrada, name='habilitar_otra_entrada'),
     # estas 2 son de la misma funcion
+
+    # eliminar entrada
     path('actualizar_limites/<int:empresa_id>/', views.actualizar_limites, name='actualizar_limites'),
+
+    # lista las empresas
     path('listar_empresas/', views.listar_empresas, name='listar_empresas'),
+
+
     
-    path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
-    path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
 
     # Rutas para las entradas para la empresa
     path('vigencia_planes/', views.vigencia_planes, name='vigencia_planes'),
@@ -65,13 +73,11 @@ urlpatterns = [
     # Rutas para las entradas para la empresa
     path('api/get_provincias/', views.get_provincias, name='get_provincias'),
     path('api/get_comunas/', views.get_comunas, name='get_comunas'),
-    
-    path('empresa_form/', views.editar_empresa, name='empresa_form'),
+
    # Editar y eliminar empresa
-    path('editar_empresa/<int:pk>/', views.editar_empresa, name='editar_empresa'),
+   
     path('eliminar_empresa/<int:pk>/', views.eliminar_empresa, name='eliminar_empresa'),
     path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
-    path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
     path('listar_planes/', views.listar_planes, name='listar_planes'),
     path('generar_boleta/<int:empresa_id>/', views.generar_boleta, name='generar_boleta'),
     # Rutas para los planes
@@ -79,9 +85,13 @@ urlpatterns = [
 
     # ruta configuracion
     path('configuracion_home/', views.configuracion_home, name='configuracion_home'),
-    
+
+  
+    # Rutas para los planes
     path('vigencia_planes/<int:pk>/', views.vigencia_planes, name='vigencia_planes'),
-    
-    
+
+    # Rutas para los planes con la empresa
+    path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
+    path('editar_vigencia_plan/<int:plan_id>/', views.editar_vigencia_plan, name='editar_vigencia_plan'),
     
     ] 

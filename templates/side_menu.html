@@ -61,6 +61,7 @@
       </li>
 
       <!-- Configuración de Software -->
+     
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware" role="button" aria-expanded="false" aria-controls="configuracionSoftware">
           <span data-feather="settings"></span> Configuración de Software
@@ -88,14 +89,16 @@
           </ul>
         </div>
       </li>
-
+     
+      
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas" role="button" aria-expanded="false" aria-controls="configuracionEmpresas">
           <i class="bi bi-building me-2" id="clientes"></i> clientes
         </a>
         <div class="collapse" id="configuracionEmpresas">
           <ul class="nav flex-column ms-3">
-          
+            {% for permiso in user_permisos %}
+            {% if permiso.nombre == "vista_empresas" %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'listar_empresas' %}">
                   <i class="bi bi-building me-2" id="clientes" ></i> Lista clientes
@@ -105,10 +108,12 @@
                     <i class="bi bi-building me-2" id="clientes" ></i> Planes
                 </a>
             </li>
+            {% endif %}
+           {% endfor %}
           </ul>
         </div>
       </li>
-
+     
       <!-- Otras opciones basadas en permisos -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos" role="button" aria-expanded="false" aria-controls="ConfiguraciónPermisos">
@@ -128,7 +133,7 @@
                 <i class="bi bi-key me-2" id="permisos" ></i> Lista de Permisos
               </a>
             </li>
-          
+           
         
       
     </ul>

@@ -1,0 +1,183 @@
+{% extends "central.html" %}
+{% block title %}Vigencia de Planes{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0 text-center"><i class="bi bi-calendar-check me-2"></i>Vigencia de Planes</h2>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select name="empresa" class="form-select {% if form.empresa.errors %}is-invalid{% endif %}" id="{{ form.empresa.id_for_label }}">
+                                        {% for empresa in form.empresa.field.queryset %}
+                                            <option value="{{ empresa.id }}" {% if form.empresa.value == empresa.id %}selected{% endif %}>
+                                                {{ empresa.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label>Empresa</label>
+                                    <div class="invalid-feedback">{{ form.empresa.errors }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select name="plan" class="form-select {% if form.plan.errors %}is-invalid{% endif %}" id="{{ form.plan.id_for_label }}">
+                                        {% for plan in form.plan.field.queryset %}
+                                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if form.plan.value == plan.id %}selected{% endif %}>
+                                                {{ plan.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label>Plan Contratado</label>
+                                    <div class="invalid-feedback">{{ form.plan.errors }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="codigo_plan" name="codigo_plan" class="form-control {% if form.codigo_plan.errors %}is-invalid{% endif %}"
+                                           value="{{ form.codigo_plan.value|default_if_none:'' }}" required>
+                                    <label for="codigo_plan">Código Plan</label>
+                                    <div class="invalid-feedback">{{ form.codigo_plan.errors }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control {% if form.fecha_inicio.errors %}is-invalid{% endif %}"
+                                           value="{{ form.fecha_inicio.value|default_if_none:'' }}" required>
+                                    <label>Fecha Inicio</label>
+                                    <div class="invalid-feedback">{{ form.fecha_inicio.errors }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control {% if form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ form.fecha_fin.value|default_if_none:'' }}">
+                                    <label>Fecha Fin (Opcional)</label>
+                                    <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido" {% if form.indefinido.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="indefinido">Indefinido</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="number" id="descuento" name="descuento" class="form-control {% if form.descuento.errors %}is-invalid{% endif %}"
+                                           min="0" max="100" value="{{ form.descuento.value|default_if_none:'' }}" required>
+                                    <label>% Descuento (0-100)</label>
+                                    <div class="invalid-feedback">{{ form.descuento.errors }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" id="precio_original" name="precio_original" class="form-control {% if form.precio_original.errors %}is-invalid{% endif %}"
+                                           value="{{ form.precio_original.value|default_if_none:'' }}" required>
+                                    <label>Precio Original</label>
+                                    <div class="invalid-feedback">{{ form.precio_original.errors }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="precio_final" name="precio_final" class="form-control" value="{{ form.precio_final.value|default_if_none:'' }}" readonly required>
+                                    <label>Precio con Descuento</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-4">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'empresas_vigentes' %}" class="btn btn-outline-secondary px-4">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary px-4" id="guardar-btn">
+                                    <i class="bi bi-save me-2"></i>Guardar Vigencia
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const descuentoInput = document.getElementById("descuento");
+    const precioOriginalInput = document.getElementById("precio_original");
+    const precioFinalInput = document.getElementById("precio_final");
+    const guardarBtn = document.getElementById("guardar-btn");
+    const fechaInicioInput = document.getElementById("fecha_inicio");
+    const fechaFinInput = document.getElementById("fecha_fin");
+    const indefinidoCheckbox = document.getElementById("indefinido");
+
+    // Establecer la fecha de inicio con la fecha actual si no tiene valor
+    if (!fechaInicioInput.value) {
+        let today = new Date().toISOString().split('T')[0];
+        fechaInicioInput.value = today;
+    }
+
+    function calcularPrecioFinal() {
+        let precioOriginal = parseFloat(precioOriginalInput.value) || 0;
+        let descuento = parseFloat(descuentoInput.value) || 0;
+        let precioFinal = precioOriginal * (1 - descuento / 100);
+        precioFinalInput.value = precioFinal.toFixed(2);
+    }
+
+    function validarFormulario(event) {
+        if (precioOriginalInput.value === "" || isNaN(precioOriginalInput.value) || 
+            descuentoInput.value === "" || isNaN(descuentoInput.value)) {
+            event.preventDefault();
+            alert("Por favor, ingrese valores válidos para el precio y el descuento.");
+        }
+    }
+
+    function toggleFechaFin() {
+        if (indefinidoCheckbox.checked) {
+            fechaFinInput.value = "";
+            fechaFinInput.setAttribute("disabled", "true");
+        } else {
+            fechaFinInput.removeAttribute("disabled");
+        }
+    }
+
+    // Listener para actualizar precio_original al seleccionar un plan
+    const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
+    if (planSelect) {
+        planSelect.addEventListener("change", function() {
+            const selectedOption = planSelect.options[planSelect.selectedIndex];
+            let planValor = selectedOption.getAttribute("data-valor") || "";
+            // Reemplazar la coma decimal por punto
+            planValor = planValor.replace(',', '.');
+            precioOriginalInput.value = planValor;
+            calcularPrecioFinal();
+        });
+    }
+
+    descuentoInput.addEventListener("input", calcularPrecioFinal);
+    precioOriginalInput.addEventListener("input", calcularPrecioFinal);
+    guardarBtn.addEventListener("click", validarFormulario);
+    indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+
+    // Inicializar valores si existen
+    calcularPrecioFinal();
+    toggleFechaFin();
+});
+</script>
+{% endblock %}
