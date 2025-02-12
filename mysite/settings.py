@@ -44,13 +44,13 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Application definition
 
 INSTALLED_APPS = [
+    'WEB',
     'django.contrib.admin', 
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'WEB',
     'crispy_forms',
     'crispy_bootstrap5',
 
@@ -69,7 +69,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
     ]
-SESSION_EXPIRE_SECONDS =  1200 # 20 minutos
+SESSION_EXPIRE_SECONDS =  1000000000000000 # 20 minutos
 SESSION_TIMEOUT_REDIRECT = 'login'
 ROOT_URLCONF = 'mysite.urls'
 
@@ -100,11 +100,14 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mydbd',
+        'NAME': 'mydb',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {
+            'init_command': 'SET default_storage_engine=INNODB',
+        }
     }
 }
 

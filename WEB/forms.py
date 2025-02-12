@@ -76,7 +76,7 @@ class EmpresaForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             if field.required:
-                field.widget.attrs['placeholder'] = f'{field.label} *'
+                field.widget.attrs['placeholder'] = f'{field.label} '
             else:
                 field.widget.attrs['placeholder'] = field.label
             if field_name in self.errors:
@@ -436,18 +436,14 @@ class LimiteEmpresaForm(forms.ModelForm):
     """
     class Meta:
         model = RegistroEmpresas
-        fields = ['limite_supervisores', 'limite_trabajadores']
+        fields = ['limite_usuarios']
         widgets = {
-            'limite_supervisores': forms.NumberInput(attrs={
+            'limite_usuarios': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
                 'step': '1'
             }),
-            'limite_trabajadores': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'step': '1'
-            }),
+         
         }
 
 class PlanVigenciaForm(forms.ModelForm):
@@ -539,19 +535,17 @@ class PlanForm(forms.ModelForm):
     """
     class Meta:
         model = Plan
-        fields = ['nombre', 'max_supervisores', 'max_trabajadores', 'valor', 'codigo', 'activo']
+        fields = ['nombre', 'max_usuarios','valor', 'codigo', 'activo']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del Plan'}),
-            'max_supervisores': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Supervisores'}),
-            'max_trabajadores': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Trabajadores'}),
+            'max_usuarios': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Usuarios'}),
             'valor': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Valor del Plan'}),
             'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código del Plan'}),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
             'nombre': 'Nombre del Plan',
-            'max_supervisores': 'Máximo de Supervisores',
-            'max_trabajadores': 'Máximo de Trabajadores',
+            'max_usuarios': 'Máximo de usuarios',
             'valor': 'Valor del Plan',
             'codigo': 'Código del Plan',
             'activo': 'Activo',

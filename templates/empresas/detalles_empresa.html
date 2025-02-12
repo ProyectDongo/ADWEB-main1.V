@@ -31,10 +31,16 @@
         
         <!-- Encabezado y botón Guardar -->
         <div class="d-flex justify-content-between align-items-center mb-4">
+         
+            <a href="{% url 'listar_empresas' %}" class=" btn btn-info btn-md mx-1 my-1">
+                    <i class="bi bi-arrow-left me-2"></i> Volver
+            </a>
+        
             <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
             <button type="submit" name="guardar" class="btn btn-success btn-lg">
                 <i class="bi bi-save"></i> Guardar Cambios
             </button>
+            
         </div>
 
         <!-- Pestañas -->
@@ -49,11 +55,11 @@
                 <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#representante" type="button" role="tab">Representante</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab">Plan </button>
+                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab">Estado </button>
             </li>
             
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">Personal</button>
+                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">servicios</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial</button>
@@ -75,8 +81,7 @@
                                     {{ form.rut|as_crispy_field }}
                                     {{ form.giro|as_crispy_field }}
                                     {{ form.direccion|as_crispy_field }}
-                                    {{ form.numero|as_crispy_field }}
-                                    {{ form.oficina|as_crispy_field }}
+                                   
 
                             </div>
                             <div class="col-md-6">
@@ -84,6 +89,8 @@
                                     {{ form.provincia|as_crispy_field }}
                                     {{ form.comuna|as_crispy_field }}
                                     {{ form.telefono|as_crispy_field }}
+                                    {{ form.numero|as_crispy_field }}
+                                    {{ form.oficina|as_crispy_field }}
                             </div>
                         </div>
                     </div>
@@ -100,6 +107,10 @@
                                 {{ form.celular_contacto|as_crispy_field }}
                                 {{ form.mail_contacto|as_crispy_field }}
                             </div>
+                            <div class="col-md-6">
+                                
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -109,13 +120,12 @@
             <div class="tab-pane fade" id="plan" role="tabpanel">
                 <div class="card shadow">
                     <div class="card-body">
-                        <h4 class="text-primary mb-4">Plan y estado</h4>
+                        <h4 class="text-primary mb-4">estado</h4>
                         <div class="row">
                             <div class="col-md-6">
                                 {{ form.estado|as_crispy_field }}
                                 {{ form.vigente|as_crispy_field}}
-                                {{ form.email|as_crispy_field }}
-                                {{ form.web|as_crispy_field }}
+                                
                             </div>
                         </div>
                     </div>
@@ -138,32 +148,38 @@
             <div class="tab-pane fade" id="personal" role="tabpanel">
                 <div class="card shadow">
                     <div class="card-body">
-                        <h4 class="text-primary mb-4"> Personal</h4>
-                        <h5 class="text-primary mt-4">Supervisores</h5>
-                        <ul class="list-group">
-                            {% for supervisor in supervisores %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ supervisor.username }} - {{ supervisor.role }}
-                                <div>
-                                    <a href="{% url 'editar_supervisor' supervisor.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                    <a href="{% url 'eliminar_supervisor' supervisor.id %}" class="btn btn-danger btn-sm">Eliminar</a>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                        <h5 class="text-primary mt-4">Trabajadores</h5>
-                        <ul class="list-group">
-                            {% for trabajador in trabajadores %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ trabajador.username }} - {{ trabajador.role }}
-                                <div>
-                                    <a href="{% url 'editar_trabajador' trabajador.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                    <a href="{% url 'eliminar_trabajador' trabajador.id %}" class="btn btn-danger btn-sm">Eliminar</a>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
+                        <h4 class="text-primary mb-4"> Servicios </h4>
 
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>Nombre</tr>
+                                    <tr>ID</tr>
+                                    <tr>Fecha</tr>
+                                    <tr>estado</tr>
+                                    <tr>acciones</tr>
+                                </thead>
+                                <tbody>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="d-flex flex-wrap justify-content-center">
+                                        <a href="#" class="btn btn-info btn-sm mx-1 my-1" title="Ver Detalles">
+                                            <i class="bi bi-eye"></i> Moficar Estado
+                                        </a>
+                                        
+                                        <a href="#" class="btn btn-info btn-sm mx-1 my-1" title="Ver Detalles">
+                                            <i class="bi bi-eye"></i> Aministrar
+                                        </a>
+                                    </td>
+                                </tbody>
+                            </table>
+
+                        </div>
+        
+                      
+                  
                     </div>  
                 </div>
             </div>
@@ -238,11 +254,7 @@
         </div>
     </div>
 </div>
-<div class="mt-4">
-    <a href="{% url 'listar_empresas' %}" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left me-2"></i> Volver
-    </a>
-</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const regionSelect = document.getElementById('id_region');
