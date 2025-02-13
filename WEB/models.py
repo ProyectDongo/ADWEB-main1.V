@@ -1,3 +1,4 @@
+from wsgiref.validate import validator
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db.models.signals import post_save
@@ -5,6 +6,8 @@ from django.dispatch import receiver
 from django.db.models import Max
 from django.utils import timezone
 from django.conf import settings
+from .validators import validar_rut
+
 
 
 class Region(models.Model):
@@ -56,7 +59,7 @@ class RegistroEmpresas(models.Model):
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
     fecha_ingreso = models.DateField(auto_now_add=True)
-    rut = models.CharField(max_length=12, unique=True)
+    rut = models.CharField(max_length=13, unique=True)
     nombre = models.CharField(max_length=100)
     giro = models.CharField(max_length=100)
     direccion = models.CharField(max_length=200)
@@ -72,7 +75,7 @@ class RegistroEmpresas(models.Model):
     vigente = models.BooleanField(default=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
     
-    rut_representante = models.CharField(max_length=12)
+    rut_representante = models.CharField(max_length=12,validators=[validar_rut])
     nombre_representante = models.CharField(max_length=100)
     
     nombre_contacto = models.CharField(max_length=100)
@@ -189,7 +192,7 @@ class VigenciaPlan(models.Model):
     descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
-
+    
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"

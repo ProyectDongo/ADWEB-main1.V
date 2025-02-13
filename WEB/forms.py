@@ -8,7 +8,8 @@ Contiene formularios para:
 - Registro de entradas/salidas
 - Configuración de planes y límites
 """
-
+from .validators import validar_rut
+import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Usuario, RegistroEmpresas, RegistroPermisos, RegistroEntrada, VigenciaPlan, Plan, Provincia, Comuna, Region
@@ -45,7 +46,7 @@ class EmpresaForm(forms.ModelForm):
             'giro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Giro Comercial'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono Fijo'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Corporativo'}),
-            'web': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Sitio Web'}),
+            'web': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sitio Web'}),
             'region': forms.Select(attrs={'class': 'form-control'}),
             'provincia': forms.Select(attrs={'class': 'form-control'}),
             'comuna': forms.Select(attrs={'class': 'form-control'}),
@@ -55,7 +56,7 @@ class EmpresaForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'form-control'}),
             'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
-            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Representante'}),
+            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut  = 12.344.461-2'}),
             'nombre_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Representante'}),
         }
 
@@ -105,6 +106,11 @@ class EmpresaForm(forms.ModelForm):
                 pass
         elif self.instance.pk:
             self.fields['comuna'].queryset = self.instance.provincia.comuna_set.all()
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        validar_rut(rut)
+        return rut
 
 class PermisoForm(forms.ModelForm):
     """
@@ -535,12 +541,13 @@ class PlanForm(forms.ModelForm):
     """
     class Meta:
         model = Plan
-        fields = ['nombre', 'max_usuarios','valor', 'codigo', 'activo']
+        fields = ['nombre', 'max_usuarios','valor', 'codigo', 'activo','descripcion']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del Plan'}),
             'max_usuarios': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Máximo de Usuarios'}),
             'valor': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Valor del Plan'}),
             'codigo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código del Plan'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3,'placeholder':'Breve descripcion'}),
             'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         labels = {
@@ -548,6 +555,7 @@ class PlanForm(forms.ModelForm):
             'max_usuarios': 'Máximo de usuarios',
             'valor': 'Valor del Plan',
             'codigo': 'Código del Plan',
+            'descripciom':'descripcion del plan',
             'activo': 'Activo',
         }
 

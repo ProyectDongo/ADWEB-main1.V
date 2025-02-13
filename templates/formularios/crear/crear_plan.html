@@ -30,28 +30,27 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            <!-- Máximo Supervisores -->
-                            <div class="col-12">
+                             <!-- Código -->
+                             <div class="col-12">
                                 <div class="form-floating">
-                                    {{ form.max_supervisores }}
-                                    <label for="{{ form.max_supervisores.id_for_label }}">Máximo Supervisores</label>
-                                    {% if form.max_supervisores.errors %}
+                                    {{ form.codigo }}
+                                    <label for="{{ form.codigo.id_for_label }}">Código</label>
+                                    {% if form.codigo.errors %}
                                     <div class="invalid-feedback">
-                                        {{ form.max_supervisores.errors|first }}
+                                        {{ form.codigo.errors|first }}
                                     </div>
                                     {% endif %}
                                 </div>
                             </div>
                             
-                            <!-- Máximo Trabajadores -->
+                            <!-- Máximo Supervisores -->
                             <div class="col-12">
                                 <div class="form-floating">
-                                    {{ form.max_trabajadores }}
-                                    <label for="{{ form.max_trabajadores.id_for_label }}">Máximo Trabajadores</label>
-                                    {% if form.max_trabajadores.errors %}
+                                    {{ form.max_usuarios }}
+                                    <label for="{{ form.max_supervisores.id_for_label }}">Máximo Usuarios</label>
+                                    {% if form.max_usuarios.errors %}
                                     <div class="invalid-feedback">
-                                        {{ form.max_trabajadores.errors|first }}
+                                        {{ form.max_usuarios.errors|first }}
                                     </div>
                                     {% endif %}
                                 </div>
@@ -70,20 +69,21 @@
                                 </div>
                             </div>
                             
-                            <!-- Código -->
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    {{ form.codigo }}
-                                    <label for="{{ form.codigo.id_for_label }}">Código</label>
-                                    {% if form.codigo.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.codigo.errors|first }}
-                                    </div>
-                                    {% endif %}
+                           
+                        
+                          <!-- Descripción -->
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.descripcion }}
+                                <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                                {% if form.descripcion.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.descripcion.errors|first }}
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
-                        
+                    </div>
                         <!-- Activo (checkbox) -->
                         <div class="form-check mt-3">
                             {{ form.activo }}

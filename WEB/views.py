@@ -691,7 +691,7 @@ def actualizar_limites(request, empresa_id):
     return render(request, 'empresas/actualizar_limites.html', {'form': form, 'empresa': empresa})
 
 @login_required
-@permiso_requerido("vista_planes")
+#@permiso_requerido("vista_planes")
 def listar_planes(request):
     """
     Lista todos los planes registrados.
@@ -703,7 +703,7 @@ def listar_planes(request):
     return render(request, 'empresas/listar_planes.html', {'planes': planes})
 
 @login_required
-@permiso_requerido("crear_plan")
+#@permiso_requerido("crear_plan")
 def crear_plan(request):
     """
     Vista para crear un nuevo plan.
@@ -784,4 +784,4 @@ def eliminar_trabajador(request, trabajador_id):
     messages.success(request, 'Trabajador eliminado exitosamente.')
     return redirect('detalle_empresa', pk=empresa_id)
 
-    
+

@@ -23,12 +23,14 @@
                 {% for error in vigencia_form.non_field_errors %}
                   {{ error }}
                 {% endfor %}
+                
               </div>
             {% endif %}
             
+            
             <!-- Sección Información Principal (EmpresaForm) -->
             <a class="nav-link" data-bs-toggle="collapse" href="#informacionprincipal" role="button">
-              <i class="bi bi-building me-2"></i> <span style="font-size: 30px;">Informacion Principal</span>
+              <i class="bi bi-building me-2"></i> <span style="font-size: 20px;">Informacion Principal</span>
             </a>
             <div class="collapse show" id="informacionprincipal">
               <div class="mb-4 border border-dark rounded p-3">
@@ -112,12 +114,18 @@
                     </div>
                   </div>
                 </div>
+                <!-- Botón Siguiente -->
+                <div class="text-end mt-3">
+                  <button type="button" class="btn btn-primary next-btn" data-current="informacionprincipal" data-next="contacto">
+                    Siguiente
+                  </button>
+                </div>
               </div>
             </div>
             
             <!-- Sección Contacto (EmpresaForm) -->
             <a class="nav-link" data-bs-toggle="collapse" href="#contacto" role="button">
-              <i class="bi bi-person-lines-fill me-2"></i> <span style="font-size: 30px;">Contacto</span>
+              <i class="bi bi-person-lines-fill me-2"></i> <span style="font-size: 20px;">Contacto</span>
             </a>
             <div class="collapse" id="contacto">
               <div class="mb-4 border border-dark rounded p-3">
@@ -142,12 +150,18 @@
                     </div>
                   </div>
                 </div>
+                <!-- Botón Siguiente -->
+                <div class="text-end mt-3">
+                  <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="representantelegal">
+                    Siguiente
+                  </button>
+                </div>
               </div>
             </div>
             
             <!-- Sección Representante Legal (EmpresaForm) -->
             <a class="nav-link" data-bs-toggle="collapse" href="#representantelegal" role="button">
-              <i class="bi bi-person-badge me-2"></i> <span style="font-size: 30px;">Representante Legal</span>
+              <i class="bi bi-person-badge me-2"></i> <span style="font-size: 20px;">Representante Legal</span>
             </a>
             <div class="collapse" id="representantelegal">
               <div class="mb-4 border border-dark rounded p-3">
@@ -165,12 +179,18 @@
                     </div>
                   </div>
                 </div>
+                <!-- Botón Siguiente -->
+                <div class="text-end mt-3">
+                  <button type="button" class="btn btn-primary next-btn" data-current="representantelegal" data-next="planestado">
+                    Siguiente
+                  </button>
+                </div>
               </div>
             </div>
             
             <!-- Sección Plan y Estado (EmpresaForm) -->
             <a class="nav-link" data-bs-toggle="collapse" href="#planestado" role="button">
-              <i class="bi bi-clipboard-check me-2"></i> <span style="font-size: 30px;">Plan y Estado</span>
+              <i class="bi bi-clipboard-check me-2"></i> <span style="font-size: 20px;">Plan y Estado</span>
             </a>
             <div class="collapse" id="planestado">
               <div class="mb-4 border border-dark rounded p-3">
@@ -183,7 +203,7 @@
                   </div>
                   <div class="col-md-3">
                     <div class="form-check form-switch mt-3">
-                      <input type="checkbox" class="form-check-input" id="id_vigente" name="vigente" {% if empresa_form.vigente.value %}checked{% endif %}>
+                      <input type="checkbox" class="form-check-input" id="id_vigente" name="vigente" checked>
                       <label class="form-check-label" for="id_vigente">Vigente</label>
                     </div>
                   </div>
@@ -200,12 +220,18 @@
                     </div>
                   </div>
                 </div>
+                <!-- Botón Siguiente -->
+                <div class="text-end mt-3">
+                  <button type="button" class="btn btn-primary next-btn" data-current="planestado" data-next="vigencia">
+                    Siguiente
+                  </button>
+                </div>
               </div>
             </div>
             
             <!-- Sección Vigencia de Planes (PlanVigenciaForm) -->
             <a class="nav-link" data-bs-toggle="collapse" href="#vigencia" role="button">
-              <i class="bi bi-building me-2"></i> <span style="font-size: 30px;">Vigencia de Planes</span>
+              <i class="bi bi-building me-2"></i> <span style="font-size: 20px;">Vigencia de Planes</span>
             </a>
             <div class="collapse" id="vigencia">
               <div class="mb-4 border border-dark rounded p-3">
@@ -248,7 +274,7 @@
                         <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
                       </div>
                       <div class="form-check mt-2">
-                        <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" {% if vigencia_form.indefinido.value %}checked{% endif %}>
+                       <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
                         <label class="form-check-label" for="id_indefinido">Indefinido</label>
                       </div>
                     </div>
@@ -276,6 +302,13 @@
                     </div>
                   </div>
                 </div>
+                  <!-- Botón Siguiente -->
+                   <div class="text-end mt-3">
+                  <button type="button" class="btn btn-primary next-btn" data-current="vigencia" data-next="planestado">
+                    Anterior
+                  </button>
+                </div>
+                </div>
               </div>
             </div>
             
@@ -285,9 +318,11 @@
                 <a href="{% url 'listar_empresas' %}" class="btn btn-outline-secondary px-4">
                   <i class="bi bi-arrow-left me-2" id="volver"></i>Volver
                 </a>
-                <button type="submit" id="guardar-btn" class="btn btn-primary px-4">
-                  <i class="bi bi-save me-2" id="guardar"></i>Guardar
-                </button>
+                
+                  <button type="submit" id="guardar-btn" class="btn btn-primary px-4">
+                    <i class="bi bi-save me-2" id="guardar"></i>Guardar
+                  </button>
+                
               </div>
             </div>
           </form>
@@ -404,6 +439,44 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+  // Seleccionamos todos los botones de siguiente
+  const nextButtons = document.querySelectorAll('.next-btn');
+
+  nextButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Obtenemos los ids de la sección actual y la siguiente
+      const currentSectionId = this.getAttribute('data-current');
+      const nextSectionId = this.getAttribute('data-next');
+
+      const currentSection = document.getElementById(currentSectionId);
+      let valid = true;
+      
+      // Validar todos los campos (input, select, textarea) dentro de la sección actual
+      const inputs = currentSection.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        // Si el campo no es válido, agregamos la clase de error de Bootstrap
+        if (!input.checkValidity()) {
+          valid = false;
+          input.classList.add('is-invalid');
+        } else {
+          input.classList.remove('is-invalid');
+        }
+      });
+      
+      // Si la sección es válida, colapsamos la sección actual y mostramos la siguiente
+      if (valid) {
+        // Utilizamos el API de Bootstrap Collapse
+        const bsCurrent = bootstrap.Collapse.getInstance(currentSection) || new bootstrap.Collapse(currentSection, { toggle: false });
+        bsCurrent.hide();
+        
+        const nextSection = document.getElementById(nextSectionId);
+        new bootstrap.Collapse(nextSection, { toggle: false }).show();
+      } else {
+        // Si hay errores, activamos las clases de validación para mostrarlos
+        currentSection.classList.add('was-validated');
+      }
+    });
+  });
 </script>
 
 <style>
@@ -411,7 +484,7 @@ document.addEventListener("DOMContentLoaded", function() {
   .form-control:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
   .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
 
-   i { font-size: 30px; }
+   i { font-size: 20px; }
 
    
 </style>

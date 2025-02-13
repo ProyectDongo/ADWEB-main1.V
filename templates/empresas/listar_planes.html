@@ -25,20 +25,32 @@
                     <thead class="table-light">
                         <tr>
                             <th>Código Plan</th>
+                            <th>Estado</th>
                             <th>Nombre</th>
                             <th>Valor</th>
-                            <th>Cantidad de Supervisores</th>
-                            <th>Cantidad de Trabajadores</th>
+                            <th>Cantidad de Usuarios</th>
+                            <th>Descripcion del Plan</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="plan-list">
                         {% for plan in planes %}
                         <tr>
                             <td>{{ plan.codigo }}</td>
+                            <td>  {% if plan.activo == 1 %}
+                                <span class="badge bg-success">Activo</span>
+                               {% else %}
+                                <span class="badge bg-danger">Suspendio</span>
+                                {% endif %}</td>
                             <td>{{ plan.nombre }}</td>
                             <td>{{ plan.valor }}</td>
-                            <td>{{ plan.max_supervisores }}</td>
-                            <td>{{ plan.max_trabajadores }}</td>
+                            <td>{{ plan.max_usuarios }}</td>
+                            <td>{{ plan.descripcion }}</td>
+                            <td class="d-flex flex-wrap justify-content-center">
+                                <a href="#" class="btn btn-info btn-sm mx-1 my-1" title="EDITAR">
+                                    <i class="bi bi-eye"></i> EDITAR
+                                </a>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
