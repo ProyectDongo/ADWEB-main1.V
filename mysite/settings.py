@@ -100,7 +100,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mydb',
+        'NAME': 'mydbd',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',

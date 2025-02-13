@@ -21,6 +21,7 @@ def crear_permisos_predeterminados():
         ("lista_empresas", "Permiso para listar empresas"),
         ("editar_supervisor", "permiso para editar supervisores"),
         ("editar_trabajador", "permiso para editar trabajadores"),
+        ("vista_empresas", "permite ver las empresas"),
     ]
     for nombre, descripcion in permisos:
         crear_permiso(nombre, descripcion)

@@ -115,9 +115,8 @@ class Usuario(AbstractUser):
     )
     permisos = models.ManyToManyField("RegistroPermisos", blank=True, related_name='usuarios')
     rut = models.CharField(max_length=12, unique=True)
+    
     nombre = models.CharField(max_length=100)
-    apellidoP = models.CharField(max_length=100)  # Corregido typo
-    apellidoM = models.CharField(max_length=100)  # Corregido typo
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
 
@@ -144,16 +143,11 @@ class Usuario(AbstractUser):
         return f"{self.username} ({self.get_role_display()})"
 
 class RegistroPermisos(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    codigo = models.CharField(max_length=50, unique=True)
-
-    class Meta:
-        verbose_name = "Permiso"
-        verbose_name_plural = "Permisos"
 
     def __str__(self):
-        return f"{self.nombre} ({self.codigo})"
+        return self.nombre
 
 class RegistroEntrada(models.Model):
     trabajador = models.ForeignKey(
@@ -230,3 +224,4 @@ class HistorialCambios(models.Model):
 
     def __str__(self):
         return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario}"
+    
