@@ -8,13 +8,26 @@ Contiene formularios para:
 - Registro de entradas/salidas
 - Configuración de planes y límites
 """
+from django.utils.safestring import mark_safe
+from django.core.validators import RegexValidator
 from .validators import validar_rut
 import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Usuario, RegistroEmpresas, RegistroPermisos, RegistroEntrada, VigenciaPlan, Plan, Provincia, Comuna, Region
 
+phone_validator = RegexValidator(
+    regex=r'^(\+56)?\s*2\d{8}$',  # Permite espacios después de +56
+    message="Formato válido: 2XXXXXXXX o +562XXXXXXXX"
+)
+
+mobile_validator = RegexValidator(
+    regex=r'^(\+56)?\s*9\d{8}$',  # Permite espacios después de +56
+    message="Formato válido: 9XXXXXXXX o +569XXXXXXXX"
+)
+
 class EmpresaForm(forms.ModelForm):
+  
     """
     Formulario completo para el registro y modificación de empresas.
     
@@ -59,7 +72,31 @@ class EmpresaForm(forms.ModelForm):
             'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut  = 12.344.461-2'}),
             'nombre_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Representante'}),
         }
+    telefono = forms.CharField(
+    validators=[phone_validator],
+    required=False,
+    widget=forms.TextInput(attrs={
+        'placeholder': 'Ej: 221234567',
+        'maxlength': '12'  # +56212345678 (12 caracteres)
+    })  
+    )
 
+    celular_contacto = forms.CharField(
+        validators=[mobile_validator],
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ej: 912345678',
+            'maxlength': '12'  # +56912345678 (12 caracteres)
+        })
+    )
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get('telefono', '').replace(' ', '')
+        return telefono if telefono else None
+
+    def clean_celular_contacto(self):
+        celular = self.cleaned_data.get('celular_contacto', '').replace(' ', '')
+        return celular if celular else None
+        
     def __init__(self, *args, **kwargs):
         """
         Inicializa el formulario con querysets dinámicos para provincias y comunas.
@@ -77,14 +114,14 @@ class EmpresaForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             if field.required:
-                field.widget.attrs['placeholder'] = f'{field.label} '
+                 field.label = mark_safe(f"<strong>{field.label}</strong>")
             else:
-                field.widget.attrs['placeholder'] = field.label
+                 field.label = mark_safe(f"<strong>{field.label}</strong>")
             if field_name in self.errors:
                 field.widget.attrs['class'] += ' is-invalid'
 
         # Eliminar valores iniciales
-            field.initial = None
+           # field.initial = None
 
 
         # Lógica para actualización dinámica de provincias
@@ -478,7 +515,7 @@ class PlanVigenciaForm(forms.ModelForm):
 
     class Meta:
         model = VigenciaPlan
-        fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'indefinido', 'descuento', 'codigo_plan']
+        fields = ['empresa', 'plan', 'fecha_inicio', 'fecha_fin', 'descuento', 'codigo_plan',]
         widgets = {
             'empresa': forms.Select(attrs={'class': 'form-select'}),
             'plan': forms.Select(attrs={'class': 'form-select'}),
@@ -518,15 +555,11 @@ class PlanVigenciaForm(forms.ModelForm):
             dict: Datos limpios y validados
         """
         cleaned_data = super().clean()
-        indefinido = cleaned_data.get('indefinido')
-        fecha_fin = cleaned_data.get('fecha_fin')
+
         descuento = cleaned_data.get('descuento')
 
         # Validación de plan indefinido
-        if indefinido and fecha_fin:
-            raise forms.ValidationError(
-                "Un plan indefinido no puede tener fecha de finalización"
-            )
+      
 
         # Validación de rango de descuento
         if descuento is not None and not (0 <= descuento <= 100):

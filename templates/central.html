@@ -12,8 +12,7 @@
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/dashboard/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">  
-    
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -32,23 +31,60 @@
             }
         }
         select[multiple] { 
-    min-height: 150px;
-    padding: 10px !important;
-}
+            min-height: 150px;
+            padding: 10px !important;
+        }
+
+        /* Estilos para ocultar el sidebar y expandir el contenido */
+        .hidden-menu {
+            display: none !important;
+        }
+        .full-width {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Botón para alternar el menú lateral */
+        #toggleSidebar {
+            position: fixed;
+            top: 100px;
+            left: 10px;
+            z-index: 105;
+            background-color: #0d6efd;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: background-color 0.3s ease;
+        }
+        #toggleSidebar:hover {
+            background-color: #084298;
+        }
     </style>
-    <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">  {% block css-page %}
+    <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
+    {% block css-page %}
     {% endblock %}
 </head>
 <body>
     {% include "navbar.html" %}
     <br>
     <br>
+    <!-- Botón para ocultar/mostrar el sidebar -->
+    <button id="toggleSidebar" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-3 col-lg-2">
+            <!-- Asignamos un id para poder manipular el menú lateral -->
+            <div id="sidebarWrapper" class="col-md-3 col-lg-2">
                 {% include "side_menu.html" %}
             </div>
-            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+            <!-- Asignamos un id al contenido principal -->
+            <main id="mainContent" role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
                 {% block content %}
                 {% endblock %}
             </main>
@@ -58,9 +94,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/inputmask/inputmask.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.js"></script>
-    
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
     <script>
@@ -68,6 +102,14 @@
         $(document).ready(function() {
             feather.replace();
         });
+
+        // Función para alternar la visibilidad del sidebar y expandir el contenido principal
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebarWrapper');
+            var mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('hidden-menu');
+            mainContent.classList.toggle('full-width');
+        }
     </script>
     {% block js.page %}
     {% endblock %}

@@ -66,10 +66,7 @@
                                     <label>Fecha Fin (Opcional)</label>
                                     <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
                                 </div>
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido">
-                                    <label class="form-check-label" for="indefinido">Indefinido</label>
-                                </div>
+                            
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
@@ -85,9 +82,9 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="number" id="precio_original" name="precio_original" class="form-control {% if form.precio_original.errors %}is-invalid{% endif %}"
-                                           placeholder="Precio Original" required>
+                                        placeholder="Precio Original" value="{{ form.precio_original.value|default:'100000' }}" required>
                                     <label>Precio Original</label>
-                                    <div class="invalid-feedback">{{ form.precio_original.errors }}</div>
+                                    <div class="invalid-feedback">{{ form.precio_original.errors|default:"100000" }}</div>
                                 </div>
                             </div>
                             

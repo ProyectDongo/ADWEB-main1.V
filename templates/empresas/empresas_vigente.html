@@ -22,74 +22,88 @@
         </div>
         <div class="row mt-2">
             <div class="col text-end">
-                <button type="submit" class="btn btn-primary">Buscar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
             </div>
         </div>
     </form>
+    {% regroup vigencias by empresa.codigo_cliente as grouped_vigencias %}
 
-    <div class="card shadow-sm">
-        <div class="card-header text-white" style="background-color:rgba(0, 106, 255, 0.707);">
-            <h1 class="mb-0">Planes Vigentes</h1>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Código Plan</th>
-                            <th>Empresa ID</th>
-                            <th>Código Cliente</th>
-                            <th>Nombre Empresa</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
-                            <th>Indefinido</th>
-                            <th>Monto Plan</th>
-                            <th>Descuento</th>
-                            <th>Monto Final</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for vigencia in vigencias %}
-                            <tr>
-                                <td>{{ vigencia.codigo_plan }}</td>
-                                <td>{{ vigencia.empresa_id }}</td>
-                                <td>{{ vigencia.empresa.codigo_cliente }}</td>
-                                <td>{{ vigencia.empresa.nombre }}</td>
-                                <td>{{ vigencia.fecha_inicio }}</td>
-                                <td>{{ vigencia.fecha_fin|default:"-" }}</td>
-                                <td>{{ vigencia.indefinido|yesno:"Sí,No" }}</td>
-                                <td>{{ vigencia.monto_plan }}</td>
-                                <td>{{ vigencia.descuento }}%</td>
-                                <td>{{ vigencia.monto_final }}</td>
-                                <td>
-                                    <a href="{% url 'generar_boleta' vigencia.empresa.id %}" class="btn btn-primary btn-sm">
-                                        Generar Boleta
-                                    </a>
-                                    <a href="{% url 'editar_vigencia_plan' vigencia.id %}" class="btn btn-primary btn-sm">
-                                        Editar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="11" class="text-center">No hay registros de vigencias.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    {% if grouped_vigencias %}
+        {% for group in grouped_vigencias %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Código Cliente: {{ group.grouper }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Código Plan</th>
+                                    <th>Empresa ID</th>
+                                    <th>Nombre Empresa</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                    <th>Estado</th>
+                                    <th>Monto Plan</th>
+                                    <th>Descuento</th>
+                                    <th>Monto Final</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vigencia in group.list %}
+                                    <tr>
+                                        <td>{{ vigencia.codigo_plan }}</td>
+                                        <td>{{ vigencia.empresa_id }}</td>
+                                        <td>{{ vigencia.empresa.nombre }}</td>
+                                        <td>{{ vigencia.fecha_inicio }}</td>
+                                        <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                                        <td>{{ vigencia.estado }}</td>
+                                        <td>{{ vigencia.monto_plan }}</td>
+                                        <td>{{ vigencia.descuento }}%</td>
+                                        <td>{{ vigencia.monto_final }}</td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <a href="{% url 'generar_boleta' vigencia.empresa.id %}" class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-receipt"></i> Boleta
+                                                </a>
+                                                <a href="{% url 'editar_vigencia_plan' vigencia.id %}" class="btn btn-secondary btn-sm">
+                                                    <i class="bi bi-gear-fill"></i> Administrar
+                                                </a>
+                        
+                                
+                                                <a href="#" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-eye-slash"></i> Deshabilitar
+                                                </a>
+                                                <a href="#" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Eliminar
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="card-footer text-end">
-            <a href="{% url 'listar_empresas' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">No hay registros de vigencias.</div>
+    {% endif %}
+
+    <div class="text-end">
+        <a href="{% url 'listar_empresas' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
     </div>
 </div>
 {% endblock %}
-{% block scripts %}
 
+{% block scripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function(){

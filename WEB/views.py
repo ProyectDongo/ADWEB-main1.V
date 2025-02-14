@@ -27,6 +27,8 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.db import IntegrityError
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # =====================
 # Vistas de Utilidades
@@ -321,6 +323,7 @@ def detalle_empresa(request, pk):
     """
     # Obtener el objeto RegistroEmpresas o devolver un 404 si no existe
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
+    vigencias = empresa.vigencias.all()
     
     # Obtener el historial de cambios recientes para la empresa
     historial = HistorialCambios.objects.filter(empresa=empresa).order_by('-fecha')[:10]
@@ -362,6 +365,7 @@ def detalle_empresa(request, pk):
     # Renderizar el template con la empresa, el formulario, los supervisores, los trabajadores y el historial
     return render(request, 'empresas/detalles_empresa.html', {
         'empresa': empresa,
+        'vigencias': vigencias,
         'form': form,
         'supervisores': supervisores,
         'trabajadores': trabajadores,
@@ -577,6 +581,7 @@ def vigencia_planes(request):
 
 @login_required
 def empresas_vigentes(request):
+    
     """
     Vista para listar las vigencias de los planes de las empresas con capacidad de búsqueda y filtrado.
 
@@ -610,6 +615,9 @@ def empresas_vigentes(request):
     # Filtrar por código cliente, que está en el modelo relacionado (RegistroEmpresas)
     if codigo_cliente:
         qs = qs.filter(empresa__codigo_cliente__icontains = codigo_cliente)
+     # Ordena el queryset por el código de cliente para que el regroup funcione correctamente
+    qs = qs.order_by('empresa__codigo_cliente', 'codigo_plan')
+
 
     context = {
         'vigencias': qs,
@@ -619,6 +627,7 @@ def empresas_vigentes(request):
             'codigo_cliente': codigo_cliente,
         }
     }
+    
     return render(request, 'empresas/empresas_vigente.html', context)
 
 @login_required
@@ -733,7 +742,7 @@ def configuracion_home(request):
 
 
 @login_required
-@permiso_requerido("editar_vigencia")
+#@permiso_requerido("editar_vigencia")
 def editar_vigencia_plan(request, plan_id):
     """
     Vista para editar la vigencia de un plan existente.
@@ -785,3 +794,24 @@ def eliminar_trabajador(request, trabajador_id):
     return redirect('detalle_empresa', pk=empresa_id)
 
 
+@require_POST
+def suspender_empresa(request, empresa_id):
+    """
+    Suspende la empresa: actualiza estado a 'suspendido' y vigente a False.
+    """
+    empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
+    empresa.estado = 'suspendido'
+    empresa.vigente = False
+    empresa.save()
+    return JsonResponse({'success': True})
+
+@require_POST
+def habilitar_empresa(request, empresa_id):
+    """
+    Habilita la empresa: actualiza estado a 'aldia' y vigente a True.
+    """
+    empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
+    empresa.estado = 'aldia'
+    empresa.vigente = True
+    empresa.save()
+    return JsonResponse({'success': True})

@@ -54,7 +54,7 @@ class RegistroEmpresas(models.Model):
     ESTADO_CHOICES = [
         ('aldia', 'Al día'),
         ('atrasado', 'Atrasado'),
-        ('suspendido', 'Plan Suspendido'),
+        ('suspendido', 'Suspendido'),
     ]
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
@@ -192,7 +192,7 @@ class VigenciaPlan(models.Model):
     descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
-    
+    estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefido')
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"

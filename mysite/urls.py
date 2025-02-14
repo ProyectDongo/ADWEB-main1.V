@@ -19,6 +19,8 @@ Including another URLconf
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from WEB import views
+from WEB.views import suspender_empresa, habilitar_empresa
+
 
 urlpatterns = [
     # Ruta para el login
@@ -93,5 +95,9 @@ urlpatterns = [
     # Rutas para los planes con la empresa
     path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
     path('editar_vigencia_plan/<int:plan_id>/', views.editar_vigencia_plan, name='editar_vigencia_plan'),
+
+    #suspender y habilitar
+    path('empresa/<int:empresa_id>/suspender/', suspender_empresa, name='suspender_empresa'),
+    path('empresa/<int:empresa_id>/habilitar/', habilitar_empresa, name='habilitar_empresa'),
     
     ] 

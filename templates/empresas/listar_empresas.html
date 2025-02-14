@@ -1,106 +1,239 @@
-
 {% extends "central.html" %}
-
+{% load static %}
 {% block title %}Lista de Empresas{% endblock %}
 
 {% block content %}
+<!-- Estilos personalizados para mejorar el aspecto visual de la tabla -->
+<style>
+  /* Alinear verticalmente y agregar espaciado a las celdas */
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+  /* Encabezado con fondo oscuro y texto blanco, centrado */
+  .table thead th {
+    background-color: #343a40;
+    color: #fff;
+    text-align: center;
+  }
+  /* Cuerpo de la tabla: por defecto centrado, y a la izquierda en columnas de texto largo */
+  .table tbody td {
+    text-align: center;
+  }
+  .table tbody td.text-left {
+    text-align: left;
+  }
+  /* Margen pequeño para los botones de acción */
+  .action-button {
+    margin: 0.2rem;
+  }
+</style>
+
 <div class="container py-5">
-    <div class="card shadow-sm">
-        <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
-            <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Empresas</h1>
-            <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
-                <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
-                    <i class="bi bi-plus-lg"></i> Crear Empresa
-                </a>
-                <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
-                    <i class="bi bi-list"></i> Lista de Planes
-                </a>
-                <a href="{% url 'empresas_vigentes' %}" class="btn btn-warning btn-md mx-1 my-1" title="Empresas Vigentes">
-                    <i class="bi bi-check2-circle"></i> Planes Vigentes
-                </a>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="mb-4">
-                <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Código Cliente</th>
-                            <th>Estado</th>
-                            <th>Vigente</th>
-                            <th>Nombre</th>
-                            <th>RUT</th>
-                            <th>Dirección</th>
-                            <th>Teléfono</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="empresa-list">
-                        {% for empresa in empresas %}
-                        <tr>
-                            <th>{{ empresa.codigo_cliente }}</th>
-                            <th> 
-                             {% if empresa.estado == 'aldia' %}
-                                <span class="badge bg-success">AL DIA</span>
-                                {% elif empresa.estado == 'atrasado' %}
-                                <span class="badge bg-warning"> ATRASADO</span>
-                               {% else %}
-                                <span class="badge bg-danger">SUSPENDIDO</span>
-                                {% endif %}
-                            </th>
-                            <th>
-                                {% if empresa.vigente == 1 %}
-                                <span class="badge bg-success">SI</span>
-                                {% else %}
-                                <span class="badge bg-danger">NO</span>
-                                {% endif %}
-                            </th>
-                            <td>{{ empresa.nombre }}</td>
-                            <td>{{ empresa.rut }}</td>
-                            <td>{{ empresa.direccion }}</td>
-                            <td>{{ empresa.telefono }}</td>
-                            <td class="d-flex flex-wrap justify-content-center">
-                                <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1" title="Ver Detalles">
-                                    <i class="bi bi-eye"></i> VER / EDITAR
-                                </a>
-                                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1" title="Eliminar Empresa">
-                                    <i class="bi bi-trash"></i> DEL
-                                </a>
-                                <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1"  title = "Vigencia de Planes">
-                                    <i class="bi bi-cloud-download-fill"></i> Asociar Nueva Plan
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center">No hay empresas disponibles.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="card shadow-sm">
+    <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
+      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Empresas</h1>
+      <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
+        <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
+          <i class="bi bi-plus-lg"></i> Crear Empresa
+        </a>
+        <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
+          <i class="bi bi-list"></i> Lista de Planes
+        </a>
+        <a href="{% url 'empresas_vigentes' %}" class="btn btn-warning btn-md mx-1 my-1" title="Empresas Vigentes">
+          <i class="bi bi-check2-circle"></i> Planes Vigentes
+        </a>
+      </div>
     </div>
+    <div class="card-body">
+      <div class="mb-4">
+        <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="thead-dark">
+            <tr>
+              <th>Código Cliente</th>
+              <th>Estado</th>
+              <th>Vigente</th>
+              <th class="text-left">Nombre</th>
+              <th class="text-left">RUT</th>
+              <th class="text-left">Dirección</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="empresa-list">
+            {% for empresa in empresas %}
+            <tr>
+              <th>{{ empresa.codigo_cliente }}</th>
+              <th>
+                {% if empresa.estado == 'aldia' %}
+                  <span class="badge bg-success">AL DIA</span>
+                {% elif empresa.estado == 'atrasado' %}
+                  <span class="badge bg-warning">ATRASADO</span>
+                {% else %}
+                  <span class="badge bg-secondary">SUSPENDIDO</span>
+                {% endif %}
+              </th>
+              <th>
+                {% if empresa.vigente %}
+                  <span class="badge bg-success">SI</span>
+                {% else %}
+                  <span class="badge bg-danger">NO</span>
+                {% endif %}
+              </th>
+              <td class="text-left">{{ empresa.nombre }}</td>
+              <td class="text-left">{{ empresa.rut }}</td>
+              <td class="text-left">{{ empresa.direccion }}</td>
+              <td>{{ empresa.telefono }}</td>
+              <td class="d-flex flex-wrap justify-content-center">
+                <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1 action-button" title="Ver Detalles">
+                  <i class="bi bi-eye"></i> VER / EDITAR
+                </a>
+                <!-- Botón suspender/habilitar -->
+                <button type="button" class="btn btn-secondary btn-sm disable-company mx-1 my-1 action-button" data-company-id="{{ empresa.id }}" title="Suspender Empresa">
+                  <i class="bi bi-x-circle"></i> DESABILITAR
+                </button>
+                <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1 action-button" title="Vigencia de Planes">
+                  <i class="bi bi-cloud-download-fill"></i> Asociar Nueva Plan
+                </a>
+                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" title="Eliminar Empresa">
+                  <i class="bi bi-trash"></i> DEL
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center">No hay empresas disponibles.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-    document.getElementById('search').addEventListener('input', function() {
-        const searchValue = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#empresa-list tr');
-        rows.forEach(row => {
-            const codigoCliente = row.querySelector('th').textContent.toLowerCase();
-            const estado = row.querySelector('th:nth-child(2)').textContent.toLowerCase();
-            const vigente = row.querySelector('th:nth-child(3)').textContent.toLowerCase();
-            const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-            const rut = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-            const direccion = row.querySelector('td:nth-child(6)').textContent.toLowerCase();
-            const telefono = row.querySelector('td:nth-child(7)').textContent.toLowerCase();
-            const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
-            row.style.display = match ? '' : 'none';
-        });
-    });
+// Función para obtener el token CSRF desde las cookies
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Filtrado de la tabla
+document.getElementById('search').addEventListener('input', function() {
+  const searchValue = this.value.toLowerCase();
+  const rows = document.querySelectorAll('#empresa-list tr');
+  rows.forEach(row => {
+    const codigoCliente = row.querySelector('th').textContent.toLowerCase();
+    const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+    const rut = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+    const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
+    row.style.display = match ? '' : 'none';
+  });
+});
+
+// Evento para el botón suspender/habilitar
+document.querySelectorAll('.disable-company').forEach(button => {
+  button.addEventListener('click', function() {
+    const companyId = this.getAttribute('data-company-id');
+    const row = this.closest('tr');
+    // Si la fila no está en modo suspendido, se procede a suspender
+    if (!row.classList.contains('suspended')) {
+      fetch(`/empresa/${companyId}/suspender/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ id: companyId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Actualizar el badge de estado a "PLAN SUSPENDIDO" (rojo)
+          const stateBadge = row.querySelector('th:nth-child(2) span.badge');
+          stateBadge.textContent = 'SUSPENDIDO';
+          stateBadge.className = 'badge bg-danger';
+          // Actualizar el badge de "vigente" a "NO" (rojo)
+          const vigenteBadge = row.querySelector('th:nth-child(3) span.badge');
+          vigenteBadge.textContent = 'NO';
+          vigenteBadge.className = 'badge bg-danger';
+          // Marcar la fila como suspendida (por ejemplo, con fondo rojo)
+          row.classList.add('suspended', 'table-danger');
+          // Deshabilitar los demás botones de acción
+          row.querySelectorAll('.action-button').forEach(btn => {
+            btn.classList.add('disabled');
+            btn.style.pointerEvents = 'none';
+          });
+          // Mantener habilitado el botón actual para permitir revertir la acción
+          this.classList.remove('disabled');
+          this.style.pointerEvents = 'auto';
+          // Cambiar el botón a modo "HABILITAR"
+          this.innerHTML = '<i class="bi bi-check-circle"></i> HABILITAR';
+        } else {
+          alert('Error al suspender la empresa.');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Error al suspender la empresa.');
+      });
+    } else {
+      // Si ya está suspendida, se procede a habilitar la empresa
+      fetch(`/empresa/${companyId}/habilitar/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ id: companyId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Revertir el badge de estado a "AL DIA" (verde)
+          const stateBadge = row.querySelector('th:nth-child(2) span.badge');
+          stateBadge.textContent = 'AL DIA';
+          stateBadge.className = 'badge bg-success';
+          // Revertir el badge de "vigente" a "SI" (verde)
+          const vigenteBadge = row.querySelector('th:nth-child(3) span.badge');
+          vigenteBadge.textContent = 'SI';
+          vigenteBadge.className = 'badge bg-success';
+          // Remover el estilo de suspensión de la fila
+          row.classList.remove('suspended', 'table-danger');
+          // Habilitar todos los botones de acción
+          row.querySelectorAll('.action-button').forEach(btn => {
+            btn.classList.remove('disabled');
+            btn.style.pointerEvents = 'auto';
+          });
+          // Cambiar el botón de vuelta a "DESABILITAR"
+          this.innerHTML = '<i class="bi bi-x-circle"></i> DESABILITAR';
+        } else {
+          alert('Error al habilitar la empresa.');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Error al habilitar la empresa.');
+      });
+    }
+  });
+});
 </script>
 {% endblock %}
