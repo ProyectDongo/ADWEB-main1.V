@@ -1,0 +1,35 @@
+document.addEventListener("DOMContentLoaded", function() {
+    // Validación de teléfonos
+    const phoneInputs = [
+        {id: 'id_telefono', pattern: '^(\\+56)?\\s*2\\d{8}$', example: 'Ej: 221234567 o +56221234567'},
+        {id: 'id_celular_contacto', pattern: '^(\\+56)?\\s*9\\d{8}$', example: 'Ej: 912345678 o +56912345678'}
+    ];
+
+    phoneInputs.forEach(input => {
+        const field = document.getElementById(input.id);
+        if (field) {
+            // Configurar patrón correctamente sin alterar las barras invertidas
+            field.setAttribute('pattern', input.pattern);
+            field.setAttribute('title', input.example);
+            field.addEventListener('input', function() {
+                // Eliminar espacios para validación interna
+                const rawValue = this.value.replace(/\s+/g, '');
+                const isValid = new RegExp(input.pattern).test(rawValue);
+                this.classList.toggle('is-invalid', !isValid);
+            });
+         }
+        })
+    
+
+    // Resaltar sección activa
+document.querySelectorAll('.collapse').forEach(collapse => {
+      collapse.addEventListener('show.bs.collapse', function() {
+        document.querySelector(`a[href="#${this.id}"]`).classList.add('active', 'fw-bold');
+      });
+      collapse.addEventListener('hide.bs.collapse', function() {
+        document.querySelector(`a[href="#${this.id}"]`).classList.remove('active', 'fw-bold');
+      });
+    });
+    
+  
+});
