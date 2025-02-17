@@ -5,14 +5,16 @@
 {% block content %}
 {% block css-page %}
 <link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}">
+
 {% endblock %}
 
-<div class="container py-5">
+<div class="container py-5 " style="margin-top:100px ;">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-8 "style="width:100% !important;">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h2 class="h4 mb-0 text-center">
+                       
                         <i class="bi bi-person-badge me-2"></i>Crear Supervisor
                     </h2>
                 </div>
@@ -45,11 +47,85 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            
+                               <!-- rut -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.rut }}
+                                    <label for="{{ form.empresa.id_for_label }}">Rut</label>
+                                    {% if form.rut.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.rut.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- nombre -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.nombre }}
+                                    <label for="{{ form.empresa.id_for_label }}">Nombre</label>
+                                    {% if form.nombre.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.nombre.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                             <!-- apellido Paterno -->
+                             <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.last_name }}
+                                    <label for="{{ form.empresa.id_for_label }}">Apellido Paterno</label>
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.last_name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                              <!-- apellido Materno -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.apellidoM }}
+                                    <label for="{{ form.empresa.id_for_label }}">Apellido Materno</label>
+                                    {% if form.apellidoM.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.apellidom.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                              <!-- celular -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                  {{ form.celular }}
+                                  <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular</label>
+                                  <div class="invalid-feedback">
+                                    {{ form.celular.errors }}
+                                    Formato válido: 9XXXXXXXX o +569XXXXXXXX
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- email -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.email }}
+                                    <label for="{{ form.empresa.id_for_label }}">Email</label>
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.email.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
 
                             <!-- Contraseñas -->
                             <div class="col-md-6">
                                 <div class="form-floating mb-4">
-                                    {{ form.password1 }}
+                                    <input type="password" name="password1" class="form-control" id="{{ form.password1.id_for_label }}" required>
                                     <label for="{{ form.password1.id_for_label }}">Contraseña</label>
                                     {% if form.password1.errors %}
                                         <div class="invalid-feedback">
@@ -61,7 +137,7 @@
                             
                             <div class="col-md-6">
                                 <div class="form-floating mb-4">
-                                    {{ form.password2 }}
+                                    <input type="password" name="password2" class="form-control" id="{{ form.password2.id_for_label }}" required>
                                     <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
                                     {% if form.password2.errors %}
                                         <div class="invalid-feedback">
@@ -72,19 +148,10 @@
                             </div>
 
                             <!-- Permisos -->
-                            <div class="col-12">
+                            <div class="form-group">
                                 <div class="mb-4">
-                                    <label class="form-label">Permisos</label>
-                                    <div>
-                                        {% for checkbox in form.permisos %}
-                                            <div class="form-check">
-                                                {{ checkbox.tag }}
-                                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                                                    {{ checkbox.choice_label }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
+                                    <label class="form-label" for="{{ form.permisos.id_for_label }}">Permisos</label>
+                                    {{ form.permisos }}
                                     {% if form.permisos.errors %}
                                         <div class="invalid-feedback d-block">
                                             {{ form.permisos.errors|first }}
@@ -92,6 +159,7 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            
                             
                         </div>
                         

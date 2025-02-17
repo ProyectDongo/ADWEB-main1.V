@@ -59,7 +59,7 @@ class RegistroEmpresas(models.Model):
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
     fecha_ingreso = models.DateField(auto_now_add=True)
-    rut = models.CharField(max_length=13, unique=True)
+    rut = models.CharField(max_length=13, unique=True,validators=[validar_rut])
     nombre = models.CharField(max_length=100)
     giro = models.CharField(max_length=100)
     direccion = models.CharField(max_length=200)
@@ -117,8 +117,8 @@ class Usuario(AbstractUser):
         related_name="usuarios"
     )
     permisos = models.ManyToManyField("RegistroPermisos", blank=True, related_name='usuarios')
-    rut = models.CharField(max_length=12, unique=True)
-    
+    rut = models.CharField(max_length=12, unique=True,validators=[validar_rut])
+    apellidoM= models.CharField(max_length=12,blank=True)
     nombre = models.CharField(max_length=100)
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
@@ -179,6 +179,7 @@ class VigenciaPlan(models.Model):
     TIPO_DURACION = [
         ('indefinido', 'Indefinido'),
         ('mensual', 'Mensual'),
+        ('suspendio', 'Suspendido'),
     ]
     empresa = models.ForeignKey(
         RegistroEmpresas,

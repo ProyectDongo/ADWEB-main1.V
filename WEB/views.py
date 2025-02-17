@@ -815,3 +815,20 @@ def habilitar_empresa(request, empresa_id):
     empresa.vigente = True
     empresa.save()
     return JsonResponse({'success': True})
+
+def toggle_estado(request, pk):
+    vigencia = get_object_or_404(VigenciaPlan, pk=pk)
+    
+    # Toggle del estado
+    if vigencia.estado == 'indefinido':
+        vigencia.estado = 'suspendido'
+    else:
+        vigencia.estado = 'indefinido'
+    
+    vigencia.save()
+    
+    return JsonResponse({
+        'success': True,
+        'new_estado': vigencia.estado,
+        'new_estado_display': vigencia.get_estado_display()
+    })

@@ -3,9 +3,12 @@
 {% block title %}Empresas Vigentes{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+
+<div class="container py-5" >
     <!-- Formulario de búsqueda -->
+    
     <form method="get" id="busquedaForm" class="mb-4">
+        {% csrf_token %} 
         <div class="row g-2">
             <div class="col-md-4">
                 <input type="text" name="empresa_id" class="form-control" placeholder="Buscar por Empresa ID" 
@@ -25,6 +28,11 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-search"></i> Buscar
                 </button>
+            </div>
+            <div class="text-end " style="text-align: left !important; ">
+                <a href="{% url 'listar_empresas' %}" class="btn btn-secondary" >
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
             </div>
         </div>
     </form>
@@ -55,30 +63,36 @@
                             </thead>
                             <tbody>
                                 {% for vigencia in group.list %}
-                                    <tr>
+                                <tr class="{% if vigencia.estado == 'suspendido' %}table-danger{% endif %}">
                                         <td>{{ vigencia.codigo_plan }}</td>
                                         <td>{{ vigencia.empresa_id }}</td>
                                         <td>{{ vigencia.empresa.nombre }}</td>
                                         <td>{{ vigencia.fecha_inicio }}</td>
                                         <td>{{ vigencia.fecha_fin|default:"-" }}</td>
-                                        <td>{{ vigencia.estado }}</td>
+                                        <td>{{ vigencia.get_estado_display }}</td>
                                         <td>{{ vigencia.monto_plan }}</td>
                                         <td>{{ vigencia.descuento }}%</td>
                                         <td>{{ vigencia.monto_final }}</td>
                                         <td>
                                             <div class="d-flex flex-wrap gap-1">
-                                                <a href="{% url 'generar_boleta' vigencia.empresa.id %}" class="btn btn-primary btn-sm">
+                                                <a href="{% url 'generar_boleta' vigencia.empresa.id %}" 
+                                                   class="btn btn-primary btn-sm action-btn {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
                                                     <i class="bi bi-receipt"></i> Boleta
                                                 </a>
-                                                <a href="{% url 'editar_vigencia_plan' vigencia.id %}" class="btn btn-secondary btn-sm">
+                                                <a href="{% url 'editar_vigencia_plan' vigencia.id %}" 
+                                                   class="btn btn-secondary btn-sm action-btn {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
                                                     <i class="bi bi-gear-fill"></i> Administrar
                                                 </a>
-                        
-                                
-                                                <a href="#" class="btn btn-warning btn-sm">
-                                                    <i class="bi bi-eye-slash"></i> Deshabilitar
-                                                </a>
-                                                <a href="#" class="btn btn-danger btn-sm">
+                                                <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-success{% else %}btn-warning{% endif %}" 
+                                                onclick="toggleEstado('{{ vigencia.id }}', this)">
+                                            {% if vigencia.estado == 'suspendido' %}
+                                            Habilitar
+                                            {% else %}
+                                            Deshabilitar
+                                            {% endif %}
+                                            </button>
+                                                <a href="#" 
+                                                   class="btn btn-danger btn-sm action-btn {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
                                                     <i class="bi bi-trash"></i> Eliminar
                                                 </a>
                                             </div>
@@ -95,11 +109,7 @@
         <div class="alert alert-info">No hay registros de vigencias.</div>
     {% endif %}
 
-    <div class="text-end">
-        <a href="{% url 'listar_empresas' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
-    </div>
+    
 </div>
 {% endblock %}
 
@@ -115,5 +125,8 @@ $(document).ready(function(){
         }, 500); // espera 500ms después de dejar de escribir
     });
 });
+
+
+
 </script>
 {% endblock %}

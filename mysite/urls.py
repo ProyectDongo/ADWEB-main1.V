@@ -100,4 +100,6 @@ urlpatterns = [
     path('empresa/<int:empresa_id>/suspender/', suspender_empresa, name='suspender_empresa'),
     path('empresa/<int:empresa_id>/habilitar/', habilitar_empresa, name='habilitar_empresa'),
     
+    path('vigencia_plan/<int:pk>/toggle_estado/', views.toggle_estado, name='toggle_estado'),
+
     ] 

@@ -222,26 +222,47 @@ class SupervisorForm(UserCreationForm):
         empresa (ModelChoiceField): Selector de empresa asociada.
         permisos (ModelMultipleChoiceField): Selector múltiple de permisos.
     """
+
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     permisos = forms.ModelMultipleChoiceField(
-        queryset=RegistroPermisos.objects.none(),
-        widget=forms.CheckboxSelectMultiple,
+        queryset=RegistroPermisos.objects.none(),  # Inicialmente vacío, se completa en __init__
+        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_permisos'}),
         required=False
     )
 
     class Meta:
         model = Usuario
-        fields = ['username', 'password1', 'password2', 'empresa', 'permisos']
+        fields = ['username','rut','nombre','last_name','apellidoM','celular','email', 'password1', 'password2', 'empresa', 'permisos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut':forms.TextInput(attrs={'class':'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidoM': forms.TextInput(attrs={'class': 'form-control'}),
+            'celular': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
             'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
+                }
+         
+    celular = forms.CharField(
+        validators=[mobile_validator],
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: 912345678',
+            'maxlength': '12'  # +56912345678 (12 caracteres)
+        })
+    )
+    def clean_celular(self):
+        celular = self.cleaned_data.get('celular', '').replace(' ', '')
+        return celular if celular else None
 
-        }
+        
 
     def __init__(self, *args, **kwargs):
         """
@@ -272,6 +293,10 @@ class SupervisorForm(UserCreationForm):
             usuario.save()
             self.save_m2m()  # Asigna las relaciones ManyToMany (permisos)
         return usuario
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        validar_rut(rut)
+        return rut
 
 class TrabajadorForm(UserCreationForm):
     """
