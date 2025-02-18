@@ -187,6 +187,28 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario Supervisor</th>
+                                            <th>Contraseña</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for supervisor in supervisores %}
+                                        <tr>
+                                            <td>{{ supervisor.username }}</td>
+                                            <td>{{ supervisor.password }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center">No hay supervisores registrados</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
     
                     </div>  

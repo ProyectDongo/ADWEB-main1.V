@@ -87,14 +87,14 @@
                                     <input type="number" id="precio_original" name="precio_original" class="form-control {% if form.precio_original.errors %}is-invalid{% endif %}"
                                         placeholder="Precio Original" value="{{ form.precio_original.value|default:'100000' }}" required>
                                     <label>Precio Original</label>
-                                    <div class="invalid-feedback">{{ form.precio_original.errors|default:"100000" }}</div>
+                                    <div class="invalid-feedback">{{ form.precio_original.errors }}</div>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" id="precio_final" name="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
-                                    <label>Precio con Descuento</label>
+                                    <label>Precio inal</label>
                                 </div>
                             </div>
                         </div>

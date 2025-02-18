@@ -29,11 +29,12 @@
                     <i class="bi bi-search"></i> Buscar
                 </button>
             </div>
-            <div class="text-end " style="text-align: left !important; ">
-                <a href="{% url 'listar_empresas' %}" class="btn btn-secondary" >
-                    <i class="bi bi-arrow-left"></i> Volver
-                </a>
-            </div>
+        </div>
+        <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas"  >
+            <a href="{% url 'listar_empresas' %}" class="btn btn-info btn-md mx-1 my-1 " >
+                <i class="bi bi-list"></i> Lista Clientes
+            </a>
+            
         </div>
     </form>
     {% regroup vigencias by empresa.codigo_cliente as grouped_vigencias %}

@@ -29,6 +29,8 @@ from django.http import HttpResponse
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.utils.crypto import get_random_string
+
 
 # =====================
 # Vistas de Utilidades
@@ -253,14 +255,7 @@ def habilitar_otra_entrada(request, entrada_id):
 @permiso_requerido("crear_empresa")
 def crear_empresa(request):
     """
-    Vista para crear una nueva empresa junto con la vigencia de su plan.
-
-    Esta vista permite a los usuarios autenticados crear una nueva empresa y asignar la vigencia de su plan.
-    Si la solicitud es un POST, se validan y guardan los formularios de empresa y vigencia. Si es GET, se muestran
-    los formularios vacíos para la creación.
-
-    :param request: HttpRequest
-    :return: Renderizado del template 'formularios/crear/crear_empresa.html' con los formularios de creación
+    Vista para crear una nueva empresa junto con la vigencia de su plan y crear un usuario supervisor.
     """
     if request.method == 'POST':
         empresa_form = EmpresaForm(request.POST)
@@ -270,14 +265,41 @@ def crear_empresa(request):
         vigencia_form.fields.pop('empresa', None)
         
         if empresa_form.is_valid() and vigencia_form.is_valid():
+            # Guardamos la empresa
             empresa = empresa_form.save(commit=False)
             # Asignar el plan desde el formulario de vigencia
             empresa.plan_contratado = vigencia_form.cleaned_data['plan']
             empresa.save()
             
+            # Guardamos la vigencia asignándole la empresa creada
             vigencia_plan = vigencia_form.save(commit=False)
             vigencia_plan.empresa = empresa
             vigencia_plan.save()
+            
+            # --- Crear el usuario supervisor ---
+            # Generamos una contraseña aleatoria de 8 caracteres
+            password = get_random_string(8)
+            
+            # Creamos el usuario supervisor
+            # Puedes ajustar el username según tus necesidades (por ejemplo, usando el código_cliente)
+            supervisor = Usuario.objects.create_user(
+                username=empresa.codigo_cliente,  # Asegúrate que sea único
+                email=empresa.email,
+                password=password,
+                role='supervisor',
+                empresa=empresa,
+                rut=empresa.rut,       # O asignar otro valor si es necesario
+                nombre=empresa.nombre, # Por ejemplo, el nombre de la empresa
+            )
+            
+            # Opcional: podrías enviar un correo electrónico con las credenciales
+            # O bien, mostrar un mensaje de éxito con las credenciales generadas.
+            
+            # Por ejemplo, usando mensajes de Django:
+            from django.contrib import messages
+            messages.success(request, 
+                f"Empresa creada correctamente. Se ha creado un usuario supervisor con username: {supervisor.username} y contraseña: {password}"
+            )
             
             return redirect('listar_empresas')
     else:
@@ -322,6 +344,7 @@ def detalle_empresa(request, pk):
     :return: Renderizado del template 'empresas/detalles_empresa.html' con los detalles de la empresa
     """
     # Obtener el objeto RegistroEmpresas o devolver un 404 si no existe
+    supervisores = Usuario.objects.filter(role='Supervisor', empresa_id=pk)
     empresa = get_object_or_404(RegistroEmpresas, pk=pk)
     vigencias = empresa.vigencias.all()
     
@@ -774,6 +797,8 @@ def editar_vigencia_plan(request, plan_id):
     
     # Renderizar el template con el formulario y el plan
     return render(request, 'empresas/editar_vigencia_plan.html', {'form': form, 'plan': plan})
+
+
 
 @login_required
 @permiso_requerido("eliminar_supervisor")

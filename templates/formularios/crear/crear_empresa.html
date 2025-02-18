@@ -14,16 +14,37 @@
           <!-- Único formulario para ambos conjuntos de datos -->
           <form method="post" class="needs-validation" novalidate>
             {% csrf_token %}
-            {# Se muestran errores generales de cualquiera de los formularios #}
-            {% if empresa_form.non_field_errors or vigencia_form.non_field_errors %}
+
+            {# Bloque de mensajes de error general y de campos específicos #}
+            {% if empresa_form.non_field_errors or vigencia_form.non_field_errors or empresa_form.rut.errors or empresa_form.rut_representante.errors or empresa_form.telefono.errors or empresa_form.celular_contacto.errors %}
               <div class="alert alert-danger">
                 {% for error in empresa_form.non_field_errors %}
-                  {{ error }}
+                  <p>{{ error }}</p>
                 {% endfor %}
                 {% for error in vigencia_form.non_field_errors %}
-                  {{ error }}
+                  <p>{{ error }}</p>
                 {% endfor %}
+                {% if empresa_form.rut.errors %}
+                  {% for error in empresa_form.rut.errors %}
+                    <p><strong>RUT:</strong> {{ error }}</p>
+                  {% endfor %}
+                {% endif %}
+                {% if empresa_form.rut_representante.errors %}
+                {% for error in empresa_form.rut_representante.errors %}
+                  <p><strong>rut_representante:</strong> {{ error }}</p>
+                {% endfor %}
+              {% endif %}
                 
+                {% if empresa_form.telefono.errors %}
+                  {% for error in empresa_form.telefono.errors %}
+                    <p><strong>Teléfono:</strong> {{ error }}. Formato válido: 2XXXXXXXX o +562XXXXXXXX.</p>
+                  {% endfor %}
+                {% endif %}
+                {% if empresa_form.celular_contacto.errors %}
+                  {% for error in empresa_form.celular_contacto.errors %}
+                    <p><strong>Celular:</strong> {{ error }}. Formato válido: 9XXXXXXXX o +569XXXXXXXX.</p>
+                  {% endfor %}
+                {% endif %}
               </div>
             {% endif %}
             
@@ -319,7 +340,7 @@
                     <div class="col-md-6">
                       <div class="form-floating">
                         <input type="text" name="precio_final" id="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
-                        <label>Precio con Descuento</label>
+                        <label>Precio Final</label>
                       </div>
                     </div>
                   </div>

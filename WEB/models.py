@@ -117,7 +117,7 @@ class Usuario(AbstractUser):
         related_name="usuarios"
     )
     permisos = models.ManyToManyField("RegistroPermisos", blank=True, related_name='usuarios')
-    rut = models.CharField(max_length=12, unique=True,validators=[validar_rut])
+    rut = models.CharField(max_length=12, unique=True,validators=[validar_rut] ,blank=True)
     apellidoM= models.CharField(max_length=12,blank=True)
     nombre = models.CharField(max_length=100)
     celular = models.CharField(max_length=20, blank=True)
