@@ -1,18 +1,52 @@
 {% extends "central.html" %}
-{% block title %}Vigencia de Planes{% endblock %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalles de Vigencia{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0 text-center"><i class="bi bi-calendar-check me-2"></i>Vigencia de Planes</h2>
-                </div>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        {# Mensajes (si los hay) #}
+        {% if messages %}
+        <div id="message-container" class="alert alert-success alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
 
-                <div class="card-body p-4">
-                    <form method="post" class="needs-validation" novalidate>
-                        {% csrf_token %}
+        <!-- Encabezado y botón Guardar -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{% url 'empresas_vigentes' %}" class="btn btn-info btn-md mx-1 my-1">
+                <i class="bi bi-arrow-left me-2"></i> Volver
+            </a>
+            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
+            <button type="submit" name="guardar" class="btn btn-success btn-lg" id="guardar-btn">
+                <i class="bi bi-save"></i> Guardar Cambios
+            </button>
+        </div>
+
+        <!-- Pestañas -->
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">
+                    Datos Generales
+                </button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Pestaña Datos Generales -->
+            <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h4 class="text-primary mb-4">Información Básica</h4>
+                        
+                        <!-- Row 1: Empresa y Plan Contratado -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -41,7 +75,8 @@
                                 </div>
                             </div>
                         </div>
-
+                        
+                        <!-- Row 2: Código Plan -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -52,7 +87,8 @@
                                 </div>
                             </div>
                         </div>
-
+                        
+                        <!-- Row 3: Fechas y Descuento -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <div class="form-floating">
@@ -64,13 +100,10 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control {% if form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ form.fecha_fin.value|default_if_none:'' }}">
+                                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control {% if form.fecha_fin.errors %}is-invalid{% endif %}"
+                                           value="{{ form.fecha_fin.value|default_if_none:'' }}">
                                     <label>Fecha Fin (Opcional)</label>
                                     <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
-                                </div>
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" id="indefinido" name="indefinido" {% if form.indefinido.value %}checked{% endif %}>
-                                    <label class="form-check-label" for="indefinido">Indefinido</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -82,7 +115,8 @@
                                 </div>
                             </div>
                         </div>
-
+                        
+                        <!-- Row 4: Precio Original y Precio Final -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -94,27 +128,18 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="text" id="precio_final" name="precio_final" class="form-control" value="{{ form.precio_final.value|default_if_none:'' }}" readonly required>
-                                    <label>Precio con Descuento</label>
+                                    <input type="text" id="precio_final" name="precio_final" class="form-control" 
+                                           value="{{ form.precio_final.value|default_if_none:'' }}" readonly required>
+                                    <label>Precio Final</label>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="border-top pt-4">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'empresas_vigentes' %}" class="btn btn-outline-secondary px-4">
-                                    <i class="bi bi-arrow-left me-2"></i>Volver
-                                </a>
-                                <button type="submit" class="btn btn-primary px-4" id="guardar-btn">
-                                    <i class="bi bi-save me-2"></i>Guardar Vigencia
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+                        
+                    </div><!-- Fin card-body -->
+                </div><!-- Fin card -->
+            </div><!-- Fin tab-pane -->
+        </div><!-- Fin tab-content -->
+    </form>
 </div>
 
 <script>
@@ -125,9 +150,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const guardarBtn = document.getElementById("guardar-btn");
     const fechaInicioInput = document.getElementById("fecha_inicio");
     const fechaFinInput = document.getElementById("fecha_fin");
+    // El checkbox "indefinido" puede no estar presente en este template,
+    // por lo que se verifica su existencia:
     const indefinidoCheckbox = document.getElementById("indefinido");
 
-    // Establecer la fecha de inicio con la fecha actual si no tiene valor
+    // Si no hay fecha de inicio, se asigna la fecha actual
     if (!fechaInicioInput.value) {
         let today = new Date().toISOString().split('T')[0];
         fechaInicioInput.value = today;
@@ -149,35 +176,41 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function toggleFechaFin() {
-        if (indefinidoCheckbox.checked) {
+        if (indefinidoCheckbox && indefinidoCheckbox.checked) {
             fechaFinInput.value = "";
             fechaFinInput.setAttribute("disabled", "true");
-        } else {
+        } else if (fechaFinInput) {
             fechaFinInput.removeAttribute("disabled");
         }
     }
 
-    // Listener para actualizar precio_original al seleccionar un plan
+    // Actualiza el precio original al seleccionar un plan
     const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
     if (planSelect) {
         planSelect.addEventListener("change", function() {
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             let planValor = selectedOption.getAttribute("data-valor") || "";
-            // Reemplazar la coma decimal por punto
+            // Asegurarse de usar el punto como separador decimal
             planValor = planValor.replace(',', '.');
             precioOriginalInput.value = planValor;
             calcularPrecioFinal();
         });
+        // Si el campo "precio original" está vacío (por ejemplo, al editar) se dispara el cambio
+        if (!precioOriginalInput.value) {
+            planSelect.dispatchEvent(new Event("change"));
+        }
     }
 
     descuentoInput.addEventListener("input", calcularPrecioFinal);
     precioOriginalInput.addEventListener("input", calcularPrecioFinal);
     guardarBtn.addEventListener("click", validarFormulario);
-    indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+    if (indefinidoCheckbox) {
+        indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+        toggleFechaFin();
+    }
 
-    // Inicializar valores si existen
+    // Calcular precio final al cargar la página (para que se muestren los valores ya existentes)
     calcularPrecioFinal();
-    toggleFechaFin();
 });
 </script>
 {% endblock %}

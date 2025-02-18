@@ -69,7 +69,17 @@
                                         <td>{{ vigencia.empresa.nombre }}</td>
                                         <td>{{ vigencia.fecha_inicio }}</td>
                                         <td>{{ vigencia.fecha_fin|default:"-" }}</td>
-                                        <td>{{ vigencia.get_estado_display }}</td>
+                                        <td>
+                                            {% if vigencia.estado != 'suspendido' %}
+                                              {% if vigencia.fecha_fin %}
+                                                Definido
+                                              {% else %}
+                                                Indefinido
+                                              {% endif %}
+                                            {% else %}
+                                              {{ vigencia.get_estado_display }}
+                                            {% endif %}
+                                        </td>
                                         <td>{{ vigencia.monto_plan }}</td>
                                         <td>{{ vigencia.descuento }}%</td>
                                         <td>{{ vigencia.monto_final }}</td>

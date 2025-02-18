@@ -14,6 +14,7 @@
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="row g-3 mb-4">
+                            <!-- Selección de Empresa -->
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <select name="empresa" class="form-select {% if form.empresa.errors %}is-invalid{% endif %}" id="{{ form.empresa.id_for_label }}">
@@ -27,11 +28,12 @@
                                     <div class="invalid-feedback">{{ form.empresa.errors }}</div>
                                 </div>
                             </div>
+                            <!-- Selección de Plan -->
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <select name="plan" class="form-select {% if form.plan.errors %}is-invalid{% endif %}" id="{{ form.plan.id_for_label }}">
                                         {% for plan in form.plan.field.queryset %}
-                                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if form.plan.value == plan.id %}selected{% endif %}>
+                                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" data-codigo="{{ plan.codigo }}" {% if form.plan.value == plan.id %}selected{% endif %}>
                                                 {{ plan.nombre }}
                                             </option>
                                         {% endfor %}
@@ -41,22 +43,24 @@
                                 </div>
                             </div>
                         </div>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                <div class="form-floating">
-                                    {{ form.codigo_plan}}
-                                    <label for="{{ vigencia_form.codigo_plan.id_for_label }}">Código Plan</label>
-                                </div>
-                                </div>
-                            
-                            </div>
 
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control {% if form.fecha_inicio.errors %}is-invalid{% endif %}"
-                                            value="{{ form.fecha_inicio.value|default_if_none:'' }}" required>
-                                        <label>Fecha Inicio</label>
+                        <!-- Campo Código Plan (se genera automáticamente) -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" id="codigo_plan" name="codigo_plan" class="form-control" placeholder="Código Plan" readonly required>
+                                    <label for="codigo_plan">Código Plan</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resto del formulario -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control {% if form.fecha_inicio.errors %}is-invalid{% endif %}"
+                                        value="{{ form.fecha_inicio.value|default_if_none:'' }}" required>
+                                    <label>Fecha Inicio</label>
                                     <div class="invalid-feedback">{{ form.fecha_inicio.errors }}</div>
                                 </div>
                             </div>
@@ -66,7 +70,6 @@
                                     <label>Fecha Fin (Opcional)</label>
                                     <div class="invalid-feedback">{{ form.fecha_fin.errors }}</div>
                                 </div>
-                            
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
@@ -121,6 +124,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const guardarBtn = document.getElementById("guardar-btn");
     const fechaInicioInput = document.getElementById("fecha_inicio");
     const fechaFinInput = document.getElementById("fecha_fin");
+    // Suponiendo que el checkbox "indefinido" existe en tu formulario
     const indefinidoCheckbox = document.getElementById("indefinido");
 
     // Establecer la fecha de inicio con la fecha actual si no tiene valor
@@ -145,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function toggleFechaFin() {
-        if (indefinidoCheckbox.checked) {
+        if (indefinidoCheckbox && indefinidoCheckbox.checked) {
             fechaFinInput.value = "";
             fechaFinInput.setAttribute("disabled", "true");
         } else {
@@ -153,23 +157,50 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Listener para actualizar precio_original al seleccionar un plan
+    // Actualizar precio original al seleccionar un plan
     const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
     if (planSelect) {
         planSelect.addEventListener("change", function() {
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             let planValor = selectedOption.getAttribute("data-valor") || "";
-            // Reemplazar la coma decimal por punto
+            // Reemplazar la coma decimal por punto, si es necesario
             planValor = planValor.replace(',', '.');
             precioOriginalInput.value = planValor;
             calcularPrecioFinal();
+            actualizarCodigoPlan();
         });
     }
 
     descuentoInput.addEventListener("input", calcularPrecioFinal);
     precioOriginalInput.addEventListener("input", calcularPrecioFinal);
     guardarBtn.addEventListener("click", validarFormulario);
-    indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+    if (indefinidoCheckbox) {
+        indefinidoCheckbox.addEventListener("change", toggleFechaFin);
+    }
+
+    // --- Lógica para actualizar el Código Plan ---
+    const empresaSelect = document.getElementById("{{ form.empresa.id_for_label }}");
+    const codigoPlanInput = document.getElementById("codigo_plan");
+
+    function actualizarCodigoPlan() {
+        // Se obtiene el nombre de la empresa y se elimina espacios innecesarios
+        const empresaNombre = empresaSelect.options[empresaSelect.selectedIndex]?.text.trim() || "";
+        // Se obtiene el código del plan (atributo data-codigo)
+        const planNombre = planSelect.options[planSelect.selectedIndex]?.text.trim() || "";
+        // Se concatena y se asigna al input
+        codigoPlanInput.value =  empresaNombre +("_")+ planNombre;
+    }
+
+    // Actualizar el código cuando cambie la empresa o el plan
+    if (empresaSelect) {
+        empresaSelect.addEventListener("change", actualizarCodigoPlan);
+    }
+    if (planSelect) {
+        planSelect.addEventListener("change", actualizarCodigoPlan);
+    }
+    
+    // Actualizar al cargar la página
+    actualizarCodigoPlan();
 });
 </script>
 {% endblock %}

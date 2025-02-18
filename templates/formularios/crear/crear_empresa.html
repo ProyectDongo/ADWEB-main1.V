@@ -247,8 +247,8 @@
               </div>
             </div>
             
-            <!-- Sección Vigencia de Planes (PlanVigenciaForm) -->
-            <a class="nav-link" data-bs-toggle="collapse" href="#vigencia" role="button">
+             <!-- Sección Vigencia de Planes (PlanVigenciaForm) -->
+             <a class="nav-link" data-bs-toggle="collapse" href="#vigencia" role="button">
               <i class="bi bi-building me-2"></i> <span style="font-size: 20px;">Vigencia de Planes</span>
             </a>
             <div class="collapse" id="vigencia">
@@ -260,7 +260,7 @@
                         <select name="plan" class="form-select {% if vigencia_form.plan.errors %}is-invalid{% endif %}" id="{{ vigencia_form.plan.id_for_label }}">
                           {% for plan in vigencia_form.plan.field.queryset %}
                             <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if vigencia_form.plan.value == plan.id %}selected{% endif %}>
-                              {{ plan.codigo }}
+                              {{ plan.nombre }}
                             </option>
                           {% endfor %}
                         </select>
@@ -272,8 +272,8 @@
                   <div class="row g-3 mb-4">
                     <div class="col-md-6">
                       <div class="form-floating">
-                        {{ vigencia_form.codigo_plan}}
-                        <label for="{{ vigencia_form.codigo_plan.id_for_label }}">Código Plan</label>
+                        {{ vigencia_form.codigo_plan }}
+                        <label for="{{ vigencia_form.codigo_plan.id_for_label }}">Código Vigencia</label>
                       </div>
                     </div>
                   </div>
@@ -292,7 +292,7 @@
                         <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
                       </div>
                       <div class="form-check mt-2">
-                       <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
+                        <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
                         <label class="form-check-label" for="id_indefinido">Indefinido</label>
                       </div>
                     </div>
@@ -314,7 +314,7 @@
                                required>
                         <label>Precio Original</label>
                         <div class="invalid-feedback">{{ vigencia_form.precio_original.errors }}</div>
-                    </div>
+                      </div>
                     </div>
                     <div class="col-md-6">
                       <div class="form-floating">
@@ -324,12 +324,11 @@
                     </div>
                   </div>
                 </div>
-                  <!-- Botón Siguiente -->
+                <!-- Botón Siguiente -->
                 <div class="text-end mt-3">
                   <button type="button" class="btn btn-primary next-btn" data-current="vigencia" data-next="planestado">
                     Anterior
                   </button>
-                </div>
                 </div>
               </div>
             </div>
@@ -340,11 +339,9 @@
                 <a href="{% url 'listar_empresas' %}" class="btn btn-outline-secondary px-4">
                   <i class="bi bi-arrow-left me-2" id="volver"></i>Volver
                 </a>
-                
-                  <button type="submit" id="guardar-btn" class="btn btn-primary px-4">
-                    <i class="bi bi-save me-2" id="guardar"></i>Guardar
-                  </button>
-                
+                <button type="submit" id="guardar-btn" class="btn btn-primary px-4">
+                  <i class="bi bi-save me-2" id="guardar"></i>Guardar
+                </button>
               </div>
             </div>
           </form>
@@ -428,7 +425,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   
   // Actualizar Precio Original al seleccionar un Plan
-  const planSelect = document.getElementById('id_plan');
+  const planSelect = document.getElementById('{{ vigencia_form.plan.id_for_label }}');
   if (planSelect && precioOriginalInput) {
     planSelect.addEventListener("change", function() {
       const selectedOption = planSelect.options[planSelect.selectedIndex];
@@ -436,6 +433,7 @@ document.addEventListener("DOMContentLoaded", function() {
       planValor = planValor.replace(',', '.');
       precioOriginalInput.value = planValor;
       calcularPrecioFinal();
+      actualizarCodigoVigencia();
     });
   }
   
@@ -449,6 +447,27 @@ document.addEventListener("DOMContentLoaded", function() {
     codigoClienteInput.value = generarCodigoCliente();
   }
   
+  // Función para actualizar el Código Vigencia
+  function actualizarCodigoVigencia() {
+    const razonSocialInput = document.getElementById('id_nombre');
+    const codigoVigenciaInput = document.getElementById('{{ vigencia_form.codigo_plan.id_for_label }}');
+    if (razonSocialInput && planSelect && codigoVigenciaInput) {
+      const razonSocial = razonSocialInput.value.trim();
+      const planName = planSelect.options[planSelect.selectedIndex].text.trim();
+      // Concatenamos (separados por un espacio)
+      codigoVigenciaInput.value = razonSocial + " " + planName;
+    }
+  }
+  
+  // Actualizar Código Vigencia al modificar el campo Razón Social
+  const razonSocialInput = document.getElementById('id_nombre');
+  if (razonSocialInput) {
+    razonSocialInput.addEventListener("input", actualizarCodigoVigencia);
+  }
+  
+  // Actualizar Código Vigencia al cargar la página (si ya hay valores)
+  actualizarCodigoVigencia();
+  
   // Validación del Formulario
   const guardarBtn = document.getElementById("guardar-btn");
   if (guardarBtn) {
@@ -460,23 +479,20 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   }
-});
+  
   // Seleccionamos todos los botones de siguiente
   const nextButtons = document.querySelectorAll('.next-btn');
-
   nextButtons.forEach(button => {
     button.addEventListener('click', function() {
       // Obtenemos los ids de la sección actual y la siguiente
       const currentSectionId = this.getAttribute('data-current');
       const nextSectionId = this.getAttribute('data-next');
-
       const currentSection = document.getElementById(currentSectionId);
       let valid = true;
       
       // Validar todos los campos (input, select, textarea) dentro de la sección actual
       const inputs = currentSection.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
-        // Si el campo no es válido, agregamos la clase de error de Bootstrap
         if (!input.checkValidity()) {
           valid = false;
           input.classList.add('is-invalid');
@@ -487,32 +503,26 @@ document.addEventListener("DOMContentLoaded", function() {
       
       // Si la sección es válida, colapsamos la sección actual y mostramos la siguiente
       if (valid) {
-        // Utilizamos el API de Bootstrap Collapse
         const bsCurrent = bootstrap.Collapse.getInstance(currentSection) || new bootstrap.Collapse(currentSection, { toggle: false });
         bsCurrent.hide();
-        
         const nextSection = document.getElementById(nextSectionId);
         new bootstrap.Collapse(nextSection, { toggle: false }).show();
       } else {
-        // Si hay errores, activamos las clases de validación para mostrarlos
         currentSection.classList.add('was-validated');
       }
     });
   });
-
+});
 </script>
 
 <style>
-   .form-floating { margin-bottom: 1.25rem; }
+  .form-floating { margin-bottom: 1.25rem; }
   .form-control:read-only { background-color: #f8f9fa !important; }
   .nav-link.active { color: #0d6efd !important; border-left: 3px solid #0d6efd; }
   .section-title { font-size: 1.1rem; }
   .invalid-feedback { display: block; }
   .border-primary { border-color: #0d6efd !important; }
-
-   i { font-size: 20px; }
-
-   
+  i { font-size: 20px; }
 </style>
 
 {% endblock %}

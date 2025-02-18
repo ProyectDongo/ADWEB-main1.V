@@ -517,18 +517,16 @@ class LimiteEmpresaForm(forms.ModelForm):
 class PlanVigenciaForm(forms.ModelForm):
     """
     Formulario avanzado para gestión de vigencias de planes.
-    
-    Attributes:
-        precio_original (IntegerField): Campo adicional para precio base
-        indefinido (BooleanField): Indicador de plan sin fecha fin
-    
-    Methods:
-        __init__: Hace opcional el campo fecha_fin
-        clean: Valida consistencia entre campos
+
+    Atributos:
+        precio_original (DecimalField): Representa el precio original (se guarda en `monto_plan`).
+        indefinido (BooleanField): Indica si el plan no tiene fecha fin.
+        precio_final (DecimalField): Campo de solo lectura que muestra el monto final (almacenado en `monto_final`).
     """
     precio_original = forms.DecimalField(
         required=True,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Precio Original",
         help_text="Precio base del plan sin descuentos"
     )
     indefinido = forms.BooleanField(
@@ -536,6 +534,12 @@ class PlanVigenciaForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         label='Plan Indefinido',
         help_text="Marcar si el plan no tiene fecha de expiración"
+    )
+    precio_final = forms.DecimalField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+        label="Precio Final",
+        help_text="Precio final calculado aplicando el descuento"
     )
 
     class Meta:
@@ -545,16 +549,22 @@ class PlanVigenciaForm(forms.ModelForm):
             'empresa': forms.Select(attrs={'class': 'form-select'}),
             'plan': forms.Select(attrs={'class': 'form-select'}),
             'codigo_plan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código del Plan'}),
-            'fecha_inicio': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control',
-                'placeholder': 'YYYY-MM-DD'
-            }),
-            'fecha_fin': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control',
-                'placeholder': 'YYYY-MM-DD'
-            }),
+            'fecha_inicio': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control',
+                    'placeholder': 'YYYY-MM-DD'
+                },
+                format='%Y-%m-%d'
+            ),
+            'fecha_fin': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control',
+                    'placeholder': 'YYYY-MM-DD'
+                },
+                format='%Y-%m-%d'
+            ),
             'descuento': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
@@ -565,34 +575,59 @@ class PlanVigenciaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Hace opcional el campo fecha_fin durante la inicialización."""
+        """
+        Inicializa el formulario inyectando valores iniciales desde la instancia,
+        de forma que descuento, fecha_fin y precio_final (monto_final) se recuperen correctamente.
+        """
+        instance = kwargs.get('instance', None)
+        if instance and instance.pk:
+            initial = kwargs.setdefault('initial', {})
+            initial['precio_original'] = instance.monto_plan
+            initial['descuento'] = instance.descuento
+            initial['fecha_fin'] = instance.fecha_fin.strftime('%Y-%m-%d') if instance.fecha_fin else ''
+            initial['indefinido'] = instance.fecha_fin is None
+            initial['precio_final'] = instance.monto_final
         super().__init__(*args, **kwargs)
+        # Hacemos que fecha_fin sea opcional
         self.fields['fecha_fin'].required = False
 
     def clean(self):
         """
-        Valida la coherencia entre los campos del formulario.
-        
-        Raises:
-            ValidationError: Si hay inconsistencia entre campos
-        
-        Returns:
-            dict: Datos limpios y validados
+        Valida la coherencia entre campos.
+
+        - Verifica que el descuento esté entre 0 y 100.
+        - Si se asigna una fecha_fin, se fuerza 'indefinido' a False.
         """
         cleaned_data = super().clean()
 
         descuento = cleaned_data.get('descuento')
-
-        # Validación de plan indefinido
-      
-
-        # Validación de rango de descuento
         if descuento is not None and not (0 <= descuento <= 100):
-            raise forms.ValidationError(
-                "El descuento debe ser un porcentaje entre 0 y 100"
-            )
+            raise forms.ValidationError("El descuento debe ser un porcentaje entre 0 y 100")
+
+        fecha_fin = cleaned_data.get('fecha_fin')
+        if fecha_fin:
+            cleaned_data['indefinido'] = False
 
         return cleaned_data
+
+    def save(self, commit=True):
+        """
+        Guarda la instancia actualizando:
+        
+        - 'monto_plan' con el valor de 'precio_original'.
+        - Si se marca como indefinido, se establece 'fecha_fin' a None.
+        """
+        instance = super().save(commit=False)
+        instance.monto_plan = self.cleaned_data.get('precio_original')
+        if self.cleaned_data.get('indefinido'):
+            instance.fecha_fin = None
+        # Se asume que 'monto_final' ya se encuentra calculado en la instancia.
+        if commit:
+            instance.save()
+        return instance
+
+
+
 class PlanForm(forms.ModelForm):
     """
     Formulario para crear y actualizar planes.
