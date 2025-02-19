@@ -124,8 +124,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const guardarBtn = document.getElementById("guardar-btn");
     const fechaInicioInput = document.getElementById("fecha_inicio");
     const fechaFinInput = document.getElementById("fecha_fin");
-    // Suponiendo que el checkbox "indefinido" existe en tu formulario
-    const indefinidoCheckbox = document.getElementById("indefinido");
 
     // Establecer la fecha de inicio con la fecha actual si no tiene valor
     if (!fechaInicioInput.value) {
@@ -148,15 +146,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    function toggleFechaFin() {
-        if (indefinidoCheckbox && indefinidoCheckbox.checked) {
-            fechaFinInput.value = "";
-            fechaFinInput.setAttribute("disabled", "true");
-        } else {
-            fechaFinInput.removeAttribute("disabled");
-        }
-    }
-
     // Actualizar precio original al seleccionar un plan
     const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
     if (planSelect) {
@@ -174,21 +163,19 @@ document.addEventListener("DOMContentLoaded", function() {
     descuentoInput.addEventListener("input", calcularPrecioFinal);
     precioOriginalInput.addEventListener("input", calcularPrecioFinal);
     guardarBtn.addEventListener("click", validarFormulario);
-    if (indefinidoCheckbox) {
-        indefinidoCheckbox.addEventListener("change", toggleFechaFin);
-    }
 
     // --- Lógica para actualizar el Código Plan ---
     const empresaSelect = document.getElementById("{{ form.empresa.id_for_label }}");
+    // Reutilizamos el planSelect previamente declarado
     const codigoPlanInput = document.getElementById("codigo_plan");
 
     function actualizarCodigoPlan() {
-        // Se obtiene el nombre de la empresa y se elimina espacios innecesarios
+        // Se obtiene el nombre de la empresa y se eliminan espacios innecesarios
         const empresaNombre = empresaSelect.options[empresaSelect.selectedIndex]?.text.trim() || "";
-        // Se obtiene el código del plan (atributo data-codigo)
+        // Se obtiene el nombre del plan
         const planNombre = planSelect.options[planSelect.selectedIndex]?.text.trim() || "";
         // Se concatena y se asigna al input
-        codigoPlanInput.value =  empresaNombre +("_")+ planNombre;
+        codigoPlanInput.value = empresaNombre + "_" + planNombre;
     }
 
     // Actualizar el código cuando cambie la empresa o el plan
@@ -198,9 +185,10 @@ document.addEventListener("DOMContentLoaded", function() {
     if (planSelect) {
         planSelect.addEventListener("change", actualizarCodigoPlan);
     }
-    
+
     // Actualizar al cargar la página
     actualizarCodigoPlan();
 });
+
 </script>
 {% endblock %}

@@ -67,10 +67,8 @@ urlpatterns = [
     path('listar_empresas/', views.listar_empresas, name='listar_empresas'),
 
 
-    
 
-    # Rutas para las entradas para la empresa
-    path('vigencia_planes/', views.vigencia_planes, name='vigencia_planes'),
+
     
     # Rutas para las entradas para la empresa
     path('api/get_provincias/', views.get_provincias, name='get_provincias'),
@@ -92,6 +90,7 @@ urlpatterns = [
     # Rutas para los planes
     path('vigencia_planes/<int:pk>/', views.vigencia_planes, name='vigencia_planes'),
 
+
     # Rutas para los planes con la empresa
     path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
     path('editar_vigencia_plan/<int:plan_id>/', views.editar_vigencia_plan, name='editar_vigencia_plan'),
@@ -101,5 +100,10 @@ urlpatterns = [
     path('empresa/<int:empresa_id>/habilitar/', habilitar_empresa, name='habilitar_empresa'),
     
     path('vigencia_plan/<int:pk>/toggle_estado/', views.toggle_estado, name='toggle_estado'),
+    #pagos
+    # urls.py
+    path('empresa/<int:empresa_id>/pagos/', views.gestion_pagos, name='gestion_pagos'),
+    path('toggle_plan/<int:vigencia_id>/', views.toggle_plan, name='toggle_plan'),
+    path('empresa/<int:empresa_id>/historial_pagos/', views.historial_pagos, name='historial_pagos'),
 
     ] 

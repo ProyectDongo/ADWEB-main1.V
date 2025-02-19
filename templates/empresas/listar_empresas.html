@@ -1,6 +1,6 @@
 {% extends "central.html" %}
 {% load static %}
-{% block title %}Lista de Empresas{% endblock %}
+{% block title %}Lista de Clientes{% endblock %}
 
 {% block content %}
 <!-- Estilos personalizados para mejorar el aspecto visual de la tabla -->
@@ -34,7 +34,7 @@
 <div class="container py-5">
   <div class="card shadow-sm">
     <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
-      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Empresas</h1>
+      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Clientes</h1>
       <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
         <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
           <i class="bi bi-plus-lg"></i> Crear Empresa
@@ -94,14 +94,15 @@
                   <i class="i bi-gear-fill"></i> Administrar
                 </a>
                 <!-- Botón suspender/habilitar -->
-                <button type="button" class="btn btn-secondary btn-sm disable-company mx-1 my-1 action-button" data-company-id="{{ empresa.id }}" title="Suspender Empresa">
-                  <i class="bi bi-x-circle"></i> DESABILITAR
-                </button>
+               
                 <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1 action-button" title="Vigencia de Planes">
                   <i class="bi bi-cloud-download-fill"></i> Asociar Nueva Plan
                 </a>
+                <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-success btn-sm mx-1 my-1 action-button">
+                  <i class="bi bi-credit-card"></i> Pagos
+              </a>
                 <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" title="Eliminar Empresa">
-                  <i class="bi bi-trash"></i> DEL
+                  <i class="bi bi-trash"></i> Eliminar
                 </a>
               </td>
             </tr>
@@ -148,92 +149,6 @@ document.getElementById('search').addEventListener('input', function() {
   });
 });
 
-// Evento para el botón suspender/habilitar
-document.querySelectorAll('.disable-company').forEach(button => {
-  button.addEventListener('click', function() {
-    const companyId = this.getAttribute('data-company-id');
-    const row = this.closest('tr');
-    // Si la fila no está en modo suspendido, se procede a suspender
-    if (!row.classList.contains('suspended')) {
-      fetch(`/empresa/${companyId}/suspender/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({ id: companyId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Actualizar el badge de estado a "PLAN SUSPENDIDO" (rojo)
-          const stateBadge = row.querySelector('th:nth-child(2) span.badge');
-          stateBadge.textContent = 'SUSPENDIDO';
-          stateBadge.className = 'badge bg-danger';
-          // Actualizar el badge de "vigente" a "NO" (rojo)
-          const vigenteBadge = row.querySelector('th:nth-child(3) span.badge');
-          vigenteBadge.textContent = 'NO';
-          vigenteBadge.className = 'badge bg-danger';
-          // Marcar la fila como suspendida (por ejemplo, con fondo rojo)
-          row.classList.add('suspended', 'table-danger');
-          // Deshabilitar los demás botones de acción
-          row.querySelectorAll('.action-button').forEach(btn => {
-            btn.classList.add('disabled');
-            btn.style.pointerEvents = 'none';
-          });
-          // Mantener habilitado el botón actual para permitir revertir la acción
-          this.classList.remove('disabled');
-          this.style.pointerEvents = 'auto';
-          // Cambiar el botón a modo "HABILITAR"
-          this.innerHTML = '<i class="bi bi-check-circle"></i> HABILITAR';
-        } else {
-          alert('Error al suspender la empresa.');
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        alert('Error al suspender la empresa.');
-      });
-    } else {
-      // Si ya está suspendida, se procede a habilitar la empresa
-      fetch(`/empresa/${companyId}/habilitar/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({ id: companyId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Revertir el badge de estado a "AL DIA" (verde)
-          const stateBadge = row.querySelector('th:nth-child(2) span.badge');
-          stateBadge.textContent = 'AL DIA';
-          stateBadge.className = 'badge bg-success';
-          // Revertir el badge de "vigente" a "SI" (verde)
-          const vigenteBadge = row.querySelector('th:nth-child(3) span.badge');
-          vigenteBadge.textContent = 'SI';
-          vigenteBadge.className = 'badge bg-success';
-          // Remover el estilo de suspensión de la fila
-          row.classList.remove('suspended', 'table-danger');
-          // Habilitar todos los botones de acción
-          row.querySelectorAll('.action-button').forEach(btn => {
-            btn.classList.remove('disabled');
-            btn.style.pointerEvents = 'auto';
-          });
-          // Cambiar el botón de vuelta a "DESABILITAR"
-          this.innerHTML = '<i class="bi bi-x-circle"></i> DESABILITAR';
-        } else {
-          alert('Error al habilitar la empresa.');
-        }
-      })
-      .catch(error => {
-        console.error(error);
-        alert('Error al habilitar la empresa.');
-      });
-    }
-  });
-});
+
 </script>
 {% endblock %}

@@ -164,3 +164,13 @@ LOGIN_REDIRECT_URL = '/accounts/redirect/'  # Asegura que siempre pase por la fu
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Para que después del logout vuelva al login
  # Redirige a esta vista después del login
 AUTH_USER_MODEL = 'WEB.Usuario'
+
+#envios de correo
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 23
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = 'tu-email@empresa.com'
+EMAIL_HOST_PASSWORD = 'tu-contraseña'
+DEFAULT_FROM_EMAIL = 'tu-email@empresa.com'

@@ -10,14 +10,16 @@ Incluye funcionalidades para:
 - Gestión de planes y vigencias
 - Generación de reportes (actualmente en desarrollo)
 """
-
+from dateutil.relativedelta import relativedelta
+from django.core.mail import send_mail
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.conf import settings
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from .forms import LimiteEmpresaForm, RegistroSalidaForm, RegistroEntradaForm, EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm, PlanVigenciaForm,PlanForm
-from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan,HistorialCambios
+from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan,HistorialCambios,Pago
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
@@ -569,22 +571,21 @@ class MantenimientoPlanes(ListView):
     context_object_name = 'planes'
 
 @login_required
-def vigencia_planes(request):
-    """
-    Gestiona la vigencia de los planes con cálculo automático de montos.
+def vigencia_planes(request, pk):
+    empresa = get_object_or_404(RegistroEmpresas, id=pk)
     
-    :param request: HttpRequest
-    :return: Renderizado de formulario de vigencia de planes
-    """
+    # Si existe un plan_id en la query string, lo obtenemos (opcional)
     plan_id = request.GET.get('plan_id')
     plan = None
     if plan_id:
-        plan = Plan.objects.get(id=plan_id)
+        plan = get_object_or_404(Plan, id=plan_id)
     
     if request.method == 'POST':
         form = PlanVigenciaForm(request.POST)
         if form.is_valid():
             vigencia_plan = form.save(commit=False)
+            # Asigna la empresa capturada de la URL
+            vigencia_plan.empresa = empresa
             if plan:
                 vigencia_plan.plan = plan
             try:
@@ -594,9 +595,16 @@ def vigencia_planes(request):
             except ValueError as e:
                 form.add_error(None, str(e))
     else:
-        form = PlanVigenciaForm(initial={'plan': plan})
+        form = PlanVigenciaForm(initial={'empresa': empresa, 'plan': plan})
+        # Opcional: si no deseas que se pueda modificar la empresa, deshabilita el campo
+        form.fields['empresa'].disabled = True
     
-    return render(request, 'empresas/vigencia_planes.html', {'form': form, 'plan': plan})
+    return render(request, 'empresas/vigencia_planes.html', {
+        'form': form,
+        'plan': plan,
+        'empresa': empresa
+    })
+
 
 # =====================
 # Reportes y Exportación
@@ -654,24 +662,6 @@ def empresas_vigentes(request):
     return render(request, 'empresas/empresas_vigente.html', context)
 
 @login_required
-def vigencia_planes(request, pk):
-    """
-    Vista para la gestión de vigencias de planes.
-    
-    :param request: HttpRequest
-    :return: Renderizado de template con formulario de vigencia de planes
-    """
-    if request.method == 'POST':
-        form = PlanVigenciaForm(request.POST)
-        if form.is_valid():
-            vigencia = form.save(commit=False)
-            vigencia.calcular_monto()
-            vigencia.save()
-            return redirect('empresas_vigentes')
-    else:
-        form = PlanVigenciaForm()
-    return render(request, 'empresas/vigencia_planes.html', {'form': form})
-
 def generar_boleta(request, empresa_id):
     """
     Genera una boleta en PDF para una empresa (actualmente deshabilitado).
@@ -857,3 +847,99 @@ def toggle_estado(request, pk):
         'new_estado': vigencia.estado,
         'new_estado_display': vigencia.get_estado_display()
     })
+
+
+# pagos 
+
+
+def gestion_pagos(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencia_planes = empresa.vigencias.filter(estado='indefinido')
+    total = sum(vp.monto_final for vp in vigencia_planes)
+    
+    hoy = timezone.now()
+    # Verifica si ya existe un pago registrado para el mes actual
+    existe_pago = Pago.objects.filter(
+        empresa=empresa,
+        fecha_pago__month=hoy.month,
+        fecha_pago__year=hoy.year
+    ).exists()
+    
+    if request.method == 'POST':
+        # Si ya existe un pago y el usuario no confirmó registrar uno nuevo,
+        # mostramos la pantalla de confirmación
+        if existe_pago and not request.POST.get('confirmar'):
+            return render(request, 'confirmar_pago.html', {
+                'empresa': empresa,
+                'proximo_mes': hoy + relativedelta(months=1)
+            })
+        
+        # Aquí debes obtener los planes seleccionados según lo enviado en el POST.
+        # Por simplicidad se asume que se usan todos los planes activos.
+        selected_planes = vigencia_planes
+        
+        # Crear el pago
+        pago = Pago.objects.create(
+            empresa=empresa,
+            monto=sum(vp.monto_final for vp in selected_planes),
+            metodo=request.POST.get('metodo'),
+            pagado=(request.POST.get('metodo') == 'manual')
+        )
+        
+        if request.POST.get('metodo') == 'manual':
+            send_mail(
+                'Instrucciones de pago manual',
+                'Por favor complete su pago...',
+                settings.DEFAULT_FROM_EMAIL,
+                [empresa.email],
+                fail_silently=False
+            )
+        
+        pago.vigencia_planes.set(selected_planes)
+        
+        # Enviar correo con los detalles del pago
+        subject = f"Detalles de pago - {empresa.nombre}"
+        message = "Planes pagados:\n" + "\n".join(
+            [f"- {vp.plan.nombre} (${vp.monto_final})" for vp in selected_planes]
+        )
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [empresa.email]
+        )
+        
+        # Actualizar el estado de la empresa
+        empresa.estado = 'aldia'
+        empresa.save()
+        return redirect('detalle_empresa', empresa_id=empresa.id)
+    
+    return render(request, 'empresas/gestion_pagos.html', {
+        'empresa': empresa,
+        'vigencia_planes': vigencia_planes,
+        'total': total,
+        'existe_pago': existe_pago,  # Se pasa esta variable al template
+    })
+
+def toggle_plan(request, vigencia_id):
+    vigencia = get_object_or_404(VigenciaPlan, id=vigencia_id)
+    vigencia.estado = 'suspendido' if vigencia.estado == 'indefinido' else 'indefinido'
+    vigencia.save()
+    return redirect('gestion_pagos', empresa_id=vigencia.empresa.id)
+
+def historial_pagos(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    return render(request, 'empresas/historial_pagos.html', {
+        'empresa': empresa,
+        'pagos': empresa.pagos.all()
+    })
+
+def confirmar_pago_extra(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    if request.method == 'POST':
+        if 'confirmar' in request.POST:
+            pago_data = request.session.get('pago_data', {})
+            # Procesar pago...
+            return redirect('gestion_pagos', empresa_id=empresa_id)
+        return redirect('gestion_pagos', empresa_id=empresa_id)
+    return render(request, 'empresas/confirmar_pago_extra.html', {'empresa': empresa})

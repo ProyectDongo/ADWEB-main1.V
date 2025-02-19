@@ -1,0 +1,114 @@
+{% extends "central.html" %}
+{% block content %}
+<div class="container">
+    <h2>Gestión de Pagos - {{ empresa.nombre }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        <h3>Planes Activos</h3>
+        
+        {# Solo se muestra la alerta si ya existe un pago registrado para este mes #}
+        {% if existe_pago %}
+        <div class="container">
+            <div class="alert alert-warning">
+                <h4>¡Atención!</h4>
+                <p>Ya existe un pago registrado para este mes.</p>
+                <p>¿Desea registrar un nuevo pago para el próximo mes?</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="confirmar" value="si" class="btn btn-primary">Sí</button>
+                    <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-secondary">No</a>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="list-group mb-3">
+            {% for vp in vigencia_planes %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <label class="form-check-label">
+                        {# Agrega el atributo data-monto directamente aquí para cada checkbox #}
+                        <input type="checkbox" name="planes" value="{{ vp.id }}" class="form-check-input" data-monto="{{ vp.monto_final }}" checked>
+                        {{ vp.plan.nombre }} - ${{ vp.monto_final }}
+                    </label>
+                    <a href="{% url 'toggle_plan' vp.id %}" 
+                       class="btn btn-sm btn-{% if vp.activo %}danger{% else %}success{% endif %}">
+                        {% if vp.activo %}Desactivar{% else %}Activar{% endif %}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mb-3">
+            <h4>Total a pagar: $<span id="total">{{ total }}</span></h4>
+        </div>
+        
+        <div class="mb-3">
+            <h3>Método de Pago</h3>
+            <select name="metodo" class="form-select">
+                <option value="manual">Manual (Recibiré instrucciones por correo)</option>
+                <option value="automatico" {% if empresa.metodo_pago == 'automatico' %}selected{% endif %}>
+                    Automático (Usar datos registrados)
+                </option>
+            </select>
+        </div>
+        
+        <div id="form-automatico" style="display: {% if empresa.metodo_pago == 'automatico' %}block{% else %}none{% endif %};">
+            <div class="mb-3">
+                <label>Banco</label>
+                <input type="text" class="form-control" name="banco">
+            </div>
+            <div class="mb-3">
+                <label>Tipo de Cuenta</label>
+                <select class="form-select" name="tipo_cuenta">
+                    <option value="ahorro">Ahorro</option>
+                    <option value="corriente">Corriente</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>Número de Cuenta</label>
+                <input type="text" class="form-control" name="numero_cuenta">
+            </div>
+        </div>
+        
+        <script>
+            document.querySelector('[name="metodo"]').addEventListener('change', (e) => {
+                document.getElementById('form-automatico').style.display = e.target.value === 'automatico' ? 'block' : 'none';
+            });
+        </script>
+       
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-credit-card"></i> Confirmar Pago
+        </button>
+    </form>
+    
+    <div class="mt-4">
+        <a href="{% url 'historial_pagos' empresa.id %}" class="btn btn-outline-dark">
+            <i class="bi bi-clock-history"></i> Ver Historial
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const checkboxes = document.querySelectorAll('[name="planes"]');
+    const totalSpan = document.getElementById('total');
+    
+    function updateTotal() {
+        let total = 0;
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                total += parseFloat(checkbox.dataset.monto);
+            }
+        });
+        totalSpan.textContent = total.toFixed(2);
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateTotal);
+    });
+});
+</script>
+{% endblock %}

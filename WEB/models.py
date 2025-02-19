@@ -85,6 +85,24 @@ class RegistroEmpresas(models.Model):
     plan_contratado = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name='empresas')
     limite_usuarios = models.PositiveIntegerField(default=0)
 
+    metodo_pago = models.CharField(
+    max_length=20, 
+    choices=[('manual', 'Manual'), ('automatico', 'Automático')], 
+    default='manual'
+    )
+    frecuencia_pago = models.CharField(
+        max_length=20, 
+        choices=[('mensual', 'Mensual'), ('anual', 'Anual')], 
+        blank=True, null=True
+    )
+    banco = models.CharField(max_length=100, blank=True, null=True)
+    tipo_cuenta = models.CharField(
+        max_length=20, 
+        choices=[('ahorro', 'Ahorro'), ('corriente', 'Corriente')], 
+        blank=True, null=True
+    )
+    numero_cuenta = models.CharField(max_length=50, blank=True, null=True)
+
     class Meta:
         verbose_name = "Empresa"
         verbose_name_plural = "Empresas"
@@ -179,7 +197,7 @@ class VigenciaPlan(models.Model):
     TIPO_DURACION = [
         ('indefinido', 'Indefinido'),
         ('mensual', 'Mensual'),
-        ('suspendio', 'Suspendido'),
+        ('suspendido', 'Suspendido'),
     ]
     empresa = models.ForeignKey(
         RegistroEmpresas,
@@ -193,7 +211,7 @@ class VigenciaPlan(models.Model):
     descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
-    estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefido')
+    estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefinido')
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"
@@ -229,3 +247,19 @@ class HistorialCambios(models.Model):
     def __str__(self):
         return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario}"
     
+#pago 
+class Pago(models.Model):
+    METODO_PAGO_CHOICES = [
+        ('manual', 'Manual'),
+        ('automatico', 'Automático'),
+    ]
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='pagos')
+    vigencia_planes = models.ManyToManyField(VigenciaPlan, related_name='pagos_asociados')
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_pago = models.DateTimeField(auto_now_add=True)
+    metodo = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES)
+    comprobante = models.FileField(upload_to='comprobantes/', blank=True, null=True)
+    pagado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
