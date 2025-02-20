@@ -3,31 +3,35 @@
 {% block title %}Lista de Clientes{% endblock %}
 
 {% block content %}
-<!-- Estilos personalizados para mejorar el aspecto visual de la tabla -->
 <style>
-  /* Alinear verticalmente y agregar espaciado a las celdas */
   .table th,
   .table td {
     vertical-align: middle;
     padding: 0.75rem;
     font-size: 14px;
   }
-  /* Encabezado con fondo oscuro y texto blanco, centrado */
   .table thead th {
     background-color: #343a40;
     color: #fff;
     text-align: center;
   }
-  /* Cuerpo de la tabla: por defecto centrado, y a la izquierda en columnas de texto largo */
   .table tbody td {
     text-align: center;
   }
   .table tbody td.text-left {
     text-align: left;
   }
-  /* Margen pequeño para los botones de acción */
   .action-button {
     margin: 0.2rem;
+  }
+  .planes-vigentes-row {
+    background-color: #f8f9fa;
+  }
+  .toggle-planes i {
+    transition: transform 0.3s ease;
+  }
+  .toggle-planes.collapsed i {
+    transform: rotate(180deg);
   }
 </style>
 
@@ -41,9 +45,6 @@
         </a>
         <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
           <i class="bi bi-list"></i> Lista de Planes
-        </a>
-        <a href="{% url 'empresas_vigentes' %}" class="btn btn-warning btn-md mx-1 my-1" title="Empresas Vigentes">
-          <i class="bi bi-check2-circle"></i> Planes Vigentes
         </a>
       </div>
     </div>
@@ -93,17 +94,89 @@
                 <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1 action-button" title="Ver Detalles">
                   <i class="i bi-gear-fill"></i> Administrar
                 </a>
-                <!-- Botón suspender/habilitar -->
-               
+                <button class="btn btn-primary btn-sm mx-1 my-1 action-button toggle-planes" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#planes-{{ empresa.id }}"
+                        title="Ver Servicios">
+                  <i class="bi bi-chevron-down"></i> Servicios
+                </button>
                 <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1 action-button" title="Vigencia de Planes">
-                  <i class="bi bi-cloud-download-fill"></i> Asociar Nueva Plan
+                  <i class="bi bi-cloud-download-fill"></i> Nuevo Plan
                 </a>
                 <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-success btn-sm mx-1 my-1 action-button">
                   <i class="bi bi-credit-card"></i> Pagos
-              </a>
+                </a>
                 <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" title="Eliminar Empresa">
                   <i class="bi bi-trash"></i> Eliminar
                 </a>
+              </td>
+            </tr>
+            <tr class="planes-vigentes-row">
+              <td colspan="8" class="p-0">
+                <div class="collapse" id="planes-{{ empresa.id }}">
+                  <div class="p-3">
+                    <h5 class="mb-3">Planes Vigentes</h5>
+                    {% if empresa.vigencias.all %}
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover">
+                        <thead>
+                          <tr>
+                            <th>Código Plan</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Monto Plan</th>
+                            <th>Descuento</th>
+                            <th>Monto Final</th>
+                            <th>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for vigencia in empresa.vigencias.all %}
+                          <tr class="{% if vigencia.estado == 'suspendido' %}table-danger{% endif %}">
+                            <td>{{ vigencia.codigo_plan }}</td>
+                            <td>{{ vigencia.fecha_inicio }}</td>
+                            <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                            <td>
+                              {% if vigencia.estado != 'suspendido' %}
+                                {% if vigencia.fecha_fin %}Definido{% else %}Indefinido{% endif %}
+                              {% else %}
+                                {{ vigencia.get_estado_display }}
+                              {% endif %}
+                            </td>
+                            <td>{{ vigencia.monto_plan }}</td>
+                            <td>{{ vigencia.descuento }}%</td>
+                            <td>{{ vigencia.monto_final }}</td>
+                            <td>
+                              <div class="d-flex flex-wrap gap-1">
+                                <a href="{% url 'generar_boleta' vigencia.empresa.id %}" 
+                                   class="btn btn-primary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-receipt"></i>
+                                </a>
+                                <a href="{% url 'editar_vigencia_plan' vigencia.id %}" 
+                                   class="btn btn-secondary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-gear"></i>
+                                </a>
+                                <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-success{% else %}btn-warning{% endif %}" 
+                                        onclick="toggleEstado('{{ vigencia.id }}', this)">
+                                  {% if vigencia.estado == 'suspendido' %}Habilitar{% else %}Deshabilitar{% endif %}
+                                </button>
+                                <a href="#" 
+                                   class="btn btn-danger btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-trash"></i>
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay planes vigentes para esta empresa</div>
+                    {% endif %}
+                  </div>
+                </div>
               </td>
             </tr>
             {% empty %}
@@ -119,7 +192,6 @@
 </div>
 
 <script>
-// Función para obtener el token CSRF desde las cookies
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -136,16 +208,17 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
-// Filtrado de la tabla
 document.getElementById('search').addEventListener('input', function() {
   const searchValue = this.value.toLowerCase();
-  const rows = document.querySelectorAll('#empresa-list tr');
+  const rows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
   rows.forEach(row => {
+    if(row.classList.contains('planes-vigentes-row')) return;
     const codigoCliente = row.querySelector('th').textContent.toLowerCase();
     const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
     const rut = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
     const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
     row.style.display = match ? '' : 'none';
+    row.nextElementSibling.style.display = match ? '' : 'none';
   });
 });
 

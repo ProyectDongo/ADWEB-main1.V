@@ -106,4 +106,8 @@ urlpatterns = [
     path('toggle_plan/<int:vigencia_id>/', views.toggle_plan, name='toggle_plan'),
     path('empresa/<int:empresa_id>/historial_pagos/', views.historial_pagos, name='historial_pagos'),
 
+
+    path('planes_por_empresa/<int:empresa_id>/', views.planes_por_empresa, name='planes_por_empresa'),
+
+     path('toggle-estado/<int:pk>/', views.toggle_estado, name='toggle_estado_vigencia'),
     ] 

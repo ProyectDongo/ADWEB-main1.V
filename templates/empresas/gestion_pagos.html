@@ -5,42 +5,45 @@
     
     <form method="post">
         {% csrf_token %}
+        
+        <!-- Sección de Planes Activos -->
         <h3>Planes Activos</h3>
-        
-        {# Solo se muestra la alerta si ya existe un pago registrado para este mes #}
-        {% if existe_pago %}
-        <div class="container">
-            <div class="alert alert-warning">
-                <h4>¡Atención!</h4>
-                <p>Ya existe un pago registrado para este mes.</p>
-                <p>¿Desea registrar un nuevo pago para el próximo mes?</p>
-                <form method="POST">
-                    {% csrf_token %}
-                    <button type="submit" name="confirmar" value="si" class="btn btn-primary">Sí</button>
-                    <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-secondary">No</a>
-                </form>
-            </div>
-        </div>
-        {% endif %}
-        
         <div class="list-group mb-3">
-            {% for vp in vigencia_planes %}
+            {% for vp in vigencia_planes_activos %}
             <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
                     <label class="form-check-label">
-                        {# Agrega el atributo data-monto directamente aquí para cada checkbox #}
                         <input type="checkbox" name="planes" value="{{ vp.id }}" class="form-check-input" data-monto="{{ vp.monto_final }}" checked>
                         {{ vp.plan.nombre }} - ${{ vp.monto_final }}
                     </label>
-                    <a href="{% url 'toggle_plan' vp.id %}" 
-                       class="btn btn-sm btn-{% if vp.activo %}danger{% else %}success{% endif %}">
-                        {% if vp.activo %}Desactivar{% else %}Activar{% endif %}
+                    <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-sm btn-danger">
+                        Desactivar
                     </a>
                 </div>
             </div>
+            {% empty %}
+            <p>No hay planes activos.</p>
             {% endfor %}
         </div>
         
+        <!-- Sección de Planes Suspendidos -->
+        <h3>Planes Suspendidos</h3>
+        <div class="list-group mb-3">
+            {% for vp in vigencia_planes_suspendidos %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>{{ vp.plan.nombre }} - ${{ vp.monto_final }} (Suspendido)</span>
+                    <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-sm btn-success">
+                        Activar
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p>No hay planes suspendidos.</p>
+            {% endfor %}
+        </div>
+        
+        <!-- Total y método de pago -->
         <div class="mb-3">
             <h4>Total a pagar: $<span id="total">{{ total }}</span></h4>
         </div>

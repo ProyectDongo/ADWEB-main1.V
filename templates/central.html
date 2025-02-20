@@ -101,6 +101,8 @@
     {% endblock %}
 </head>
 <body>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
     {% include "navbar.html" %}
     <br>
     <br>

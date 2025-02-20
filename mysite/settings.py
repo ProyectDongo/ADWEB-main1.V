@@ -168,9 +168,7 @@ AUTH_USER_MODEL = 'WEB.Usuario'
 #envios de correo
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 23
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = 'tu-email@empresa.com'
-EMAIL_HOST_PASSWORD = 'tu-contraseña'
-DEFAULT_FROM_EMAIL = 'tu-email@empresa.com'
+EMAIL_HOST = 'localhost'  # Asegúrate que Mercury está en localhost
+EMAIL_PORT = 25  # Puerto SMTP de Mercury
+EMAIL_USE_TLS = False  # Mercury usualmente no usa TLS por defecto
+DEFAULT_FROM_EMAIL = 'tu-email@empresa.com'  # Debe existir en Mercury

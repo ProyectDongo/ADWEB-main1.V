@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Instrucciones de Pago Manual</title>
+    <style>
+        /* Estilos básicos para el correo */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin: 0 20px;
+        }
+        .transfer-data {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ logo_url }}" alt="Logo de {{ empresa.nombre }}" width="200">
+    </div>
+    <div class="content">
+        <h2>Instrucciones de Pago Manual</h2>
+        <p>Estimado/a <strong>{{ empresa.nombre }}</strong>,</p>
+        <p>Para completar su pago correspondiente al mes de <strong>{{ proximo_mes|date:"F Y" }}</strong>, por favor realice una transferencia bancaria utilizando los siguientes datos:</p>
+        <div class="transfer-data">
+            <p><strong>Banco:</strong> {{ transfer_data.banco }}</p>
+            <p><strong>Tipo de Cuenta:</strong> {{ transfer_data.tipo_cuenta }}</p>
+            <p><strong>Número de Cuenta:</strong> {{ transfer_data.numero_cuenta }}</p>
+            <p><strong>Titular:</strong> {{ transfer_data.titular }}</p>
+        </div>
+        <p>Una vez realizado el pago, envíenos el comprobante a nuestro correo de soporte para confirmar la transacción.</p>
+        <p>Gracias por su confianza.</p>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 {{ empresa.nombre }}. Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

@@ -32,6 +32,10 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils.crypto import get_random_string
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 # =====================
@@ -850,77 +854,67 @@ def toggle_estado(request, pk):
 
 
 # pagos 
-
+def get_next_due(empresa):
+    """Devuelve la fecha (primer día del mes) del próximo pago pendiente."""
+    hoy = timezone.now()
+    next_due = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    while Pago.objects.filter(
+        empresa=empresa,
+        fecha_pago__year=next_due.year,
+        fecha_pago__month=next_due.month
+    ).exists():
+        next_due += relativedelta(months=1)
+    return next_due
 
 def gestion_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_planes = empresa.vigencias.filter(estado='indefinido')
-    total = sum(vp.monto_final for vp in vigencia_planes)
+    vigencia_planes_activos = empresa.vigencias.filter(estado='indefinido')
+    vigencia_planes_suspendidos = empresa.vigencias.filter(estado='suspendido')
+    total = sum(vp.monto_final for vp in vigencia_planes_activos)
     
     hoy = timezone.now()
-    # Verifica si ya existe un pago registrado para el mes actual
-    existe_pago = Pago.objects.filter(
-        empresa=empresa,
-        fecha_pago__month=hoy.month,
-        fecha_pago__year=hoy.year
-    ).exists()
+    next_due = get_next_due(empresa)
     
     if request.method == 'POST':
-        # Si ya existe un pago y el usuario no confirmó registrar uno nuevo,
-        # mostramos la pantalla de confirmación
-        if existe_pago and not request.POST.get('confirmar'):
-            return render(request, 'confirmar_pago.html', {
+        if (next_due.month != hoy.month or next_due.year != hoy.year) and not request.POST.get('confirmar'):
+            selected_planes_ids = request.POST.getlist('planes')
+            metodo = request.POST.get('metodo')
+            context = {
                 'empresa': empresa,
-                'proximo_mes': hoy + relativedelta(months=1)
-            })
+                'proximo_mes': next_due,
+                'planes': selected_planes_ids,
+                'metodo': metodo,
+            }
+            return render(request, 'empresas/confirmar_pago.html', context)
         
-        # Aquí debes obtener los planes seleccionados según lo enviado en el POST.
-        # Por simplicidad se asume que se usan todos los planes activos.
-        selected_planes = vigencia_planes
+        selected_planes_ids = request.POST.getlist('planes')
+        selected_planes = vigencia_planes_activos.filter(id__in=selected_planes_ids)
+        metodo = request.POST.get('metodo')
         
-        # Crear el pago
         pago = Pago.objects.create(
             empresa=empresa,
             monto=sum(vp.monto_final for vp in selected_planes),
-            metodo=request.POST.get('metodo'),
-            pagado=(request.POST.get('metodo') == 'manual')
+            metodo=metodo,
+            pagado=(metodo == 'manual' or metodo == 'otro_metodo'),  # Ajusta según lógica
+            fecha_pago=next_due
         )
         
-        if request.POST.get('metodo') == 'manual':
-            send_mail(
-                'Instrucciones de pago manual',
-                'Por favor complete su pago...',
-                settings.DEFAULT_FROM_EMAIL,
-                [empresa.email],
-                fail_silently=False
-            )
+        if metodo == 'manual':
+            # Se envía el correo personalizado con las instrucciones de pago manual
+            send_manual_payment_email(empresa, next_due)
         
         pago.vigencia_planes.set(selected_planes)
-        
-        # Enviar correo con los detalles del pago
-        subject = f"Detalles de pago - {empresa.nombre}"
-        message = "Planes pagados:\n" + "\n".join(
-            [f"- {vp.plan.nombre} (${vp.monto_final})" for vp in selected_planes]
-        )
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [empresa.email]
-        )
-        
-        # Actualizar el estado de la empresa
         empresa.estado = 'aldia'
         empresa.save()
-        return redirect('detalle_empresa', empresa_id=empresa.id)
+        return redirect('detalle_empresa', pk=empresa.id)
     
     return render(request, 'empresas/gestion_pagos.html', {
         'empresa': empresa,
-        'vigencia_planes': vigencia_planes,
+        'vigencia_planes_activos': vigencia_planes_activos,
+        'vigencia_planes_suspendidos': vigencia_planes_suspendidos,
         'total': total,
-        'existe_pago': existe_pago,  # Se pasa esta variable al template
     })
-
+    
 def toggle_plan(request, vigencia_id):
     vigencia = get_object_or_404(VigenciaPlan, id=vigencia_id)
     vigencia.estado = 'suspendido' if vigencia.estado == 'indefinido' else 'indefinido'
@@ -939,7 +933,48 @@ def confirmar_pago_extra(request, empresa_id):
     if request.method == 'POST':
         if 'confirmar' in request.POST:
             pago_data = request.session.get('pago_data', {})
-            # Procesar pago...
+            # Procesar pago extra...
             return redirect('gestion_pagos', empresa_id=empresa_id)
         return redirect('gestion_pagos', empresa_id=empresa_id)
     return render(request, 'empresas/confirmar_pago_extra.html', {'empresa': empresa})
+
+
+#envio de correo 
+
+def send_manual_payment_email(empresa, next_due):
+    """
+    Envía un correo con instrucciones de pago manual personalizado.
+    """
+    # Datos ficticios de transferencia
+    transfer_data = {
+        'banco': 'Banco Ficticio',
+        'tipo_cuenta': 'Cuenta Corriente',
+        'numero_cuenta': '9876543210',
+        'titular': empresa.nombre,
+    }
+    # URL del logo de la empresa (puede ser una URL absoluta a un recurso en tus estáticos)
+    logo_url = 'static/png/Logo.png'
+    
+    subject = "Instrucciones de Pago Manual"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [empresa.email]
+    
+    context = {
+        'empresa': empresa,
+        'transfer_data': transfer_data,
+        'logo_url': logo_url,
+        'proximo_mes': next_due,
+    }
+    # Renderizamos el contenido HTML del correo usando una plantilla
+    html_content = render_to_string('empresas/email/instrucciones_pago_manual.html', context)
+    # Extraemos el contenido en texto plano (por si el cliente de correo no soporta HTML)
+    text_content = strip_tags(html_content)
+    
+    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+def planes_por_empresa(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencias = VigenciaPlanes.objects.filter(empresa=empresa)
+    return render(request, 'planes_por_empresa.html', {'vigencias': vigencias})
