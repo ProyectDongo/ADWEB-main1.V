@@ -10,6 +10,7 @@ Incluye funcionalidades para:
 - Gestión de planes y vigencias
 - Generación de reportes (actualmente en desarrollo)
 """
+import datetime
 from dateutil.relativedelta import relativedelta
 from django.core.mail import send_mail
 from django.conf import settings
@@ -36,6 +37,8 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.db.models.functions import TruncMonth
+from django.db.models import Count, Sum
 
 
 # =====================
@@ -287,21 +290,17 @@ def crear_empresa(request):
             password = get_random_string(8)
             
             # Creamos el usuario supervisor
-            # Puedes ajustar el username según tus necesidades (por ejemplo, usando el código_cliente)
             supervisor = Usuario.objects.create_user(
                 username=empresa.codigo_cliente,  # Asegúrate que sea único
                 email=empresa.email,
                 password=password,
                 role='supervisor',
                 empresa=empresa,
-                rut=empresa.rut,       # O asignar otro valor si es necesario
-                nombre=empresa.nombre, # Por ejemplo, el nombre de la empresa
+                rut=empresa.rut,       
+                nombre=empresa.nombre, 
             )
             
-            # Opcional: podrías enviar un correo electrónico con las credenciales
-            # O bien, mostrar un mensaje de éxito con las credenciales generadas.
-            
-            # Por ejemplo, usando mensajes de Django:
+           
             from django.contrib import messages
             messages.success(request, 
                 f"Empresa creada correctamente. Se ha creado un usuario supervisor con username: {supervisor.username} y contraseña: {password}"
@@ -311,9 +310,9 @@ def crear_empresa(request):
     else:
         empresa_form = EmpresaForm()
         vigencia_form = PlanVigenciaForm()
-        vigencia_form.fields.pop('empresa', None)  # También en GET para evitar error en template
+        vigencia_form.fields.pop('empresa', None)  
 
-    return render(request, 'formularios/crear/crear_empresa.html', {
+    return render(request, 'side_menu/clientes/lista_clientes/crear_empresa/crear_empresa.html', {
         'empresa_form': empresa_form,
         'vigencia_form': vigencia_form
     })
@@ -376,7 +375,7 @@ def detalle_empresa(request, pk):
         form = EmpresaForm(instance=empresa)
 
     # Renderizar el template con la empresa, el formulario, los supervisores, los trabajadores y el historial
-    return render(request, 'empresas/detalles_empresa.html', {
+    return render(request, 'side_menu/clientes/lista_clientes/administrar/detalles_empresa.html', {
         'empresa': empresa,
         'vigencias': vigencias,
         'form': form,
@@ -400,7 +399,7 @@ def listar_empresas(request):
     if query:
         empresas = empresas.filter(nombre__icontains=query)
     
-    return render(request, 'empresas/listar_empresas.html', {'empresas': empresas})
+    return render(request, 'side_menu/clientes/lista_clientes/listar_empresas.html', {'empresas': empresas})
 
 @login_required
 def eliminar_empresa(request, pk):
@@ -412,7 +411,7 @@ def eliminar_empresa(request, pk):
 
 def listar_empresas_eliminadas(request):
     empresas = RegistroEmpresas.objects.filter(eliminada=True)
-    return render(request, 'empresas/listar_empresas_eliminadas.html', {'empresas': empresas})
+    return render(request, 'side_menu/clientes/lista_clientes/ver_eliminados/listar_empresas_eliminadas.html', {'empresas': empresas})
 
 def recuperar_empresa(request, id):
     empresa = get_object_or_404(RegistroEmpresas, id=id)
@@ -440,7 +439,7 @@ def crear_permiso(request):
             return redirect('lista_permisos')
     else:
         form = PermisoForm()
-    return render(request, 'formularios/crear/crear_permiso.html', {'form': form})
+    return render(request, 'side_menu/permisos/crear/crear_permiso.html', {'form': form})
 
 @login_required
 @permiso_requerido("crear_admin")
@@ -458,7 +457,7 @@ def crear_admin(request):
             return redirect('home')
     else:
         form = AdminForm()
-    return render(request, 'formularios/crear/crear_admin.html', {'form': form})
+    return render(request, 'side_menu/Sofware/crear_admin.html', {'form': form})
 
 @login_required
 @permiso_requerido("crear_supervisor")
@@ -473,7 +472,7 @@ def crear_supervisor(request):
             return redirect('configuracion_home')
     else:
         form = SupervisorForm(user=request.user)
-    return render(request, 'formularios/crear/crear_supervisor.html', {'form': form})
+    return render(request, 'side_menu/Sofware/crear_supervisor.html', {'form': form})
 
 @login_required
 @permiso_requerido("crear_trabajador")
@@ -499,7 +498,7 @@ def crear_trabajador(request):
                 return redirect('detalles_empresa', empresa_id=trabajador.empresa.id)
     else:
         form = TrabajadorForm(user=request.user)
-    return render(request, 'formularios/crear/crear_trabajador.html', {'form': form})
+    return render(request, 'side_menu/Sofware/crear_trabajador.html', {'form': form})
 
 @login_required
 @permiso_requerido("editar_supervisor")
@@ -597,7 +596,7 @@ def vigencia_planes(request, pk):
             try:
                 vigencia_plan.calcular_monto()
                 vigencia_plan.save()
-                return redirect('empresas_vigentes')
+                return redirect('listar_empresas')
             except ValueError as e:
                 form.add_error(None, str(e))
     else:
@@ -605,7 +604,7 @@ def vigencia_planes(request, pk):
         # Opcional: si no deseas que se pueda modificar la empresa, deshabilita el campo
         form.fields['empresa'].disabled = True
     
-    return render(request, 'empresas/vigencia_planes.html', {
+    return render(request, 'side_menu/clientes/lista_clientes/nuevo_plan/vigencia_planes.html', {
         'form': form,
         'plan': plan,
         'empresa': empresa
@@ -696,7 +695,7 @@ def lista_permisos(request):
     :return: Renderizado de template con lista de permisos
     """
     permisos = RegistroPermisos.objects.all()
-    return render(request, 'listas/listas_permisos.html', {'permisos': permisos})
+    return render(request, 'side_menu/permisos/lista/listas_permisos.html', {'permisos': permisos})
 
 @login_required
 def actualizar_limites(request, empresa_id):
@@ -728,7 +727,7 @@ def listar_planes(request):
     :return: Renderizado de template con lista de planes
     """
     planes = Plan.objects.all()
-    return render(request, 'empresas/listar_planes.html', {'planes': planes})
+    return render(request, 'side_menu/clientes/planes/lista/listar_planes.html', {'planes': planes})
 
 @login_required
 #@permiso_requerido("crear_plan")
@@ -747,7 +746,7 @@ def crear_plan(request):
             return redirect('listar_planes')
     else:
         form = PlanForm()
-    return render(request, 'formularios/crear/crear_plan.html', {'form': form})
+    return render(request, 'side_menu/clientes/planes/crear/crear_plan.html', {'form': form})
 login_required
 def configuracion_home(request):
     """
@@ -786,15 +785,13 @@ def editar_vigencia_plan(request, plan_id):
             # Mostrar un mensaje de éxito
             messages.success(request, 'Plan actualizado exitosamente.')
             # Redirigir a la lista de empresas
-            return redirect('empresas_vigentes')
+            return redirect('listar_empresas')
     else:
         # Si la solicitud es GET, crear un formulario con la instancia del plan
         form = PlanVigenciaForm(instance=plan)
     
     # Renderizar el template con el formulario y el plan
-    return render(request, 'empresas/editar_vigencia_plan.html', {'form': form, 'plan': plan})
-
-
+    return render(request, 'side_menu/clientes/lista_clientes/servicios/editar/editar_vigencia_plan.html', {'form': form, 'plan': plan})
 
 @login_required
 @permiso_requerido("eliminar_supervisor")
@@ -857,9 +854,18 @@ def toggle_estado(request, pk):
 
 # pagos 
 def get_next_due(empresa):
-    """Devuelve la fecha (primer día del mes) del próximo pago pendiente."""
+    """Devuelve la fecha (primer día del mes actual o del siguiente) del próximo pago pendiente."""
     hoy = timezone.now()
-    next_due = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Inicia desde el primer día del mes actual
+    current_due = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if not Pago.objects.filter(
+        empresa=empresa,
+        fecha_pago__year=current_due.year,
+        fecha_pago__month=current_due.month
+    ).exists():
+        return current_due
+    # Si ya existe pago en el mes actual, se calcula el mes siguiente
+    next_due = current_due + relativedelta(months=1)
     while Pago.objects.filter(
         empresa=empresa,
         fecha_pago__year=next_due.year,
@@ -867,6 +873,7 @@ def get_next_due(empresa):
     ).exists():
         next_due += relativedelta(months=1)
     return next_due
+
 
 def gestion_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -878,7 +885,7 @@ def gestion_pagos(request, empresa_id):
     next_due = get_next_due(empresa)
     
     if request.method == 'POST':
-        if (next_due.month != hoy.month or next_due.year != hoy.year) and not request.POST.get('confirmar'):
+        if not request.POST.get('confirmar') and (next_due.month != hoy.month or next_due.year != hoy.year):
             selected_planes_ids = request.POST.getlist('planes')
             metodo = request.POST.get('metodo')
             context = {
@@ -887,8 +894,12 @@ def gestion_pagos(request, empresa_id):
                 'planes': selected_planes_ids,
                 'metodo': metodo,
             }
-            return render(request, 'empresas/confirmar_pago.html', context)
+            return render(request, 'side_menu/clientes/lista_clientes/pagos/confirmacion/confirmar_pago.html', context)
         
+        if request.POST.get('confirmar'):
+            next_due_str = request.POST.get('next_due')
+            next_due = datetime.datetime.strptime(next_due_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.get_current_timezone())
+                
         selected_planes_ids = request.POST.getlist('planes')
         selected_planes = vigencia_planes_activos.filter(id__in=selected_planes_ids)
         metodo = request.POST.get('metodo')
@@ -897,26 +908,27 @@ def gestion_pagos(request, empresa_id):
             empresa=empresa,
             monto=sum(vp.monto_final for vp in selected_planes),
             metodo=metodo,
-            pagado=(metodo == 'manual' or metodo == 'otro_metodo'),  # Ajusta según lógica
-            fecha_pago=next_due
+            pagado=(metodo == 'manual'),
+            fecha_pago=next_due  # Fecha correcta del próximo mes
         )
         
         if metodo == 'manual':
-            # Se envía el correo personalizado con las instrucciones de pago manual
             send_manual_payment_email(empresa, next_due)
         
         pago.vigencia_planes.set(selected_planes)
         empresa.estado = 'aldia'
         empresa.save()
-        return redirect('detalle_empresa', pk=empresa.id)
+        
+        # Mensaje de éxito antes de redireccionar
+        messages.success(request, 'Los pagos se efectuaron correctamente')
+        return redirect('listar_empresas')
     
-    return render(request, 'empresas/gestion_pagos.html', {
+    return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', {
         'empresa': empresa,
         'vigencia_planes_activos': vigencia_planes_activos,
         'vigencia_planes_suspendidos': vigencia_planes_suspendidos,
         'total': total,
     })
-    
 def toggle_plan(request, vigencia_id):
     vigencia = get_object_or_404(VigenciaPlan, id=vigencia_id)
     vigencia.estado = 'suspendido' if vigencia.estado == 'indefinido' else 'indefinido'
@@ -925,20 +937,10 @@ def toggle_plan(request, vigencia_id):
 
 def historial_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    return render(request, 'empresas/historial_pagos.html', {
+    return render(request, 'side_menu/clientes/lista_clientes/pagos/historial/historial_pagos.html', {
         'empresa': empresa,
         'pagos': empresa.pagos.all()
     })
-
-def confirmar_pago_extra(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    if request.method == 'POST':
-        if 'confirmar' in request.POST:
-            pago_data = request.session.get('pago_data', {})
-            # Procesar pago extra...
-            return redirect('gestion_pagos', empresa_id=empresa_id)
-        return redirect('gestion_pagos', empresa_id=empresa_id)
-    return render(request, 'empresas/confirmar_pago_extra.html', {'empresa': empresa})
 
 
 #envio de correo 
@@ -980,3 +982,32 @@ def planes_por_empresa(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     vigencias = VigenciaPlanes.objects.filter(empresa=empresa)
     return render(request, 'planes_por_empresa.html', {'vigencias': vigencias})
+
+
+
+def estadisticas_empresas(request):
+    # Empresas registradas agrupadas por mes de ingreso
+    empresas_por_mes = RegistroEmpresas.objects.annotate(
+        mes=TruncMonth('fecha_ingreso')
+    ).values('mes').annotate(
+        total=Count('id')
+    ).order_by('mes')
+    
+    context = {
+        'empresas_por_mes': list(empresas_por_mes),
+    }
+    return render(request, 'side_menu/estadisticas/empresas/empresas.html', context)
+
+def estadisticas_pagos(request):
+    # Pagos agrupados por mes (por cantidad y monto total)
+    pagos_por_mes = Pago.objects.annotate(
+        mes=TruncMonth('fecha_pago')
+    ).values('mes').annotate(
+        cantidad=Count('id'),
+        monto_total=Sum('monto')
+    ).order_by('mes')
+    
+    context = {
+        'pagos_por_mes': list(pagos_por_mes),
+    }
+    return render(request, 'side_menu/estadisticas/pagos/pagos.html', context)

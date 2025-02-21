@@ -160,7 +160,7 @@
                                         <th>Fecha de Inicio</th>
                                         <th>Monto Final</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
+                                     
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -172,13 +172,7 @@
                                         <td>{{ vigencia.fecha_inicio|date:"d/m/Y" }}</td>
                                         <td>{{ vigencia.monto_final }}</td>
                                         <td> {{ vigencia.estado }}</td>
-                                        <td class="d-flex flex-wrap justify-content-center">
-                                            <a href="{% url 'empresas_vigentes' %}?codigo_cliente={{ empresa.codigo_cliente }}" 
-                                                 class="btn btn-info btn-sm mx-1 my-1" title="Modificar Estado">
-                                                <i class="bi bi-eye"></i> Modificar Estado
-                                            </a>
-
-                                        </td>
+                                      
                                     </tr>
                                     {% empty %}
                                     <tr>

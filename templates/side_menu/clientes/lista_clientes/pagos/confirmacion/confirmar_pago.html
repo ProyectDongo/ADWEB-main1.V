@@ -7,13 +7,13 @@
         <p>¿Desea registrar un nuevo pago para {{ proximo_mes|date:"F Y" }}?</p>
         <form method="POST">
             {% csrf_token %}
-            <!-- Campos ocultos para conservar los datos del formulario original -->
             <input type="hidden" name="metodo" value="{{ metodo }}">
             {% for plane_id in planes %}
                 <input type="hidden" name="planes" value="{{ plane_id }}">
             {% endfor %}
-            <button type="submit" name="confirmar" value="si" class="btn btn-primary">Sí</button>
-            <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-secondary">No</a>
+            <input type="hidden" name="next_due" value="{{ proximo_mes|date:'Y-m-d H:i' }}">
+            <button type="submit" name="confirmar" value="si" class="btn btn-primary">Confirmar Pago</button>
+            <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-secondary">Cancelar</a>
         </form>
     </div>
 </div>

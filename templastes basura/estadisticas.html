@@ -1,0 +1,122 @@
+{% extends "central.html" %}
+{% load static %}
+{% block title %}estadísticas{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Empresas Inscritas y Pagos Mensuales</h1>
+  <div class="row">
+    <div class="col-12 mb-4">
+      <!-- Canvas para la gráfica de empresas -->
+      <canvas id="empresasChart" style="height: 400px;"></canvas>
+    </div>
+    <div class="col-12 mb-4">
+      <!-- Canvas para la gráfica de pagos -->
+      <canvas id="pagosChart" style="height: 400px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Incluir Chart.js desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Insertar datos JSON de empresas y pagos -->
+{{ empresas_por_mes|json_script:"empresas-data" }}
+{{ pagos_por_mes|json_script:"pagos-data" }}
+
+<script>
+  // Definir nombres de meses en español (todos los meses)
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  
+  // Etiquetas fijas para el gráfico (todos los meses)
+  const fullLabels = monthNames;
+  
+  // Parsear los datos JSON incrustados
+  const empresasDataRaw = JSON.parse(document.getElementById('empresas-data').textContent);
+  const pagosDataRaw = JSON.parse(document.getElementById('pagos-data').textContent);
+
+  // Función para obtener el dato correspondiente a cada mes
+  // Se asume que el formato de "mes" es "YYYY-MM"
+  function getValueForMonth(data, field, monthIndex) {
+    const monthNumber = String(monthIndex + 1).padStart(2, '0');
+    const found = data.find(item => item.mes.substring(5,7) === monthNumber);
+    return found ? found[field] : 0;
+  }
+
+  // Preparar datos para la gráfica de empresas: se llenan todos los meses
+  const empresasCount = fullLabels.map((_, index) => getValueForMonth(empresasDataRaw, 'total', index));
+
+  // Preparar datos para la gráfica de pagos: se llenan todos los meses
+  const pagosCount = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'cantidad', index));
+  const pagosMonto = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'monto_total', index));
+
+  // Configuración de la gráfica de Empresas
+  const ctxEmpresas = document.getElementById('empresasChart').getContext('2d');
+  new Chart(ctxEmpresas, {
+      type: 'line',
+      data: {
+          labels: fullLabels,
+          datasets: [{
+              label: 'Empresas Registradas',
+              data: empresasCount,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              fill: false,
+              tension: 0.1
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              x: {
+                  display: true,
+                  title: { display: true, text: 'Mes' }
+              },
+              y: {
+                  display: true,
+                  title: { display: true, text: 'Cantidad' }
+              }
+          }
+      }
+  });
+
+  // Configuración de la gráfica de Pagos
+  const ctxPagos = document.getElementById('pagosChart').getContext('2d');
+  new Chart(ctxPagos, {
+      type: 'line',
+      data: {
+          labels: fullLabels,
+          datasets: [
+              {
+                  label: 'Cantidad de Pagos',
+                  data: pagosCount,
+                  borderColor: 'rgba(153, 102, 255, 1)',
+                  fill: false,
+                  tension: 0.1
+              },
+              {
+                  label: 'Monto Total',
+                  data: pagosMonto,
+                  borderColor: 'rgba(255, 159, 64, 1)',
+                  fill: false,
+                  tension: 0.1
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              x: {
+                  display: true,
+                  title: { display: true, text: 'Mes' }
+              },
+              y: {
+                  display: true,
+                  title: { display: true, text: 'Valor' }
+              }
+          }
+      }
+  });
+</script>
+{% endblock %}

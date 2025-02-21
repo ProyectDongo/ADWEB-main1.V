@@ -1,0 +1,151 @@
+{% extends "central.html" %}
+{% load static %}
+{% block title %}Estadísticas Empresas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Empresas Inscritas Mensuales</h1>
+
+  <!-- Accordion para los gráficos -->
+  <div class="accordion" id="accordionEmpresas">
+    <!-- Gráfico Lineal -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingLineEmpresas">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLineEmpresas" aria-expanded="true" aria-controls="collapseLineEmpresas">
+          Gráfico Lineal
+        </button>
+      </h2>
+      <div id="collapseLineEmpresas" class="accordion-collapse collapse show" aria-labelledby="headingLineEmpresas" data-bs-parent="#accordionEmpresas">
+        <div class="accordion-body">
+          <canvas id="empresasLineChart" style="height: 400px;"></canvas>
+        </div>
+      </div>
+    </div>
+    <!-- Gráfico de Barras -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingBarEmpresas">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBarEmpresas" aria-expanded="false" aria-controls="collapseBarEmpresas">
+          Gráfico de Barras
+        </button>
+      </h2>
+      <div id="collapseBarEmpresas" class="accordion-collapse collapse" aria-labelledby="headingBarEmpresas" data-bs-parent="#accordionEmpresas">
+        <div class="accordion-body">
+          <canvas id="empresasBarChart" style="height: 400px;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion para el cuadro de datos -->
+  <div class="accordion mt-4" id="accordionEmpresasDatos">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="headingDatosEmpresas">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatosEmpresas" aria-expanded="false" aria-controls="collapseDatosEmpresas">
+          Datos Mensuales
+        </button>
+      </h2>
+      <div id="collapseDatosEmpresas" class="accordion-collapse collapse" aria-labelledby="headingDatosEmpresas" data-bs-parent="#accordionEmpresasDatos">
+        <div class="accordion-body">
+          <div class="card">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Mes</th>
+                      <th>Empresas Registradas</th>
+                    </tr>
+                  </thead>
+                  <tbody id="empresas-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Incluir Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Datos JSON -->
+{{ empresas_por_mes|json_script:"empresas-data" }}
+
+<script>
+  // Array con los nombres de los meses en español
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const fullLabels = monthNames;
+
+  // Parsear datos JSON
+  const empresasDataRaw = JSON.parse(document.getElementById('empresas-data').textContent);
+
+  // Función para obtener el valor para cada mes (0 si no hay datos)
+  function getValueForMonth(data, field, monthIndex) {
+    const monthNumber = String(monthIndex + 1).padStart(2, '0');
+    const found = data.find(item => item.mes.substring(5,7) === monthNumber);
+    return found ? found[field] : 0;
+  }
+
+  // Generar arreglo con datos para cada mes
+  const empresasCount = fullLabels.map((_, index) => getValueForMonth(empresasDataRaw, 'total', index));
+
+  // Configuración del gráfico lineal
+  const ctxLine = document.getElementById('empresasLineChart').getContext('2d');
+  new Chart(ctxLine, {
+      type: 'line',
+      data: {
+          labels: fullLabels,
+          datasets: [{
+              label: 'Empresas Registradas',
+              data: empresasCount,
+              borderColor: 'rgba(75, 192, 192, 1)',
+              fill: false,
+              tension: 0.1
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              x: { title: { display: true, text: 'Mes' } },
+              y: { title: { display: true, text: 'Cantidad' } }
+          }
+      }
+  });
+
+  // Configuración del gráfico de barras
+  const ctxBar = document.getElementById('empresasBarChart').getContext('2d');
+  new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+          labels: fullLabels,
+          datasets: [{
+              label: 'Empresas Registradas',
+              data: empresasCount,
+              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+              x: { title: { display: true, text: 'Mes' } },
+              y: { title: { display: true, text: 'Cantidad' }, beginAtZero: true }
+          }
+      }
+  });
+
+  // Rellenar la tabla de datos
+  const tableBody = document.getElementById('empresas-table-body');
+  fullLabels.forEach((label, index) => {
+    tableBody.innerHTML += `<tr>
+                              <td>${label}</td>
+                              <td>${empresasCount[index]}</td>
+                            </tr>`;
+  });
+</script>
+{% endblock %}

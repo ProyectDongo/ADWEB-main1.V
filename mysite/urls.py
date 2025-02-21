@@ -19,7 +19,7 @@ Including another URLconf
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from WEB import views
-from WEB.views import suspender_empresa, habilitar_empresa
+from WEB.views import suspender_empresa, habilitar_empresa,estadisticas_empresas,estadisticas_pagos
 
 
 urlpatterns = [
@@ -112,5 +112,10 @@ urlpatterns = [
 
     path('planes_por_empresa/<int:empresa_id>/', views.planes_por_empresa, name='planes_por_empresa'),
 
-     path('toggle-estado/<int:pk>/', views.toggle_estado, name='toggle_estado_vigencia'),
+    path('toggle-estado/<int:pk>/', views.toggle_estado, name='toggle_estado_vigencia'),
+
+
+    #estaditicas
+    path('estadisticas/empresas/', estadisticas_empresas, name='estadisticas_empresas'),
+    path('estadisticas/pagos/', estadisticas_pagos, name='estadisticas_pagos'),
     ] 

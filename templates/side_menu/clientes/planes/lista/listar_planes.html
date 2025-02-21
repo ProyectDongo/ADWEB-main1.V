@@ -30,7 +30,7 @@
                             <th>Valor</th>
                             <th>Cantidad de Usuarios</th>
                             <th>Descripcion del Plan</th>
-                            <th>Acciones</th>
+                           
                         </tr>
                     </thead>
                     <tbody id="plan-list">
@@ -46,11 +46,7 @@
                             <td>{{ plan.valor }}</td>
                             <td>{{ plan.max_usuarios }}</td>
                             <td>{{ plan.descripcion }}</td>
-                            <td class="d-flex flex-wrap justify-content-center">
-                            <a href="#" class="btn btn-info btn-sm mx-1 my-1" title="EDITAR">
-                                <i class="bi bi-eye"></i> EDITAR
-                            </a>
-                            </td>
+                            
                         </tr>
                         {% empty %}
                         <tr>

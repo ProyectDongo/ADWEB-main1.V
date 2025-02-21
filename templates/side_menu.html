@@ -115,11 +115,29 @@
         </div>
       </li>
         <!-- Otras opciones basadas en planes-->
+     <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEstadisticas" role="button" aria-expanded="false" aria-controls="ConfiguraciónEstadisticas">
+            <i class="bi bi-clipboard2-data-fill"></i> estadísticas
+          </a>
+          <div class="collapse" id="configuracionEstadisticas">
+            <ul class="nav flex-column ms-3">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'estadisticas_empresas' %}">
+                  <i class="bi bi-clipboard2-data"></i>Empresas
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'estadisticas_pagos' %}">
+                  <i class="bi bi-clipboard2-data"></i>Pagos
+                </a>
+              </li>
+            </div>
+      </li>
         
       <!-- Otras opciones basadas en permisos -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos" role="button" aria-expanded="false" aria-controls="ConfiguraciónPermisos">
-          <i class="bi bi-key me-2" id="permisos"></i> Configuración de Permisos
+          <i class="bi bi-key me-2" id="permisos"></i>Configuración de Permisos
         </a>
         <div class="collapse" id="configuracionPermisos">
           <ul class="nav flex-column ms-3">
@@ -137,9 +155,6 @@
             </ul>
             </li>
          </li>
-          
-            
-      
     </ul>
   </div>
 </nav>

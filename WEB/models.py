@@ -257,13 +257,12 @@ class Pago(models.Model):
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='pagos')
     vigencia_planes = models.ManyToManyField(VigenciaPlan, related_name='pagos_asociados')
     monto = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha_pago = models.DateTimeField(auto_now_add=True)
+    fecha_pago = models.DateTimeField()  # Eliminar auto_now_add=True
     metodo = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES)
     comprobante = models.FileField(upload_to='comprobantes/', blank=True, null=True)
     pagado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
-    
 
     

@@ -26,32 +26,24 @@ mobile_validator = RegexValidator(
     message="Formato válido: 9XXXXXXXX o +569XXXXXXXX"
 )
 
+
+
 class EmpresaForm(forms.ModelForm):
-  
     """
     Formulario completo para el registro y modificación de empresas.
     
     Hereda de ModelForm y utiliza el modelo RegistroEmpresas.
     Implementa lógica dinámica para selección de ubicación geográfica.
-    
-    Attributes:
-        Meta.model (RegistroEmpresas): Modelo asociado al formulario
-        Meta.fields (list): Lista de todos los campos del modelo
-        Meta.widgets (dict): Configuración personalizada de widgets para cada campo
-    
-    Methods:
-        __init__: Inicializa los querysets dinámicos para provincias y comunas
     """
     class Meta:
         model = RegistroEmpresas
         fields = [
-            'codigo_cliente','rut', 'nombre', 'giro', 'direccion', 'numero', 'oficina',
+            'codigo_cliente', 'rut', 'nombre', 'giro', 'direccion', 'numero', 'oficina',
             'region', 'provincia', 'comuna', 'telefono', 'celular',
             'email', 'web', 'vigente', 'estado', 'rut_representante',
             'nombre_representante', 'nombre_contacto', 'celular_contacto',
-            'mail_contacto', 
+            'mail_contacto',
         ]
-       
         widgets = {
             'codigo_cliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código Cliente'}),
             'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Empresa'}),
@@ -69,16 +61,17 @@ class EmpresaForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'form-control'}),
             'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
-            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut  = 12.344.461-2'}),
+            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut = 12.344.461-2'}),
             'nombre_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Representante'}),
         }
+
     telefono = forms.CharField(
-    validators=[phone_validator],
-    required=False,
-    widget=forms.TextInput(attrs={
-        'placeholder': 'Ej: 221234567',
-        'maxlength': '12'  # +56212345678 (12 caracteres)
-    })  
+        validators=[phone_validator],
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Ej: 221234567',
+            'maxlength': '12'
+        })
     )
 
     celular_contacto = forms.CharField(
@@ -86,9 +79,10 @@ class EmpresaForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'placeholder': 'Ej: 912345678',
-            'maxlength': '12'  # +56912345678 (12 caracteres)
+            'maxlength': '12'
         })
     )
+
     def clean_telefono(self):
         telefono = self.cleaned_data.get('telefono', '').replace(' ', '')
         return telefono if telefono else None
@@ -96,45 +90,89 @@ class EmpresaForm(forms.ModelForm):
     def clean_celular_contacto(self):
         celular = self.cleaned_data.get('celular_contacto', '').replace(' ', '')
         return celular if celular else None
-        
+
+    def format_rut(self, rut):
+        """
+        Formatea un RUT para que se guarde con puntos y guion.
+        Ejemplo: "765432103" -> "76.543.210-3"
+        """
+        if not rut:
+            return rut
+        # Eliminamos puntos, guiones y espacios
+        cleaned = re.sub(r'[\.\-\s]', '', rut).upper()
+        if len(cleaned) < 2:
+            return rut  # No se puede formatear correctamente
+        check_digit = cleaned[-1]
+        number_part = cleaned[:-1]
+        try:
+            # Formateamos la parte numérica con separador de miles (usando punto)
+            formatted_number = "{:,}".format(int(number_part)).replace(",", ".")
+        except ValueError:
+            formatted_number = number_part
+        return f"{formatted_number}-{check_digit}"
+
+    @staticmethod
+    def normalize_rut(rut):
+        """
+        Normaliza un RUT removiendo puntos, guiones y espacios, y convirtiendo a mayúsculas.
+        """
+        return re.sub(r'[\.\-\s]', '', rut).upper() if rut else rut
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        # Valida el RUT (si es inválido, validar_rut() lanza excepción)
+        validar_rut(rut)
+        formatted = self.format_rut(rut)
+        normalized = self.normalize_rut(formatted)
+        qs = RegistroEmpresas.objects.all()
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        for empresa in qs:
+            if self.normalize_rut(empresa.rut) == normalized:
+                raise forms.ValidationError("Ya existe una empresa con este RUT.")
+        return formatted
+
+    def clean_rut_representante(self):
+        rut = self.cleaned_data.get('rut_representante')
+        validar_rut(rut)
+        return self.format_rut(rut)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        rut_empresa = cleaned_data.get('rut')
+        rut_representante = cleaned_data.get('rut_representante')
+        if rut_empresa and rut_representante:
+            if self.normalize_rut(rut_empresa) == self.normalize_rut(rut_representante):
+                raise forms.ValidationError(
+                    "El RUT de empresa y el RUT del representante no pueden ser el mismo."
+                )
+        return cleaned_data
+
     def __init__(self, *args, **kwargs):
         """
         Inicializa el formulario con querysets dinámicos para provincias y comunas.
-        
-        Args:
-            *args: Argumentos posicionales
-            **kwargs: Argumentos clave (incluye 'instance' para edición)
-        
-        Behavior:
-            - Actualiza provincias basado en la región seleccionada
-            - Actualiza comunas basado en la provincia seleccionada
-            - Maneja tanto creación como edición de instancias
         """
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
             if field.required:
-                 field.label = mark_safe(f"<strong>{field.label}</strong>")
+                field.label = mark_safe(f"<strong>{field.label}</strong>")
             else:
-                 field.label = mark_safe(f"<strong>{field.label}</strong>")
+                field.label = mark_safe(f"<strong>{field.label}</strong>")
             if field_name in self.errors:
                 field.widget.attrs['class'] += ' is-invalid'
 
-        # Eliminar valores iniciales
-           # field.initial = None
-
-
-        # Lógica para actualización dinámica de provincias
+        # Actualiza dinámicamente el queryset de provincias según la región seleccionada
         if 'region' in self.data:
             try:
                 region_id = int(self.data.get('region'))
                 self.fields['provincia'].queryset = Provincia.objects.filter(region_id=region_id)
             except (ValueError, TypeError):
-                pass  # Mantener queryset vacío si hay error en los datos
+                pass
         elif self.instance.pk:
             self.fields['provincia'].queryset = self.instance.region.provincia_set.all()
 
-        # Lógica para actualización dinámica de comunas
+        # Actualiza dinámicamente el queryset de comunas según la provincia seleccionada
         if 'provincia' in self.data:
             try:
                 provincia_id = int(self.data.get('provincia'))
@@ -144,10 +182,6 @@ class EmpresaForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['comuna'].queryset = self.instance.provincia.comuna_set.all()
 
-    def clean_rut(self):
-        rut = self.cleaned_data.get('rut')
-        validar_rut(rut)
-        return rut
 
 class PermisoForm(forms.ModelForm):
     """
