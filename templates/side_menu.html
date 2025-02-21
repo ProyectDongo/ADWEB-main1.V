@@ -107,10 +107,7 @@
                 <a class="nav-link" href="{% url 'listar_planes' %}">
                     <i class="bi bi-building me-2" id="clientes" ></i> Planes
                 </a>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'empresas_vigentes' %}">
-                    <i class="bi bi-database-fill-gear" id="clientes" ></i> Administrar Planes
-                  </a>
+            
             </li>
             {% endif %}
            {% endfor %}
@@ -118,21 +115,7 @@
         </div>
       </li>
         <!-- Otras opciones basadas en planes-->
-        <li class="nav-item">
-          <a class="nav-link" data-bs-toggle="collapse" href="#configuracionplanes" role="button" aria-expanded="false" aria-controls="Configuraciónplanes">
-            <i class="bi bi-database-fill-gear" id="permisos"></i> Aminitracion
-          </a>
-          <div class="collapse" id="configuracionplanes">
-            <ul class="nav flex-column ms-3">
-              <li class="nav-item">
-              
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'empresas_vigentes' %}">
-                    <i class="bi bi-database-fill-gear" id="clientes" ></i> Administrar Planes
-                  </a>
-            </li>
-            </ul>
-      </li>
+        
       <!-- Otras opciones basadas en permisos -->
       <li class="nav-item">
         <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos" role="button" aria-expanded="false" aria-controls="ConfiguraciónPermisos">

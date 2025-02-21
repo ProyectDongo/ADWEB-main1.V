@@ -49,8 +49,6 @@ urlpatterns = [
     path('eliminar_supervisor/<int:supervisor_id>/', views.eliminar_supervisor, name='eliminar_supervisor'),
     path('eliminar_trabajador/<int:trabajador_id>/', views.eliminar_trabajador, name='eliminar_trabajador'),
 
-
-
     #lista permisos
     path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
 
@@ -77,6 +75,11 @@ urlpatterns = [
    # Editar y eliminar empresa
    
     path('eliminar_empresa/<int:pk>/', views.eliminar_empresa, name='eliminar_empresa'),
+    path('empresas/eliminadas/', views.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
+    path('empresa/recuperar/<int:id>/', views.recuperar_empresa, name='recuperar_empresa'),
+
+
+
     path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
     path('listar_planes/', views.listar_planes, name='listar_planes'),
     path('generar_boleta/<int:empresa_id>/', views.generar_boleta, name='generar_boleta'),

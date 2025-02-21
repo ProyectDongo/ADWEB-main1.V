@@ -318,22 +318,6 @@ def crear_empresa(request):
         'vigencia_form': vigencia_form
     })
 
-@login_required
-@permiso_requerido("vista_empresas")
-def listar_empresas(request):
-    """
-    Lista todas las empresas registradas con capacidad de búsqueda.
-    
-    :param request: HttpRequest
-    :return: Renderizado de template con lista de empresas
-    """
-    query = request.GET.get('q')
-    empresas = RegistroEmpresas.objects.all()
-    
-    if query:
-        empresas = empresas.filter(nombre__icontains=query)
-    
-    return render(request, 'empresas/listar_empresas.html', {'empresas': empresas})
 
 @login_required
 
@@ -401,23 +385,41 @@ def detalle_empresa(request, pk):
         'historial': historial
     })
 
-
+@login_required
+@permiso_requerido("vista_empresas")
+def listar_empresas(request):
+    """
+    Lista todas las empresas registradas con capacidad de búsqueda.
+    
+    :param request: HttpRequest
+    :return: Renderizado de template con lista de empresas
+    """
+    empresas = RegistroEmpresas.objects.filter(eliminada=False)
+    
+    query = request.GET.get('q')
+    if query:
+        empresas = empresas.filter(nombre__icontains=query)
+    
+    return render(request, 'empresas/listar_empresas.html', {'empresas': empresas})
 
 @login_required
 def eliminar_empresa(request, pk):
-    """
-    Vista para eliminación de una empresa existente.
-    
-    :param request: HttpRequest
-    :param pk: ID de la empresa a eliminar
-    :return: Confirmación de eliminación o redirección
-    """
-    empresa = get_object_or_404(RegistroEmpresas, pk=pk)
-    if request.method == 'POST':
-        empresa.delete()
-        return redirect('listar_empresas')
-    return render(request, 'empresas/eliminar_empresa.html', {'empresa': empresa})
+    empresa = get_object_or_404(RegistroEmpresas, id=pk)
+    empresa.eliminada = True
+    empresa.save()
+    messages.success(request, 'Empresa marcada como eliminada')
+    return redirect('listar_empresas')
 
+def listar_empresas_eliminadas(request):
+    empresas = RegistroEmpresas.objects.filter(eliminada=True)
+    return render(request, 'empresas/listar_empresas_eliminadas.html', {'empresas': empresas})
+
+def recuperar_empresa(request, id):
+    empresa = get_object_or_404(RegistroEmpresas, id=id)
+    empresa.eliminada = False
+    empresa.save()
+    messages.success(request, 'Empresa recuperada exitosamente')
+    return redirect('listar_empresas_eliminadas')
 # =====================
 # CRUD de Usuarios
 # =====================

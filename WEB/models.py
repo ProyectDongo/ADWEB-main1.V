@@ -85,6 +85,7 @@ class RegistroEmpresas(models.Model):
     plan_contratado = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name='empresas')
     limite_usuarios = models.PositiveIntegerField(default=0)
 
+    eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  # Nuevo campo
     metodo_pago = models.CharField(
     max_length=20, 
     choices=[('manual', 'Manual'), ('automatico', 'Automático')], 
@@ -263,3 +264,6 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
+    
+
+    

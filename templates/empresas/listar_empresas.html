@@ -46,6 +46,9 @@
         <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
           <i class="bi bi-list"></i> Lista de Planes
         </a>
+        <a href="{% url 'listar_empresas_eliminadas' %}" class="btn btn-warning btn-md mx-1 my-1">
+          <i class="bi bi-trash"></i> Ver Eliminadas
+        </a>
       </div>
     </div>
     <div class="card-body">
@@ -106,7 +109,8 @@
                 <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-success btn-sm mx-1 my-1 action-button">
                   <i class="bi bi-credit-card"></i> Pagos
                 </a>
-                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" title="Eliminar Empresa">
+                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" 
+                  title="Eliminar Empresa" onclick="return confirm('¿Seguro que deseas marcar como eliminada esta empresa?');">
                   <i class="bi bi-trash"></i> Eliminar
                 </a>
               </td>
