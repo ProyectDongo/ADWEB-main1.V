@@ -10,6 +10,8 @@ Incluye funcionalidades para:
 - Gestión de planes y vigencias
 - Generación de reportes (actualmente en desarrollo)
 """
+from .models import EmailNotification
+import os
 import datetime
 from dateutil.relativedelta import relativedelta
 from django.core.mail import send_mail
@@ -20,7 +22,7 @@ from django.conf import settings
 from .decorators import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from .forms import LimiteEmpresaForm, RegistroSalidaForm, RegistroEntradaForm, EmpresaForm, PermisoForm, AdminForm, SupervisorForm, TrabajadorForm, SupervisorEditForm, TrabajadorEditForm, PlanVigenciaForm,PlanForm
-from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan,HistorialCambios,Pago
+from .models import RegistroEmpresas, Usuario, RegistroPermisos, RegistroEntrada, Plan, Region, Provincia, Comuna, VigenciaPlan,HistorialCambios,Pago,EmailNotification
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
@@ -39,7 +41,15 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum
+from email.mime.image import MIMEImage
 
+import imaplib
+import email
+import re
+import base64
+import logging
+from django.http import JsonResponse
+from email.header import decode_header
 
 # =====================
 # Vistas de Utilidades
@@ -104,7 +114,7 @@ def redirect_after_login(request):
     if role == 'admin':
         return redirect('admin_home')
     elif role == 'supervisor':
-        return redirect('supervisor_home')
+        return redirect('supervisor_home', empresa_id=request.user.empresa_id)
     elif role == 'trabajador':
         return redirect('trabajador_home')
     return redirect('login')
@@ -178,7 +188,7 @@ def supervisor_home(request,empresa_id):
         'supervisores': supervisores,
         'trabajadores': trabajadores,
     }
-    return render(request, 'home/supervisor_home.html', context)
+    return render(request, 'home/home_supervisor/supervisor_home.html', context)
 
 
 @login_required
@@ -341,7 +351,6 @@ def detalle_empresa(request, pk):
     historial = HistorialCambios.objects.filter(empresa=empresa).order_by('-fecha')[:10]
     
     # Filtrar usuarios por grupo y empresa
-    supervisores = Usuario.objects.filter(role='Supervisor', empresa_id=pk)
     trabajadores = Usuario.objects.filter(role='Trabajador', empresa_id=pk)
 
     if request.method == 'POST':
@@ -399,7 +408,12 @@ def listar_empresas(request):
     if query:
         empresas = empresas.filter(nombre__icontains=query)
     
+    # Agregar atributo 'tiene_pendientes' a cada empresa
+    for empresa in empresas:
+        empresa.tiene_pendientes = empresa.pagos.filter(pagado=False).exists()
+    
     return render(request, 'side_menu/clientes/lista_clientes/listar_empresas.html', {'empresas': empresas})
+
 
 @login_required
 def eliminar_empresa(request, pk):
@@ -890,6 +904,7 @@ def gestion_pagos(request, empresa_id):
             metodo = request.POST.get('metodo')
             context = {
                 'empresa': empresa,
+                'codigo_cliente': empresa.codigo_cliente,
                 'proximo_mes': next_due,
                 'planes': selected_planes_ids,
                 'metodo': metodo,
@@ -908,7 +923,7 @@ def gestion_pagos(request, empresa_id):
             empresa=empresa,
             monto=sum(vp.monto_final for vp in selected_planes),
             metodo=metodo,
-            pagado=(metodo == 'manual'),
+            pagado=False,
             fecha_pago=next_due  # Fecha correcta del próximo mes
         )
         
@@ -925,6 +940,7 @@ def gestion_pagos(request, empresa_id):
     
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', {
         'empresa': empresa,
+        'codigo_cliente': empresa.codigo_cliente,
         'vigencia_planes_activos': vigencia_planes_activos,
         'vigencia_planes_suspendidos': vigencia_planes_suspendidos,
         'total': total,
@@ -942,40 +958,54 @@ def historial_pagos(request, empresa_id):
         'pagos': empresa.pagos.all()
     })
 
-
+def actualizar_estado_pago(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+    # Aquí puedes aplicar la lógica deseada.
+    # Por ejemplo, si el pago estaba pendiente, lo marcamos como pagado,
+    # y viceversa.
+    pago.pagado = not pago.pagado
+    pago.save()
+    
+    messages.success(request, f"El estado del pago se actualizó a: {'Pagado' if pago.pagado else 'Pendiente'}.")
+    
+    # Redirige al historial de pagos de la empresa
+    return redirect('historial_pagos', empresa_id=pago.empresa.id)
 #envio de correo 
-
-def send_manual_payment_email(empresa, next_due):
-    """
-    Envía un correo con instrucciones de pago manual personalizado.
-    """
-    # Datos ficticios de transferencia
+def send_manual_payment_email(empresa, next_due): 
     transfer_data = {
         'banco': 'Banco Ficticio',
         'tipo_cuenta': 'Cuenta Corriente',
         'numero_cuenta': '9876543210',
         'titular': empresa.nombre,
     }
-    # URL del logo de la empresa (puede ser una URL absoluta a un recurso en tus estáticos)
-    logo_url = 'static/png/Logo.png'
-    
-    subject = "Instrucciones de Pago Manual"
+
+    subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente}"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [empresa.email]
-    
+
+    # Ruta absoluta del logo
+    logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
+
     context = {
         'empresa': empresa,
+        'codigo_cliente': empresa.codigo_cliente,  # Aquí añadimos el código cliente al contexto
         'transfer_data': transfer_data,
-        'logo_url': logo_url,
         'proximo_mes': next_due,
     }
-    # Renderizamos el contenido HTML del correo usando una plantilla
+
     html_content = render_to_string('empresas/email/instrucciones_pago_manual.html', context)
-    # Extraemos el contenido en texto plano (por si el cliente de correo no soporta HTML)
     text_content = strip_tags(html_content)
-    
+
     msg = EmailMultiAlternatives(subject, text_content, from_email, to)
     msg.attach_alternative(html_content, "text/html")
+
+    # Adjuntar imagen como contenido en línea
+    with open(logo_path, "rb") as img:
+        logo = MIMEImage(img.read())
+        logo.add_header("Content-ID", "<logo_cid>")  # CID para referenciar en el HTML
+        logo.add_header("Content-Disposition", "inline")  # Asegura que no sea descargable
+        msg.attach(logo)
+
     msg.send()
 
 def planes_por_empresa(request, empresa_id):
@@ -1011,3 +1041,142 @@ def estadisticas_pagos(request):
         'pagos_por_mes': list(pagos_por_mes),
     }
     return render(request, 'side_menu/estadisticas/pagos/pagos.html', context)
+
+
+
+logger = logging.getLogger(__name__)
+
+def get_comprobantes():
+    """Obtiene comprobantes de pago con extracción robusta del código cliente"""
+    comprobantes = []
+    
+    try:
+        # Configuración IMAP
+        IMAP_SERVER = 'imap.gmail.com'
+        EMAIL_ACCOUNT = 'anghello3569molina@gmail.com'
+        PASSWORD = 'bncuzhavbtvuqjpi'
+
+        # Conexión segura
+        mail = imaplib.IMAP4_SSL(IMAP_SERVER, timeout=10)
+        
+        try:
+            mail.login(EMAIL_ACCOUNT, PASSWORD)
+            mail.select('inbox')
+
+            # Búsqueda de mensajes
+            status, data = mail.search(None, '(SUBJECT "Instrucciones de Pago Manual")')
+            
+            if status != 'OK':
+                raise Exception("Error en búsqueda de correos")
+
+            for e_id in data[0].split():
+                try:
+                    status, msg_data = mail.fetch(e_id, '(RFC822)')
+                    if status != 'OK': continue
+
+                    msg = email.message_from_bytes(msg_data[0][1])
+                    comprobante = {
+                        'subject': msg.get('Subject', 'Sin asunto'),
+                        'from': msg.get('From', 'Remitente desconocido'),
+                        'date': msg.get('Date', 'Fecha no disponible'),
+                        'codigo_cliente': 'No encontrado',
+                        'imagenes': []
+                    }
+
+                    # Extracción prioritaria desde el asunto
+                    subject = comprobante['subject']
+                    subject_match = re.search(
+                        r'(?i)Cliente:\s*([A-Z0-9\-]+)',  # Regex para formato "Cliente: CODIGO"
+                        subject
+                    )
+                    
+                    if subject_match:
+                        comprobante['codigo_cliente'] = subject_match.group(1).strip()
+                        logger.debug(f"Código detectado en asunto: {comprobante['codigo_cliente']}")
+                    else:
+                        # Búsqueda en cuerpo como respaldo
+                        body = ""
+                        for part in msg.walk():
+                            if part.get_content_type() in ['text/plain', 'text/html']:
+                                try:
+                                    body += " " + part.get_payload(decode=True).decode(errors='replace')
+                                except Exception as e:
+                                    logger.error(f"Error decodificando cuerpo: {e}")
+
+                        full_text = f"{subject} {body}"
+                        codigo_match = re.search(
+                            r'(?i)(?:Código|Codigo|Cód|Cod)[\s:\-]*Cliente?[\s:\-]*([A-Z0-9\-]+)', 
+                            full_text
+                        )
+                        
+                        if codigo_match:
+                            comprobante['codigo_cliente'] = codigo_match.group(1).strip()
+                            logger.debug(f"Código detectado en cuerpo: {comprobante['codigo_cliente']}")
+
+                    # Procesamiento de imágenes
+                    for part in msg.walk():
+                        if part.get_content_maintype() == 'image':
+                            try:
+                                filename = part.get_filename() or ""
+                                decoded_header = decode_header(filename)
+                                filename = decoded_header[0][0]
+                                if isinstance(filename, bytes):
+                                    filename = filename.decode(decoded_header[0][1] or 'utf-8')
+                                
+                                if 'comprobante' in filename.lower():
+                                    imagen_data = part.get_payload(decode=True)
+                                    if imagen_data:
+                                        comprobante['imagenes'].append({
+                                            'tipo': part.get_content_type(),
+                                            'datos': base64.b64encode(imagen_data).decode('utf-8'),
+                                            'nombre': filename
+                                        })
+                            except Exception as img_error:
+                                logger.error(f"Error procesando imagen: {img_error}")
+
+                    comprobantes.append(comprobante)
+
+                except Exception as msg_error:
+                    logger.error(f"Error procesando mensaje {e_id}: {msg_error}")
+
+        except imaplib.IMAP4.error as auth_error:
+            logger.error(f"Error de autenticación IMAP: {auth_error}")
+            raise
+        finally:
+            try: mail.logout()
+            except: pass
+
+    except Exception as e:
+        logger.error(f"Error general: {e}", exc_info=True)
+        raise
+
+    return comprobantes
+def notificaciones_json(request):
+    """Endpoint para obtener notificaciones en formato JSON con manejo de errores."""
+    try:
+        comprobantes = get_comprobantes()
+        
+        # Estructuración segura de la respuesta
+        response_data = {
+            'count': len(comprobantes),
+            'notifications': [
+                {
+                    'asunto': c.get('subject', 'Sin asunto'),
+                    'remitente': c.get('from', 'Remitente desconocido'),
+                    'codigo_cliente': c.get('codigo_cliente', 'No encontrado'),
+                    'fecha': c.get('date', 'Fecha no disponible'),
+                    'imagenes': c.get('imagenes', [])
+                } 
+                for c in comprobantes
+            ]
+        }
+        
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        logger.error(f"Error en notificaciones_json: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': 'Error al obtener notificaciones',
+            'detalle': str(e)
+        }, status=500, safe=False)
+

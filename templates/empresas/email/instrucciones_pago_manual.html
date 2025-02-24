@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    {% load static %}
     <meta charset="utf-8">
     <title>Instrucciones de Pago Manual</title>
     <style>
@@ -33,11 +34,16 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ logo_url }}" alt="Logo de {{ empresa.nombre }}" width="200">
+        <img src="cid:logo_cid"  width="400">
     </div>
     <div class="content">
         <h2>Instrucciones de Pago Manual</h2>
         <p>Estimado/a <strong>{{ empresa.nombre }}</strong>,</p>
+        <p><strong>Código Cliente:</strong> 
+            <span style="background-color: #f0f0f0; padding: 2px 5px; border-radius: 3px;">
+                {{ codigo_cliente }}
+            </span>
+        </p>
         <p>Para completar su pago correspondiente al mes de <strong>{{ proximo_mes|date:"F Y" }}</strong>, por favor realice una transferencia bancaria utilizando los siguientes datos:</p>
         <div class="transfer-data">
             <p><strong>Banco:</strong> {{ transfer_data.banco }}</p>
@@ -45,7 +51,8 @@
             <p><strong>Número de Cuenta:</strong> {{ transfer_data.numero_cuenta }}</p>
             <p><strong>Titular:</strong> {{ transfer_data.titular }}</p>
         </div>
-        <p>Una vez realizado el pago, envíenos el comprobante a nuestro correo de soporte para confirmar la transacción.</p>
+        <p>Una vez realizado el pago, envíenos el comprobante a nuestro correo, RESPONDIENDO ESTE MISMO CORREO de soporte para confirmar la transacción.</p>
+        <p>Por favor, al enviar el comprobante, adjuntarlo con el nombre "COMPROBANTE"</p>
         <p>Gracias por su confianza.</p>
     </div>
     <div class="footer">

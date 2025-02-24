@@ -15,6 +15,7 @@
                             <th>Método</th>
                             <th>Planes</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,10 +36,15 @@
                                     <span class="badge bg-warning">Pendiente</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                <a href="{% url 'actualizar_estado_pago' pago.id %}" class="btn btn-sm btn-outline-primary">
+                                    Actualizar
+                                </a>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">No hay registros de pago</td>
+                            <td colspan="6" class="text-center">No hay registros de pago</td>
                         </tr>
                         {% endfor %}
                     </tbody>

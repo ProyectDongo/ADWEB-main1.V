@@ -6,3 +6,4 @@ pip install crispy_bootstrap5
 pip install django-widget-tweaks
 
 pip install python-dateutil
+pip install django-anymail

@@ -1,48 +1,44 @@
 {% extends "central.html" %}
 {% load static %}
-{% block title %}Crear trabajador{% endblock %}
+{% block title %}Crear Usuario{% endblock %}
 
 {% block content %}
 {% block css-page %}
-<link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}"> 
+<link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}">
+
 {% endblock %}
 
-<div class="container py-5">
+<div class="container py-5 " style="margin-top:100px ;">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-8 "style="width:1000px!important;">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0 text-center"><i class="bi bi-person-badge me-2"></i>Crear Trabajador</h2>
+                    <h2 class="h4 mb-0 text-center">
+                       
+                        <i class="bi bi-person-badge me-2"></i>Crear Usuario
+                    </h2>
                 </div>
-                
                 <div class="card-body p-4">
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="row g-3">
-                            <!-- Usuario y Empresa -->
+                            <!-- Usuario -->
                             <div class="col-md-6">
                                 <div class="form-floating mb-4">
-                                    <input type="text" class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
-                                    id="{{ form.username.id_for_label }}" name="{{ form.username.name }}" 
-                                    value="{{ form.username.value }}" required>
-                             <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
-                             {% if form.username.errors %}
-                             <div class="invalid-feedback">
-                                 {{ form.username.errors|first }}
-                             </div>
-                             {% endif %}
+                                    {{ form.username }}
+                                    <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+                                    {% if form.username.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.username.errors|first }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
+                            <!-- Empresa -->
                             <div class="col-md-6">
                                 <div class="form-floating mb-4">
-                                    <select name="empresa" class="form-select" id="{{ form.empresa.id_for_label }}">
-                                        {% for empresa in form.empresa.field.queryset %}
-                                            <option value="{{ empresa.id }}" {% if form.empresa.value == empresa.id %}selected{% endif %}>
-                                                {{ empresa.nombre }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
+                                    {{ form.empresa }}
                                     <label for="{{ form.empresa.id_for_label }}">Empresa</label>
                                     {% if form.empresa.errors %}
                                         <div class="invalid-feedback">
@@ -51,6 +47,80 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            
+                               <!-- rut -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.rut }}
+                                    <label for="{{ form.empresa.id_for_label }}">Rut</label>
+                                    {% if form.rut.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.rut.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- nombre -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.nombre }}
+                                    <label for="{{ form.empresa.id_for_label }}">Nombre</label>
+                                    {% if form.nombre.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.nombre.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                             <!-- apellido Paterno -->
+                             <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.last_name }}
+                                    <label for="{{ form.empresa.id_for_label }}">Apellido Paterno</label>
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.last_name.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                              <!-- apellido Materno -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.apellidoM }}
+                                    <label for="{{ form.empresa.id_for_label }}">Apellido Materno</label>
+                                    {% if form.apellidoM.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.apellidom.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                              <!-- celular -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                  {{ form.celular }}
+                                  <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular</label>
+                                  <div class="invalid-feedback">
+                                    {{ form.celular.errors }}
+                                   
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- email -->
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    {{ form.email }}
+                                    <label for="{{ form.empresa.id_for_label }}">Email</label>
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ form.email.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
 
                             <!-- Contraseñas -->
                             <div class="col-md-6">
@@ -78,19 +148,10 @@
                             </div>
 
                             <!-- Permisos -->
-                            <div class="col-12">
+                            <div class="form-group">
                                 <div class="mb-4">
-                                    <label class="form-label">Permisos</label>
-                                    <div>
-                                        {% for permiso in form.permisos.field.queryset %}
-                                            <div class="form-check">
-                                                <input type="checkbox" name="permisos[]" value="{{ permiso.id }}" 
-                                                       class="form-check-input" id="permiso_{{ permiso.id }}"
-                                                       {% if permiso.id in form.permisos.value %}checked{% endif %}>
-                                                <label class="form-check-label" for="permiso_{{ permiso.id }}">{{ permiso.nombre }}</label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
+                                    <label class="form-label" for="{{ form.permisos.id_for_label }}">Permisos</label>
+                                    {{ form.permisos }}
                                     {% if form.permisos.errors %}
                                         <div class="invalid-feedback d-block">
                                             {{ form.permisos.errors|first }}
@@ -99,7 +160,9 @@
                                 </div>
                             </div>
                             
-
+                            
+                        </div>
+                        
                         <!-- Botones -->
                         <div class="mt-5 border-top pt-4">
                             <div class="d-flex justify-content-between">

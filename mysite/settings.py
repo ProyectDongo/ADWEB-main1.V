@@ -45,6 +45,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 INSTALLED_APPS = [
     'WEB',
+    "anymail",
     'django.contrib.admin', 
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -166,9 +167,10 @@ LOGOUT_REDIRECT_URL = '/accounts/login/'  # Para que después del logout vuelva 
 AUTH_USER_MODEL = 'WEB.Usuario'
 
 #envios de correo
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'  # Asegúrate que Mercury está en localhost
-EMAIL_PORT = 25  # Puerto SMTP de Mercury
-EMAIL_USE_TLS = False  # Mercury usualmente no usa TLS por defecto
-DEFAULT_FROM_EMAIL = 'tu-email@empresa.com'  # Debe existir en Mercury
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "anghello3569molina@gmail.com"  # Reemplaza con tu correo
+EMAIL_HOST_PASSWORD = "bncuzhavbtvuqjpi"  # Reemplaza con la contraseña generada
+DEFAULT_FROM_EMAIL = "tu_correo@gmail.com"

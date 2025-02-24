@@ -50,7 +50,7 @@
             <span data-feather="home"></span> Home
           </a>
         {% elif role == "supervisor" %}
-          <a class="nav-link active" href="{% url 'supervisor_home' %}">
+        <a class="nav-link active" href="{% url 'supervisor_home' empresa_id=empresa.id %}">
             <span data-feather="home"></span> Home
           </a>
         {% elif role == "trabajador" %}

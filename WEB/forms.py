@@ -248,15 +248,29 @@ class AdminForm(UserCreationForm):
             self.save_m2m()
         return user
 
+def format_rut(rut):
+    """
+    Recibe un RUT sin formatear (ej: '107091637') y lo transforma en el formato con puntos y guion (ej: '10.709.163-7').
+    """
+    # Elimina cualquier punto o guion existente
+    rut = rut.replace('.', '').replace('-', '')
+    if not rut or len(rut) < 2:
+        return rut
+    # Se asume que el último dígito es el dígito verificador (DV)
+    numeros, dv = rut[:-1], rut[-1]
+    numeros_formateado = ""
+    # Agrupa de derecha a izquierda en bloques de tres dígitos
+    while len(numeros) > 3:
+        numeros_formateado = "." + numeros[-3:] + numeros_formateado
+        numeros = numeros[:-3]
+    numeros_formateado = numeros + numeros_formateado
+    return f"{numeros_formateado}-{dv}"
+
+# Ejemplo de modificación en el SupervisorForm:
 class SupervisorForm(UserCreationForm):
     """
     Formulario para creación de supervisores con permisos limitados.
-    
-    Attributes:
-        empresa (ModelChoiceField): Selector de empresa asociada.
-        permisos (ModelMultipleChoiceField): Selector múltiple de permisos.
     """
-
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
         required=False,
@@ -270,10 +284,10 @@ class SupervisorForm(UserCreationForm):
 
     class Meta:
         model = Usuario
-        fields = ['username','rut','nombre','last_name','apellidoM','celular','email', 'password1', 'password2', 'empresa', 'permisos']
+        fields = ['username', 'rut', 'nombre', 'last_name', 'apellidoM', 'celular', 'email', 'password1', 'password2', 'empresa', 'permisos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'rut':forms.TextInput(attrs={'class':'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'apellidoM': forms.TextInput(attrs={'class': 'form-control'}),
@@ -281,34 +295,23 @@ class SupervisorForm(UserCreationForm):
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
             'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
-                }
-         
+        }
+
     celular = forms.CharField(
         validators=[mobile_validator],
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ej: 912345678',
-            'maxlength': '12'  # +56912345678 (12 caracteres)
+            'maxlength': '12'
         })
     )
+
     def clean_celular(self):
         celular = self.cleaned_data.get('celular', '').replace(' ', '')
         return celular if celular else None
 
-        
-
     def __init__(self, *args, **kwargs):
-        """
-        Inicializa el formulario con restricciones de permisos y empresas.
-
-        Args:
-            user (Usuario): Usuario que crea el supervisor (se extrae de kwargs).
-            
-        Behavior:
-            - Para no-admin: Se restringe la empresa y los permisos disponibles.
-            - Para admin: Se muestran todas las empresas y permisos.
-        """
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user and user.role != 'admin':
@@ -317,32 +320,25 @@ class SupervisorForm(UserCreationForm):
         elif user and user.role == 'admin':
             self.fields['permisos'].queryset = RegistroPermisos.objects.all()
 
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        # Realiza la validación (se asume que validar_rut lanza una excepción si es inválido)
+        validar_rut(rut)
+        # Devuelve el RUT formateado
+        return format_rut(rut)
+
     def save(self, commit=True):
-        """
-        Guarda el usuario asignándole el rol 'supervisor' y los permisos seleccionados.
-        """
         usuario = super().save(commit=False)
         usuario.role = 'supervisor'
         if commit:
             usuario.save()
-            self.save_m2m()  # Asigna las relaciones ManyToMany (permisos)
+            self.save_m2m()
         return usuario
-    def clean_rut(self):
-        rut = self.cleaned_data.get('rut')
-        validar_rut(rut)
-        return rut
 
+# Ejemplo de modificación en el TrabajadorForm:
 class TrabajadorForm(UserCreationForm):
     """
     Formulario para creación de trabajadores con restricciones de empresa.
-    
-    Attributes:
-        empresa (ModelChoiceField): Selector de empresa asociada
-        permisos (ModelMultipleChoiceField): Selector múltiple de permisos
-    
-    Methods:
-        __init__: Personaliza querysets según el usuario creador
-        save: Asigna el rol 'trabajador' al guardar
     """
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
@@ -350,29 +346,41 @@ class TrabajadorForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     permisos = forms.ModelMultipleChoiceField(
-        queryset=RegistroPermisos.objects.none(),
-        widget=forms.CheckboxSelectMultiple,
+        queryset=RegistroPermisos.objects.none(),  # Inicialmente vacío, se completa en __init__
+        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_permisos'}),
         required=False
     )
 
     class Meta:
         model = Usuario
-        fields = ['username', 'password1', 'password2', 'empresa', 'permisos']
+        fields = ['username', 'rut', 'nombre', 'last_name', 'apellidoM', 'celular', 'email', 'password1', 'password2', 'empresa', 'permisos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellidoM': forms.TextInput(attrs={'class': 'form-control'}),
+            'celular': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.TextInput(attrs={'class': 'form-control'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-control'}),
         }
 
+    celular = forms.CharField(
+        validators=[mobile_validator],
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: 912345678',
+            'maxlength': '12'
+        })
+    )
+
+    def clean_celular(self):
+        celular = self.cleaned_data.get('celular', '').replace(' ', '')
+        return celular if celular else None
+
     def __init__(self, *args, **kwargs):
-        """
-        Configura los querysets de empresa y permisos.
-        
-        Args:
-            user (Usuario): Usuario que crea el trabajador
-        
-        Behavior:
-            - Para no-admins: Restringe a su empresa y permisos
-            - Para admins: Permite todas las empresas y permisos
-        """
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         if user and user.role != 'admin':
@@ -381,14 +389,19 @@ class TrabajadorForm(UserCreationForm):
         elif user and user.role == 'admin':
             self.fields['permisos'].queryset = RegistroPermisos.objects.all()
 
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        validar_rut(rut)
+        return format_rut(rut)
+
     def save(self, commit=True):
-        """Guarda el usuario con rol de trabajador y permisos asignados."""
         user = super().save(commit=False)
         user.role = 'trabajador'
         if commit:
             user.save()
             self.save_m2m()
         return user
+
 
 class AdminEditForm(UserChangeForm):
     """

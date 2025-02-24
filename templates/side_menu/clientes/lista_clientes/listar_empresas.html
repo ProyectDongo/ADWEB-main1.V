@@ -33,11 +33,115 @@
   .toggle-planes.collapsed i {
     transform: rotate(180deg);
   }
+  /* Estilos mejorados para notificaciones */
+  .notificaciones-container {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    z-index: 1000;
+    width: 400px;
+    max-width: 90%;
+  }
+
+  .notificacion-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .notificacion-item {
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .notificacion-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .accordion-button {
+    background-color: #fff !important;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa !important;
+  }
+
+  .notificacion-icon {
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    color: #0d6efd;
+  }
+
+  .notificacion-body {
+    padding: 1rem;
+    background-color: #f8f9fa;
+  }
+
+  .codigo-cliente {
+    background-color: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  .imagen-comprobante {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: white;
+  }
+  
+  
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+  .cursor-zoom {
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.cursor-zoom:hover {
+  transform: scale(1.03);
+}
+
+#imagenAmpliada {
+  cursor: zoom-out;
+}
+
 </style>
+<div class="container mt-3">
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
+    <i class="bi bi-bell-fill"></i>
+    <span id="notificacionesBadge" class="badge bg-danger">0</span>
+  </button>
+
+  <div class="collapse mt-3" id="notificacionesPanel">
+    <div class="card card-body">
+      <div class="accordion" id="notificacionesAcordeon">
+        <!-- Las notificaciones se insertarán aquí -->
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container py-5">
   {% if messages %}
   {% for message in messages %}
+  
   <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
       {{ message }}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -141,6 +245,7 @@
                             <th>Descuento</th>
                             <th>Monto Final</th>
                             <th>Acciones</th>
+                            <th>Estado Pagos</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -177,6 +282,13 @@
                                    class="btn btn-danger btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
                                   <i class="bi bi-trash"></i>
                                 </a>
+                                <td>
+                                  {% if empresa.tiene_pendientes %}
+                                      <span class="badge bg-danger">Pendientes</span>
+                                  {% else %}
+                                      <span class="badge bg-success">Al día</span>
+                                  {% endif %}
+                              </td>
                               </div>
                             </td>
                           </tr>
@@ -202,8 +314,98 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="imagenModal" tabindex="-1" aria-labelledby="imagenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imagenModalLabel">Comprobante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagenAmpliada" class="img-fluid" style="max-height: 80vh;">
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
+function mostrarImagen(src) {
+  const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
+  document.getElementById('imagenAmpliada').src = src;
+  modal.show();
+}
+
+
+// Función para actualizar notificaciones
+async function actualizarNotificaciones() {
+  try {
+    const response = await fetch("{% url 'notificaciones_json' %}");
+    const data = await response.json();
+    
+    // Actualizar badge
+    const badge = document.getElementById('notificacionesBadge');
+    badge.textContent = data.count;
+    badge.classList.toggle('invisible', data.count === 0);
+    
+    // Actualizar acordeón
+    const acordeon = document.getElementById('notificacionesAcordeon');
+    acordeon.innerHTML = '';
+    
+    data.notifications.forEach((noti, index) => {
+      const itemId = `noti-${index}`;
+      const fecha = new Date(noti.fecha).toLocaleString();
+      
+      const itemHTML = `
+        <div class="notificacion-item">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" 
+                      data-bs-toggle="collapse" data-bs-target="#${itemId}">
+                <i class="bi bi-envelope-exclamation notificacion-icon"></i>
+                <div class="d-flex flex-column">
+                  <span class="small text-muted">${fecha}</span>
+                  <div class="text-truncate" style="max-width: 250px;">
+                    ${noti.asunto}
+                  </div>
+                </div>
+              </button>
+            </h2>
+            <div id="${itemId}" class="accordion-collapse collapse" 
+                 data-bs-parent="#notificacionesAcordeon">
+              <div class="accordion-body notificacion-body">
+                <div class="d-flex align-items-center mb-3">
+                  <i class="bi bi-person-badge me-2"></i>
+                  <span class="codigo-cliente">${noti.codigo_cliente || 'No especificado'}</span>
+                </div>
+                <div class="imagenes-container">
+                  ${noti.imagenes.map(img => `
+                  <div class="imagen-comprobante" onclick="mostrarImagen('data:${img.tipo};base64,${img.datos}')">
+                    <div class="small text-muted mb-2">${img.nombre || 'Comprobante'}</div>
+                    <img src="data:${img.tipo};base64,${img.datos}" 
+                        class="img-fluid rounded cursor-zoom"
+                        style="max-height: 200px; object-fit: contain;">
+                  </div>
+                `).join('') }
+                
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      acordeon.insertAdjacentHTML('beforeend', itemHTML);
+    });
+    
+  } catch (error) {
+    console.error('Error actualizando notificaciones:', error);
+  }
+
+}
+
+// Actualizar cada 30 segundos y al cargar
+setInterval(actualizarNotificaciones, 30000);
+actualizarNotificaciones();
+
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -221,19 +423,36 @@ function getCookie(name) {
 const csrftoken = getCookie('csrftoken');
 
 document.getElementById('search').addEventListener('input', function() {
-  const searchValue = this.value.toLowerCase();
-  const rows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
-  rows.forEach(row => {
-    if(row.classList.contains('planes-vigentes-row')) return;
-    const codigoCliente = row.querySelector('th').textContent.toLowerCase();
-    const nombre = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-    const rut = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-    const match = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
-    row.style.display = match ? '' : 'none';
-    row.nextElementSibling.style.display = match ? '' : 'none';
-  });
+    const searchValue = this.value.trim().toLowerCase();
+    const rows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
+    
+    rows.forEach(row => {
+        if(row.classList.contains('planes-vigentes-row')) return;
+        
+        const codigoCliente = row.querySelector('th')?.textContent?.toLowerCase() || '';
+        const nombre = row.querySelector('td:nth-child(4)')?.textContent?.toLowerCase() || '';
+        const rut = row.querySelector('td:nth-child(5)')?.textContent?.toLowerCase() || '';
+        
+        // Lógica de búsqueda
+        const codigoParts = codigoCliente.split('-');
+        const segmentoUnico = codigoParts[codigoParts.length - 1];
+        
+        const matchCodigo = (
+            codigoCliente === searchValue || 
+            segmentoUnico === searchValue || 
+            (codigoCliente.startsWith(searchValue) && searchValue.length >= 5)
+        );
+        
+        const match = matchCodigo || nombre.includes(searchValue) || rut.includes(searchValue);
+        
+        // Modificación clave: Verificar existencia del sibling
+        if (row.nextElementSibling) {
+            row.style.display = match ? '' : 'none';
+            row.nextElementSibling.style.display = match ? '' : 'none';
+        } else {
+            row.style.display = match ? '' : 'none';
+        }
+    });
 });
-
-
 </script>
 {% endblock %}
