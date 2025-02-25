@@ -960,9 +960,7 @@ def historial_pagos(request, empresa_id):
 
 def actualizar_estado_pago(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
-    # Aquí puedes aplicar la lógica deseada.
-    # Por ejemplo, si el pago estaba pendiente, lo marcamos como pagado,
-    # y viceversa.
+
     pago.pagado = not pago.pagado
     pago.save()
     
@@ -979,18 +977,21 @@ def send_manual_payment_email(empresa, next_due):
         'titular': empresa.nombre,
     }
 
-    subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente}"
+    # Se incluye el empresa_id en el subject para facilitar su extracción posterior
+    subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente} | EmpresaID: {empresa.id}"
     from_email = settings.DEFAULT_FROM_EMAIL
     to = [empresa.email]
 
     # Ruta absoluta del logo
     logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
 
+    # Agregamos empresa_id al contexto
     context = {
         'empresa': empresa,
-        'codigo_cliente': empresa.codigo_cliente,  # Aquí añadimos el código cliente al contexto
+        'codigo_cliente': empresa.codigo_cliente,
         'transfer_data': transfer_data,
         'proximo_mes': next_due,
+        'empresa_id': empresa.id,  # Nuevo campo
     }
 
     html_content = render_to_string('empresas/email/instrucciones_pago_manual.html', context)
@@ -1002,11 +1003,13 @@ def send_manual_payment_email(empresa, next_due):
     # Adjuntar imagen como contenido en línea
     with open(logo_path, "rb") as img:
         logo = MIMEImage(img.read())
-        logo.add_header("Content-ID", "<logo_cid>")  # CID para referenciar en el HTML
-        logo.add_header("Content-Disposition", "inline")  # Asegura que no sea descargable
+        logo.add_header("Content-ID", "<logo_cid>")
+        logo.add_header("Content-Disposition", "inline")
         msg.attach(logo)
 
     msg.send()
+
+    
 
 def planes_por_empresa(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -1047,7 +1050,7 @@ def estadisticas_pagos(request):
 logger = logging.getLogger(__name__)
 
 def get_comprobantes():
-    """Obtiene comprobantes de pago con extracción robusta del código cliente"""
+    """Obtiene comprobantes de pago con extracción robusta del código cliente y empresa_id."""
     comprobantes = []
     
     try:
@@ -1072,7 +1075,8 @@ def get_comprobantes():
             for e_id in data[0].split():
                 try:
                     status, msg_data = mail.fetch(e_id, '(RFC822)')
-                    if status != 'OK': continue
+                    if status != 'OK':
+                        continue
 
                     msg = email.message_from_bytes(msg_data[0][1])
                     comprobante = {
@@ -1080,13 +1084,14 @@ def get_comprobantes():
                         'from': msg.get('From', 'Remitente desconocido'),
                         'date': msg.get('Date', 'Fecha no disponible'),
                         'codigo_cliente': 'No encontrado',
+                        'empresa_id': None,  # Nuevo campo
                         'imagenes': []
                     }
 
-                    # Extracción prioritaria desde el asunto
+                    # Extracción prioritaria desde el asunto para el código cliente
                     subject = comprobante['subject']
                     subject_match = re.search(
-                        r'(?i)Cliente:\s*([A-Z0-9\-]+)',  # Regex para formato "Cliente: CODIGO"
+                        r'(?i)Cliente:\s*([A-Z0-9\-]+)',
                         subject
                     )
                     
@@ -1112,6 +1117,12 @@ def get_comprobantes():
                         if codigo_match:
                             comprobante['codigo_cliente'] = codigo_match.group(1).strip()
                             logger.debug(f"Código detectado en cuerpo: {comprobante['codigo_cliente']}")
+
+                    # NUEVA EXTRACTION: Extraer empresa_id desde el asunto (p.ej.: "EmpresaID: 123")
+                    empresa_id_match = re.search(r'(?i)EmpresaID:\s*([0-9]+)', subject)
+                    if empresa_id_match:
+                        comprobante['empresa_id'] = int(empresa_id_match.group(1))
+                        logger.debug(f"Empresa ID detectado en asunto: {comprobante['empresa_id']}")
 
                     # Procesamiento de imágenes
                     for part in msg.walk():
@@ -1143,14 +1154,17 @@ def get_comprobantes():
             logger.error(f"Error de autenticación IMAP: {auth_error}")
             raise
         finally:
-            try: mail.logout()
-            except: pass
+            try: 
+                mail.logout()
+            except:
+                pass
 
     except Exception as e:
         logger.error(f"Error general: {e}", exc_info=True)
         raise
 
     return comprobantes
+
 def notificaciones_json(request):
     """Endpoint para obtener notificaciones en formato JSON con manejo de errores."""
     try:
@@ -1165,7 +1179,8 @@ def notificaciones_json(request):
                     'remitente': c.get('from', 'Remitente desconocido'),
                     'codigo_cliente': c.get('codigo_cliente', 'No encontrado'),
                     'fecha': c.get('date', 'Fecha no disponible'),
-                    'imagenes': c.get('imagenes', [])
+                    'imagenes': c.get('imagenes', []),
+                    'empresa_id': c.get('empresa_id')  # Agregado este campo
                 } 
                 for c in comprobantes
             ]
@@ -1179,4 +1194,3 @@ def notificaciones_json(request):
             'error': 'Error al obtener notificaciones',
             'detalle': str(e)
         }, status=500, safe=False)
-

@@ -12,3 +12,9 @@ Módulos
    :undoc-members:
    :show-inheritance:
    :noindex:
+
+.. automodule:: WEB.models
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :noindex:

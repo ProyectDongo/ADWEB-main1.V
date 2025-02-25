@@ -122,7 +122,8 @@ urlpatterns = [
     path('estadisticas/pagos/', estadisticas_pagos, name='estadisticas_pagos'),
 
 
-
+# urls.py
+    
     path('notificaciones/json/', views.notificaciones_json, name='notificaciones_json'),
 
     ] 

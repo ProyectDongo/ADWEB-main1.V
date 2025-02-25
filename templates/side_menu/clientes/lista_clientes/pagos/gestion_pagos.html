@@ -1,126 +1,214 @@
 {% extends "central.html" %}
 {% block content %}
+<!-- Estilos personalizados -->
+<style>
+  body {
+    background-color: #f4f6f9;
+  }
+  .payment-card {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+  .payment-card .card-header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 1.5rem;
+  }
+  .payment-card .card-body {
+    background: #fff;
+    padding: 2rem;
+  }
+  .section-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.5rem;
+  }
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+    padding: 1rem;
+  }
+  .list-group-item:last-child {
+    border-bottom: none;
+  }
+  .btn-custom {
+    font-weight: 500;
+  }
+  .badge-suspended {
+    background-color: #e74c3c;
+  }
+  .total-box {
+    background-color: #ecf0f1;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .payment-method-box {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+  }
+</style>
+
 <div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h2 class="mb-0">Gestión de Pagos - {{ empresa.nombre }}</h2>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <!-- Sección de Planes Activos -->
-                <h4 class="mb-3 text-success">Planes Activos</h4>
-                <div class="list-group mb-4">
-                    {% for vp in vigencia_planes_activos %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <label class="form-check-label">
-                            <input type="checkbox" name="planes" value="{{ vp.id }}" class="form-check-input" data-monto="{{ vp.monto_final }}" checked>
-                            <strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }}
-                        </label>
-                        <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-sm btn-danger">
-                            <i class="bi bi-x-circle"></i> Desactivar
-                        </a>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted text-center">No hay planes activos.</p>
-                    {% endfor %}
-                </div>
-
-                <!-- Sección de Planes Suspendidos -->
-                <h4 class="mb-3 text-danger">Planes Suspendidos</h4>
-                <div class="list-group mb-4">
-                    {% for vp in vigencia_planes_suspendidos %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }} (Suspendido)</span>
-                        <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-sm btn-success">
-                            <i class="bi bi-check-circle"></i> Activar
-                        </a>
-                    </div>
-                    {% empty %}
-                    <p class="text-muted text-center">No hay planes suspendidos.</p>
-                    {% endfor %}
-                </div>
-
-                <!-- Total y Método de Pago -->
-                <div class="mb-4">
-                    <h3>Total a pagar: <span class="text-primary fw-bold">$<span id="total">{{ total }}</span></span></h3>
-                </div>
-
-                <div class="mb-4">
-                    <h4>Método de Pago</h4>
-                    <select name="metodo" class="form-select">
-                        <option value="manual">Manual (Recibiré instrucciones por correo)</option>
-                        <option value="automatico" {% if empresa.metodo_pago == 'automatico' %}selected{% endif %}>
-                            Automático (Usar datos registrados)
-                        </option>
-                    </select>
-                </div>
-
-                <!-- Datos para método automático -->
-                <div id="form-automatico" class="p-3 bg-light rounded" style="display: {% if empresa.metodo_pago == 'automatico' %}block{% else %}none{% endif %};">
-                    <h5>Datos de Cuenta</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Banco</label>
-                        <input type="text" class="form-control" name="banco" placeholder="Nombre del banco">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Cuenta</label>
-                        <select class="form-select" name="tipo_cuenta">
-                            <option value="ahorro">Ahorro</option>
-                            <option value="corriente">Corriente</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Número de Cuenta</label>
-                        <input type="text" class="form-control" name="numero_cuenta" placeholder="0000-0000-0000-0000">
-                    </div>
-                </div>
-
-                <script>
-                    document.querySelector('[name="metodo"]').addEventListener('change', (e) => {
-                        document.getElementById('form-automatico').style.display = e.target.value === 'automatico' ? 'block' : 'none';
-                    });
-                </script>
-
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-credit-card"></i> Confirmar Pago
-                    </button>
-                </div>
-            </form>
-
-            <!-- Botones de navegación -->
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{% url 'historial_pagos' empresa.id %}" class="btn btn-outline-dark">
-                    <i class="bi bi-clock-history"></i> Ver Historial
-                </a>
-                <a href="{% url 'listar_empresas' %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver a Listar Empresas
-                </a>
-            </div>
-        </div>
+  <div class="card payment-card shadow">
+    <div class="card-header">
+      <h2 class="mb-0">
+        <i class="bi bi-cash-stack"></i>
+        Gestión de Pagos - {{ empresa.nombre }}
+      </h2>
     </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row">
+          <!-- Planes Activos -->
+          <div class="col-md-6">
+            <div class="mb-4">
+              <h4 class="section-title text-success">
+                <i class="bi bi-check2-circle"></i>
+                Planes Activos
+              </h4>
+              <ul class="list-group">
+                {% for vp in vigencia_planes_activos %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <input type="checkbox" name="planes" value="{{ vp.id }}" class="form-check-input me-2" data-monto="{{ vp.monto_final }}" checked>
+                    <strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }}
+                  </div>
+                  <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-outline-danger btn-sm btn-custom">
+                    <i class="bi bi-x-circle"></i> Desactivar
+                  </a>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted">
+                  <i class="bi bi-info-circle"></i> No hay planes activos.
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <!-- Planes Suspendidos -->
+          <div class="col-md-6">
+            <div class="mb-4">
+              <h4 class="section-title text-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                Planes Suspendidos
+              </h4>
+              <ul class="list-group">
+                {% for vp in vigencia_planes_suspendidos %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }}
+                    <span class="badge badge-suspended ms-2">Suspendido</span>
+                  </div>
+                  <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-outline-success btn-sm btn-custom">
+                    <i class="bi bi-check-circle"></i> Activar
+                  </a>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted">
+                  <i class="bi bi-info-circle"></i> No hay planes suspendidos.
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Total a pagar -->
+        <div class="total-box text-center">
+          <h3>
+            <i class="bi bi-currency-dollar"></i>
+            Total a pagar: <span class="text-primary">$<span id="total">{{ total }}</span></span>
+          </h3>
+        </div>
+        <!-- Método de pago -->
+        <div class="mb-3">
+          <label for="metodo" class="form-label">
+            <i class="bi bi-wallet2"></i>
+            Método de Pago
+          </label>
+          <select name="metodo" id="metodo" class="form-select">
+            <option value="manual">Manual (Recibiré instrucciones por correo)</option>
+            <option value="automatico" {% if empresa.metodo_pago == 'automatico' %}selected{% endif %}>
+              Automático (Usar datos registrados)
+            </option>
+          </select>
+        </div>
+        <!-- Datos de cuenta para método automático -->
+        <div id="form-automatico" class="payment-method-box" style="display: {% if empresa.metodo_pago == 'automatico' %}block{% else %}none{% endif %};">
+          <h5 class="mb-3">
+            <i class="bi bi-gear-fill"></i>
+            Datos de Cuenta
+          </h5>
+          <div class="mb-3">
+            <label for="banco" class="form-label">Banco</label>
+            <input type="text" class="form-control" name="banco" id="banco" placeholder="Nombre del banco">
+          </div>
+          <div class="mb-3">
+            <label for="tipo_cuenta" class="form-label">Tipo de Cuenta</label>
+            <select class="form-select" name="tipo_cuenta" id="tipo_cuenta">
+              <option value="ahorro">Ahorro</option>
+              <option value="corriente">Corriente</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="numero_cuenta" class="form-label">Número de Cuenta</label>
+            <input type="text" class="form-control" name="numero_cuenta" id="numero_cuenta" placeholder="0000-0000-0000-0000">
+          </div>
+        </div>
+        <!-- Botón de Confirmar -->
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+          <button type="submit" class="btn btn-success btn-lg btn-custom">
+            <i class="bi bi-credit-card-2-front"></i>
+            Confirmar Pago
+          </button>
+        </div>
+      </form>
+      <!-- Botones de navegación -->
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'historial_pagos' empresa.id %}" class="btn btn-outline-dark btn-custom">
+          <i class="bi bi-clock-history"></i>
+          Ver Historial
+        </a>
+        <a href="{% url 'listar_empresas' %}" class="btn btn-secondary btn-custom">
+          <i class="bi bi-arrow-left-circle"></i>
+          Volver a Listar Empresas
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const checkboxes = document.querySelectorAll('[name="planes"]');
-    const totalSpan = document.getElementById('total');
-    
-    function updateTotal() {
-        let total = 0;
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                total += parseFloat(checkbox.dataset.monto);
-            }
-        });
-        totalSpan.textContent = total.toFixed(2);
-    }
-    
+  const metodoSelect = document.getElementById('metodo');
+  const formAutomatico = document.getElementById('form-automatico');
+  
+  metodoSelect.addEventListener('change', (e) => {
+    formAutomatico.style.display = e.target.value === 'automatico' ? 'block' : 'none';
+  });
+  
+  const checkboxes = document.querySelectorAll('[name="planes"]');
+  const totalSpan = document.getElementById('total');
+  
+  function updateTotal() {
+    let total = 0;
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateTotal);
+      if (checkbox.checked) {
+        total += parseFloat(checkbox.dataset.monto);
+      }
     });
+    totalSpan.textContent = total.toFixed(2);
+  }
+  
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateTotal);
+  });
 });
 </script>
 {% endblock %}

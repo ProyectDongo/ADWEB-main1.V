@@ -1,90 +1,1144 @@
-{% extends "central.html" %}
-{% load crispy_forms_tags %}
+quiero que crees otro notificaion en orma de cono de avertencia al otro extremo que me liste los planes pendietnes eston es pagado= bool es 0 es pendiente y 1 al dia, 2 botones 1 genera un corre de adventencia para la empresa que tiene pagos pendientes el otro lista todos los planes  vigentes que no esetn pagados de la  determianda empresa --class RegistroEmpresas(models.Model):
+    """
+    Modelo que representa el registro de una empresa en el sistema.
 
-{% block title %}Detalles de Vigencia {% endblock %}
+    Este modelo almacena información detallada sobre una empresa, incluyendo datos
+    de identificación, ubicación, contacto, plan contratado y métodos de pago.
+
+    Atributos:
+        codigo_cliente (CharField): Código único asignado al cliente. Si no se
+            proporciona, se genera automáticamente en el método save.
+        fecha_ingreso (DateField): Fecha de ingreso de la empresa, se asigna
+            automáticamente al crearse el registro.
+        rut (CharField): RUT de la empresa, debe ser único y se valida mediante la
+            función 'validar_rut'.
+        nombre (CharField): Nombre de la empresa.
+        giro (CharField): Giro o actividad principal de la empresa.
+        direccion (CharField): Dirección de la empresa.
+        numero (CharField): Número de la dirección.
+        oficina (CharField): Oficina o departamento (opcional).
+        region (ForeignKey): Región a la que pertenece la empresa. Se usa PROTECT
+            para evitar borrados accidentales.
+        provincia (ForeignKey): Provincia a la que pertenece la empresa.
+        comuna (ForeignKey): Comuna a la que pertenece la empresa.
+        telefono (CharField): Teléfono fijo de la empresa.
+        celular (CharField): Teléfono celular de la empresa (opcional).
+        email (EmailField): Correo electrónico de la empresa.
+        web (URLField): Página web de la empresa (opcional).
+        vigente (BooleanField): Indica si la empresa está activa.
+        estado (CharField): Estado de la empresa, con opciones ('aldia', 'atrasado', 'suspendido'),
+            por defecto 'aldia'.
+
+        rut_representante (CharField): RUT del representante de la empresa, validado con 'validar_rut'.
+        nombre_representante (CharField): Nombre del representante legal de la empresa.
+
+        nombre_contacto (CharField): Nombre de la persona de contacto.
+        celular_contacto (CharField): Teléfono celular de la persona de contacto.
+        mail_contacto (EmailField): Correo electrónico de la persona de contacto.
+
+        plan_contratado (ForeignKey): Plan contratado por la empresa, relacionado con el modelo 'Plan'.
+            Se utiliza PROTECT para evitar borrados accidentales. La relación se identifica con el nombre 'empresas'.
+        limite_usuarios (PositiveIntegerField): Límite de usuarios permitido según el plan contratado.
+        
+        eliminada (BooleanField): Indica si la empresa ha sido eliminada lógicamente.
+        metodo_pago (CharField): Método de pago con opciones ('manual', 'automatico'), por defecto 'manual'.
+        frecuencia_pago (CharField): Frecuencia de pago con opciones ('mensual', 'anual') (opcional).
+        banco (CharField): Banco asociado al método de pago (opcional).
+        tipo_cuenta (CharField): Tipo de cuenta bancaria con opciones ('ahorro', 'corriente') (opcional).
+        numero_cuenta (CharField): Número de cuenta bancaria (opcional).
+
+    Meta:
+        verbose_name: "Empresa"
+        verbose_name_plural: "Empresas"
+
+    Métodos:
+        __str__: Retorna el nombre de la empresa.
+        save: Sobrescribe el método de guardado para generar automáticamente el 'codigo_cliente'
+              y actualizar el 'limite_usuarios' en función del plan contratado.
+    """
+    ESTADO_CHOICES = [
+        ('aldia', 'Al día'),
+        ('atrasado', 'Atrasado'),
+        ('suspendido', 'Suspendido'),
+    ]
+    
+    codigo_cliente = models.CharField(max_length=20, unique=True)
+    fecha_ingreso = models.DateField(auto_now_add=True)
+    rut = models.CharField(max_length=13, unique=True, validators=[validar_rut])
+    nombre = models.CharField(max_length=100)
+    giro = models.CharField(max_length=100)
+    direccion = models.CharField(max_length=200)
+    numero = models.CharField(max_length=20)
+    oficina = models.CharField(max_length=20, blank=True)
+    region = models.ForeignKey(Region, on_delete=models.PROTECT)
+    provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
+    comuna = models.ForeignKey(Comuna, on_delete=models.PROTECT)
+    telefono = models.CharField(max_length=20)
+    celular = models.CharField(max_length=20, blank=True)
+    email = models.EmailField()
+    web = models.URLField(blank=True)
+    vigente = models.BooleanField(default=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
+    
+    rut_representante = models.CharField(max_length=12, validators=[validar_rut])
+    nombre_representante = models.CharField(max_length=100)
+    
+    nombre_contacto = models.CharField(max_length=100)
+    celular_contacto = models.CharField(max_length=20)
+    mail_contacto = models.EmailField()
+    
+    plan_contratado = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name='empresas')
+    limite_usuarios = models.PositiveIntegerField(default=0)
+
+    eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  # Nuevo campo
+    metodo_pago = models.CharField(
+        max_length=20, 
+        choices=[('manual', 'Manual'), ('automatico', 'Automático')], 
+        default='manual'
+    )
+    frecuencia_pago = models.CharField(
+        max_length=20, 
+        choices=[('mensual', 'Mensual'), ('anual', 'Anual')], 
+        blank=True, null=True
+    )
+    banco = models.CharField(max_length=100, blank=True, null=True)
+    tipo_cuenta = models.CharField(
+        max_length=20, 
+        choices=[('ahorro', 'Ahorro'), ('corriente', 'Corriente')], 
+        blank=True, null=True
+    )
+    numero_cuenta = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Empresa"
+        verbose_name_plural = "Empresas"
+
+    def __str__(self):
+        """
+        Retorna la representación en cadena de la empresa.
+
+        :return: El nombre de la empresa.
+        """
+        return self.nombre
+
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribe el método save para realizar acciones adicionales antes de guardar:
+
+        - Genera automáticamente el 'codigo_cliente' si aún no está asignado, utilizando el máximo ID
+          actual y formateándolo con el prefijo 'CLI-' seguido de un número de 6 dígitos.
+        - Actualiza el campo 'limite_usuarios' en función del 'max_usuarios' definido en el plan contratado.
+
+        Luego, llama al método save del padre para almacenar el registro en la base de datos.
+
+        :param args: Argumentos posicionales.
+        :param kwargs: Argumentos con nombre.
+        """
+        if not self.codigo_cliente:
+            ultimo_id = RegistroEmpresas.objects.aggregate(Max('id'))['id__max'] or 0
+            self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
+        
+        if self.plan_contratado:
+            self.limite_usuarios = self.plan_contratado.max_usuarios
+            
+        super().save(*args, **kwargs)
+class Pago(models.Model):
+    """
+    Modelo que representa un pago realizado por una empresa.
+
+    Este modelo almacena los detalles de un pago, incluyendo la empresa que realiza el pago,
+    los planes asociados a la vigencia del plan, el monto pagado, la fecha en que se realizó el pago,
+    el método de pago utilizado, un comprobante (opcional) y el estado del pago.
+
+    Atributos:
+        empresa (ForeignKey): Relación con el modelo RegistroEmpresas que representa la empresa que efectúa el pago.
+            Se elimina en cascada y se accede a través del related_name 'pagos'.
+        vigencia_planes (ManyToManyField): Relación con el modelo VigenciaPlan que asocia uno o varios planes a este pago.
+            Se accede a través del related_name 'pagos_asociados'.
+        monto (DecimalField): Monto del pago, con hasta 10 dígitos y 2 decimales.
+        fecha_pago (DateTimeField): Fecha y hora en que se realizó el pago. Se debe asignar manualmente.
+        metodo (CharField): Método de pago utilizado, con opciones 'manual' y 'automatico'.
+        comprobante (FileField): Archivo que sirve como comprobante del pago (opcional).
+        pagado (BooleanField): Indica si el pago ha sido efectuado. Valor por defecto es False.
+
+    Métodos:
+        __str__: Retorna una representación en cadena del pago en el formato "Pago {id} - {empresa.nombre} ({fecha_pago})".
+    """
+    METODO_PAGO_CHOICES = [
+        ('manual', 'Manual'),
+        ('automatico', 'Automático'),
+    ]
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='pagos')
+    vigencia_planes = models.ManyToManyField(VigenciaPlan, related_name='pagos_asociados')
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_pago = models.DateTimeField()  # Se asigna manualmente.
+    metodo = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES)
+    comprobante = models.FileField(upload_to='comprobantes/', blank=True, null=True)
+    pagado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
+--class VigenciaPlan(models.Model):
+    """
+    Modelo que representa la vigencia de un plan contratado por una empresa.
+
+    Este modelo registra la duración y las condiciones económicas de un plan contratado,
+    permitiendo calcular el monto final del plan después de aplicar un descuento.
+
+    Atributos:
+        empresa (ForeignKey): Relación con el modelo RegistroEmpresas que contrata el plan.
+                                Se elimina en cascada.
+        plan (ForeignKey): Relación con el modelo Plan contratado. Se utiliza PROTECT para evitar borrados accidentales.
+        fecha_inicio (DateField): Fecha de inicio de la vigencia del plan. Por defecto, la fecha actual.
+        fecha_fin (DateField): Fecha de término de la vigencia, opcional.
+        monto_plan (DecimalField): Valor base del plan.
+        descuento (DecimalField): Porcentaje de descuento a aplicar al valor del plan. Valor por defecto: 0.
+        monto_final (DecimalField): Valor final del plan luego de aplicar el descuento.
+        codigo_plan (CharField): Código único identificador del plan.
+        estado (CharField): Estado de la vigencia, con opciones:
+            - 'indefinido' para una vigencia sin fecha definida.
+            - 'mensual' para una vigencia mensual.
+            - 'suspendido' para una vigencia suspendida.
+
+    Meta:
+        verbose_name: "Vigencia de Plan"
+        verbose_name_plural: "Vigencias de Planes"
+        ordering: Ordena los registros por 'fecha_inicio' en orden descendente.
+
+    Métodos:
+        __str__: Retorna una representación en cadena de la vigencia, mostrando la empresa, el nombre del plan y la fecha de inicio.
+        calcular_monto: Calcula y actualiza el 'monto_final' del plan aplicando el descuento.
+                        Si el plan no tiene un valor definido, lanza un ValueError.
+        save: Sobrescribe el método save para calcular el monto final antes de guardar la instancia.
+    """
+    TIPO_DURACION = [
+        ('indefinido', 'Indefinido'),
+        ('mensual', 'Mensual'),
+        ('suspendido', 'Suspendido'),
+    ]
+    empresa = models.ForeignKey(
+        RegistroEmpresas,
+        on_delete=models.CASCADE,
+        related_name='vigencias'
+    )
+    plan = models.ForeignKey(Plan, on_delete=models.PROTECT)
+    fecha_inicio = models.DateField(default=timezone.now)
+    fecha_fin = models.DateField(null=True, blank=True)
+    monto_plan = models.DecimalField(max_digits=10, decimal_places=2)
+    descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    monto_final = models.DecimalField(max_digits=10, decimal_places=2)
+    codigo_plan = models.CharField(max_length=50, unique=True)
+    estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefinido')
+
+    class Meta:
+        verbose_name = "Vigencia de Plan"
+        verbose_name_plural = "Vigencias de Planes"
+        ordering = ['-fecha_inicio']
+
+    def __str__(self):
+        """
+        Retorna la representación en cadena de la vigencia del plan.
+
+        :return: Cadena con el formato "Empresa - Nombre del Plan (Fecha de inicio)".
+        """
+        return f"{self.empresa} - {self.plan.nombre} ({self.fecha_inicio})"
+
+    def calcular_monto(self):
+        """
+        Calcula y actualiza el monto final del plan aplicando el descuento.
+
+        El cálculo se realiza de la siguiente manera:
+            - Se verifica que el valor del plan esté definido.
+            - Se convierte el porcentaje de descuento en decimal.
+            - Se establece 'monto_plan' con el valor base del plan.
+            - Se calcula 'monto_final' multiplicando 'monto_plan' por (1 - descuento_decimal).
+
+        :return: El monto final calculado.
+        :raises ValueError: Si el valor del plan (plan.valor) no está definido.
+        """
+        if self.plan.valor is None:
+            raise ValueError("El plan no tiene un valor definido.")
+
+        descuento_decimal = self.descuento / 100
+        self.monto_plan = self.plan.valor
+        self.monto_final = self.monto_plan * (1 - descuento_decimal)
+        return self.monto_final
+
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribe el método save para calcular el monto final antes de guardar la instancia.
+
+        Llama al método 'calcular_monto' para actualizar 'monto_final' y luego procede
+        a guardar la instancia utilizando el método save del padre.
+
+        :param args: Argumentos posicionales.
+        :param kwargs: Argumentos con nombre.
+        """
+        self.calcular_monto()
+        super().save(*args, **kwargs)-- # pagos 
+def get_next_due(empresa):
+    """Devuelve la fecha (primer día del mes actual o del siguiente) del próximo pago pendiente."""
+    hoy = timezone.now()
+    # Inicia desde el primer día del mes actual
+    current_due = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if not Pago.objects.filter(
+        empresa=empresa,
+        fecha_pago__year=current_due.year,
+        fecha_pago__month=current_due.month
+    ).exists():
+        return current_due
+    # Si ya existe pago en el mes actual, se calcula el mes siguiente
+    next_due = current_due + relativedelta(months=1)
+    while Pago.objects.filter(
+        empresa=empresa,
+        fecha_pago__year=next_due.year,
+        fecha_pago__month=next_due.month
+    ).exists():
+        next_due += relativedelta(months=1)
+    return next_due
+
+
+def gestion_pagos(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencia_planes_activos = empresa.vigencias.filter(estado='indefinido')
+    vigencia_planes_suspendidos = empresa.vigencias.filter(estado='suspendido')
+    total = sum(vp.monto_final for vp in vigencia_planes_activos)
+    
+    hoy = timezone.now()
+    next_due = get_next_due(empresa)
+    
+    if request.method == 'POST':
+        if not request.POST.get('confirmar') and (next_due.month != hoy.month or next_due.year != hoy.year):
+            selected_planes_ids = request.POST.getlist('planes')
+            metodo = request.POST.get('metodo')
+            context = {
+                'empresa': empresa,
+                'codigo_cliente': empresa.codigo_cliente,
+                'proximo_mes': next_due,
+                'planes': selected_planes_ids,
+                'metodo': metodo,
+            }
+            return render(request, 'side_menu/clientes/lista_clientes/pagos/confirmacion/confirmar_pago.html', context)
+        
+        if request.POST.get('confirmar'):
+            next_due_str = request.POST.get('next_due')
+            next_due = datetime.datetime.strptime(next_due_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.get_current_timezone())
+                
+        selected_planes_ids = request.POST.getlist('planes')
+        selected_planes = vigencia_planes_activos.filter(id__in=selected_planes_ids)
+        metodo = request.POST.get('metodo')
+        
+        pago = Pago.objects.create(
+            empresa=empresa,
+            monto=sum(vp.monto_final for vp in selected_planes),
+            metodo=metodo,
+            pagado=False,
+            fecha_pago=next_due  # Fecha correcta del próximo mes
+        )
+        
+        if metodo == 'manual':
+            send_manual_payment_email(empresa, next_due)
+        
+        pago.vigencia_planes.set(selected_planes)
+        empresa.estado = 'aldia'
+        empresa.save()
+        
+        # Mensaje de éxito antes de redireccionar
+        messages.success(request, 'Los pagos se efectuaron correctamente')
+        return redirect('listar_empresas')
+    
+    return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', {
+        'empresa': empresa,
+        'codigo_cliente': empresa.codigo_cliente,
+        'vigencia_planes_activos': vigencia_planes_activos,
+        'vigencia_planes_suspendidos': vigencia_planes_suspendidos,
+        'total': total,
+    })
+def toggle_plan(request, vigencia_id):
+    vigencia = get_object_or_404(VigenciaPlan, id=vigencia_id)
+    vigencia.estado = 'suspendido' if vigencia.estado == 'indefinido' else 'indefinido'
+    vigencia.save()
+    return redirect('gestion_pagos', empresa_id=vigencia.empresa.id)
+
+def historial_pagos(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    return render(request, 'side_menu/clientes/lista_clientes/pagos/historial/historial_pagos.html', {
+        'empresa': empresa,
+        'pagos': empresa.pagos.all()
+    })
+
+def actualizar_estado_pago(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+
+    pago.pagado = not pago.pagado
+    pago.save()
+    
+    messages.success(request, f"El estado del pago se actualizó a: {'Pagado' if pago.pagado else 'Pendiente'}.")
+    
+    # Redirige al historial de pagos de la empresa
+    return redirect('historial_pagos', empresa_id=pago.empresa.id)
+#envio de correo 
+def send_manual_payment_email(empresa, next_due): 
+    transfer_data = {
+        'banco': 'Banco Ficticio',
+        'tipo_cuenta': 'Cuenta Corriente',
+        'numero_cuenta': '9876543210',
+        'titular': empresa.nombre,
+    }
+
+    # Se incluye el empresa_id en el subject para facilitar su extracción posterior
+    subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente} | EmpresaID: {empresa.id}"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [empresa.email]
+
+    # Ruta absoluta del logo
+    logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
+
+    # Agregamos empresa_id al contexto
+    context = {
+        'empresa': empresa,
+        'codigo_cliente': empresa.codigo_cliente,
+        'transfer_data': transfer_data,
+        'proximo_mes': next_due,
+        'empresa_id': empresa.id,  # Nuevo campo
+    }
+
+    html_content = render_to_string('empresas/email/instrucciones_pago_manual.html', context)
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+    msg.attach_alternative(html_content, "text/html")
+
+    # Adjuntar imagen como contenido en línea
+    with open(logo_path, "rb") as img:
+        logo = MIMEImage(img.read())
+        logo.add_header("Content-ID", "<logo_cid>")
+        logo.add_header("Content-Disposition", "inline")
+        msg.attach(logo)
+
+    msg.send()
+
+    
+
+def planes_por_empresa(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencias = VigenciaPlanes.objects.filter(empresa=empresa)
+    return render(request, 'planes_por_empresa.html', {'vigencias': vigencias})
+
+
+
+def estadisticas_empresas(request):
+    # Empresas registradas agrupadas por mes de ingreso
+    empresas_por_mes = RegistroEmpresas.objects.annotate(
+        mes=TruncMonth('fecha_ingreso')
+    ).values('mes').annotate(
+        total=Count('id')
+    ).order_by('mes')
+    
+    context = {
+        'empresas_por_mes': list(empresas_por_mes),
+    }
+    return render(request, 'side_menu/estadisticas/empresas/empresas.html', context)
+
+def estadisticas_pagos(request):
+    # Pagos agrupados por mes (por cantidad y monto total)
+    pagos_por_mes = Pago.objects.annotate(
+        mes=TruncMonth('fecha_pago')
+    ).values('mes').annotate(
+        cantidad=Count('id'),
+        monto_total=Sum('monto')
+    ).order_by('mes')
+    
+    context = {
+        'pagos_por_mes': list(pagos_por_mes),
+    }
+    return render(request, 'side_menu/estadisticas/pagos/pagos.html', context)
+
+
+
+logger = logging.getLogger(__name__)
+
+def get_comprobantes():
+    """Obtiene comprobantes de pago con extracción robusta del código cliente y empresa_id."""
+    comprobantes = []
+    
+    try:
+        # Configuración IMAP
+        IMAP_SERVER = 'imap.gmail.com'
+        EMAIL_ACCOUNT = 'anghello3569molina@gmail.com'
+        PASSWORD = 'bncuzhavbtvuqjpi'
+
+        # Conexión segura
+        mail = imaplib.IMAP4_SSL(IMAP_SERVER, timeout=10)
+        
+        try:
+            mail.login(EMAIL_ACCOUNT, PASSWORD)
+            mail.select('inbox')
+
+            # Búsqueda de mensajes
+            status, data = mail.search(None, '(SUBJECT "Instrucciones de Pago Manual")')
+            
+            if status != 'OK':
+                raise Exception("Error en búsqueda de correos")
+
+            for e_id in data[0].split():
+                try:
+                    status, msg_data = mail.fetch(e_id, '(RFC822)')
+                    if status != 'OK':
+                        continue
+
+                    msg = email.message_from_bytes(msg_data[0][1])
+                    comprobante = {
+                        'subject': msg.get('Subject', 'Sin asunto'),
+                        'from': msg.get('From', 'Remitente desconocido'),
+                        'date': msg.get('Date', 'Fecha no disponible'),
+                        'codigo_cliente': 'No encontrado',
+                        'empresa_id': None,  # Nuevo campo
+                        'imagenes': []
+                    }
+
+                    # Extracción prioritaria desde el asunto para el código cliente
+                    subject = comprobante['subject']
+                    subject_match = re.search(
+                        r'(?i)Cliente:\s*([A-Z0-9\-]+)',
+                        subject
+                    )
+                    
+                    if subject_match:
+                        comprobante['codigo_cliente'] = subject_match.group(1).strip()
+                        logger.debug(f"Código detectado en asunto: {comprobante['codigo_cliente']}")
+                    else:
+                        # Búsqueda en cuerpo como respaldo
+                        body = ""
+                        for part in msg.walk():
+                            if part.get_content_type() in ['text/plain', 'text/html']:
+                                try:
+                                    body += " " + part.get_payload(decode=True).decode(errors='replace')
+                                except Exception as e:
+                                    logger.error(f"Error decodificando cuerpo: {e}")
+
+                        full_text = f"{subject} {body}"
+                        codigo_match = re.search(
+                            r'(?i)(?:Código|Codigo|Cód|Cod)[\s:\-]*Cliente?[\s:\-]*([A-Z0-9\-]+)', 
+                            full_text
+                        )
+                        
+                        if codigo_match:
+                            comprobante['codigo_cliente'] = codigo_match.group(1).strip()
+                            logger.debug(f"Código detectado en cuerpo: {comprobante['codigo_cliente']}")
+
+                    # NUEVA EXTRACTION: Extraer empresa_id desde el asunto (p.ej.: "EmpresaID: 123")
+                    empresa_id_match = re.search(r'(?i)EmpresaID:\s*([0-9]+)', subject)
+                    if empresa_id_match:
+                        comprobante['empresa_id'] = int(empresa_id_match.group(1))
+                        logger.debug(f"Empresa ID detectado en asunto: {comprobante['empresa_id']}")
+
+                    # Procesamiento de imágenes
+                    for part in msg.walk():
+                        if part.get_content_maintype() == 'image':
+                            try:
+                                filename = part.get_filename() or ""
+                                decoded_header = decode_header(filename)
+                                filename = decoded_header[0][0]
+                                if isinstance(filename, bytes):
+                                    filename = filename.decode(decoded_header[0][1] or 'utf-8')
+                                
+                                if 'comprobante' in filename.lower():
+                                    imagen_data = part.get_payload(decode=True)
+                                    if imagen_data:
+                                        comprobante['imagenes'].append({
+                                            'tipo': part.get_content_type(),
+                                            'datos': base64.b64encode(imagen_data).decode('utf-8'),
+                                            'nombre': filename
+                                        })
+                            except Exception as img_error:
+                                logger.error(f"Error procesando imagen: {img_error}")
+
+                    comprobantes.append(comprobante)
+
+                except Exception as msg_error:
+                    logger.error(f"Error procesando mensaje {e_id}: {msg_error}")
+
+        except imaplib.IMAP4.error as auth_error:
+            logger.error(f"Error de autenticación IMAP: {auth_error}")
+            raise
+        finally:
+            try: 
+                mail.logout()
+            except:
+                pass
+
+    except Exception as e:
+        logger.error(f"Error general: {e}", exc_info=True)
+        raise
+
+    return comprobantes
+
+def notificaciones_json(request):
+    """Endpoint para obtener notificaciones en formato JSON con manejo de errores."""
+    try:
+        comprobantes = get_comprobantes()
+        
+        # Estructuración segura de la respuesta
+        response_data = {
+            'count': len(comprobantes),
+            'notifications': [
+                {
+                    'asunto': c.get('subject', 'Sin asunto'),
+                    'remitente': c.get('from', 'Remitente desconocido'),
+                    'codigo_cliente': c.get('codigo_cliente', 'No encontrado'),
+                    'fecha': c.get('date', 'Fecha no disponible'),
+                    'imagenes': c.get('imagenes', []),
+                    'empresa_id': c.get('empresa_id')  # Agregado este campo
+                } 
+                for c in comprobantes
+            ]
+        }
+        
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        logger.error(f"Error en notificaciones_json: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': 'Error al obtener notificaciones',
+            'detalle': str(e)
+        }, status=500, safe=False)
+-- aqui deberia aparecer el la notificaicion de icono cono para ver los botones y lo antes mencionado apra que genere los 2 botones y el correo y la lista de plnes pendientes y su respectva empresa {% extends "central.html" %}
+{% load static %}
+{% block title %}Lista de Clientes{% endblock %}
 
 {% block content %}
+<style>
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+  .table thead th {
+    background-color: #343a40;
+    color: #fff;
+    text-align: center;
+  }
+  .table tbody td {
+    text-align: center;
+  }
+  .table tbody td.text-left {
+    text-align: left;
+  }
+  .action-button {
+    margin: 0.2rem;
+  }
+  .planes-vigentes-row {
+    background-color: #f8f9fa;
+  }
+  .toggle-planes i {
+    transition: transform 0.3s ease;
+  }
+  .toggle-planes.collapsed i {
+    transform: rotate(180deg);
+  }
+  /* Estilos mejorados para notificaciones */
+  .notificaciones-container {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    z-index: 1000;
+    width: 400px;
+    max-width: 90%;
+  }
+
+  .notificacion-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .notificacion-item {
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .notificacion-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .accordion-button {
+    background-color: #fff !important;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa !important;
+  }
+
+  .notificacion-icon {
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    color: #0d6efd;
+  }
+
+  .notificacion-body {
+    padding: 1rem;
+    background-color: #f8f9fa;
+  }
+
+  .codigo-cliente {
+    background-color: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  .imagen-comprobante {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: white;
+  }
+  
+  
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+  .cursor-zoom {
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.cursor-zoom:hover {
+  transform: scale(1.03);
+}
+
+#imagenAmpliada {
+  cursor: zoom-out;
+}
+
+</style>
+<div class="container mt-3">
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
+    <i class="bi bi-bell-fill"></i>
+    <span id="notificacionesBadge" class="badge bg-danger">0</span>
+  </button>
+
+  <div class="collapse mt-3" id="notificacionesPanel">
+    <div class="card card-body">
+      <div class="accordion" id="notificacionesAcordeon">
+        <!-- Las notificaciones se insertarán aquí -->
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container py-5">
-    <form method="post">
-        {% csrf_token %}
-        {% if messags %}
-        <div id="message-container" class="alert alert-success alert-dismissible fade show "role= "alert">
-            {% for messagem in messages %}
-                {{ message }}
-            {% endfor %}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
-        {% if form.errors %}
-
-         <!-- Encabezado y botón Guardar -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-         
-            <a href="{% url 'empresas_vigentes' %}" class=" btn btn-info btn-md mx-1 my-1">
-                    <i class="bi bi-arrow-left me-2"></i> Volver
-            </a>
-        
-            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
-            <button type="submit" name="guardar" class="btn btn-success btn-lg">
-                <i class="bi bi-save"></i> Guardar Cambios
-            </button>
-            
-        </div>
-         <!-- Pestañas -->
-
-         <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-
-             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Generales</button>
-            </li>
-         </ul>
-
-
-         <!-- Contenido de las pestañas -->
-
-         <div class="tab-content" id="myTabContent"> 
-
-             <!-- Pestaña Datos Generales -->
-             <div class="tab-pane fade show active" id="datos" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Información Básica</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field}}
-
-                            </div>
-                            <div class="col-md-6">
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                                    {{ form.|as_crispy_field }}
-                            </div>
-                        </div>
+  {% if messages %}
+  {% for message in messages %}
+  
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endif %}
+  <div class="card shadow-sm">
+    <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
+      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Clientes</h1>
+      <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
+        <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
+          <i class="bi bi-plus-lg"></i> Crear Empresa
+        </a>
+        <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
+          <i class="bi bi-list"></i> Lista de Planes
+        </a>
+        <a href="{% url 'listar_empresas_eliminadas' %}" class="btn btn-warning btn-md mx-1 my-1">
+          <i class="bi bi-trash"></i> Ver Eliminadas
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="mb-4">
+        <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="thead-dark">
+            <tr>
+              <th>Código Cliente</th>
+              <th>Estado</th>
+              <th>Vigente</th>
+              <th class="text-left">Nombre</th>
+              <th class="text-left">RUT</th>
+              <th class="text-left">Dirección</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="empresa-list">
+            {% for empresa in empresas %}
+            <tr>
+              <th>{{ empresa.codigo_cliente }}</th>
+              <th>
+                {% if empresa.estado == 'aldia' %}
+                  <span class="badge bg-success">AL DIA</span>
+                {% elif empresa.estado == 'atrasado' %}
+                  <span class="badge bg-warning">ATRASADO</span>
+                {% else %}
+                  <span class="badge bg-secondary">SUSPENDIDO</span>
+                {% endif %}
+              </th>
+              <th>
+                {% if empresa.vigente %}
+                  <span class="badge bg-success">SI</span>
+                {% else %}
+                  <span class="badge bg-danger">NO</span>
+                {% endif %}
+              </th>
+              <td class="text-left">{{ empresa.nombre }}</td>
+              <td class="text-left">{{ empresa.rut }}</td>
+              <td class="text-left">{{ empresa.direccion }}</td>
+              <td>{{ empresa.telefono }}</td>
+              <td class="d-flex flex-wrap justify-content-center">
+                <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1 action-button" title="Ver Detalles">
+                  <i class="i bi-gear-fill"></i> Administrar
+                </a>
+                <button class="btn btn-primary btn-sm mx-1 my-1 action-button toggle-planes" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#planes-{{ empresa.id }}"
+                        title="Ver Servicios">
+                  <i class="bi bi-chevron-down"></i> Servicios
+                </button>
+                <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1 action-button" title="Vigencia de Planes">
+                  <i class="bi bi-cloud-download-fill"></i> Nuevo Plan
+                </a>
+                <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-success btn-sm mx-1 my-1 action-button">
+                  <i class="bi bi-credit-card"></i> Pagos
+                </a>
+                <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" 
+                  title="Eliminar Empresa" onclick="return confirm('¿Seguro que deseas marcar como eliminada esta empresa?');">
+                  <i class="bi bi-trash"></i> Eliminar
+                </a>
+              </td>
+            </tr>
+            <tr class="planes-vigentes-row">
+              <td colspan="8" class="p-0">
+                <div class="collapse" id="planes-{{ empresa.id }}">
+                  <div class="p-3">
+                    <h5 class="mb-3">Planes Vigentes</h5>
+                    {% if empresa.vigencias.all %}
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover">
+                        <thead>
+                          <tr>
+                            <th>Código Plan</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Monto Plan</th>
+                            <th>Descuento</th>
+                            <th>Monto Final</th>
+                            <th>Acciones</th>
+                            <th>Estado Pagos</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for vigencia in empresa.vigencias.all %}
+                          <tr class="{% if vigencia.estado == 'suspendido' %}table-danger{% endif %}">
+                            <td>{{ vigencia.codigo_plan }}</td>
+                            <td>{{ vigencia.fecha_inicio }}</td>
+                            <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                            <td>
+                              {% if vigencia.estado != 'suspendido' %}
+                                {% if vigencia.fecha_fin %}Definido{% else %}Indefinido{% endif %}
+                              {% else %}
+                                {{ vigencia.get_estado_display }}
+                              {% endif %}
+                            </td>
+                            <td>{{ vigencia.monto_plan }}</td>
+                            <td>{{ vigencia.descuento }}%</td>
+                            <td>{{ vigencia.monto_final }}</td>
+                            <td>
+                              <div class="d-flex flex-wrap gap-1">
+                                <a href="{% url 'generar_boleta' vigencia.empresa.id %}" 
+                                   class="btn btn-primary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-receipt"></i>
+                                </a>
+                                <a href="{% url 'editar_vigencia_plan' vigencia.id %}" 
+                                   class="btn btn-secondary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-gear"></i>
+                                </a>
+                                <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-success{% else %}btn-warning{% endif %}" 
+                                        onclick="toggleEstado('{{ vigencia.id }}', this)">
+                                  {% if vigencia.estado == 'suspendido' %}Habilitar{% else %}Deshabilitar{% endif %}
+                                </button>
+                                <a href="#" 
+                                   class="btn btn-danger btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                  <i class="bi bi-trash"></i>
+                                </a>
+                                <td>
+                                  {% if empresa.tiene_pendientes %}
+                                      <span class="badge bg-danger">Pendientes</span>
+                                  {% else %}
+                                      <span class="badge bg-success">Al día</span>
+                                  {% endif %}
+                              </td>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No hay planes vigentes para esta empresa</div>
+                    {% endif %}
+                  </div>
                 </div>
-            </div>
-
-         </div>
-
-
-
-
-
-
-
-
-
-
-    </form>
-
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" class="text-center">No hay empresas disponibles.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
+<div class="modal fade" id="imagenModal" tabindex="-1" aria-labelledby="imagenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imagenModalLabel">Comprobante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagenAmpliada" class="img-fluid" style="max-height: 80vh;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function mostrarImagen(src) {
+  const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
+  document.getElementById('imagenAmpliada').src = src;
+  modal.show();
+}
+
+// Función para actualizar notificaciones
+async function enviarAdvertencia(empresa_id) {
+  try {
+    const response = await fetch(`/enviar_advertencia/${empresa_id}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      }
+    });
+    if(response.ok){
+      alert('Correo de advertencia enviado.');
+    } else {
+      alert('Error al enviar el correo.');
+    }
+  } catch(error){
+    console.error('Error al enviar advertencia:', error);
+    alert('Error al enviar el correo.');
+  }
+}
+
+// Función para actualizar notificaciones
+async function actualizarNotificaciones() {
+  try {
+    const response = await fetch("{% url 'notificaciones_json' %}");
+    const data = await response.json();
+    
+    // Actualizar badge
+    const badge = document.getElementById('notificacionesBadge');
+    badge.textContent = data.count;
+    badge.classList.toggle('invisible', data.count === 0);
+    
+    // Actualizar acordeón
+    const acordeon = document.getElementById('notificacionesAcordeon');
+    acordeon.innerHTML = '';
+    
+    data.notifications.forEach((noti, index) => {
+      const itemId = `noti-${index}`;
+      const fecha = new Date(noti.fecha).toLocaleString();
+      
+      // Construir URL para actualizar pago (en notificaciones de email)
+      const paymentUrl = `/empresa/${noti.empresa_id}/pagos/`;
+      
+      // Si la notificación es del tipo "pending", mostramos 2 botones: uno para enviar advertencia y otro para ver planes no pagados.
+      let extraButtons = '';
+      if(noti.tipo === 'pending'){
+        extraButtons = `
+          <div class="d-flex justify-content-end mt-3">
+            <button class="btn btn-warning btn-sm me-2" onclick="enviarAdvertencia(${noti.empresa_id})">
+              <i class="bi bi-envelope"></i> Enviar Advertencia
+            </button>
+            <a href="/planes_por_empresa/${noti.empresa_id}/" class="btn btn-primary btn-sm">
+              <i class="bi bi-list"></i> Ver Planes No Pagados
+            </a>
+          </div>
+        `;
+      } else {
+        extraButtons = `
+          <div class="d-flex justify-content-end mt-3">
+            <a href="${paymentUrl}" class="btn btn-success btn-sm">
+              <i class="bi bi-credit-card"></i> Actualizar Pago
+            </a>
+          </div>
+        `;
+      }
+      
+      const itemHTML = `
+        <div class="notificacion-item">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" 
+                      data-bs-toggle="collapse" data-bs-target="#${itemId}">
+                <i class="bi bi-envelope-exclamation notificacion-icon"></i>
+                <div class="d-flex flex-column">
+                  <span class="small text-muted">${fecha}</span>
+                  <div class="text-truncate" style="max-width: 250px;">
+                    ${noti.asunto}
+                  </div>
+                </div>
+              </button>
+            </h2>
+            <div id="${itemId}" class="accordion-collapse collapse" 
+                 data-bs-parent="#notificacionesAcordeon">
+              <div class="accordion-body notificacion-body">
+                <div class="d-flex align-items-center mb-3">
+                  <i class="bi bi-person-badge me-2"></i>
+                  <span class="codigo-cliente">${noti.codigo_cliente || 'No especificado'}</span>
+                </div>
+                <div class="imagenes-container">
+                  ${noti.imagenes && noti.imagenes.length ? noti.imagenes.map(img => `
+                    <div class="imagen-comprobante" onclick="mostrarImagen('data:${img.tipo};base64,${img.datos}')">
+                      <div class="small text-muted mb-2">${img.nombre || 'Comprobante'}</div>
+                      <img src="data:${img.tipo};base64,${img.datos}" 
+                           class="img-fluid rounded cursor-zoom"
+                           style="max-height: 200px; object-fit: contain;">
+                    </div>
+                  `).join('') : ''}
+                </div>
+                ${extraButtons}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      acordeon.insertAdjacentHTML('beforeend', itemHTML);
+    });
+    
+  } catch (error) {
+    console.error('Error actualizando notificaciones:', error);
+  }
+}
+
+  // Actualizar cada 30 segundos y al cargar
+  setInterval(actualizarNotificaciones, 30000);
+  actualizarNotificaciones();
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  
+  document.getElementById('search').addEventListener('input', function() {
+    const searchValue = this.value.trim().toLowerCase();
+    // Selecciona las filas principales (las que NO tienen la clase "planes-vigentes-row")
+    const mainRows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
+
+    mainRows.forEach(mainRow => {
+      // Extraemos únicamente los datos del cliente (código, nombre y RUT)
+      const codigoCliente = mainRow.querySelector('th')?.textContent.toLowerCase() || '';
+      const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+      const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+      
+      // Verificamos si alguno de esos campos contiene el texto buscado
+      const isMatch = codigoCliente.includes(searchValue) ||
+                      nombre.includes(searchValue) ||
+                      rut.includes(searchValue);
+      
+      if (isMatch) {
+        // Si coincide, mostramos la fila del cliente
+        mainRow.style.display = 'table-row';
+        // Y también mostramos la fila de planes vigentes sin alterar su estado interno
+        const siblingRow = mainRow.nextElementSibling;
+        if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+          siblingRow.style.display = 'table-row';
+        }
+      } else {
+        // Si no coincide, ocultamos la fila del cliente y su fila asociada
+        mainRow.style.display = 'none';
+        const siblingRow = mainRow.nextElementSibling;
+        if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+          siblingRow.style.display = 'none';
+        }
+      }
+    });
+  });
+
+document.getElementById('search').addEventListener('input', function() {
+  const searchValue = this.value.trim().toLowerCase();
+  // Selecciona las filas principales (las que NO tienen la clase "planes-vigentes-row")
+  const mainRows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
+
+  mainRows.forEach(mainRow => {
+    // Extraemos únicamente los datos del cliente (código, nombre y RUT)
+    const codigoCliente = mainRow.querySelector('th')?.textContent.toLowerCase() || '';
+    const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+    const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+    
+    // Verificamos si alguno de esos campos contiene el texto buscado
+    const isMatch = codigoCliente.includes(searchValue) ||
+                    nombre.includes(searchValue) ||
+                    rut.includes(searchValue);
+    
+    if (isMatch) {
+      // Si coincide, mostramos la fila del cliente
+      mainRow.style.display = 'table-row';
+      // Y también mostramos la fila de planes vigentes sin alterar su estado interno
+      const siblingRow = mainRow.nextElementSibling;
+      if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+        siblingRow.style.display = 'table-row';
+      }
+    } else {
+      // Si no coincide, ocultamos la fila del cliente y su fila asociada
+      mainRow.style.display = 'none';
+      const siblingRow = mainRow.nextElementSibling;
+      if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+        siblingRow.style.display = 'none';
+      }
+    }
+  });
+});
+</script>
 {% endblock %}
