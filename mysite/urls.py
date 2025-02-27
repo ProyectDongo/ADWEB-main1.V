@@ -19,7 +19,7 @@ Including another URLconf
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from WEB import views
-from WEB.views import suspender_empresa, habilitar_empresa,estadisticas_empresas,estadisticas_pagos,actualizar_estado_pago,historial_pagos,notificaciones_json
+from WEB.views import suspender_empresa, habilitar_empresa,estadisticas_empresas,estadisticas_pagos,actualizar_estado_pago,historial_pagos,notificaciones_json,notificar_cobranza,lista_deudas
 
 
 urlpatterns = [
@@ -125,5 +125,9 @@ urlpatterns = [
 # urls.py
     
     path('notificaciones/json/', views.notificaciones_json, name='notificaciones_json'),
+
+    path('deudas/', lista_deudas, name='lista_deudas'),
+    # Ruta para notificar cobranza a una empresa en particular
+    path('deudas/notificar/<int:empresa_id>/', notificar_cobranza, name='notificar_cobranza'),
 
     ] 

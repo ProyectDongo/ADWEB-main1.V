@@ -98,7 +98,7 @@
                       <label for="{{ empresa_form.telefono.id_for_label }}">Teléfono Fijo</label>
                       <div class="invalid-feedback">
                         {{ empresa_form.telefono.errors }}
-                        Formato válido: 2XXXXXXXX o +562XXXXXXXX
+                        
                       </div>
                     </div>
                   </div>
@@ -169,7 +169,7 @@
                       <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular Contacto</label>
                       <div class="invalid-feedback">
                         {{ empresa_form.celular_contacto.errors }}
-                        Formato válido: 9XXXXXXXX o +569XXXXXXXX
+                        
                       </div>
                     </div>
                   </div>
@@ -274,77 +274,70 @@
             </a>
             <div class="collapse" id="vigencia">
               <div class="mb-4 border border-dark rounded p-3">
-                <div class="card-body p-4">
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <select name="plan" class="form-select {% if vigencia_form.plan.errors %}is-invalid{% endif %}" id="{{ vigencia_form.plan.id_for_label }}">
-                          {% for plan in vigencia_form.plan.field.queryset %}
-                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if vigencia_form.plan.value == plan.id %}selected{% endif %}>
-                              {{ plan.nombre }}
-                            </option>
-                          {% endfor %}
-                        </select>
-                        <label>Código de Plan</label>
-                        <div class="invalid-feedback">{{ vigencia_form.plan.errors }}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        {{ vigencia_form.codigo_plan }}
-                        <label for="{{ vigencia_form.codigo_plan.id_for_label }}">Código Vigencia</label>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                      <div class="form-floating">
-                        <input type="date" name="fecha_inicio" id="id_fecha_inicio" class="form-control {% if vigencia_form.fecha_inicio.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_inicio.value|default_if_none:'' }}" required>
-                        <label>Fecha Inicio</label>
-                        <div class="invalid-feedback">{{ vigencia_form.fecha_inicio.errors }}</div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-floating">
-                        <input type="date" name="fecha_fin" id="id_fecha_fin" class="form-control {% if vigencia_form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_fin.value|default_if_none:'' }}">
-                        <label>Fecha Fin (Opcional)</label>
-                        <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
-                      </div>
-                      <div class="form-check mt-2">
-                        <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
-                        <label class="form-check-label" for="id_indefinido">Indefinido</label>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-floating">
-                        <input type="number" name="descuento" id="id_descuento" class="form-control {% if vigencia_form.descuento.errors %}is-invalid{% endif %}" min="0" max="100" value="{{ vigencia_form.descuento.value|default_if_none:'' }}" required>
-                        <label>% Descuento (0-100)</label>
-                        <div class="invalid-feedback">{{ vigencia_form.descuento.errors }}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input type="number" name="precio_original" id="id_precio_original"
-                               class="form-control {% if vigencia_form.precio_original.errors %}is-invalid{% endif %}"
-                               placeholder="Precio Original"
-                               value="{{ vigencia_form.precio_original.value|default:'100000' }}"
-                               required>
-                        <label>Precio Original</label>
-                        <div class="invalid-feedback">{{ vigencia_form.precio_original.errors }}</div>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <input type="text" name="precio_final" id="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
-                        <label>Precio Final</label>
-                      </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select name="plan" class="form-select {% if vigencia_form.plan.errors %}is-invalid{% endif %}" id="{{ vigencia_form.plan.id_for_label }}">
+                        {% for plan in vigencia_form.plan.field.queryset %}
+                          <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if vigencia_form.plan.value == plan.id %}selected{% endif %}>
+                            {{ plan.nombre }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                      <label>Código de Plan</label>
+                      <div class="invalid-feedback">{{ vigencia_form.plan.errors }}</div>
                     </div>
                   </div>
                 </div>
+                {# El campo Código Vigencia se genera y se envía pero se oculta #}
+                {{ vigencia_form.codigo_plan.as_hidden }}
+                <div class="row g-3 mb-4">
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                      <input type="date" name="fecha_inicio" id="id_fecha_inicio" class="form-control {% if vigencia_form.fecha_inicio.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_inicio.value|default_if_none:'' }}" required>
+                      <label>Fecha Inicio</label>
+                      <div class="invalid-feedback">{{ vigencia_form.fecha_inicio.errors }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                      <input type="date" name="fecha_fin" id="id_fecha_fin" class="form-control {% if vigencia_form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_fin.value|default_if_none:'' }}">
+                      <label>Fecha Fin (Opcional)</label>
+                      <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
+                    </div>
+                    <div class="form-check mt-2">
+                      <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
+                      <label class="form-check-label" for="id_indefinido">Indefinido</label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                      <input type="number" name="descuento" id="id_descuento" class="form-control {% if vigencia_form.descuento.errors %}is-invalid{% endif %}" min="0" max="100" value="{{ vigencia_form.descuento.value|default_if_none:'' }}" required>
+                      <label>% Descuento (0-100)</label>
+                      <div class="invalid-feedback">{{ vigencia_form.descuento.errors }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="number" name="precio_original" id="id_precio_original"
+                             class="form-control {% if vigencia_form.precio_original.errors %}is-invalid{% endif %}"
+                             placeholder="Precio Original"
+                             value="{{ vigencia_form.precio_original.value|default:'100000' }}"
+                             required>
+                      <label>Precio Original</label>
+                      <div class="invalid-feedback">{{ vigencia_form.precio_original.errors }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" name="precio_final" id="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
+                      <label>Precio Final</label>
+                    </div>
+                  </div>
+                </div>
+              
                 <!-- Botón Siguiente -->
                 <div class="text-end mt-3">
                   <button type="button" class="btn btn-primary next-btn" data-current="vigencia" data-next="planestado">
@@ -371,6 +364,8 @@
     </div>
   </div>
 </div>
+
+
 
 <!-- Script Unificado -->
 <script>
@@ -409,8 +404,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
   
-  // Manejo de Fechas y Descuento
-  const descuentoInput = document.getElementById("id_descuento");
+    // Manejo de fechas, descuento y precio final
+    const descuentoInput = document.getElementById("id_descuento");
   const precioOriginalInput = document.getElementById("id_precio_original");
   const precioFinalInput = document.getElementById("precio_final");
   const fechaInicioInput = document.getElementById("id_fecha_inicio");
@@ -445,7 +440,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
   
-  // Actualizar Precio Original al seleccionar un Plan
+  // Actualizar Precio Original y Código Vigencia al seleccionar un plan
   const planSelect = document.getElementById('{{ vigencia_form.plan.id_for_label }}');
   if (planSelect && precioOriginalInput) {
     planSelect.addEventListener("change", function() {
@@ -458,35 +453,22 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
   
-  // Generar Código Cliente (opcional, si no lo asigna el modelo)
-  const codigoClienteInput = document.getElementById('id_codigo_cliente');
-  if (codigoClienteInput && !codigoClienteInput.value) {
-    function generarCodigoCliente() {
-      const ahora = new Date();
-      return 'CLI-' + ahora.getFullYear() + ('0' + (ahora.getMonth() + 1)).slice(-2) + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
-    }
-    codigoClienteInput.value = generarCodigoCliente();
-  }
-  
-  // Función para actualizar el Código Vigencia
+  // Función para actualizar el Código Vigencia (generado pero no mostrado)
   function actualizarCodigoVigencia() {
     const razonSocialInput = document.getElementById('id_nombre');
     const codigoVigenciaInput = document.getElementById('{{ vigencia_form.codigo_plan.id_for_label }}');
     if (razonSocialInput && planSelect && codigoVigenciaInput) {
       const razonSocial = razonSocialInput.value.trim();
       const planName = planSelect.options[planSelect.selectedIndex].text.trim();
-      // Concatenamos (separados por un espacio)
       codigoVigenciaInput.value = razonSocial + " " + planName;
     }
   }
   
-  // Actualizar Código Vigencia al modificar el campo Razón Social
   const razonSocialInput = document.getElementById('id_nombre');
   if (razonSocialInput) {
     razonSocialInput.addEventListener("input", actualizarCodigoVigencia);
   }
   
-  // Actualizar Código Vigencia al cargar la página (si ya hay valores)
   actualizarCodigoVigencia();
   
   // Validación del Formulario
@@ -522,7 +504,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       });
       
-      // Si la sección es válida, colapsamos la sección actual y mostramos la siguiente
+      
       if (valid) {
         const bsCurrent = bootstrap.Collapse.getInstance(currentSection) || new bootstrap.Collapse(currentSection, { toggle: false });
         bsCurrent.hide();

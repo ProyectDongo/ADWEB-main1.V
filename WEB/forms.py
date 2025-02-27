@@ -17,9 +17,10 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import Usuario, RegistroEmpresas, RegistroPermisos, RegistroEntrada, VigenciaPlan, Plan, Provincia, Comuna, Region
 
 phone_validator = RegexValidator(
-    regex=r'^(\+56)?\s*2\d{8}$',  # Permite espacios después de +56
-    message="Formato válido: 2XXXXXXXX o +562XXXXXXXX"
+    regex=r'^(\+56\s*)?[29]\d{8}$',  # Expresión regular corregida
+    message="Formato válido: 2XXXXXXXX, +562XXXXXXXX, 9XXXXXXXX o +569XXXXXXXX"
 )
+
 
 mobile_validator = RegexValidator(
     regex=r'^(\+56)?\s*9\d{8}$',  # Permite espacios después de +56
@@ -49,14 +50,27 @@ class EmpresaForm(forms.ModelForm):
             'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Empresa'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón Social'}),
             'giro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Giro Comercial'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono Fijo'}),
+            'telefono':
+              forms.TextInput(attrs={
+                  'class': 'form-control',  
+                  'inputmode': 'numeric', 
+                  'placeholder': 'Teléfono Fijo',
+                  'onkeypress': "return /[0-9\\+\\s]/.test(event.key);",}),
+
+
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Corporativo'}),
             'web': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sitio Web'}),
             'region': forms.Select(attrs={'class': 'form-control'}),
             'provincia': forms.Select(attrs={'class': 'form-control'}),
             'comuna': forms.Select(attrs={'class': 'form-control'}),
-            'direccion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Dirección'}),
-            'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control','placeholder': 'Dirección'}),
+            'numero': 
+            forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Número',
+                'inputmode': 'numeric', 
+                'onkeypress': "return /[0-9\\+\\s]/.test(event.key);"}),
+
             'oficina': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Oficina'}),
             'estado': forms.Select(attrs={'class': 'form-control'}),
             'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -70,7 +84,9 @@ class EmpresaForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'placeholder': 'Ej: 221234567',
-            'maxlength': '12'
+            'maxlength': '12',
+            'inputmode': 'numeric',
+            'onkeypress': "return /[0-9\\+\\s]/.test(event.key);"
         })
     )
 
@@ -79,10 +95,12 @@ class EmpresaForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'placeholder': 'Ej: 912345678',
-            'maxlength': '12'
+            'maxlength': '12',
+            'inputmode': 'numeric',
+            'onkeypress': "return /[0-9\\+\\s]/.test(event.key);"
         })
     )
-
+   
     def clean_telefono(self):
         telefono = self.cleaned_data.get('telefono', '').replace(' ', '')
         return telefono if telefono else None
@@ -110,6 +128,7 @@ class EmpresaForm(forms.ModelForm):
         except ValueError:
             formatted_number = number_part
         return f"{formatted_number}-{check_digit}"
+   
 
     @staticmethod
     def normalize_rut(rut):

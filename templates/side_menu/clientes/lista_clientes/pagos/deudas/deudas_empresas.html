@@ -1,0 +1,35 @@
+{% extends "central.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Deudas Pendientes de Empresas</h2>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Empresa</th>
+                <th>Código Cliente</th>
+                <th>Deuda Pendiente</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empresa in empresas %}
+            <tr>
+                <td>{{ empresa.nombre }}</td>
+                <td>{{ empresa.codigo_cliente }}</td>
+                <td>${{ empresa.deuda_pendiente }}</td>
+                <td>
+                    <form method="post" action="{% url 'notificar_cobranza' empresa.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Notificar Cobranza</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No hay deudas pendientes.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

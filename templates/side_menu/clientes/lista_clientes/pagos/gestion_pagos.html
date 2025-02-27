@@ -44,6 +44,7 @@
     padding: 1.5rem;
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
+    text-align: center;
   }
   .payment-method-box {
     background-color: #f8f9fa;
@@ -120,10 +121,10 @@
           </div>
         </div>
         <!-- Total a pagar -->
-        <div class="total-box text-center">
+        <div class="total-box">
           <h3>
             <i class="bi bi-currency-dollar"></i>
-            Total a pagar: <span class="text-primary">$<span id="total">{{ total }}</span></span>
+            Total a pagar: $<span id="total">{{ total|floatformat:2 }}</span>
           </h3>
         </div>
         <!-- Método de pago -->
@@ -133,17 +134,27 @@
             Método de Pago
           </label>
           <select name="metodo" id="metodo" class="form-select">
-            <option value="manual">Manual (Recibiré instrucciones por correo)</option>
-            <option value="automatico" {% if empresa.metodo_pago == 'automatico' %}selected{% endif %}>
-              Automático (Usar datos registrados)
-            </option>
+            <option value="cheque">Cheque</option>
+            <option value="automatico">Automático</option>
+            <option value="tarjeta_credito">Tarjeta de Crédito</option>
+            <option value="debito">Débito</option>
+            <option value="abono">Abono</option>
+            <option value="cobranza">Cobranza</option>
           </select>
         </div>
-        <!-- Datos de cuenta para método automático -->
-        <div id="form-automatico" class="payment-method-box" style="display: {% if empresa.metodo_pago == 'automatico' %}block{% else %}none{% endif %};">
+        <!-- Input para monto de abono (se muestra solo si se selecciona abono) -->
+        <div id="abono-box" class="mb-3" style="display: none;">
+          <label for="monto_abono" class="form-label">
+            <i class="bi bi-cash-stack"></i>
+            Monto a abonar
+          </label>
+          <input type="number" step="0.01" class="form-control" name="monto_abono" id="monto_abono" placeholder="Ingrese el monto a abonar">
+        </div>
+        <!-- Datos de cuenta para método automático (se muestra solo si se selecciona automático) -->
+        <div id="automatico-box" class="payment-method-box" style="display: none;">
           <h5 class="mb-3">
             <i class="bi bi-gear-fill"></i>
-            Datos de Cuenta
+            Datos de Cuenta para Pago Automático
           </h5>
           <div class="mb-3">
             <label for="banco" class="form-label">Banco</label>
@@ -161,7 +172,7 @@
             <input type="text" class="form-control" name="numero_cuenta" id="numero_cuenta" placeholder="0000-0000-0000-0000">
           </div>
         </div>
-        <!-- Botón de Confirmar -->
+        <!-- Botón de Confirmar Pago -->
         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
           <button type="submit" class="btn btn-success btn-lg btn-custom">
             <i class="bi bi-credit-card-2-front"></i>
@@ -187,12 +198,26 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const metodoSelect = document.getElementById('metodo');
-  const formAutomatico = document.getElementById('form-automatico');
+  const abonoBox = document.getElementById('abono-box');
+  const automaticoBox = document.getElementById('automatico-box');
   
   metodoSelect.addEventListener('change', (e) => {
-    formAutomatico.style.display = e.target.value === 'automatico' ? 'block' : 'none';
+    const metodo = e.target.value;
+    // Mostrar campo de abono si se selecciona "abono"
+    if (metodo === 'abono') {
+      abonoBox.style.display = 'block';
+    } else {
+      abonoBox.style.display = 'none';
+    }
+    // Mostrar datos de cuenta si se selecciona "automatico"
+    if (metodo === 'automatico') {
+      automaticoBox.style.display = 'block';
+    } else {
+      automaticoBox.style.display = 'none';
+    }
   });
   
+  // Actualizar total a pagar según planes seleccionados
   const checkboxes = document.querySelectorAll('[name="planes"]');
   const totalSpan = document.getElementById('total');
   

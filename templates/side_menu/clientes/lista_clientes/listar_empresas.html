@@ -161,6 +161,9 @@
         <a href="{% url 'listar_empresas_eliminadas' %}" class="btn btn-warning btn-md mx-1 my-1">
           <i class="bi bi-trash"></i> Ver Eliminadas
         </a>
+        <a href="{% url 'lista_deudas' %}" class="btn btn-warning btn-md mx-1 my-1">
+          <i class="bi bi-trash"></i> Ver 
+        </a>
       </div>
     </div>
     <div class="card-body">
@@ -176,7 +179,7 @@
               <th>Vigente</th>
               <th class="text-left">Nombre</th>
               <th class="text-left">RUT</th>
-              <th class="text-left">Dirección</th>
+              
               <th>Teléfono</th>
               <th>Acciones</th>
             </tr>
@@ -203,7 +206,7 @@
               </th>
               <td class="text-left">{{ empresa.nombre }}</td>
               <td class="text-left">{{ empresa.rut }}</td>
-              <td class="text-left">{{ empresa.direccion }}</td>
+              
               <td>{{ empresa.telefono }}</td>
               <td class="d-flex flex-wrap justify-content-center">
                 <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1 action-button" title="Administrar">
