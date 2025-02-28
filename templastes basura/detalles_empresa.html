@@ -1,176 +1,176 @@
 {% extends "central.html" %}
-{% load crispy_forms_tags %}
-
-{% block title %}Detalles de la Empresa{% endblock %}
+{% load static %}
+{% block title %}Lista de Clientes{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <form method="post">
-        {% csrf_token %}
-        
-        <!-- Encabezado y botón Guardar -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
-            <button type="submit" name="guardar" class="btn btn-success btn-lg">
-                <i class="bi bi-save"></i> Guardar Cambios
-            </button>
-        </div>
+<style>
+  /* Aquí puedes incluir todos los estilos compartidos */
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+  /* ... resto de estilos ... */
+</style>
 
-        <!-- Pestañas -->
-        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Generales</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#representante" type="button" role="tab">Representante</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">Personal</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial</button>
-            </li>
-        </ul>
-
-        <!-- Contenido de las pestañas -->
-        <div class="tab-content" id="myTabContent">
-            
-            <!-- Pestaña Datos Generales -->
-            <div class="tab-pane fade show active" id="datos" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Información Básica</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.nombre|as_crispy_field }}
-                                {{ form.rut|as_crispy_field }}
-                                {{ form.direccion|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.telefono|as_crispy_field }}
-                                {{ form.email|as_crispy_field }}
-                                {{ form.web|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña Representante Legal -->
-            <div class="tab-pane fade" id="representante" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Datos del Representante</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.rut_representante|as_crispy_field }}
-                                {{ form.nombre_representante|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña Personal -->
-            <div class="tab-pane fade" id="personal" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Contacto y Personal</h4>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                {{ form.nombre_contacto|as_crispy_field }}
-                                {{ form.celular_contacto|as_crispy_field }}
-                                {{ form.mail_contacto|as_crispy_field }}
-                            </div>
-                        </div>
-                        
-                        <h5 class="text-primary mt-4">Supervisores</h5>
-                        <ul class="list-group">
-                            {% for supervisor in supervisores %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ supervisor.get_full_name }}
-                                <span class="badge bg-primary">{{ supervisor.email }}</span>
-                            </li>
-                            {% endfor %}
-                        </ul>
-
-                        <h5 class="text-primary mt-4">Trabajadores</h5>
-                        <ul class="list-group">
-                            {% for trabajador in trabajadores %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ trabajador.get_full_name }}
-                                <span class="badge bg-primary">{{ trabajador.email }}</span>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña Historial y Configuración -->
-            <div class="tab-pane fade" id="historial" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Historial de Cambios</h4>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Usuario</th>
-                                        <th>Cambio Realizado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for cambio in historial %}
-                                    <tr>
-                                        <td>{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
-                                        <td>{{ cambio.usuario.get_full_name }}</td>
-                                        <td>{{ cambio.descripcion }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3" class="text-center">No hay registros de cambios</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Botón de Eliminación -->
-                        <div class="mt-5 border-top pt-4">
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
-                                <i class="bi bi-trash"></i> Eliminar Empresa
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
-
-<!-- Modal de Confirmación de Eliminación -->
-<div class="modal fade" id="confirmDelete" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirmar Eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                ¿Estás seguro que deseas eliminar permanentemente esta empresa y todos sus datos asociados?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="post" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" name="eliminar" class="btn btn-danger">
-                        Sí, Eliminar Definitivamente
-                    </button>
-                </form>
-            </div>
-        </div>
+<div class="container mt-3">
+  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
+    <i class="bi bi-bell-fill"></i>
+    <span id="notificacionesBadge" class="badge bg-danger">0</span>
+  </button>
+  <div class="collapse mt-3" id="notificacionesPanel">
+    <div class="card card-body">
+      <div class="accordion" id="notificacionesAcordeon">
+        <!-- Las notificaciones se insertarán aquí -->
+      </div>
     </div>
+  </div>
 </div>
+
+<div class="container py-5">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  <div class="card shadow-sm">
+    <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
+      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Clientes</h1>
+      <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
+        <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
+          <i class="bi bi-plus-lg"></i> Crear Empresa
+        </a>
+        <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
+          <i class="bi bi-list"></i> Lista de Planes
+        </a>
+        <a href="{% url 'listar_empresas_eliminadas' %}" class="btn btn-warning btn-md mx-1 my-1">
+          <i class="bi bi-trash"></i> Ver Eliminadas
+        </a>
+        <a href="{% url 'lista_deudas' %}" class="btn btn-warning btn-md mx-1 my-1">
+          <i class="bi bi-trash"></i> Ver 
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="mb-4">
+        <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
+      </div>
+      <!-- Aquí incluimos la parte de "servicio clientes" -->
+      {% include "servicio_clientes.html" %}
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="imagenModal" tabindex="-1" aria-labelledby="imagenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imagenModalLabel">Comprobante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagenAmpliada" class="img-fluid" style="max-height: 80vh;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Función para mostrar imagen ampliada
+  function mostrarImagen(src) {
+    const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
+    document.getElementById('imagenAmpliada').src = src;
+    modal.show();
+  }
+
+  // Función para actualizar notificaciones
+  async function actualizarNotificaciones() {
+    try {
+      const response = await fetch("{% url 'notificaciones_json' %}");
+      const data = await response.json();
+      const badge = document.getElementById('notificacionesBadge');
+      badge.textContent = data.count;
+      badge.classList.toggle('invisible', data.count === 0);
+      const acordeon = document.getElementById('notificacionesAcordeon');
+      acordeon.innerHTML = '';
+      data.notifications.forEach((noti, index) => {
+        const itemId = `noti-${index}`;
+        const fecha = new Date(noti.fecha).toLocaleString();
+        const paymentUrl = `/empresa/${noti.empresa_id}/pagos/`;
+        const itemHTML = `
+          <div class="notificacion-item">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${itemId}">
+                  <i class="bi bi-envelope-exclamation notificacion-icon"></i>
+                  <div class="d-flex flex-column">
+                    <span class="small text-muted">${fecha}</span>
+                    <div class="text-truncate" style="max-width: 250px;">
+                      ${noti.asunto}
+                    </div>
+                  </div>
+                </button>
+              </h2>
+              <div id="${itemId}" class="accordion-collapse collapse" data-bs-parent="#notificacionesAcordeon">
+                <div class="accordion-body notificacion-body">
+                  <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-badge me-2"></i>
+                    <span class="codigo-cliente">${noti.codigo_cliente || 'No especificado'}</span>
+                  </div>
+                  <div class="imagenes-container">
+                    ${noti.imagenes.map(img => `
+                      <div class="imagen-comprobante" onclick="mostrarImagen('data:${img.tipo};base64,${img.datos}')">
+                        <div class="small text-muted mb-2">${img.nombre || 'Comprobante'}</div>
+                        <img src="data:${img.tipo};base64,${img.datos}" class="img-fluid rounded cursor-zoom" style="max-height: 200px; object-fit: contain;">
+                      </div>
+                    `).join('')}
+                  </div>
+                  <div class="d-flex justify-content-end mt-3">
+                    <a href="${paymentUrl}" class="btn btn-success btn-sm">
+                      <i class="bi bi-credit-card"></i> Actualizar Pago
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        acordeon.insertAdjacentHTML('beforeend', itemHTML);
+      });
+    } catch (error) {
+      console.error('Error actualizando notificaciones:', error);
+    }
+  }
+
+  setInterval(actualizarNotificaciones, 30000);
+  actualizarNotificaciones();
+
+  document.getElementById('search').addEventListener('input', function() {
+    const searchValue = this.value.trim().toLowerCase();
+    const mainRows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
+    mainRows.forEach(mainRow => {
+      const codigoCliente = mainRow.querySelector('th')?.textContent.toLowerCase() || '';
+      const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+      const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+      const isMatch = codigoCliente.includes(searchValue) || nombre.includes(searchValue) || rut.includes(searchValue);
+      if (isMatch) {
+        mainRow.style.display = 'table-row';
+        const siblingRow = mainRow.nextElementSibling;
+        if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+          siblingRow.style.display = 'table-row';
+        }
+      } else {
+        mainRow.style.display = 'none';
+        const siblingRow = mainRow.nextElementSibling;
+        if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
+          siblingRow.style.display = 'none';
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}

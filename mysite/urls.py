@@ -18,116 +18,104 @@ Including another URLconf
 
 from django.contrib.auth import views as auth_views
 from django.urls import path
-from WEB import views
-from WEB.views import suspender_empresa, habilitar_empresa,estadisticas_empresas,estadisticas_pagos,actualizar_estado_pago,historial_pagos,notificaciones_json,notificar_cobranza,lista_deudas
 
+from WEB.views.clientes import empresas
 
+"from WEB.views import suspender_empresa,habilitar_empresa,estadisticas_empresas,estadisticas_pagos,actualizar_estado_pago,historial_pagos,notificaciones_json,notificar_cobranza,lista_deudas"
+from WEB.views import autenticacion,sofware,planes,estadisticas,permisos,utilidades
+from WEB.views.clientes.pagos import pagos
+from WEB.views.clientes.empresas import empresas
 urlpatterns = [
-    # Ruta para el login
+
+ # Autenticación URLS:
+
     path('', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    # Ruta para el logout
-    path('accounts/logout/', views.logout_view, name='logout'),
-    # Ruta para la redirección después del login
-    path('accounts/redirect/', views.redirect_after_login, name='redirect_after_login'),
-    # Rutas para las páginas de inicio de admin, supervisor y trabajador
-    path('admin/home/', views.admin_home, name='admin_home'),
-    path('supervisor/<int:empresa_id>/', views.supervisor_home, name='supervisor_home'),
-    path('trabajador/home/', views.trabajador_home, name='trabajador_home'),
-
-    # Rutas para crear empresas, permisos, admins, supervisores y trabajadores
-    path('crear_empresa/', views.crear_empresa, name='crear_empresa'),
-    path('crear_permiso/', views.crear_permiso, name='crear_permiso'),
-    path('crear_admin/', views.crear_admin, name='crear_admin'),
-    path('crear_supervisor/', views.crear_supervisor, name='crear_supervisor'),
-    path('crear_trabajador/', views.crear_trabajador, name='crear_trabajador'),
-
-    # Rutas para editar  supervisores y trabajadores
-    path('editar_supervisor/<int:pk>/', views.editar_supervisor, name='editar_supervisor'),
-    path('editar_trabajador/<int:pk>/', views.editar_trabajador, name='editar_trabajador'),
-    path('eliminar_supervisor/<int:supervisor_id>/', views.eliminar_supervisor, name='eliminar_supervisor'),
-    path('eliminar_trabajador/<int:trabajador_id>/', views.eliminar_trabajador, name='eliminar_trabajador'),
-
-    #lista permisos
-    path('lista_permisos/', views.lista_permisos, name='lista_permisos'),
-
-    #lista admins
-    path('eliminar_usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
-    # habilitar otra entrada
-    path('habilitar_otra_entrada/<int:entrada_id>/', views.habilitar_otra_entrada, name='habilitar_otra_entrada'),
-    # estas 2 son de la misma funcion
-
-    # eliminar entrada
-    path('actualizar_limites/<int:empresa_id>/', views.actualizar_limites, name='actualizar_limites'),
-
-    # lista las empresas
-    path('listar_empresas/', views.listar_empresas, name='listar_empresas'),
-
-
-
-
+    path('accounts/redirect/', autenticacion.redirect_after_login, name='login_redirect'),
+    path('logout/', autenticacion.logout_view, name='logout'),
     
-    # Rutas para las entradas para la empresa
-    path('api/get_provincias/', views.get_provincias, name='get_provincias'),
-    path('api/get_comunas/', views.get_comunas, name='get_comunas'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+#home URLS:
+    #admin:
+    path('admin/home/', autenticacion.admin_home, name='admin_home'),
+    #supervisor:
+    path('supervisor/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
+    #usuario:
+    path('trabajador/home/', autenticacion.trabajador_home, name='trabajador_home'),
+    #configuracion:
+    path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+# Sofware URLS:
 
-   # Editar y eliminar empresa
-   
-    path('eliminar_empresa/<int:pk>/', views.eliminar_empresa, name='eliminar_empresa'),
-    path('empresas/eliminadas/', views.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
-    path('empresa/recuperar/<int:id>/', views.recuperar_empresa, name='recuperar_empresa'),
+    path('crear_admin/', sofware.crear_admin, name='crear_admin'),
+    path('crear_supervisor/', sofware.crear_supervisor, name='crear_supervisor'),
+    path('crear_trabajador/', sofware.crear_trabajador, name='crear_trabajador'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+# Clientes  URLS:
+
+    #lista de clientes:
+    path('listar_clientes/', empresas.listar_clientes, name='listar_clientes'),
+        #Crear Empresa:
+            path('crear_empresa/', empresas.crear_empresa, name='crear_empresa'),
+
+        #listar empresas eliminadas - recuperar - eliminar:
+            path('eliminar_empresa/<int:pk>/', empresas.eliminar_empresa, name='eliminar_empresa'),
+            path('empresas/eliminadas/', empresas.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
+            path('empresa/recuperar/<int:id>/', empresas.recuperar_empresa, name='recuperar_empresa'),
+        #desplliega los planes (servicios:)
+            path('vigencia_planes/<int:pk>/', empresas.vigencia_planes, name='vigencia_planes'),
+                #botones dentro del despliegue:
+                    #generar boleta:
+                        path('generar_boleta/<int:empresa_id>/', empresas.generar_boleta, name='generar_boleta'),
+                    #boton editar :
+                        path('editar_vigencia_plan/<int:plan_id>/', utilidades.editar_vigencia_plan, name='editar_vigencia_plan'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+        # boton para redirigir a pagos  :
+        path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
+            #desactivar pagos - servicios :
+            path('toggle_plan/<int:vigencia_id>/', pagos.toggle_plan, name='toggle_plan'),
 
 
+            #hisorial de pagos :
+            path('empresa/<int:empresa_id>/historial/', pagos.historial_pagos, name='historial_pagos'),
+                #btn de actualziar pags de pendiente a aldia:
+                    path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
+        #Listar Deudas:
+        path('deudas/', pagos.lista_deudas, name='lista_deudas'),
+            #notificar Deudas :
+            path('deudas/notificar/<int:empresa_id>/', pagos.notificar_cobranza, name='notificar_cobranza'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
 
-    path('detalle_empresa/<int:pk>/', views.detalle_empresa, name='detalle_empresa'),
-    path('listar_planes/', views.listar_planes, name='listar_planes'),
-    path('generar_boleta/<int:empresa_id>/', views.generar_boleta, name='generar_boleta'),
-    # Rutas para los planes
-    path('crear_plan/', views.crear_plan, name='crear_plan'), 
+    #notficaiones :
+    path('notificaciones/json/', pagos.notificaciones_json, name='notificaciones_json'),
 
-    # ruta configuracion
-    path('configuracion_home/', views.configuracion_home, name='configuracion_home'),
+
+    #Detalles Empresas:
+    path('detalle_empresa/<int:pk>/', empresas.detalle_empresa, name='detalle_empresa'),
 
   
-    # Rutas para los planes
-    path('vigencia_planes/<int:pk>/', views.vigencia_planes, name='vigencia_planes'),
 
 
-    # Rutas para los planes con la empresa
-    path('empresas_vigentes/', views.empresas_vigentes, name='empresas_vigentes'),
-    path('editar_vigencia_plan/<int:plan_id>/', views.editar_vigencia_plan, name='editar_vigencia_plan'),
+    #lista de planes:
+    path('listar_planes/', planes.listar_planes, name='listar_planes'),
 
-    #suspender y habilitar
-    path('empresa/<int:empresa_id>/suspender/', suspender_empresa, name='suspender_empresa'),
-    path('empresa/<int:empresa_id>/habilitar/', habilitar_empresa, name='habilitar_empresa'),
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+#estadisticas URLS:
     
-    path('vigencia_plan/<int:pk>/toggle_estado/', views.toggle_estado, name='toggle_estado'),
-    #pagos
-    # urls.py
-    path('empresa/<int:empresa_id>/pagos/', views.gestion_pagos, name='gestion_pagos'),
-    path('toggle_plan/<int:vigencia_id>/', views.toggle_plan, name='toggle_plan'),
-    path('empresa/<int:empresa_id>/historial_pagos/', views.historial_pagos, name='historial_pagos'),
+    path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
+    path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
 
 
-    path('planes_por_empresa/<int:empresa_id>/', views.planes_por_empresa, name='planes_por_empresa'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+#Permisos URLS:
 
-    path('toggle-estado/<int:pk>/', views.toggle_estado, name='toggle_estado_vigencia'),
-
-    path('pago/actualizar/<int:pago_id>/', actualizar_estado_pago, name='actualizar_estado_pago'),
-    path('empresa/<int:empresa_id>/historial/', historial_pagos, name='historial_pagos'),
-
-    #estaditicas
-    path('estadisticas/empresas/', estadisticas_empresas, name='estadisticas_empresas'),
-    path('estadisticas/pagos/', estadisticas_pagos, name='estadisticas_pagos'),
+    #Creaar permisos:
+        path('crear_permiso/', permisos.crear_permiso, name='crear_permiso'),
+    #listar permisos:
+        path('lista_permisos/', permisos.lista_permisos, name='lista_permisos'),
 
 
-# urls.py
-    
-    path('notificaciones/json/', views.notificaciones_json, name='notificaciones_json'),
-
-    path('deudas/', lista_deudas, name='lista_deudas'),
-    # Ruta para notificar cobranza a una empresa en particular
-    path('deudas/notificar/<int:empresa_id>/', notificar_cobranza, name='notificar_cobranza'),
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------------------------#
 
     ] 

@@ -1,0 +1,139 @@
+<div class="table-responsive">
+    <table class="table table-striped table-hover mb-0">
+      <thead class="thead-dark">
+        <tr>
+          <th>Código Cliente</th>
+          <th>Estado</th>
+          <th>Vigente</th>
+          <th class="text-left">Nombre</th>
+          <th class="text-left">RUT</th>
+          <th>Teléfono</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="empresa-list">
+        {% for empresa in empresas %}
+          <tr>
+            <th>{{ empresa.codigo_cliente }}</th>
+            <th>
+              {% if empresa.estado == 'aldia' %}
+                <span class="badge bg-success">AL DIA</span>
+              {% elif empresa.estado == 'atrasado' %}
+                <span class="badge bg-warning">ATRASADO</span>
+              {% else %}
+                <span class="badge bg-secondary">SUSPENDIDO</span>
+              {% endif %}
+            </th>
+            <th>
+              {% if empresa.vigente %}
+                <span class="badge bg-success">SI</span>
+              {% else %}
+                <span class="badge bg-danger">NO</span>
+              {% endif %}
+            </th>
+            <td class="text-left">{{ empresa.nombre }}</td>
+            <td class="text-left">{{ empresa.rut }}</td>
+            <td>{{ empresa.telefono }}</td>
+            <td class="d-flex flex-wrap justify-content-center">
+              <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm mx-1 my-1 action-button" title="Administrar">
+                <i class="bi bi-gear-fill"></i> 
+              </a>
+              <button class="btn btn-primary btn-sm mx-1 my-1 action-button toggle-planes" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#planes-{{ empresa.id }}"
+                      title="Ver Servicios">
+                <i class="bi bi-clipboard-minus-fill"></i>
+              </button>
+              <a href="{% url 'vigencia_planes' empresa.id %}" class="btn bg-success btn-sm mx-1 my-1 action-button" title="Nuevo Servicio">
+                <i class="bi bi-clipboard-plus-fill"></i>
+              </a>
+              <a href="{% url 'gestion_pagos' empresa.id %}" class="btn btn-success btn-sm mx-1 my-1 action-button" title="Pagos">
+                <i class="bi bi-coin"></i>
+              </a>
+              <a href="{% url 'eliminar_empresa' empresa.id %}" class="btn btn-danger btn-sm mx-1 my-1 action-button" 
+                 title="Eliminar Empresa" onclick="return confirm('¿Seguro que deseas marcar como eliminada esta empresa?');">
+                <i class="bi bi-trash"></i> 
+              </a>
+            </td>
+          </tr>
+          <tr class="planes-vigentes-row">
+            <td colspan="8" class="p-0">
+              <div class="collapse" id="planes-{{ empresa.id }}">
+                <div class="p-3">
+                  <h5 class="mb-3">Servicios Vigentes</h5>
+                  {% if empresa.vigencias.all %}
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover">
+                        <thead>
+                          <tr>
+                            <th>Código Plan</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Monto Plan</th>
+                            <th>Descuento</th>
+                            <th>Monto Final</th>
+                            <th>Estado Pagos</th>
+                            <th>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for vigencia in empresa.vigencias.all %}
+                            <tr class="{% if vigencia.estado == 'suspendido' %}table-danger{% endif %}">
+                              <td>{{ vigencia.codigo_plan }}</td>
+                              <td>{{ vigencia.fecha_inicio }}</td>
+                              <td>{{ vigencia.fecha_fin|default:"-" }}</td>
+                              <td>
+                                {% if vigencia.estado != 'suspendido' %}
+                                  {% if vigencia.fecha_fin %}Definido{% else %}Indefinido{% endif %}
+                                {% else %}
+                                  {{ vigencia.get_estado_display }}
+                                {% endif %}
+                              </td>
+                              <td>{{ vigencia.monto_plan }}</td>
+                              <td>{{ vigencia.descuento }}%</td>
+                              <td>{{ vigencia.monto_final }}</td>
+                              <td>
+                                {% if empresa.tiene_pendientes %}
+                                  <span class="badge bg-danger">Pendientes</span>
+                                {% else %}
+                                  <span class="badge bg-success">Al día</span>
+                                {% endif %}
+                              </td>
+                              <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                  <a href="{% url 'generar_boleta' vigencia.empresa.id %}" class="btn btn-primary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                    <i class="bi bi-receipt"></i>
+                                  </a>
+                                  <a href="{% url 'editar_vigencia_plan' vigencia.id %}" class="btn btn-secondary btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                    <i class="bi bi-gear"></i>
+                                  </a>
+                                  <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-success{% else %}btn-warning{% endif %}" onclick="toggleEstado('{{ vigencia.id }}', this)">
+                                    {% if vigencia.estado == 'suspendido' %}Habilitar{% else %}Deshabilitar{% endif %}
+                                  </button>
+                                  <a href="#" class="btn btn-danger btn-sm {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                    <i class="bi bi-trash"></i>
+                                  </a>
+                                </div>
+                              </td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% else %}
+                    <div class="alert alert-info mb-0">No hay planes vigentes para esta empresa</div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">No hay empresas disponibles.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  

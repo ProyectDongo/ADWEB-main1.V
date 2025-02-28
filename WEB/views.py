@@ -42,7 +42,6 @@ from django.utils.html import strip_tags
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum
 from email.mime.image import MIMEImage
-
 import imaplib
 import email
 import re
