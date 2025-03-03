@@ -72,7 +72,7 @@ urlpatterns = [
         # boton para redirigir a pagos  :
         path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
             #desactivar pagos - servicios :
-            path('toggle_plan/<int:vigencia_id>/', pagos.toggle_plan, name='toggle_plan'),
+           
 
 
             #hisorial de pagos :
@@ -97,7 +97,8 @@ urlpatterns = [
 
     #lista de planes:
     path('listar_planes/', planes.listar_planes, name='listar_planes'),
-
+        #crear plan :
+        path('crear_plan/', planes.crear_plan, name='crear_plan'), 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #estadisticas URLS:
@@ -117,5 +118,10 @@ urlpatterns = [
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
-
+    path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
+    path('empresa/<int:empresa_id>/pagos/historial/', pagos.historial_pagos, name='historial_pagos'),
+    path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
+    path('empresa/<int:empresa_id>/cobros/', pagos.listar_cobros, name='listar_cobros'),
+    path('empresa/<int:empresa_id>/cobros/<int:cobro_id>/pagar/', pagos.pagar_cobro, name='pagar_cobro'),
+    # Otras rutas necesarias…
     ] 

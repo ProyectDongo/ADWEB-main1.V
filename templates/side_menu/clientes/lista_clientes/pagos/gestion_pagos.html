@@ -1,239 +1,110 @@
 {% extends "central.html" %}
+{% load crispy_forms_tags %}
+
 {% block content %}
-<!-- Estilos personalizados -->
-<style>
-  body {
-    background-color: #f4f6f9;
-  }
-  .payment-card {
-    border: none;
-    border-radius: 1rem;
-    overflow: hidden;
-  }
-  .payment-card .card-header {
-    background: #2c3e50;
-    color: #fff;
-    padding: 1.5rem;
-  }
-  .payment-card .card-body {
-    background: #fff;
-    padding: 2rem;
-  }
-  .section-title {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 0.5rem;
-  }
-  .list-group-item {
-    border: none;
-    border-bottom: 1px solid #eee;
-    padding: 1rem;
-  }
-  .list-group-item:last-child {
-    border-bottom: none;
-  }
-  .btn-custom {
-    font-weight: 500;
-  }
-  .badge-suspended {
-    background-color: #e74c3c;
-  }
-  .total-box {
-    background-color: #ecf0f1;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-  .payment-method-box {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-    margin-top: 1rem;
-  }
-</style>
+<div class="container py-5">
+    <h1 class="text-primary">Gestión de Pagos - {{ empresa.nombre }}</h1>
 
-<div class="container mt-5">
-  <div class="card payment-card shadow">
-    <div class="card-header">
-      <h2 class="mb-0">
-        <i class="bi bi-cash-stack"></i>
-        Gestión de Pagos - {{ empresa.nombre }}
-      </h2>
+    <!-- Notificación de deuda (solo si hay cobros pendientes) -->
+    {% if cobros_pendientes.exists %}
+        <div class="alert alert-warning" role="alert">
+            <strong>Atención:</strong> Esta empresa tiene cobros pendientes.
+        </div>
+    {% endif %}
+
+    <!-- Formulario para registrar un cobro -->
+    <div class="card mb-4">
+        <div class="card-header">Registrar Nuevo Cobro</div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ cobro_form|crispy }}
+                <button type="submit" class="btn btn-success">Registrar Cobro</button>
+            </form>
+        </div>
     </div>
-    <div class="card-body">
-      <form method="post">
-        {% csrf_token %}
-        <div class="row">
-          <!-- Planes Activos -->
-          <div class="col-md-6">
-            <div class="mb-4">
-              <h4 class="section-title text-success">
-                <i class="bi bi-check2-circle"></i>
-                Planes Activos
-              </h4>
-              <ul class="list-group">
-                {% for vp in vigencia_planes_activos %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <input type="checkbox" name="planes" value="{{ vp.id }}" class="form-check-input me-2" data-monto="{{ vp.monto_final }}" checked>
-                    <strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }}
-                  </div>
-                  <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-outline-danger btn-sm btn-custom">
-                    <i class="bi bi-x-circle"></i> Desactivar
-                  </a>
-                </li>
-                {% empty %}
-                <li class="list-group-item text-center text-muted">
-                  <i class="bi bi-info-circle"></i> No hay planes activos.
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </div>
-          <!-- Planes Suspendidos -->
-          <div class="col-md-6">
-            <div class="mb-4">
-              <h4 class="section-title text-danger">
-                <i class="bi bi-exclamation-triangle"></i>
-                Planes Suspendidos
-              </h4>
-              <ul class="list-group">
-                {% for vp in vigencia_planes_suspendidos %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>{{ vp.plan.nombre }}</strong> - ${{ vp.monto_final }}
-                    <span class="badge badge-suspended ms-2">Suspendido</span>
-                  </div>
-                  <a href="{% url 'toggle_plan' vp.id %}" class="btn btn-outline-success btn-sm btn-custom">
-                    <i class="bi bi-check-circle"></i> Activar
-                  </a>
-                </li>
-                {% empty %}
-                <li class="list-group-item text-center text-muted">
-                  <i class="bi bi-info-circle"></i> No hay planes suspendidos.
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </div>
+
+    <!-- Lista de cobros pendientes con opción de pago -->
+    <div class="card mb-4">
+        <div class="card-header">Cobros Pendientes</div>
+        <div class="card-body">
+            {% if cobros_pendientes %}
+                <ul class="list-group">
+                    {% for cobro in cobros_pendientes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Plan:</strong> {{ cobro.vigencia_plan }}<br>
+                                <strong>Monto Total:</strong> ${{ cobro.monto_total|floatformat:2 }}<br>
+                                <strong>Pagado:</strong> ${{ cobro.monto_pagado|floatformat:2 }}<br>
+                                <strong>Restante:</strong> ${{ cobro.monto_restante|floatformat:2 }}
+                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pagoModal{{ cobro.id }}">Pagar</button>
+                        </li>
+
+                        <!-- Modal de Pago -->
+                        <div class="modal fade" id="pagoModal{{ cobro.id }}" tabindex="-1" aria-labelledby="pagoModalLabel{{ cobro.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="pagoModalLabel{{ cobro.id }}">Registrar Pago</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>Monto Total:</strong> ${{ cobro.monto_total|floatformat:2 }}</p>
+                                        <p><strong>Pagado:</strong> ${{ cobro.monto_pagado|floatformat:2 }}</p>
+                                        <p><strong>Restante:</strong> ${{ cobro.monto_restante|floatformat:2 }}</p>
+                                        <form method="post" enctype="multipart/form-data" action="{% url 'pagar_cobro' empresa.id cobro.id %}">
+                                            {% csrf_token %}
+                                            {{ pago_form|crispy }}
+                                            <button type="submit" class="btn btn-success">Registrar Pago</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No hay cobros pendientes.</p>
+            {% endif %}
         </div>
-        <!-- Total a pagar -->
-        <div class="total-box">
-          <h3>
-            <i class="bi bi-currency-dollar"></i>
-            Total a pagar: $<span id="total">{{ total|floatformat:2 }}</span>
-          </h3>
-        </div>
-        <!-- Método de pago -->
-        <div class="mb-3">
-          <label for="metodo" class="form-label">
-            <i class="bi bi-wallet2"></i>
-            Método de Pago
-          </label>
-          <select name="metodo" id="metodo" class="form-select">
-            <option value="cheque">Cheque</option>
-            <option value="automatico">Automático</option>
-            <option value="tarjeta_credito">Tarjeta de Crédito</option>
-            <option value="debito">Débito</option>
-            <option value="abono">Abono</option>
-            <option value="cobranza">Cobranza</option>
-          </select>
-        </div>
-        <!-- Input para monto de abono (se muestra solo si se selecciona abono) -->
-        <div id="abono-box" class="mb-3" style="display: none;">
-          <label for="monto_abono" class="form-label">
-            <i class="bi bi-cash-stack"></i>
-            Monto a abonar
-          </label>
-          <input type="number" step="0.01" class="form-control" name="monto_abono" id="monto_abono" placeholder="Ingrese el monto a abonar">
-        </div>
-        <!-- Datos de cuenta para método automático (se muestra solo si se selecciona automático) -->
-        <div id="automatico-box" class="payment-method-box" style="display: none;">
-          <h5 class="mb-3">
-            <i class="bi bi-gear-fill"></i>
-            Datos de Cuenta para Pago Automático
-          </h5>
-          <div class="mb-3">
-            <label for="banco" class="form-label">Banco</label>
-            <input type="text" class="form-control" name="banco" id="banco" placeholder="Nombre del banco">
-          </div>
-          <div class="mb-3">
-            <label for="tipo_cuenta" class="form-label">Tipo de Cuenta</label>
-            <select class="form-select" name="tipo_cuenta" id="tipo_cuenta">
-              <option value="ahorro">Ahorro</option>
-              <option value="corriente">Corriente</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="numero_cuenta" class="form-label">Número de Cuenta</label>
-            <input type="text" class="form-control" name="numero_cuenta" id="numero_cuenta" placeholder="0000-0000-0000-0000">
-          </div>
-        </div>
-        <!-- Botón de Confirmar Pago -->
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-          <button type="submit" class="btn btn-success btn-lg btn-custom">
-            <i class="bi bi-credit-card-2-front"></i>
-            Confirmar Pago
-          </button>
-        </div>
-      </form>
-      <!-- Botones de navegación -->
-      <div class="d-flex justify-content-between mt-4">
-        <a href="{% url 'historial_pagos' empresa.id %}" class="btn btn-outline-dark btn-custom">
-          <i class="bi bi-clock-history"></i>
-          Ver Historial
-        </a>
-        <a href="{% url 'listar_clientes' %}" class="btn btn-secondary btn-custom">
-          <i class="bi bi-arrow-left-circle"></i>
-          Volver a Listar Empresas
-        </a>
-      </div>
     </div>
-  </div>
+
+    <!-- Historial de Pagos -->
+    <div class="card">
+        <div class="card-header">Historial de Pagos</div>
+        <div class="card-body">
+            {% if pagos %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Método</th>
+                            <th>Comprobante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos %}
+                            <tr>
+                                <td>{{ pago.fecha_pago }}</td>
+                                <td>${{ pago.monto|floatformat:2 }}</td>
+                                <td>{{ pago.metodo }}</td>
+                                <td>
+                                    {% if pago.comprobante %}
+                                        <a href="{{ pago.comprobante.url }}" target="_blank">Ver Comprobante</a>
+                                    {% else %}
+                                        No adjunto
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted">No hay pagos registrados.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const metodoSelect = document.getElementById('metodo');
-  const abonoBox = document.getElementById('abono-box');
-  const automaticoBox = document.getElementById('automatico-box');
-  
-  metodoSelect.addEventListener('change', (e) => {
-    const metodo = e.target.value;
-    // Mostrar campo de abono si se selecciona "abono"
-    if (metodo === 'abono') {
-      abonoBox.style.display = 'block';
-    } else {
-      abonoBox.style.display = 'none';
-    }
-    // Mostrar datos de cuenta si se selecciona "automatico"
-    if (metodo === 'automatico') {
-      automaticoBox.style.display = 'block';
-    } else {
-      automaticoBox.style.display = 'none';
-    }
-  });
-  
-  // Actualizar total a pagar según planes seleccionados
-  const checkboxes = document.querySelectorAll('[name="planes"]');
-  const totalSpan = document.getElementById('total');
-  
-  function updateTotal() {
-    let total = 0;
-    checkboxes.forEach(checkbox => {
-      if (checkbox.checked) {
-        total += parseFloat(checkbox.dataset.monto);
-      }
-    });
-    totalSpan.textContent = total.toFixed(2);
-  }
-  
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', updateTotal);
-  });
-});
-</script>
 {% endblock %}

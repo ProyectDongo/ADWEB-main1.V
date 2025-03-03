@@ -567,40 +567,74 @@ class HistorialCambios(models.Model):
 class Pago(models.Model):
     """
     Modelo que representa un pago realizado por una empresa.
-
-    Este modelo almacena los detalles de un pago, incluyendo la empresa que realiza el pago,
-    los planes asociados a la vigencia del plan, el monto pagado, la fecha en que se realizó el pago,
-    el método de pago utilizado, un comprobante (opcional) y el estado del pago.
-
-    Atributos:
-        empresa (ForeignKey): Relación con el modelo RegistroEmpresas que representa la empresa que efectúa el pago.
-            Se elimina en cascada y se accede a través del related_name 'pagos'.
-        vigencia_planes (ManyToManyField): Relación con el modelo VigenciaPlan que asocia uno o varios planes a este pago.
-            Se accede a través del related_name 'pagos_asociados'.
-        monto (DecimalField): Monto del pago, con hasta 10 dígitos y 2 decimales.
-        fecha_pago (DateTimeField): Fecha y hora en que se realizó el pago. Se debe asignar manualmente.
-        metodo (CharField): Método de pago utilizado, con opciones 'manual' y 'automatico'.
-        comprobante (FileField): Archivo que sirve como comprobante del pago (opcional).
-        pagado (BooleanField): Indica si el pago ha sido efectuado. Valor por defecto es False.
-
-    Métodos:
-        __str__: Retorna una representación en cadena del pago en el formato "Pago {id} - {empresa.nombre} ({fecha_pago})".
+    Se registran distintos métodos de pago (incluyendo abono y cobranza) y se añaden
+    campos de auditoría y observaciones para un registro detallado.
     """
     METODO_PAGO_CHOICES = [
-        ('manual', 'Manual'),
         ('automatico', 'Automático'),
+        ('cheque', 'Cheque'),
+        ('tarjeta', 'Tarjeta'),
+        ('credito', 'Crédito'),
+        ('debito', 'Débito'),
+        ('abono', 'Abono'),
+        ('efectivo', 'Efectivo'),  
+    
     ]
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='pagos')
     vigencia_planes = models.ManyToManyField(VigenciaPlan, related_name='pagos_asociados')
     monto = models.DecimalField(max_digits=10, decimal_places=2)
-    fecha_pago = models.DateTimeField()  # Se asigna manualmente.
+    fecha_pago = models.DateTimeField()  # Se asigna manualmente o mediante lógica de negocio
     metodo = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES)
     comprobante = models.FileField(upload_to='comprobantes/', blank=True, null=True)
     pagado = models.BooleanField(default=False)
+    
+    # CAMBIO: Campos de auditoría para tener un registro detallado
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # CAMBIO: Campo de observaciones para comentarios internos o incidencias
+    observaciones = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
+class Cobro(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='cobros')
+    vigencia_plan = models.ForeignKey(VigenciaPlan, on_delete=models.CASCADE, related_name='cobros')
+    monto_total = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()  # Se usará como fecha de cobro
+    estado = models.CharField(
+        max_length=20,
+        choices=[('pendiente', 'Pendiente'), ('pagado', 'Pagado')],
+        default='pendiente'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def monto_pagado(self):
+        # Suma todos los pagos asociados al plan (este método puede ajustarse según la lógica de negocio)
+        pagos = Pago.objects.filter(empresa=self.empresa, vigencia_planes=self.vigencia_plan)
+        return sum(p.monto for p in pagos)
+
+    def monto_restante(self):
+        return self.monto_total - self.monto_pagado()
+
+    def __str__(self):
+        return f"Cobro {self.id} - {self.vigencia_plan}"
+
+
+class HistorialPagos(models.Model):
+    """
+    Modelo para llevar un registro detallado de las operaciones y cambios en los pagos.
+    Permite rastrear cada acción (creación, actualización, cambio de estado) realizada sobre un pago.
+    """
+    pago = models.ForeignKey(Pago, on_delete=models.CASCADE, related_name='historial')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    descripcion = models.TextField()
+
+    def __str__(self):
+        return f"Historial Pago {self.pago.id} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
 
 class EmailNotification(models.Model):
     subject = models.CharField(max_length=255)

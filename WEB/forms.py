@@ -14,7 +14,10 @@ from .validators import validar_rut
 import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Usuario, RegistroEmpresas, RegistroPermisos, RegistroEntrada, VigenciaPlan, Plan, Provincia, Comuna, Region
+from .models import *
+from crispy_forms.layout import Layout, Submit,Fieldset
+from crispy_forms.helper import FormHelper
+
 
 phone_validator = RegexValidator(
     regex=r'^(\+56\s*)?[29]\d{8}$',  # Expresión regular corregida
@@ -718,3 +721,40 @@ class PlanForm(forms.ModelForm):
             'activo': 'Activo',
         }
 
+class CobroForm(forms.ModelForm):
+    class Meta:
+        model = Cobro
+        fields = ['vigencia_plan', 'monto_total', 'fecha_inicio', 'fecha_fin']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Fieldset(
+                'Registrar Cobro',
+                'vigencia_plan',
+                'monto_total',
+                'fecha_inicio',
+                'fecha_fin',
+            ),
+            Submit('submit', 'Registrar Cobro')
+        )
+
+class PagoForm(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['metodo', 'monto', 'observaciones', 'comprobante']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Fieldset(
+                'Registrar Pago',
+                'metodo',
+                'monto',
+                'observaciones',
+                'comprobante',
+            ),
+            Submit('submit', 'Registrar Pago')
+        )

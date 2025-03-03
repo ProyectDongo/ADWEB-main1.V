@@ -14,143 +14,114 @@ from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from email.header import decode_header
+from django.forms import modelformset_factory
+from django.db.models import  Sum
 
 
+def registrar_cobro(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    if request.method == 'POST':
+        form = CobroForm(request.POST)
+        if form.is_valid():
+            cobro = form.save(commit=False)
+            cobro.empresa = empresa
+            cobro.save()
+            messages.success(request, 'Cobro registrado exitosamente!')
+            return redirect('listar_cobros', empresa_id=empresa.id)
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+    else:
+        form = CobroForm()
+    context = {
+        'empresa': empresa,
+        'form': form,
+    }
+    return render(request, 'pagos/registrar_cobro.html', context)
 
+def listar_cobros(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    cobros = empresa.cobros.filter(estado='pendiente')
+    context = {
+        'empresa': empresa,
+        'cobros': cobros,
+    }
+    return render(request, 'pagos/listar_cobros.html', context)
 
+def pagar_cobro(request, empresa_id, cobro_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    cobro = get_object_or_404(Cobro, id=cobro_id, empresa=empresa)
+    monto_pagado = cobro.monto_pagado()
+    monto_restante = cobro.monto_restante()
 
-
-logger = logging.getLogger(__name__)
-def get_next_due(empresa):
-    """Devuelve la fecha (primer día del mes actual o del siguiente) del próximo pago pendiente."""
-    hoy = timezone.now()
-    current_due = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    if not Pago.objects.filter(
-        empresa=empresa,
-        fecha_pago__year=current_due.year,
-        fecha_pago__month=current_due.month
-    ).exists():
-        return current_due
-    next_due = current_due + relativedelta(months=1)
-    while Pago.objects.filter(
-        empresa=empresa,
-        fecha_pago__year=next_due.year,
-        fecha_pago__month=next_due.month
-    ).exists():
-        next_due += relativedelta(months=1)
-    return next_due
+    if request.method == 'POST':
+        form = PagoForm(request.POST, request.FILES)
+        if form.is_valid():
+            pago = form.save(commit=False)
+            pago.empresa = empresa
+            pago.fecha_pago = timezone.now()
+            pago.save()
+            # Asignar el plan del cobro al pago:
+            pago.vigencia_planes.add(cobro.vigencia_plan)
+            HistorialPagos.objects.create(
+                pago=pago,
+                usuario=request.user,
+                descripcion=f"Pago registrado: {pago.monto} via {pago.metodo} para Cobro {cobro.id}"
+            )
+            messages.success(request, 'Pago registrado exitosamente!')
+            # Actualizar el estado del cobro si se salda
+            if cobro.monto_restante() <= 0:
+                cobro.estado = 'pagado'
+                cobro.save()
+                messages.info(request, 'El cobro se ha completado y se cerrará de la lista pendiente.')
+            return redirect('listar_cobros', empresa_id=empresa.id)
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+    else:
+        form = PagoForm()
+    
+    context = {
+        'empresa': empresa,
+        'cobro': cobro,
+        'monto_total': cobro.monto_total,
+        'monto_pagado': monto_pagado,
+        'monto_restante': monto_restante,
+        'form': form,
+    }
+    return render(request, 'pagos/pagar_cobro.html', context)
 
 def gestion_pagos(request, empresa_id):
-    """
-    Vista para gestionar el pago de una empresa.
-    Según el método de pago seleccionado:
-      - Si es **abono** se toma el monto ingresado; si es menor que el total, se crea
-        un pago pendiente para el siguiente mes.
-      - Si es **cobranza**, se crea el pago pendiente y se envía el correo de cobranza.
-      - Otros métodos (cheque, automático, tarjeta, débito, manual) confirman el pago.
-    """
+    # Vista para pagos sin vincular a un cobro específico (se mantiene la lógica anterior)
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     vigencia_planes_activos = empresa.vigencias.filter(estado='indefinido')
-    vigencia_planes_suspendidos = empresa.vigencias.filter(estado='suspendido')
-    total = sum(vp.monto_final for vp in vigencia_planes_activos)
-    
-    hoy = timezone.now()
-    next_due = get_next_due(empresa)
+    PagoFormSet = modelformset_factory(Pago, form=PagoForm, extra=1, can_delete=True)
     
     if request.method == 'POST':
-        # Si no se confirma y la fecha de pago corresponde a otro mes, se muestra la confirmación
-        if not request.POST.get('confirmar') and (next_due.month != hoy.month or next_due.year != hoy.year):
-            selected_planes_ids = request.POST.getlist('planes')
-            metodo = request.POST.get('metodo')
-            context = {
-                'empresa': empresa,
-                'codigo_cliente': empresa.codigo_cliente,
-                'proximo_mes': next_due,
-                'planes': selected_planes_ids,
-                'metodo': metodo,
-            }
-            return render(request, 'side_menu/clientes/lista_clientes/pagos/confirmacion/confirmar_pago.html', context)
-        
-        if request.POST.get('confirmar'):
-            next_due_str = request.POST.get('next_due')
-            next_due = datetime.datetime.strptime(next_due_str, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.get_current_timezone())
-                
-        selected_planes_ids = request.POST.getlist('planes')
-        selected_planes = vigencia_planes_activos.filter(id__in=selected_planes_ids)
-        metodo = request.POST.get('metodo')
-        total_amount = sum(vp.monto_final for vp in selected_planes)
-        
-        if metodo == 'abono':
-            try:
-                abono_amount = float(request.POST.get('monto_abono', 0))
-            except ValueError:
-                abono_amount = 0
-            if abono_amount <= 0 or abono_amount > total_amount:
-                messages.error(request, "El monto de abono debe ser mayor que 0 y menor o igual al total.")
-                return redirect('gestion_pagos', empresa_id=empresa.id)
-            # Crear pago de abono confirmado
-            pago_abono = Pago.objects.create(
-                empresa=empresa,
-                monto=abono_amount,
-                metodo=metodo,
-                pagado=True,
-                fecha_pago=timezone.now()
-            )
-            pago_abono.vigencia_planes.set(selected_planes)
-            pending_amount = total_amount - abono_amount
-            if pending_amount > 0:
-                # Crear pago pendiente para el próximo mes
-                next_due_pending = get_next_due(empresa)
-                Pago.objects.create(
-                    empresa=empresa,
-                    monto=pending_amount,
-                    metodo=metodo,
-                    pagado=False,
-                    fecha_pago=next_due_pending
+        formset = PagoFormSet(request.POST, queryset=Pago.objects.none(), prefix='pagos')
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.empresa = empresa
+                if not instance.fecha_pago:
+                    instance.fecha_pago = timezone.now()
+                instance.save()
+                instance.vigencia_planes.set(vigencia_planes_activos)
+                HistorialPagos.objects.create(
+                    pago=instance,
+                    usuario=request.user,
+                    descripcion=f"Pago registrado: {instance.monto} via {instance.metodo}"
                 )
-        elif metodo == 'cobranza':
-            pago = Pago.objects.create(
-                empresa=empresa,
-                monto=total_amount,
-                metodo=metodo,
-                pagado=False,
-                fecha_pago=next_due
-            )
-            pago.vigencia_planes.set(selected_planes)
-            send_cobranza_email(empresa, total_amount)
-        else:
-            # Para métodos: cheque, automático, tarjeta_credito, débito, manual
-            pago = Pago.objects.create(
-                empresa=empresa,
-                monto=total_amount,
-                metodo=metodo,
-                pagado=True,
-                fecha_pago=timezone.now()
-            )
-            pago.vigencia_planes.set(selected_planes)
-            if metodo == 'manual':
-                send_manual_payment_email(empresa, timezone.now())
-        
-        # Una vez efectuado el pago, se marca la empresa como al día.
-        empresa.estado = 'aldia'
-        empresa.save()
-        messages.success(request, 'Los pagos se efectuaron correctamente')
-        return redirect('listar_clientes')
-    
-    return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', {
-        'empresa': empresa,
-        'codigo_cliente': empresa.codigo_cliente,
-        'vigencia_planes_activos': vigencia_planes_activos,
-        'vigencia_planes_suspendidos': vigencia_planes_suspendidos,
-        'total': total,
-    })
+            messages.success(request, 'Pagos registrados exitosamente!')
+            return redirect('gestion_pagos', empresa_id=empresa.id)
+    else:
+        formset = PagoFormSet(queryset=Pago.objects.none(), prefix='pagos')
 
-def toggle_plan(request, vigencia_id):
-    """Alterna el estado de un plan (de indefinido a suspendido y viceversa)."""
-    vigencia = get_object_or_404(VigenciaPlan, id=vigencia_id)
-    vigencia.estado = 'suspendido' if vigencia.estado == 'indefinido' else 'indefinido'
-    vigencia.save()
-    return redirect('gestion_pagos', empresa_id=vigencia.empresa.id)
+    # Se elimina la notificación de deuda actual en el template
+    context = {
+        'empresa': empresa,
+        'formset': formset,
+        'vigencia_planes_activos': vigencia_planes_activos,
+    }
+    return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
 def historial_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -389,3 +360,7 @@ def actualizar_pagos_vencidos(request):
             vp.save()
     messages.success(request, "Se han actualizado los pagos vencidos a pendiente y suspendido los planes correspondientes.")
     return redirect('listar_clientes')
+
+
+
+
