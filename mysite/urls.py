@@ -76,7 +76,7 @@ urlpatterns = [
 
 
             #hisorial de pagos :
-            path('empresa/<int:empresa_id>/historial/', pagos.historial_pagos, name='historial_pagos'),
+          
                 #btn de actualziar pags de pendiente a aldia:
                     path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
         #Listar Deudas:
@@ -119,7 +119,6 @@ urlpatterns = [
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
     path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
-    path('empresa/<int:empresa_id>/pagos/historial/', pagos.historial_pagos, name='historial_pagos'),
    
 
     # Otras rutas necesarias…

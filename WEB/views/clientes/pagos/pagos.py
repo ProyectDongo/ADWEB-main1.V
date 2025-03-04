@@ -164,13 +164,7 @@ def gestion_pagos(request, empresa_id):
     }
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
-def historial_pagos(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    return render(request, 'side_menu/clientes/lista_clientes/pagos/historial/historial_pagos.html', {
-        'empresa': empresa,
-        'pagos': empresa.pagos.all()
-    })
-
+# de aqui empiezan lo correos
 def actualizar_estado_pago(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
     pago.pagado = not pago.pagado
