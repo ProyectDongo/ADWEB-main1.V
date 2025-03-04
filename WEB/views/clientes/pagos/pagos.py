@@ -18,82 +18,122 @@ from django.forms import modelformset_factory
 from django.db.models import  Sum
 
 
+logger = logging.getLogger(__name__)
+
 def registrar_cobro(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    
     if request.method == 'POST':
-        form = CobroForm(request.POST)
-        if form.is_valid():
-            cobro = form.save(commit=False)
-            cobro.empresa = empresa
-            cobro.save()
-            messages.success(request, 'Cobro registrado exitosamente!')
-            return redirect('listar_cobros', empresa_id=empresa.id)
+        selector = request.POST.get('selector')
+        fecha_inicio = request.POST.get('fechaInicio')
+        fecha_fin = request.POST.get('fechaFin')
+        
+        # Obtener todos los planes vigentes sin filtrar por estado
+        vigencias_activas = empresa.vigencias.all()
+        
+        if selector == 'todos':
+            valor_total = vigencias_activas.aggregate(total=Sum('monto_final'))['total'] or 0
+            cobro = Cobro.objects.create(
+                empresa=empresa,
+                vigencia_plan=None,
+                monto_total=valor_total,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin
+            )
+            # Relacionar todos los planes al cobro
+            cobro.vigencias_planes.set(vigencias_activas)
+            
         else:
-            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+            vigencia = get_object_or_404(vigencias_activas, id=selector)
+            cobro = Cobro.objects.create(
+                empresa=empresa,
+                vigencia_plan=vigencia,
+                monto_total=vigencia.monto_final,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin
+            )
+            cobro.vigencias_planes.add(vigencia)
+        
+        messages.success(request, 'Cobro registrado exitosamente!')
+        return redirect('gestion_pagos', empresa_id=empresa.id)
+    
     else:
-        form = CobroForm()
-    context = {
-        'empresa': empresa,
-        'form': form,
-    }
-    return render(request, 'pagos/registrar_cobro.html', context)
+        # Obtener todos los planes vigentes sin filtrar por estado
+        vigencias = empresa.vigencias.all()
+        cobros_pendientes = empresa.cobros.filter(estado='pendiente').prefetch_related('vigencia_plan')
+        
+        context = {
+            'empresa': empresa,
+            'vigencias': vigencias,
+            'cobros': cobros_pendientes,
+        }
+        return render(request, 'pagos/gestion_pagos.html', context)
 
-def listar_cobros(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    cobros = empresa.cobros.filter(estado='pendiente')
-    context = {
-        'empresa': empresa,
-        'cobros': cobros,
-    }
-    return render(request, 'pagos/listar_cobros.html', context)
 
-def pagar_cobro(request, empresa_id, cobro_id):
+def actualizar_cobro(request, empresa_id, cobro_id):
+    """
+    Vista para registrar un abono a un cobro existente.
+    Se crea un nuevo Pago (con método 'abono') y se actualiza el historial.
+    """
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     cobro = get_object_or_404(Cobro, id=cobro_id, empresa=empresa)
-    monto_pagado = cobro.monto_pagado()
-    monto_restante = cobro.monto_restante()
-
     if request.method == 'POST':
-        form = PagoForm(request.POST, request.FILES)
-        if form.is_valid():
-            pago = form.save(commit=False)
-            pago.empresa = empresa
-            pago.fecha_pago = timezone.now()
-            pago.save()
-            # Asignar el plan del cobro al pago:
+        abono = request.POST.get('abono')
+        descripcion = request.POST.get('descripcion')
+        try:
+            abono = float(abono)
+        except (ValueError, TypeError):
+            messages.error(request, "El abono debe ser un número válido.")
+            return redirect('registrar_cobro', empresa_id=empresa.id)
+
+        # Crear un pago con método 'abono'
+        pago = Pago.objects.create(
+            empresa=empresa,
+            monto=abono,
+            fecha_pago=timezone.now(),
+            metodo='abono',
+        )
+        # Asociar el pago a la(s) vigencia(s) correspondiente(s)
+        if cobro.vigencia_plan:
             pago.vigencia_planes.add(cobro.vigencia_plan)
-            HistorialPagos.objects.create(
-                pago=pago,
-                usuario=request.user,
-                descripcion=f"Pago registrado: {pago.monto} via {pago.metodo} para Cobro {cobro.id}"
-            )
-            messages.success(request, 'Pago registrado exitosamente!')
-            # Actualizar el estado del cobro si se salda
-            if cobro.monto_restante() <= 0:
-                cobro.estado = 'pagado'
-                cobro.save()
-                messages.info(request, 'El cobro se ha completado y se cerrará de la lista pendiente.')
-            return redirect('listar_cobros', empresa_id=empresa.id)
         else:
-            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+            vigencias = empresa.vigencias.all()
+            for v in vigencias:
+                pago.vigencia_planes.add(v)
+        pago.save()
+
+        HistorialPagos.objects.create(
+            pago=pago,
+            usuario=request.user,
+            descripcion=f"Pago registrado: {(cobro.vigencia_plan.plan.nombre if cobro.vigencia_plan else 'Todos')} - Valor: {cobro.monto_total} - Abono: {abono} - Descripción: {descripcion}"
+        )
+
+        if cobro.monto_restante() <= 0:
+            cobro.estado = 'pagado'
+            cobro.save()
+            messages.info(request, 'El cobro se ha completado y se cerrará de la lista pendiente.')
+        else:
+            messages.success(request, 'Pago registrado y cobro actualizado exitosamente!')
+        return redirect('registrar_cobro', empresa_id=empresa.id)
     else:
-        form = PagoForm()
-    
-    context = {
-        'empresa': empresa,
-        'cobro': cobro,
-        'monto_total': cobro.monto_total,
-        'monto_pagado': monto_pagado,
-        'monto_restante': monto_restante,
-        'form': form,
-    }
-    return render(request, 'pagos/pagar_cobro.html', context)
+        messages.error(request, "Método no permitido.")
+        return redirect('registrar_cobro', empresa_id=empresa.id)
 
 def gestion_pagos(request, empresa_id):
     # Vista para pagos sin vincular a un cobro específico (se mantiene la lógica anterior)
+    
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_planes_activos = empresa.vigencias.filter(estado='indefinido')
+    
+    # Obtener todos los planes sin filtrar
+    vigencias = empresa.vigencias.all()
+    
+    # Obtener cobros pendientes
+    cobros_pendientes = empresa.cobros.filter(estado='pendiente')
     PagoFormSet = modelformset_factory(Pago, form=PagoForm, extra=1, can_delete=True)
+
+    historial = HistorialPagos.objects.filter(
+        pago__empresa=empresa
+    ).select_related('pago', 'usuario').order_by('-fecha')
     
     if request.method == 'POST':
         formset = PagoFormSet(request.POST, queryset=Pago.objects.none(), prefix='pagos')
@@ -118,8 +158,9 @@ def gestion_pagos(request, empresa_id):
     # Se elimina la notificación de deuda actual en el template
     context = {
         'empresa': empresa,
-        'formset': formset,
-        'vigencia_planes_activos': vigencia_planes_activos,
+        'vigencias': vigencias,
+        'cobros': cobros_pendientes,
+        'historial': historial,
     }
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 

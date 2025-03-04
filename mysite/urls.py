@@ -120,8 +120,9 @@ urlpatterns = [
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
     path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
     path('empresa/<int:empresa_id>/pagos/historial/', pagos.historial_pagos, name='historial_pagos'),
-    path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
-    path('empresa/<int:empresa_id>/cobros/', pagos.listar_cobros, name='listar_cobros'),
-    path('empresa/<int:empresa_id>/cobros/<int:cobro_id>/pagar/', pagos.pagar_cobro, name='pagar_cobro'),
+   
+
     # Otras rutas necesarias…
+    path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
+    path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
     ] 

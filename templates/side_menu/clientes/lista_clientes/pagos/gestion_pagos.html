@@ -3,108 +3,217 @@
 
 {% block content %}
 <div class="container py-5">
-    <h1 class="text-primary">Gestión de Pagos - {{ empresa.nombre }}</h1>
+    <h1 class="text-primary mb-4">Gestión de Pagos - {{ empresa.nombre }}</h1>
 
-    <!-- Notificación de deuda (solo si hay cobros pendientes) -->
-    {% if cobros_pendientes.exists %}
-        <div class="alert alert-warning" role="alert">
-            <strong>Atención:</strong> Esta empresa tiene cobros pendientes.
-        </div>
-    {% endif %}
+    <!-- Navegación de pestañas -->
+    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab">
+                <i class="bi bi-wallet2"></i> Pagos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">
+                <i class="bi bi-clock-history"></i> Historial
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="notificar-tab" data-bs-toggle="tab" data-bs-target="#notificar" type="button" role="tab">
+                <i class="bi bi-bell"></i> Notificar
+            </button>
+        </li>
+    </ul>
 
-    <!-- Formulario para registrar un cobro -->
-    <div class="card mb-4">
-        <div class="card-header">Registrar Nuevo Cobro</div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {{ cobro_form|crispy }}
-                <button type="submit" class="btn btn-success">Registrar Cobro</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Lista de cobros pendientes con opción de pago -->
-    <div class="card mb-4">
-        <div class="card-header">Cobros Pendientes</div>
-        <div class="card-body">
-            {% if cobros_pendientes %}
-                <ul class="list-group">
-                    {% for cobro in cobros_pendientes %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Plan:</strong> {{ cobro.vigencia_plan }}<br>
-                                <strong>Monto Total:</strong> ${{ cobro.monto_total|floatformat:2 }}<br>
-                                <strong>Pagado:</strong> ${{ cobro.monto_pagado|floatformat:2 }}<br>
-                                <strong>Restante:</strong> ${{ cobro.monto_restante|floatformat:2 }}
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content" id="myTabContent">
+        <!-- Pestaña Pagos -->
+        <div class="tab-pane fade show active" id="pagos" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-header">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#miniFormCobro" aria-expanded="false" aria-controls="miniFormCobro">
+                        <i class="bi bi-plus-circle"></i> Ingresar Cobro
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Mini formulario para ingresar cobro -->
+                    <div class="collapse" id="miniFormCobro">
+                        <form method="post" action="{% url 'registrar_cobro' empresa.id %}">
+                            {% csrf_token %}
+                            <!-- Selector de plan -->
+                            <div class="mb-3">
+                                <label class="form-label">Seleccionar plan</label>
+                                <select class="form-control" name="selector" id="planSelector" required>
+                                    {% for vigencia in vigencias %}
+                                        <option value="{{ vigencia.id }}" data-monto="{{ vigencia.monto_final }}">
+                                            {{ vigencia.plan.nombre }} - 
+                                            {{ vigencia.fecha_inicio|date:"d/m/Y" }} a 
+                                            {% if vigencia.fecha_fin %}{{ vigencia.fecha_fin|date:"d/m/Y" }}
+                                            {% else %}Indefinido{% endif %}
+                                            ({{ vigencia.estado|title }})
+                                        </option>
+                                    {% empty %}
+                                        <option disabled>No hay planes disponibles</option>
+                                    {% endfor %}
+                                    <option value="todos">Todos los planes</option>
+                                </select>
                             </div>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#pagoModal{{ cobro.id }}">Pagar</button>
-                        </li>
+                            <!-- Campo para ingresar el valor -->
+                            <div class="mb-3">
+                                <label class="form-label">Valor</label>
+                                <input type="number" name="valor" id="valorInput" class="form-control" readonly>
+                            </div>
+                            <!-- Fechas -->
+                            <div class="mb-3">
+                                <label class="form-label">Fecha de Inicio</label>
+                                <input type="date" name="fechaInicio" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fecha de Fin</label>
+                                <input type="date" name="fechaFin" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Registrar Cobro
+                            </button>
+                        </form>
+                    </div>
 
-                        <!-- Modal de Pago -->
-                        <div class="modal fade" id="pagoModal{{ cobro.id }}" tabindex="-1" aria-labelledby="pagoModalLabel{{ cobro.id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pagoModalLabel{{ cobro.id }}">Registrar Pago</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <!-- Lista de cobros -->
+                    <div class="mt-4">
+                        <h5>Detalles de Cobros</h5>
+                        <ul class="list-group">
+                            {% for cobro in cobros %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ cobro.fecha_inicio|date:"d/m/Y" }}</strong> - 
+                                        {{ cobro.vigencia_plan.plan.nombre|default:"Todos los planes" }}
+                                        <span class="badge bg-{{ cobro.estado|yesno:'success,secondary' }}">
+                                            {{ cobro.get_estado_display }}
+                                        </span>
                                     </div>
-                                    <div class="modal-body">
-                                        <p><strong>Monto Total:</strong> ${{ cobro.monto_total|floatformat:2 }}</p>
-                                        <p><strong>Pagado:</strong> ${{ cobro.monto_pagado|floatformat:2 }}</p>
-                                        <p><strong>Restante:</strong> ${{ cobro.monto_restante|floatformat:2 }}</p>
-                                        <form method="post" enctype="multipart/form-data" action="{% url 'pagar_cobro' empresa.id cobro.id %}">
-                                            {% csrf_token %}
-                                            {{ pago_form|crispy }}
-                                            <button type="submit" class="btn btn-success">Registrar Pago</button>
-                                        </form>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                            type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#detalle{{ cobro.id }}">
+                                            Detalles
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-muted">No hay cobros pendientes.</p>
-            {% endif %}
+                                
+                                <div class="collapse mt-3" id="detalle{{ cobro.id }}">
+                                    <form method="post" action="{% url 'actualizar_cobro' empresa.id cobro.id %}">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Monto Total:</label>
+                                                <input type="text" class="form-control" 
+                                                    value="{{ cobro.monto_total }}" readonly>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Monto Restante:</label>
+                                                <input type="text" class="form-control" 
+                                                    value="{{ cobro.monto_restante }}" readonly>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <label class="form-label">Abono:</label>
+                                            <input type="number" name="abono" 
+                                                class="form-control" required 
+                                                min="0.01" step="0.01"
+                                                max="{{ cobro.monto_restante }}">
+                                        </div>
+                                        
+                                        <div class="mt-3">
+                                            <label class="form-label">Descripción:</label>
+                                            <textarea name="descripcion" 
+                                                class="form-control" required></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary mt-3">
+                                            <i class="bi bi-save"></i> Registrar Abono
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No hay cobros registrados</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Historial de Pagos -->
-    <div class="card">
-        <div class="card-header">Historial de Pagos</div>
-        <div class="card-body">
-            {% if pagos %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Método</th>
-                            <th>Comprobante</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pago in pagos %}
-                            <tr>
-                                <td>{{ pago.fecha_pago }}</td>
-                                <td>${{ pago.monto|floatformat:2 }}</td>
-                                <td>{{ pago.metodo }}</td>
-                                <td>
-                                    {% if pago.comprobante %}
-                                        <a href="{{ pago.comprobante.url }}" target="_blank">Ver Comprobante</a>
-                                    {% else %}
-                                        No adjunto
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted">No hay pagos registrados.</p>
-            {% endif %}
+        <!-- Pestaña Historial -->
+        <div class="tab-pane fade" id="historial" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h5>Historial Completo</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registro in historial %}
+                                <tr>
+                                    <td>{{ registro.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ registro.usuario|default:"Sistema" }}</td>
+                                    <td>{{ registro.pago.metodo|title }}</td>
+                                    <td>{{ registro.descripcion }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No hay registros históricos</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña Notificar -->
+        <div class="tab-pane fade" id="notificar" role="tabpanel">
+            <div class="card shadow">
+                <div class="card-body">
+                    <p>Módulo de notificaciones en desarrollo</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const planSelector = document.getElementById('planSelector');
+    const valorInput = document.getElementById('valorInput');
+    
+    function calcularMonto() {
+        const selectedOption = planSelector.options[planSelector.selectedIndex];
+        
+        if (selectedOption.value === 'todos') {
+            let total = 0;
+            {% for vigencia in vigencias %}
+                total += {{ vigencia.monto_final }};
+            {% endfor %}
+            valorInput.value = total.toFixed(2);
+        } else {
+            const monto = selectedOption.getAttribute('data-monto');
+            valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
+        }
+    }
+
+    planSelector.addEventListener('change', calcularMonto);
+    calcularMonto(); // Ejecutar al cargar
+});
+</script>
 {% endblock %}
