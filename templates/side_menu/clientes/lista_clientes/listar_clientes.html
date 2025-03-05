@@ -400,19 +400,17 @@ async function actualizarNotificaciones() {
   
   document.getElementById('search').addEventListener('input', function() {
     const searchValue = this.value.trim().toLowerCase();
-    // Selecciona las filas principales (las que NO tienen la clase "planes-vigentes-row")
     const mainRows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
 
     mainRows.forEach(mainRow => {
-      // Extraemos únicamente los datos del cliente (código, nombre y RUT)
-      const codigoCliente = mainRow.querySelector('th')?.textContent.toLowerCase() || '';
-      const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-      const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
-      
-      // Verificamos si alguno de esos campos contiene el texto buscado
-      const isMatch = codigoCliente.includes(searchValue) ||
-                      nombre.includes(searchValue) ||
-                      rut.includes(searchValue);
+        
+        const codigoCliente = mainRow.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || ''; // Primer td
+        const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || ''; // Cuarto td
+        const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || ''; // Quinto td
+
+        const isMatch = codigoCliente.includes(searchValue) ||
+                        nombre.includes(searchValue) ||
+                        rut.includes(searchValue);
       
       if (isMatch) {
         // Si coincide, mostramos la fila del cliente
@@ -433,40 +431,6 @@ async function actualizarNotificaciones() {
     });
   });
 
-document.getElementById('search').addEventListener('input', function() {
-  const searchValue = this.value.trim().toLowerCase();
-  // Selecciona las filas principales (las que NO tienen la clase "planes-vigentes-row")
-  const mainRows = document.querySelectorAll('#empresa-list tr:not(.planes-vigentes-row)');
-
-  mainRows.forEach(mainRow => {
-    // Extraemos únicamente los datos del cliente (código, nombre y RUT)
-    const codigoCliente = mainRow.querySelector('th')?.textContent.toLowerCase() || '';
-    const nombre = mainRow.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
-    const rut = mainRow.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
-    
-    // Verificamos si alguno de esos campos contiene el texto buscado
-    const isMatch = codigoCliente.includes(searchValue) ||
-                    nombre.includes(searchValue) ||
-                    rut.includes(searchValue);
-    
-    if (isMatch) {
-      // Si coincide, mostramos la fila del cliente
-      mainRow.style.display = 'table-row';
-      // Y también mostramos la fila de planes vigentes sin alterar su estado interno
-      const siblingRow = mainRow.nextElementSibling;
-      if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
-        siblingRow.style.display = 'table-row';
-      }
-    } else {
-      // Si no coincide, ocultamos la fila del cliente y su fila asociada
-      mainRow.style.display = 'none';
-      const siblingRow = mainRow.nextElementSibling;
-      if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
-        siblingRow.style.display = 'none';
-      }
-    }
-  });
-});
 
 </script>
 
@@ -487,7 +451,7 @@ document.getElementById('search').addEventListener('input', function() {
 }
 
 
-/* Aseguramos que el dropdown se muestre correctamente sobre otros elementos */
+
 .dropdown-menu {
     z-index: 2000;
 }
