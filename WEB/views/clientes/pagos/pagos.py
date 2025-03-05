@@ -28,7 +28,6 @@ def registrar_cobro(request, empresa_id):
         fecha_inicio = request.POST.get('fechaInicio')
         fecha_fin = request.POST.get('fechaFin')
         
-        # Obtener todos los planes vigentes sin filtrar por estado
         vigencias_activas = empresa.vigencias.all()
         
         if selector == 'todos':
@@ -40,7 +39,6 @@ def registrar_cobro(request, empresa_id):
                 fecha_inicio=fecha_inicio,
                 fecha_fin=fecha_fin
             )
-            # Relacionar todos los planes al cobro
             cobro.vigencias_planes.set(vigencias_activas)
             
         else:
@@ -54,11 +52,24 @@ def registrar_cobro(request, empresa_id):
             )
             cobro.vigencias_planes.add(vigencia)
         
+        # Registrar en historial
+        pago_historial = Pago.objects.create(
+            empresa=empresa,
+            cobro=cobro,
+            monto=0,
+            fecha_pago=timezone.now(),
+            metodo='registro'
+        )
+        HistorialPagos.objects.create(
+            pago=pago_historial,
+            usuario=request.user,
+            descripcion=f"Registro de cobro por ${cobro.monto_total:.2f} - Vigencia: {cobro.fecha_inicio} a {cobro.fecha_fin}"
+        )
+        
         messages.success(request, 'Cobro registrado exitosamente!')
         return redirect('gestion_pagos', empresa_id=empresa.id)
     
     else:
-        # Obtener todos los planes vigentes sin filtrar por estado
         vigencias = empresa.vigencias.all()
         cobros_pendientes = empresa.cobros.filter(estado='pendiente').prefetch_related('vigencia_plan')
         
@@ -68,7 +79,6 @@ def registrar_cobro(request, empresa_id):
             'cobros': cobros_pendientes,
         }
         return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
-
 
 def actualizar_cobro(request, empresa_id, cobro_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -86,7 +96,6 @@ def actualizar_cobro(request, empresa_id, cobro_id):
             messages.error(request, "El abono debe ser un número válido y mayor a 0.")
             return redirect('gestion_pagos', empresa_id=empresa.id)
 
-        # Crear pago asociado al cobro
         pago = Pago.objects.create(
             empresa=empresa,
             cobro=cobro,
@@ -95,20 +104,17 @@ def actualizar_cobro(request, empresa_id, cobro_id):
             metodo='abono',
         )
         
-        # Asociar vigencias correspondientes
         if cobro.vigencia_plan:
             pago.vigencia_planes.add(cobro.vigencia_plan)
         else:
             pago.vigencia_planes.set(cobro.vigencias_planes.all())
         
-        # Actualizar historial
         HistorialPagos.objects.create(
             pago=pago,
             usuario=request.user,
             descripcion=f"Abono de ${abono:.2f} - {descripcion}"
         )
 
-        # Actualizar estado del cobro
         if cobro.monto_restante() <= 0:
             cobro.estado = 'pagado'
             cobro.save()
@@ -116,7 +122,6 @@ def actualizar_cobro(request, empresa_id, cobro_id):
         else:
             messages.success(request, 'Abono registrado correctamente.')
         
-        # Redirigir manteniendo el colapsable abierto
         return redirect(f"{reverse('gestion_pagos', args=[empresa.id])}?open_cobro={cobro.id}")
     
     messages.error(request, "Método no permitido.")
@@ -127,7 +132,6 @@ def gestion_pagos(request, empresa_id):
     vigencias = empresa.vigencias.all()
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
     
-    # Historial completo con pagos relacionados
     historial = HistorialPagos.objects.filter(
         pago__empresa=empresa
     ).select_related('pago', 'usuario', 'pago__cobro').order_by('-fecha')
@@ -139,6 +143,8 @@ def gestion_pagos(request, empresa_id):
         'historial': historial,
     }
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
+
+
 # de aqui empiezan lo correos
 def actualizar_estado_pago(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
@@ -177,35 +183,6 @@ def send_manual_payment_email(empresa, next_due):
         msg.attach(logo)
     msg.send()
 
-def send_cobranza_email(empresa, deuda):
-    """Envía correo de cobranza con los datos de la cuenta para realizar la transferencia."""
-    transfer_data = {
-        'banco': 'Banco Ficticio',
-        'tipo_cuenta': 'Cuenta Corriente',
-        'numero_cuenta': '1234567890',
-        'titular': empresa.nombre,
-    }
-    subject = f"Notificación de Cobranza | Cliente: {empresa.codigo_cliente} | EmpresaID: {empresa.id}"
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to = [empresa.email]
-    logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
-    context = {
-        'empresa': empresa,
-        'codigo_cliente': empresa.codigo_cliente,
-        'transfer_data': transfer_data,
-        'deuda': deuda,
-        'empresa_id': empresa.id,
-    }
-    html_content = render_to_string('empresas/email/notificacion_cobranza.html', context)
-    text_content = strip_tags(html_content)
-    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
-    msg.attach_alternative(html_content, "text/html")
-    with open(logo_path, "rb") as img:
-        logo = MIMEImage(img.read())
-        logo.add_header("Content-ID", "<logo_cid>")
-        logo.add_header("Content-Disposition", "inline")
-        msg.attach(logo)
-    msg.send()
 
 def planes_por_empresa(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -338,20 +315,6 @@ def lista_deudas(request):
             empresas_con_deuda.append(empresa)
     return render(request, 'side_menu/clientes/lista_clientes/pagos/deudas/deudas_empresas.html', {'empresas': empresas_con_deuda})
 
-def notificar_cobranza(request, empresa_id):
-    """
-    Al presionar el botón “Notificar Cobranza” de la plantilla,
-    se envía el correo con los datos de la cuenta para transferir.
-    """
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    pending_payments = empresa.pagos.filter(pagado=False)
-    deuda = sum(p.monto for p in pending_payments)
-    if deuda <= 0:
-        messages.info(request, "La empresa no tiene deuda pendiente.")
-        return redirect('lista_deudas')
-    send_cobranza_email(empresa, deuda)
-    messages.success(request, "Correo de cobranza enviado correctamente.")
-    return redirect('lista_deudas')
 
 def actualizar_pagos_vencidos(request):
     """

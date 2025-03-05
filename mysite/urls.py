@@ -82,7 +82,7 @@ urlpatterns = [
         #Listar Deudas:
         path('deudas/', pagos.lista_deudas, name='lista_deudas'),
             #notificar Deudas :
-            path('deudas/notificar/<int:empresa_id>/', pagos.notificar_cobranza, name='notificar_cobranza'),
+            
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 
     #notficaiones :

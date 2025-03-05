@@ -3,192 +3,302 @@
 {% block title %}Lista de Clientes{% endblock %}
 
 {% block content %}
-<style>
-  .table th,
-  .table td {
-    vertical-align: middle;
-    padding: 0.75rem;
-    font-size: 14px;
-  }
-  .table thead th {
-    background-color: #343a40;
-    color: #fff;
-    text-align: center;
-  }
-  .table tbody td {
-    text-align: center;
-  }
-  .table tbody td.text-left {
-    text-align: left;
-  }
-  .action-button {
-    margin: 0.2rem;
-  }
-  .planes-vigentes-row {
-    background-color: #f8f9fa;
-  }
-  .toggle-planes i {
-    transition: transform 0.3s ease;
-  }
-  .toggle-planes.collapsed i {
-    transform: rotate(180deg);
-  }
-  /* Estilos mejorados para notificaciones */
-  .notificaciones-container {
-    position: fixed;
-    right: 20px;
-    top: 80px;
-    z-index: 1000;
-    width: 400px;
-    max-width: 90%;
-  }
-
-  .notificacion-header {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .notificacion-item {
-    margin-bottom: 0.5rem;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
-  }
-
-  .notificacion-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-
-  .accordion-button {
-    background-color: #fff !important;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-  }
-
-  .accordion-button:not(.collapsed) {
-    background-color: #f8f9fa !important;
-  }
-
-  .notificacion-icon {
-    font-size: 1.2rem;
-    margin-right: 1rem;
-    color: #0d6efd;
-  }
-
-  .notificacion-body {
-    padding: 1rem;
-    background-color: #f8f9fa;
-  }
-
-  .codigo-cliente {
-    background-color: #e9ecef;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-family: monospace;
-  }
-
-  .imagen-comprobante {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    background-color: white;
-  }
-  
-  
-  .table th,
-  .table td {
-    vertical-align: middle;
-    padding: 0.75rem;
-    font-size: 14px;
-  }
-  .cursor-zoom {
-  cursor: zoom-in;
-  transition: transform 0.3s ease;
-}
-
-.cursor-zoom:hover {
-  transform: scale(1.03);
-}
-
-#imagenAmpliada {
-  cursor: zoom-out;
-}
-
-</style>
-<div class="container mt-3">
-  <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
-    <i class="bi bi-bell-fill"></i>
-    <span id="notificacionesBadge" class="badge bg-danger">0</span>
-  </button>
-
-  <div class="collapse mt-3" id="notificacionesPanel">
-    <div class="card card-body">
-      <div class="accordion" id="notificacionesAcordeon">
-        <!-- Las notificaciones se insertarán aquí -->
-      </div>
+<div class="container-fluid py-4">
+    <!-- Notificaciones flotantes -->
+    <div class="notificaciones-container">
+        <button class="btn btn-primary shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
+            <i class="bi bi-bell-fill me-2"></i>
+            <span id="notificacionesBadge" class="badge bg-danger ms-1">0</span>
+        </button>
+        <div class="collapse mt-2" id="notificacionesPanel">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-bell"></i> Notificaciones</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="accordion" id="notificacionesAcordeon">
+                        <!-- Notificaciones se insertarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- Contenedor principal -->
+    <div class="card shadow-lg border-0">
+        <!-- Encabezado -->
+        <div class="card-header bg-primary bg-gradient text-white py-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="h2 mb-1"><i class="bi bi-people-fill me-2"></i>Gestor de Clientes</h1>
+                    <p class="mb-0 opacity-75">Administración integral de empresas y servicios</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'crear_empresa' %}" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-plus-circle me-2"></i>Nueva Empresa
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-lg px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'listar_planes' %}"><i class="bi bi-list me-2"></i>Lista de Planes</a></li>
+                            <li><a class="dropdown-item" href="{% url 'listar_empresas_eliminadas' %}"><i class="bi bi-trash me-2"></i>Eliminadas</a></li>
+                            <li><a class="dropdown-item" href="{% url 'lista_deudas' %}"><i class="bi bi-envelope-exclamation me-2"></i>Notificaciones</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cuerpo de la tarjeta -->
+        <div class="card-body p-4">
+            <!-- Barra de búsqueda -->
+            <div class="input-group input-group-lg mb-4 shadow-sm">
+                <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="search" class="form-control border-0 bg-light" placeholder="Buscar empresa por nombre, RUT o código...">
+            </div>
+
+            <!-- Lista de clientes -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Código</th>
+                            <th>Estado</th>
+                            <th>Vigencia</th>
+                            <th>Empresa</th>
+                            <th>RUT</th>
+                            <th>Contacto</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="empresa-list" class="border-top-0">
+                        {% for empresa in empresas %}
+                        <tr>
+                            <td class="ps-4 fw-medium">{{ empresa.codigo_cliente }}</td>
+                            <td>
+                                {% if empresa.estado == 'aldia' %}
+                                    <span class="badge bg-success text-white py-2 px-3">
+                                        <i class="bi bi-check-circle me-2"></i>AL DÍA
+                                    </span>
+                                {% elif empresa.estado == 'atrasado' %}
+                                    <span class="badge bg-warning text-dark py-2 px-3">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>ATRASADO
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white py-2 px-3">
+                                        <i class="bi bi-pause-circle me-2"></i>SUSPENDIDO
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if empresa.vigente %}
+                                    <span class="badge bg-success text-white py-2 px-3">ACTIVA</span>
+                                {% else %}
+                                    <span class="badge bg-danger text-white py-2 px-3">INACTIVA</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm bg-primary text-white rounded-circle me-3">
+                                        {{ empresa.nombre|first|upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ empresa.nombre }}</h6>
+                                        <small class="text-muted">Creado: {{ empresa.fecha_creacion|date:"d/m/Y" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ empresa.rut }}</td>
+                            <td>
+                                {% if empresa.telefono %}
+                                <a href="tel:{{ empresa.telefono }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone me-2"></i>{{ empresa.telefono }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">Sin teléfono</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-sm btn-light" title="Administrar">
+                                        <i class="bi bi-gear"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-light toggle-planes" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#planes-{{ empresa.id }}"
+                                            title="Servicios">
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'vigencia_planes' empresa.id %}">
+                                                    <i class="bi bi-plus-circle me-2"></i>Nuevo Servicio
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'gestion_pagos' empresa.id %}">
+                                                    <i class="bi bi-credit-card me-2"></i>Gestionar Pagos
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{% url 'eliminar_empresa' empresa.id %}" 
+                                                   onclick="return confirm('¿Seguro que deseas eliminar esta empresa?');">
+                                                    <i class="bi bi-trash me-2"></i>Eliminar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Sección de planes -->
+                        <tr class="planes-vigentes-row">
+                            <td colspan="7" class="p-0 border-0">
+                                <div class="collapse" id="planes-{{ empresa.id }}">
+                                    <div class="p-3 bg-light rounded-3 m-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="mb-0"><i class="bi bi-clipboard2-data me-2"></i>Servicios Contratados</h5>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                                {{ empresa.vigencias.count }} servicio{{ empresa.vigencias.count|pluralize }}
+                                            </span>
+                                        </div>
+                                        
+                                        {% if empresa.vigencias.all %}
+                                        <div class="row g-4">
+                                            {% for vigencia in empresa.vigencias.all %}
+                                            <div class="col-12">
+                                                <div class="card border-0 shadow-sm">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                                            <div>
+                                                                <h6 class="card-title mb-1">
+                                                                    {{ vigencia.plan.nombre }}
+                                                                    <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
+                                                                        {{ vigencia.codigo_plan }}
+                                                                    </span>
+                                                                </h6>
+                                                                <small class="text-muted">
+                                                                    {{ vigencia.fecha_inicio|date:"d/m/Y" }} - 
+                                                                    {{ vigencia.fecha_fin|date:"d/m/Y"|default:"Indefinido" }}
+                                                                </small>
+                                                            </div>
+                                                            <span class="badge {% if vigencia.estado == 'suspendido' %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if vigencia.estado == 'suspendido' %}danger{% else %}success{% endif %}">
+                                                                {{ vigencia.get_estado_display }}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <div class="d-flex align-items-center gap-3 mb-3">
+                                                                    <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                                                        <i class="bi bi-currency-dollar text-primary fs-5"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Monto Final</small>
+                                                                        <span class="fw-bold">${{ vigencia.monto_final }}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="col-md-4">
+                                                                <div class="d-flex align-items-center gap-3 mb-3">
+                                                                    <div class="bg-info bg-opacity-10 p-2 rounded">
+                                                                        <i class="bi bi-percent text-info fs-5"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Descuento</small>
+                                                                        <span class="fw-bold">{{ vigencia.descuento }}%</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="col-md-4">
+                                                                <div class="d-flex align-items-center gap-3 mb-3">
+                                                                    <div class="bg-warning bg-opacity-10 p-2 rounded">
+                                                                        <i class="bi bi-clock-history text-warning fs-5"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Estado Pagos</small>
+                                                                        <span class="badge {% if empresa.tiene_pendientes %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if empresa.tiene_pendientes %}danger{% else %}success{% endif %}">
+                                                                            {% if empresa.tiene_pendientes %}Pendientes{% else %}Al día{% endif %}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="d-flex gap-2">
+                                                            <a href="{% url 'generar_boleta' vigencia.empresa.id %}" 
+                                                               class="btn btn-sm btn-outline-primary {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                                                <i class="bi bi-receipt me-2"></i>Generar Boleta
+                                                            </a>
+                                                            <a href="{% url 'editar_vigencia_plan' vigencia.id %}" 
+                                                               class="btn btn-sm btn-outline-secondary {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
+                                                                <i class="bi bi-pencil-square me-2"></i>Editar
+                                                            </a>
+                                                            <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-outline-success{% else %}btn-outline-warning{% endif %}" 
+                                                                    onclick="toggleEstado('{{ vigencia.id }}', this)">
+                                                                {% if vigencia.estado == 'suspendido' %}
+                                                                    <i class="bi bi-play-circle me-2"></i>Habilitar
+                                                                {% else %}
+                                                                    <i class="bi bi-pause-circle me-2"></i>Deshabilitar
+                                                                {% endif %}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info mb-0">
+                                            <i class="bi bi-info-circle me-2"></i> No se encontraron servicios activos
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle me-2"></i> No se encontraron empresas registradas
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="container py-5">
-  {% if messages %}
-  {% for message in messages %}
-  
-  <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  {% endfor %}
-{% endif %}
-  <div class="card shadow-sm">
-    <div class="card-header d-flex flex-column flex-md-row flex-wrap justify-content-between align-items-center" style="background-color:rgba(0, 106, 255, 0.707);">
-      <h1 class="mb-3 mb-md-0 display-4 text-center text-md-start" style="font-size: 40px;">Lista de Clientes</h1>
-      <div class="btn-group flex-wrap" role="group" aria-label="Acciones de Empresas">
-        <a href="{% url 'crear_empresa' %}" class="btn btn-success btn-md mx-1 my-1" title="Crear Nueva Empresa">
-          <i class="bi bi-plus-lg"></i> Crear Empresa
-        </a>
-        <a href="{% url 'listar_planes' %}" class="btn btn-info btn-md mx-1 my-1" title="Lista de Planes">
-          <i class="bi bi-list"></i> Lista de Planes
-        </a>
-        <a href="{% url 'listar_empresas_eliminadas' %}" class="btn btn-warning btn-md mx-1 my-1" title="clientes eliminados">
-          <i class="bi bi-trash"></i> 
-        </a>
-        <a href="{% url 'lista_deudas' %}" class="btn btn-danger btn-sm mx-1 my-1" title="Notificar Clientes">
-          <i class="bi bi-envelope-exclamation-fill"></i>
-        </a>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="mb-4">
-        <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar empresa por nombre, RUT o código cliente...">
-      </div>
-      {% include "side_menu/clientes/lista_clientes/servicio_clientes.html" %}
-    </div>
-  </div>
-</div>
-
+<!-- Modal de imágenes -->
 <div class="modal fade" id="imagenModal" tabindex="-1" aria-labelledby="imagenModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="imagenModalLabel">Comprobante</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-        <img id="imagenAmpliada" class="img-fluid" style="max-height: 80vh;">
-      </div>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagenModalLabel">Comprobante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="imagenAmpliada" class="img-fluid rounded-3 shadow" style="max-height: 80vh;">
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
+<!-- Scripts -->
 <script>
 function mostrarImagen(src) {
   const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
@@ -357,5 +467,29 @@ document.getElementById('search').addEventListener('input', function() {
     }
   });
 });
+
 </script>
+
+<style>
+.avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    font-weight: 500;
+}
+.notificaciones-container {
+    position: fixed;
+    top: 8rem;
+    z-index: 1000;
+    width: 350px;
+}
+
+
+/* Aseguramos que el dropdown se muestre correctamente sobre otros elementos */
+.dropdown-menu {
+    z-index: 2000;
+}
+</style>
 {% endblock %}

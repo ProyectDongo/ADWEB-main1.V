@@ -2,196 +2,220 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container py-5">
-    <h1 class="text-primary mb-4">Gestión de Pagos - {{ empresa.nombre }}</h1>
+<div class="container-fluid py-4">
+    <!-- Encabezado mejorado -->
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-primary bg-gradient p-4 rounded-3 shadow">
+        <div>
+            <h1 class="text-white mb-0"><i class="bi bi-credit-card-2-front"></i> Gestión de Pagos</h1>
+            <p class="text-white-50 mb-0">{{ empresa.nombre }}</p>
+        </div>
+        <a href="{% url 'listar_clientes' %}" class="btn btn-light">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
 
-    <!-- Navegación de pestañas -->
-    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab">
-                <i class="bi bi-wallet2"></i> Pagos
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">
-                <i class="bi bi-clock-history"></i> Historial
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="notificar-tab" data-bs-toggle="tab" data-bs-target="#notificar" type="button" role="tab">
-                <i class="bi bi-bell"></i> Notificar
-            </button>
-        </li>
-    </ul>
-
-    <!-- Contenido de las pestañas -->
-    <div class="tab-content" id="myTabContent">
-        <!-- Pestaña Pagos -->
-        <div class="tab-pane fade show active" id="pagos" role="tabpanel">
-            <div class="card shadow">
-                <div class="card-header">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#miniFormCobro" aria-expanded="false" aria-controls="miniFormCobro">
-                        <i class="bi bi-plus-circle"></i> Ingresar Pago
+    <!-- Pestañas modernas -->
+    <div class="card shadow-lg">
+        <div class="card-header px-4 py-3 border-bottom">
+            <ul class="nav nav-pills nav-fill gap-3 mb-0" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active d-flex align-items-center gap-2" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos">
+                        <i class="bi bi-wallet2 fs-5"></i> Pagos Activos
                     </button>
-                </div>
-                <div class="card-body">
-                    <!-- Mini formulario para ingresar cobro -->
-                    <div class="collapse" id="miniFormCobro">
-                        <form method="post" action="{% url 'registrar_cobro' empresa.id %}">
-                            {% csrf_token %}
-                            <!-- Selector de plan -->
-                            <div class="mb-3">
-                                <label class="form-label">Seleccionar plan</label>
-                                <select class="form-control" name="selector" id="planSelector" required>
-                                    {% for vigencia in vigencias %}
-                                        <option value="{{ vigencia.id }}" data-monto="{{ vigencia.monto_final }}">
-                                            {{ vigencia.plan.nombre }} - 
-                                            {{ vigencia.fecha_inicio|date:"d/m/Y" }} a 
-                                            {% if vigencia.fecha_fin %}{{ vigencia.fecha_fin|date:"d/m/Y" }}
-                                            {% else %}Indefinido{% endif %}
-                                            ({{ vigencia.estado|title }})
-                                        </option>
-                                    {% empty %}
-                                        <option disabled>No hay planes disponibles</option>
-                                    {% endfor %}
-                                    <option value="todos">Todos los planes</option>
-                                </select>
-                            </div>
-                            <!-- Campo para ingresar el valor -->
-                            <div class="mb-3">
-                                <label class="form-label">Valor</label>
-                                <input type="number" name="valor" id="valorInput" class="form-control" readonly>
-                            </div>
-                            <!-- Fechas -->
-                            <div class="mb-3">
-                                <label class="form-label">Fecha de Inicio</label>
-                                <input type="date" name="fechaInicio" class="form-control" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Fecha de Fin</label>
-                                <input type="date" name="fechaFin" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Registrar Pago
-                            </button>
-                        </form>
-                    </div>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial">
+                        <i class="bi bi-clock-history fs-5"></i> Historial
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2" id="notificar-tab" data-bs-toggle="tab" data-bs-target="#notificar">
+                        <i class="bi bi-bell fs-5"></i> Notificaciones
+                    </button>
+                </li>
+            </ul>
+        </div>
 
-                    <!-- Lista de cobros -->
-                    <div class="mt-4">
-                        <h5>Detalles de Cobros</h5>
-                        <ul class="list-group">
-                            {% for cobro in cobros %}
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ cobro.fecha_inicio|date:"d/m/Y" }}</strong> - <strong>{{ cobro.fecha_fin|date:"d/m/Y" }}</strong> - 
-                                        {{ cobro.vigencia_plan.plan.nombre|default:"Todos los planes" }} - {{cobro.monto_total}}
-                                        <span class="badge bg-{{ cobro.estado|yesno:'success,secondary' }}">
-                                            {{ cobro.get_estado_display }}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary" 
-                                            type="button" 
-                                            data-bs-toggle="collapse" 
-                                            data-bs-target="#detalle{{ cobro.id }}">
-                                            Detalles
-                                        </button>
-                                    </div>
+        <div class="card-body p-4">
+            <div class="tab-content" id="myTabContent">
+                <!-- Pestaña Pagos Mejorada -->
+                <div class="tab-pane fade show active" id="pagos" role="tabpanel">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="text-primary"><i class="bi bi-receipt"></i> Registro de Pagos</h4>
+                            <button class="btn btn-primary d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#miniFormCobro">
+                                <i class="bi bi-plus-circle me-2"></i> Nuevo Pago
+                            </button>
+                        </div>
+                        
+                        <div class="collapse" id="miniFormCobro">
+                            <div class="card border-primary mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Ingresar Transacción</h5>
                                 </div>
-                                
-                                <div class="collapse mt-3" id="detalle{{ cobro.id }}">
-                                    <form method="post" action="{% url 'actualizar_cobro' empresa.id cobro.id %}">
+                                <div class="card-body">
+                                    <form method="post" action="{% url 'registrar_cobro' empresa.id %}">
                                         {% csrf_token %}
-                                        <div class="row">
+                                        <div class="row g-3">
                                             <div class="col-md-6">
-                                                <label class="form-label">Monto Total:</label>
-                                                <input type="text" class="form-control" 
-                                                    value="{{ cobro.monto_total }}" readonly>
+                                                <label class="form-label fw-bold">Plan asociado</label>
+                                                <select class="form-select" name="selector" id="planSelector" required>
+                                                    {% for vigencia in vigencias %}
+                                                        <option value="{{ vigencia.id }}" data-monto="{{ vigencia.monto_final }}">
+                                                            {{ vigencia.plan.nombre }} - {{ vigencia.fecha_inicio|date:"d/m/Y" }} 
+                                                            <span class="text-muted">{% if vigencia.fecha_fin %}- {{ vigencia.fecha_fin|date:"d/m/Y" }}{% else %}(Indefinido){% endif %}</span>
+                                                        </option>
+                                                    {% empty %}
+                                                        <option disabled>No hay planes disponibles</option>
+                                                    {% endfor %}
+                                                    <option value="todos">Todos los planes</option>
+                                                </select>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label">Monto Restante:</label>
-                                                <input type="text" class="form-control" 
-                                                    value="{{ cobro.monto_restante }}" readonly>
+                                                <label class="form-label fw-bold">Monto total</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" name="valor" id="valorInput" class="form-control" readonly>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Fecha de inicio</label>
+                                                <input type="date" name="fechaInicio" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Fecha de fin</label>
+                                                <input type="date" name="fechaFin" class="form-control" required>
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-success w-100">
+                                                    <i class="bi bi-check2-circle me-2"></i> Confirmar Pago
+                                                </button>
                                             </div>
                                         </div>
-                                        
-                                        <div class="mt-3">
-                                            <label class="form-label">Abono:</label>
-                                            <input type="number" name="abono" 
-                                                class="form-control" required 
-                                                min="0.01" step="0.01"
-                                                max="{{ cobro.monto_restante }}">
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <label class="form-label">Descripción:</label>
-                                            <textarea name="descripcion" 
-                                                class="form-control" required></textarea>
-                                        </div>
-                                        
-                                        <button type="submit" class="btn btn-primary mt-3">
-                                            <i class="bi bi-save"></i> Registrar Abono
-                                        </button>
                                     </form>
                                 </div>
-                            </li>
-                            {% empty %}
-                            <li class="list-group-item">No hay cobros registrados</li>
-                            {% endfor %}
-                        </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="text-primary mb-3"><i class="bi bi-list-check"></i> Detalles de Transacciones</h4>
+                    <div class="accordion" id="cobrosAccordion">
+                        {% for cobro in cobros %}
+                        <div class="accordion-item shadow-sm mb-3">
+                            <div class="accordion-header">
+                                <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#detalle{{ cobro.id }}">
+                                    <div class="d-flex gap-3 align-items-center">
+                                        <span class="badge bg-{{ cobro.estado|yesno:'success,secondary' }} fs-6">
+                                            {{ cobro.get_estado_display }}
+                                        </span>
+                                        <div>
+                                            <span class="fw-bold">${{ cobro.monto_total|floatformat:2 }}</span>
+                                            <span class="text-muted ms-2">{{ cobro.vigencia_plan.plan.nombre|default:"Todos los planes" }}</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                            <div id="detalle{{ cobro.id }}" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <form method="post" action="{% url 'actualizar_cobro' empresa.id cobro.id %}">
+                                        {% csrf_token %}
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Total facturado</label>
+                                                <input type="text" class="form-control bg-light" value="${{ cobro.monto_total|floatformat:2 }}" readonly>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Saldo pendiente</label>
+                                                <input type="text" class="form-control bg-light" value="${{ cobro.monto_restante|floatformat:2 }}" readonly>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Monto a abonar</label>
+                                                <input type="number" name="abono" class="form-control" required min="0.01" step="0.01" max="{{ cobro.monto_restante }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Descripción del abono</label>
+                                                <textarea name="descripcion" class="form-control" rows="2" required></textarea>
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    <i class="bi bi-save2 me-2"></i> Registrar Abono
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> No se encontraron transacciones registradas
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Pestaña Historial -->
-        <div class="tab-pane fade" id="historial" role="tabpanel">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h5>Historial Completo</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Usuario</th>
-                                    <th>Acción</th>
-                                    <th>Descripción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for registro in historial %}
-                                <tr>
-                                    <td>{{ registro.fecha|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ registro.usuario|default:"Sistema" }}</td>
-                                    <td>{{ registro.pago.metodo|title }}</td>
-                                    <td>{{ registro.descripcion }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">No hay registros históricos</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <!-- Pestaña Historial Mejorada -->
+                <div class="tab-pane fade" id="historial" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-archive"></i> Registro Histórico</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Fecha</th>
+                                            <th>Usuario</th>
+                                            <th>Tipo</th>
+                                            <th>Descripción</th>
+                                            <th class="text-end pe-4">Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for registro in historial %}
+                                        <tr>
+                                            <td class="ps-4">{{ registro.fecha|date:"d/m/Y H:i" }}</td>
+                                            <td><span class="badge bg-secondary">{{ registro.usuario|default:"Sistema" }}</span></td>
+                                            <td>{{ registro.pago.get_metodo_display }}</td>
+                                            <td class="text-truncate" style="max-width: 250px;">{{ registro.descripcion }}</td>
+                                            <td class="text-end pe-4 fw-bold">${{ registro.pago.monto|floatformat:2 }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <div class="alert alert-warning mb-0">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i> No hay registros históricos
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Pestaña Notificar -->
-        <div class="tab-pane fade" id="notificar" role="tabpanel">
-            <div class="card shadow">
-                <div class="card-body">
-                    <p>Módulo de notificaciones en desarrollo</p>
+                <!-- Pestaña Notificar Mejorada -->
+                <div class="tab-pane fade" id="notificar" role="tabpanel">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-megaphone"></i> Sistema de Notificaciones</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-2"></i> Módulo en desarrollo - Próximamente
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Scripts (sin cambios) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const planSelector = document.getElementById('planSelector');
@@ -199,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function calcularMonto() {
         const selectedOption = planSelector.options[planSelector.selectedIndex];
-        
         if (selectedOption.value === 'todos') {
             let total = 0;
             {% for vigencia in vigencias %}
@@ -211,53 +234,18 @@ document.addEventListener('DOMContentLoaded', function() {
             valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
         }
     }
-
+    
     planSelector.addEventListener('change', calcularMonto);
-    calcularMonto(); // Ejecutar al cargar
-});
+    calcularMonto();
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Mantener colapsable abierto después de actualizar
     const urlParams = new URLSearchParams(window.location.search);
     const openCobro = urlParams.get('open_cobro');
-    
     if (openCobro) {
         const target = document.getElementById(`detalle${openCobro}`);
         if (target) {
             new bootstrap.Collapse(target, { show: true });
         }
     }
-
-    // Actualización en tiempo real de montos
-    document.querySelectorAll('[data-abono-form]').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Actualizar montos
-                    const montoRestante = this.closest('.list-group-item').querySelector('[data-monto-restante]');
-                    montoRestante.value = data.monto_restante;
-                    
-                    // Actualizar estado si es necesario
-                    if (data.estado === 'pagado') {
-                        this.closest('.list-group-item').querySelector('.badge').className = 'badge bg-success';
-                        this.closest('.list-group-item').querySelector('.badge').textContent = 'Pagado';
-                        this.remove();
-                    }
-                }
-            });
-        });
-    });
 });
 </script>
 {% endblock %}
