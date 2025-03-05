@@ -7,6 +7,10 @@ from django.db.models import Max
 from django.utils import timezone
 from django.conf import settings
 from .validators import validar_rut
+from django.forms import modelformset_factory
+from django.db.models import  Sum
+from django.urls import reverse
+
 
 
 class Region(models.Model):
@@ -596,11 +600,15 @@ class Cobro(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def monto_pagado(self):
-        pagos = Pago.objects.filter(cobro=self)
-        return sum(p.monto for p in pagos)
+        return self.pagos.aggregate(total=Sum('monto'))['total'] or 0
 
     def monto_restante(self):
         return self.monto_total - self.monto_pagado()
+    
+    def actualizar_estado(self):
+        if self.monto_restante() <= 0:
+            self.estado = 'pagado'
+            self.save()
 
     def __str__(self):
         return f"Cobro {self.id} - {self.vigencia_plan.plan.nombre if self.vigencia_plan else 'Todos'}"

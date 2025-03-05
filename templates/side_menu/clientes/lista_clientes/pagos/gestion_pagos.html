@@ -31,7 +31,7 @@
             <div class="card shadow">
                 <div class="card-header">
                     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#miniFormCobro" aria-expanded="false" aria-controls="miniFormCobro">
-                        <i class="bi bi-plus-circle"></i> Ingresar Cobro
+                        <i class="bi bi-plus-circle"></i> Ingresar Pago
                     </button>
                 </div>
                 <div class="card-body">
@@ -72,7 +72,7 @@
                                 <input type="date" name="fechaFin" class="form-control" required>
                             </div>
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Registrar Cobro
+                                <i class="bi bi-check-circle"></i> Registrar Pago
                             </button>
                         </form>
                     </div>
@@ -214,6 +214,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     planSelector.addEventListener('change', calcularMonto);
     calcularMonto(); // Ejecutar al cargar
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mantener colapsable abierto después de actualizar
+    const urlParams = new URLSearchParams(window.location.search);
+    const openCobro = urlParams.get('open_cobro');
+    
+    if (openCobro) {
+        const target = document.getElementById(`detalle${openCobro}`);
+        if (target) {
+            new bootstrap.Collapse(target, { show: true });
+        }
+    }
+
+    // Actualización en tiempo real de montos
+    document.querySelectorAll('[data-abono-form]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar montos
+                    const montoRestante = this.closest('.list-group-item').querySelector('[data-monto-restante]');
+                    montoRestante.value = data.monto_restante;
+                    
+                    // Actualizar estado si es necesario
+                    if (data.estado === 'pagado') {
+                        this.closest('.list-group-item').querySelector('.badge').className = 'badge bg-success';
+                        this.closest('.list-group-item').querySelector('.badge').textContent = 'Pagado';
+                        this.remove();
+                    }
+                }
+            });
+        });
+    });
 });
 </script>
 {% endblock %}

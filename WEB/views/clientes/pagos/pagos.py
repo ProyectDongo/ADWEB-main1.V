@@ -67,95 +67,71 @@ def registrar_cobro(request, empresa_id):
             'vigencias': vigencias,
             'cobros': cobros_pendientes,
         }
-        return render(request, 'pagos/gestion_pagos.html', context)
+        return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
 
 def actualizar_cobro(request, empresa_id, cobro_id):
-    """
-    Vista para registrar un abono a un cobro existente.
-    Se crea un nuevo Pago (con método 'abono') y se actualiza el historial.
-    """
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     cobro = get_object_or_404(Cobro, id=cobro_id, empresa=empresa)
+    
     if request.method == 'POST':
         abono = request.POST.get('abono')
         descripcion = request.POST.get('descripcion')
+        
         try:
             abono = float(abono)
+            if abono <= 0:
+                raise ValueError
         except (ValueError, TypeError):
-            messages.error(request, "El abono debe ser un número válido.")
-            return redirect('registrar_cobro', empresa_id=empresa.id)
+            messages.error(request, "El abono debe ser un número válido y mayor a 0.")
+            return redirect('gestion_pagos', empresa_id=empresa.id)
 
-        # Crear un pago con método 'abono'
+        # Crear pago asociado al cobro
         pago = Pago.objects.create(
             empresa=empresa,
+            cobro=cobro,
             monto=abono,
             fecha_pago=timezone.now(),
             metodo='abono',
         )
-        # Asociar el pago a la(s) vigencia(s) correspondiente(s)
+        
+        # Asociar vigencias correspondientes
         if cobro.vigencia_plan:
             pago.vigencia_planes.add(cobro.vigencia_plan)
         else:
-            vigencias = empresa.vigencias.all()
-            for v in vigencias:
-                pago.vigencia_planes.add(v)
-        pago.save()
-
+            pago.vigencia_planes.set(cobro.vigencias_planes.all())
+        
+        # Actualizar historial
         HistorialPagos.objects.create(
             pago=pago,
             usuario=request.user,
-            descripcion=f"Pago registrado: {(cobro.vigencia_plan.plan.nombre if cobro.vigencia_plan else 'Todos')} - Valor: {cobro.monto_total} - Abono: {abono} - Descripción: {descripcion}"
+            descripcion=f"Abono de ${abono:.2f} - {descripcion}"
         )
 
+        # Actualizar estado del cobro
         if cobro.monto_restante() <= 0:
             cobro.estado = 'pagado'
             cobro.save()
-            messages.info(request, 'El cobro se ha completado y se cerrará de la lista pendiente.')
+            messages.success(request, '¡Cobro completado exitosamente!')
         else:
-            messages.success(request, 'Pago registrado y cobro actualizado exitosamente!')
-        return redirect('registrar_cobro', empresa_id=empresa.id)
-    else:
-        messages.error(request, "Método no permitido.")
-        return redirect('registrar_cobro', empresa_id=empresa.id)
+            messages.success(request, 'Abono registrado correctamente.')
+        
+        # Redirigir manteniendo el colapsable abierto
+        return redirect(f"{reverse('gestion_pagos', args=[empresa.id])}?open_cobro={cobro.id}")
+    
+    messages.error(request, "Método no permitido.")
+    return redirect('gestion_pagos', empresa_id=empresa.id)
 
 def gestion_pagos(request, empresa_id):
-    # Vista para pagos sin vincular a un cobro específico (se mantiene la lógica anterior)
-    
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    
-    # Obtener todos los planes sin filtrar
     vigencias = empresa.vigencias.all()
-    
-    # Obtener cobros pendientes
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
-    PagoFormSet = modelformset_factory(Pago, form=PagoForm, extra=1, can_delete=True)
-
+    
+    # Historial completo con pagos relacionados
     historial = HistorialPagos.objects.filter(
         pago__empresa=empresa
-    ).select_related('pago', 'usuario').order_by('-fecha')
+    ).select_related('pago', 'usuario', 'pago__cobro').order_by('-fecha')
     
-    if request.method == 'POST':
-        formset = PagoFormSet(request.POST, queryset=Pago.objects.none(), prefix='pagos')
-        if formset.is_valid():
-            instances = formset.save(commit=False)
-            for instance in instances:
-                instance.empresa = empresa
-                if not instance.fecha_pago:
-                    instance.fecha_pago = timezone.now()
-                instance.save()
-                instance.vigencia_planes.set(vigencia_planes_activos)
-                HistorialPagos.objects.create(
-                    pago=instance,
-                    usuario=request.user,
-                    descripcion=f"Pago registrado: {instance.monto} via {instance.metodo}"
-                )
-            messages.success(request, 'Pagos registrados exitosamente!')
-            return redirect('gestion_pagos', empresa_id=empresa.id)
-    else:
-        formset = PagoFormSet(queryset=Pago.objects.none(), prefix='pagos')
-
-    # Se elimina la notificación de deuda actual en el template
     context = {
         'empresa': empresa,
         'vigencias': vigencias,
@@ -163,7 +139,6 @@ def gestion_pagos(request, empresa_id):
         'historial': historial,
     }
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
-
 # de aqui empiezan lo correos
 def actualizar_estado_pago(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
