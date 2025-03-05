@@ -1,120 +1,87 @@
 {% load static %}
+<!-- Bootstrap CSS -->
+
 <style>
-  /* Reset básico */
-  * {
+  .custom-navbar {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+  }
+  
+  .navbar-logo {
+    height: 99px;
+    
+  }
+  
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  
+  .user-name {
+    color: white;
+    font-weight: 500;
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    transition: color 0.3s ease;
   }
-  body {
-    font-family: Arial, sans-serif;
+  
+  .user-name:hover {
+    color: #ffd700;
   }
-
-  /* Estilo del navbar */
-  .navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: rgb(0, 106, 255);
-    padding: 10px 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Sombra uniforme */
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  
+  .logout-btn {
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
   }
-
-  /* Logo */
-  .navbar .logo {
-    height: 110px; /* Ajusta según convenga */
+  
+  .logout-btn:hover {
+    background: white !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-2px);
   }
-
-  /* Contenedor de elementos de navegación */
-  .navbar .nav-items {
-    display: flex;
-    align-items: center;
-  }
-
-  /* Nombre de usuario */
-  .navbar .user-name {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin-right: 100px;
-    cursor: pointer;
-    transition: color 0.3s;
-  }
-  .navbar .user-name:hover {
-    color: #f8d00f;
-  }
-
-  /* Enlace de Cerrar Sesión */
-  .navbar .logout {
-    font-size: 1.1rem;
-    color: #ffffff;
-    text-decoration: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  .navbar .logout:hover,
-  .navbar .logout:focus {
-    background-color: #f8d00f;
-    color: #343a40;
-  }
-
-  /* Botón de menú para móviles (ícono hamburguesa) */
-  .navbar .menu-toggle {
-    display: none;
-    font-size: 1.5rem;
-    color: #ffffff;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  /* Responsive: ajustes para pantallas pequeñas */
+  
   @media (max-width: 768px) {
-    .navbar {
-      flex-wrap: wrap;
-    }
-    .navbar .menu-toggle {
-      display: block;
-    }
-    /* Ocultamos inicialmente los elementos de navegación */
-    .navbar .nav-items {
-      width: 100%;
+    .user-info {
       flex-direction: column;
-      align-items: flex-start;
-      display: none;
-      margin-top: 10px;
+      gap: 1rem;
+      padding: 1rem 0;
     }
-    /* Al activar el menú se muestran */
-    .navbar .nav-items.active {
-      display: flex;
-    }
-    .navbar .user-name {
-      margin: 10px 0;
-    }
-    .navbar .logout {
-      width: 100%;
-      text-align: left;
-      padding: 10px 0;
+    
+    .navbar-logo {
+      height: 40px;
     }
   }
 </style>
 
-<nav class="navbar">
-  <img src="{% static 'png/logo.png' %}" alt="Logo" class="logo">
-  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-  <div class="nav-items" id="nav-items">
-    <span class="user-name" id="user-name">{{ user.username }}</span>
-    <a href="{% url 'logout' %}" class="logout">Cerrar Sesión</a>
+<nav class="navbar custom-navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <!-- Logo siempre a la izquierda -->
+    <a class="navbar" >
+      <img src="{% static 'png/logo.png' %}" alt="Logo" class="navbar-logo">
+    </a>
+
+    <!-- Botón para móvil -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Contenido del navbar -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="ms-auto user-info"> <!-- ms-auto empuja el contenido a la derecha -->
+        <span class="user-name">{{ user.username }}</span>
+        <a href="{% url 'logout' %}" class="btn logout-btn">
+          <i class="bi bi-box-arrow-right"></i>
+          Cerrar Sesión
+        </a>
+      </div>
+    </div>
   </div>
 </nav>
 
-<script>
-  function toggleMenu(){
-    var navItems = document.getElementById('nav-items');
-    navItems.classList.toggle('active');
-  }
-</script>
+<!-- Bootstrap JS -->

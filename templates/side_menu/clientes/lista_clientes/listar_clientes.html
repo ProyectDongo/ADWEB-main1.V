@@ -44,7 +44,7 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{% url 'listar_planes' %}"><i class="bi bi-list me-2"></i>Lista de Planes</a></li>
                             <li><a class="dropdown-item" href="{% url 'listar_empresas_eliminadas' %}"><i class="bi bi-trash me-2"></i>Eliminadas</a></li>
-                            <li><a class="dropdown-item" href="{% url 'lista_deudas' %}"><i class="bi bi-envelope-exclamation me-2"></i>Notificaciones</a></li>
+                            
                         </ul>
                     </div>
                 </div>
@@ -444,8 +444,8 @@ async function actualizarNotificaciones() {
     font-weight: 500;
 }
 .notificaciones-container {
-    position: fixed;
-    top: 8rem;
+    position: relative;
+    margin-bottom: 10px;
     z-index: 1000;
     width: 350px;
 }

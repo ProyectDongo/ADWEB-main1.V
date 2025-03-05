@@ -79,10 +79,7 @@ urlpatterns = [
           
                 #btn de actualziar pags de pendiente a aldia:
                     path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
-        #Listar Deudas:
-        path('deudas/', pagos.lista_deudas, name='lista_deudas'),
-            #notificar Deudas :
-            
+       
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 
     #notficaiones :
