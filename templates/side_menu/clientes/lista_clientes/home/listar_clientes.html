@@ -38,10 +38,10 @@
                         <i class="bi bi-plus-circle me-2"></i>Nueva Empresa
                     </a>
                     <div class="dropdown">
-                        <button class="btn btn-light btn-lg px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-light btn-lg px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown" >
                             <i class="bi bi-gear"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end " id="ranura">
                             <li><a class="dropdown-item" href="{% url 'listar_planes' %}"><i class="bi bi-list me-2"></i>Lista de Planes</a></li>
                             <li><a class="dropdown-item" href="{% url 'listar_empresas_eliminadas' %}"><i class="bi bi-trash me-2"></i>Eliminadas</a></li>
                         </ul>
@@ -226,8 +226,8 @@
                                                                     </div>
                                                                     <div>
                                                                         <small class="text-muted d-block">Estado Pagos</small>
-                                                                        <span class="badge {% if empresa.tiene_pendientes %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if empresa.tiene_pendientes %}danger{% else %}success{% endif %}">
-                                                                            {% if empresa.tiene_pendientes %}Pendientes{% else %}Al día{% endif %}
+                                                                        <span class="badge {% if vigencia.pago_pendiente %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if vigencia.pago_pendiente %}danger{% else %}success{% endif %}">
+                                                                            {% if vigencia.pago_pendiente %}Pendientes{% else %}Al día{% endif %}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -439,7 +439,7 @@ async function actualizarNotificaciones() {
                 menu.style.position = 'fixed';
                 const rect = this.getBoundingClientRect();
                 menu.style.top = `${rect.bottom}px`;
-                menu.style.right = `${rect.right}-10px`; // Cambiar de right a left si es necesario
+                menu.style.right = `${rect.right}-15px`; // Cambiar de right a left si es necesario
             }
         });
     });
@@ -462,13 +462,23 @@ async function actualizarNotificaciones() {
 }
 .card {
     margin-top: 50px; /* Ajustar según sea necesario */
+
+#ranura{
+    position: fixed;
+    width: 20px !important;
+    height: 100px !important;
+    margin-top: -10px !important;
+    transform: translate3d(-10px, 30px, 0px) !important;
+    inset: 284.688px 10px auto auto !important;
 }
-.dropdown-menu {
+}
+.dropdown-menu{
     z-index: 1050;
     position: fixed;
-    top: auto;
-    left: auto;
-    transform: none;
+    right: 30px !important;
+    transform: translate3d(-10px, 30px, 0px) !important;
+    height: 140px;
+    
 }
 </style>
 {% endblock %}

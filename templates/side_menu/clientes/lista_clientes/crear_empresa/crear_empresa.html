@@ -8,14 +8,15 @@
     <div class="col-lg-10">
       <div class="card shadow">
         <div class="card-header bg-primary text-white">
-          <h2 class="h4 mb-0 text-center"><i class="bi bi-building me-2"></i>Crear Empresa</h2>
+          <h2 class="h4 mb-0 text-center">
+            <i class="bi bi-building me-2"></i>Crear Empresa
+          </h2>
         </div>
         <div class="card-body p-4">
-          <!-- Único formulario para ambos conjuntos de datos -->
           <form method="post" class="needs-validation" novalidate>
             {% csrf_token %}
 
-            {# Bloque de mensajes de error general y de campos específicos #}
+            {# Mensajes de error general y de campos específicos #}
             {% if empresa_form.non_field_errors or vigencia_form.non_field_errors or empresa_form.rut.errors or empresa_form.rut_representante.errors or empresa_form.telefono.errors or empresa_form.celular_contacto.errors %}
               <div class="alert alert-danger">
                 {% for error in empresa_form.non_field_errors %}
@@ -30,11 +31,10 @@
                   {% endfor %}
                 {% endif %}
                 {% if empresa_form.rut_representante.errors %}
-                {% for error in empresa_form.rut_representante.errors %}
-                  <p><strong>rut_representante:</strong> {{ error }}</p>
-                {% endfor %}
-              {% endif %}
-                
+                  {% for error in empresa_form.rut_representante.errors %}
+                    <p><strong>RUT Representante:</strong> {{ error }}</p>
+                  {% endfor %}
+                {% endif %}
                 {% if empresa_form.telefono.errors %}
                   {% for error in empresa_form.telefono.errors %}
                     <p><strong>Teléfono:</strong> {{ error }}. Formato válido: 2XXXXXXXX o +562XXXXXXXX.</p>
@@ -47,314 +47,322 @@
                 {% endif %}
               </div>
             {% endif %}
-            
-            
-            <!-- Sección Información Principal (EmpresaForm) -->
-            <a class="nav-link" data-bs-toggle="collapse" href="#informacionprincipal" role="button">
-              <i class="bi bi-building me-2"></i> <span style="font-size: 20px;">Informacion Principal</span>
-            </a>
-            <div class="collapse show" id="informacionprincipal">
-              <div class="mb-4 border border-dark rounded p-3">
-                <h4 class="mb-4 border-bottom pb-2">
-            
-                </h4>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.codigo_cliente }}
-                      <label for="{{ empresa_form.codigo_cliente.id_for_label }}">Código Cliente</label>
-                      <div class="invalid-feedback">
-                        {{ empresa_form.codigo_cliente.errors }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.rut }}
-                      <label for="{{ empresa_form.rut.id_for_label }}">RUT Empresa</label>
-                      <div class="invalid-feedback">
-                        {{ empresa_form.rut.errors }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.nombre }}
-                      <label for="{{ empresa_form.nombre.id_for_label }}">Razón Social</label>
-                      <div class="invalid-feedback">
-                        {{ empresa_form.nombre.errors }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.giro }}
-                      <label for="{{ empresa_form.giro.id_for_label }}">Giro Comercial</label>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.telefono }}
-                      <label for="{{ empresa_form.telefono.id_for_label }}">Teléfono Fijo</label>
-                      <div class="invalid-feedback">
-                        {{ empresa_form.telefono.errors }}
-                        
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      {{ empresa_form.region }}
-                      <label for="{{ empresa_form.region.id_for_label }}">Región</label>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      {{ empresa_form.provincia }}
-                      <label for="{{ empresa_form.provincia.id_for_label }}">Provincia</label>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      {{ empresa_form.comuna }}
-                      <label for="{{ empresa_form.comuna.id_for_label }}">Comuna</label>
-                    </div>
-                  </div>
-                  <div class="col-md-8">
-                    <div class="form-floating">
-                      {{ empresa_form.direccion }}
-                      <label for="{{ empresa_form.direccion.id_for_label }}">Dirección</label>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-floating">
-                      {{ empresa_form.numero }}
-                      <label for="{{ empresa_form.numero.id_for_label }}">Número</label>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-floating">
-                      {{ empresa_form.oficina }}
-                      <label for="{{ empresa_form.oficina.id_for_label }}">Oficina</label>
-                    </div>
-                  </div>
-                </div>
-                <!-- Botón Siguiente -->
-                <div class="text-end mt-3">
-                  
-                  <button type="button" class="btn btn-primary next-btn" data-current="informacionprincipal" data-next="contacto">
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Sección Contacto (EmpresaForm) -->
-            <a class="nav-link" data-bs-toggle="collapse" href="#contacto" role="button">
-              <i class="bi bi-person-lines-fill me-2"></i> <span style="font-size: 20px;">Contacto</span>
-            </a>
-            <div class="collapse" id="contacto">
-              <div class="mb-4 border border-dark rounded p-3">
 
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.nombre_contacto }}
-                      <label for="{{ empresa_form.nombre_contacto.id_for_label }}">Nombre Contacto</label>
+            <!-- Menú de Pestañas -->
+            <ul class="nav nav-tabs mb-4" id="empresaTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="informacionprincipal-tab" data-bs-toggle="tab" data-bs-target="#informacionprincipal" type="button" role="tab">
+                  <i class="bi bi-building me-2"></i>Información Principal
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">
+                  <i class="bi bi-person-lines-fill me-2"></i>Contacto
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="representantelegal-tab" data-bs-toggle="tab" data-bs-target="#representantelegal" type="button" role="tab">
+                  <i class="bi bi-person-badge me-2"></i>Representante Legal
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="planestado-tab" data-bs-toggle="tab" data-bs-target="#planestado" type="button" role="tab">
+                  <i class="bi bi-clipboard-check me-2"></i>Plan y Estado
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vigencia-tab" data-bs-toggle="tab" data-bs-target="#vigencia" type="button" role="tab">
+                  <i class="bi bi-building me-2"></i>Vigencia de Planes
+                </button>
+              </li>
+            </ul>
+
+            <!-- Contenido de las Pestañas -->
+            <div class="tab-content" id="empresaTabContent">
+              <!-- Información Principal -->
+              <div class="tab-pane fade show active" id="informacionprincipal" role="tabpanel" aria-labelledby="informacionprincipal-tab">
+                <div class="mb-4 border border-dark rounded p-3">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.codigo_cliente }}
+                        <label for="{{ empresa_form.codigo_cliente.id_for_label }}">Código Cliente</label>
+                        <div class="invalid-feedback">
+                          {{ empresa_form.codigo_cliente.errors }}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.celular_contacto }}
-                      <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular Contacto</label>
-                      <div class="invalid-feedback">
-                        {{ empresa_form.celular_contacto.errors }}
-                        
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.rut }}
+                        <label for="{{ empresa_form.rut.id_for_label }}">RUT Empresa</label>
+                        <div class="invalid-feedback">
+                          {{ empresa_form.rut.errors }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.nombre }}
+                        <label for="{{ empresa_form.nombre.id_for_label }}">Razón Social</label>
+                        <div class="invalid-feedback">
+                          {{ empresa_form.nombre.errors }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.giro }}
+                        <label for="{{ empresa_form.giro.id_for_label }}">Giro Comercial</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.telefono }}
+                        <label for="{{ empresa_form.telefono.id_for_label }}">Teléfono Fijo</label>
+                        <div class="invalid-feedback">
+                          {{ empresa_form.telefono.errors }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        {{ empresa_form.region }}
+                        <label for="{{ empresa_form.region.id_for_label }}">Región</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        {{ empresa_form.provincia }}
+                        <label for="{{ empresa_form.provincia.id_for_label }}">Provincia</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        {{ empresa_form.comuna }}
+                        <label for="{{ empresa_form.comuna.id_for_label }}">Comuna</label>
+                      </div>
+                    </div>
+                    <div class="col-md-8">
+                      <div class="form-floating">
+                        {{ empresa_form.direccion }}
+                        <label for="{{ empresa_form.direccion.id_for_label }}">Dirección</label>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        {{ empresa_form.numero }}
+                        <label for="{{ empresa_form.numero.id_for_label }}">Número</label>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        {{ empresa_form.oficina }}
+                        <label for="{{ empresa_form.oficina.id_for_label }}">Oficina</label>
                       </div>
                     </div>
                   </div>
-                  <div class="col-12">
-                    <div class="form-floating">
-                      {{ empresa_form.mail_contacto }}
-                      <label for="{{ empresa_form.mail_contacto.id_for_label }}">Email Contacto</label>
-                    </div>
+                  <!-- Botón Siguiente -->
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-primary next-btn" data-current="informacionprincipal" data-next="contacto">
+                      Siguiente
+                    </button>
                   </div>
                 </div>
-                <!-- Botón Siguiente -->
-                <div class="text-end mt-3">
-                  <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="informacionprincipal">
-                    Anterior
-                  </button>
-                  <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="representantelegal">
-                    Siguiente
-                  </button>
+              </div>
+
+              <!-- Contacto -->
+              <div class="tab-pane fade" id="contacto" role="tabpanel" aria-labelledby="contacto-tab">
+                <div class="mb-4 border border-dark rounded p-3">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.nombre_contacto }}
+                        <label for="{{ empresa_form.nombre_contacto.id_for_label }}">Nombre Contacto</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.celular_contacto }}
+                        <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular Contacto</label>
+                        <div class="invalid-feedback">
+                          {{ empresa_form.celular_contacto.errors }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-floating">
+                        {{ empresa_form.mail_contacto }}
+                        <label for="{{ empresa_form.mail_contacto.id_for_label }}">Email Contacto</label>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Botón Siguiente/Anterior -->
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="informacionprincipal">
+                      Anterior
+                    </button>
+                    <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="representantelegal">
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Representante Legal -->
+              <div class="tab-pane fade" id="representantelegal" role="tabpanel" aria-labelledby="representantelegal-tab">
+                <div class="mb-4 border border-dark rounded p-3">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.rut_representante }}
+                        <label for="{{ empresa_form.rut_representante.id_for_label }}">RUT Representante</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.nombre_representante }}
+                        <label for="{{ empresa_form.nombre_representante.id_for_label }}">Nombre Representante</label>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Botón Siguiente/Anterior -->
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-primary next-btn" data-current="representantelegal" data-next="contacto">
+                      Anterior
+                    </button>
+                    <button type="button" class="btn btn-primary next-btn" data-current="representantelegal" data-next="planestado">
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Plan y Estado -->
+              <div class="tab-pane fade" id="planestado" role="tabpanel" aria-labelledby="planestado-tab">
+                <div class="mb-4 border border-dark rounded p-3">
+                  <div class="row g-3">
+                    <div class="col-md-3">
+                      <div class="form-floating">
+                        {{ empresa_form.estado }}
+                        <label for="{{ empresa_form.estado.id_for_label }}">Estado</label>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-check form-switch mt-3">
+                        <input type="checkbox" class="form-check-input" id="id_vigente" name="vigente" checked>
+                        <label class="form-check-label" for="id_vigente">Vigente</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.email }}
+                        <label for="{{ empresa_form.email.id_for_label }}">Email Corporativo</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        {{ empresa_form.web }}
+                        <label for="{{ empresa_form.web.id_for_label }}">Sitio Web</label>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Botón Siguiente/Anterior -->
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-primary next-btn" data-current="planestado" data-next="representantelegal">
+                      Anterior
+                    </button>
+                    <button type="button" class="btn btn-primary next-btn" data-current="planestado" data-next="vigencia">
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vigencia de Planes -->
+              <div class="tab-pane fade" id="vigencia" role="tabpanel" aria-labelledby="vigencia-tab">
+                <div class="mb-4 border border-dark rounded p-3">
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <select name="plan" class="form-select {% if vigencia_form.plan.errors %}is-invalid{% endif %}" id="{{ vigencia_form.plan.id_for_label }}">
+                          {% for plan in vigencia_form.plan.field.queryset %}
+                            <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if vigencia_form.plan.value == plan.id %}selected{% endif %}>
+                              {{ plan.nombre }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                        <label>Código de Plan</label>
+                        <div class="invalid-feedback">{{ vigencia_form.plan.errors }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  {{ vigencia_form.codigo_plan.as_hidden }}
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="date" name="fecha_inicio" id="id_fecha_inicio" class="form-control {% if vigencia_form.fecha_inicio.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_inicio.value|default_if_none:'' }}" required>
+                        <label>Fecha Inicio</label>
+                        <div class="invalid-feedback">{{ vigencia_form.fecha_inicio.errors }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="date" name="fecha_fin" id="id_fecha_fin" class="form-control {% if vigencia_form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_fin.value|default_if_none:'' }}">
+                        <label>Fecha Fin (Opcional)</label>
+                        <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
+                      </div>
+                      <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
+                        <label class="form-check-label" for="id_indefinido">Indefinido</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="number" name="descuento" id="id_descuento" class="form-control {% if vigencia_form.descuento.errors %}is-invalid{% endif %}" min="0" max="100" value="{{ vigencia_form.descuento.value|default_if_none:'' }}" required>
+                        <label>% Descuento (0-100)</label>
+                        <div class="invalid-feedback">{{ vigencia_form.descuento.errors }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="number" name="precio_original" id="id_precio_original"
+                               class="form-control {% if vigencia_form.precio_original.errors %}is-invalid{% endif %}"
+                               placeholder="Precio Original"
+                               value="{{ vigencia_form.precio_original.value|default:'100000' }}"
+                               required>
+                        <label>Precio Original</label>
+                        <div class="invalid-feedback">{{ vigencia_form.precio_original.errors }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="text" name="precio_final" id="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
+                        <label>Precio Final</label>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Botón Anterior -->
+                  <div class="text-end mt-3">
+                    <button type="button" class="btn btn-primary next-btn" data-current="vigencia" data-next="planestado">
+                      Anterior
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <!-- Sección Representante Legal (EmpresaForm) -->
-            <a class="nav-link" data-bs-toggle="collapse" href="#representantelegal" role="button">
-              <i class="bi bi-person-badge me-2"></i> <span style="font-size: 20px;">Representante Legal</span>
-            </a>
-            <div class="collapse" id="representantelegal">
-              <div class="mb-4 border border-dark rounded p-3">
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.rut_representante }}
-                      <label for="{{ empresa_form.rut_representante.id_for_label }}">RUT Representante</label>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.nombre_representante }}
-                      <label for="{{ empresa_form.nombre_representante.id_for_label }}">Nombre Representante</label>
-                    </div>
-                  </div>
-                </div>
-                <!-- Botón Siguiente -->
-                <div class="text-end mt-3">
-                  <button type="button" class="btn btn-primary next-btn" data-current="representantelegal" data-next="contacto">
-                    Anterior
-                  </button>
-                  <button type="button" class="btn btn-primary next-btn" data-current="representantelegal" data-next="planestado">
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Sección Plan y Estado (EmpresaForm) -->
-            <a class="nav-link" data-bs-toggle="collapse" href="#planestado" role="button">
-              <i class="bi bi-clipboard-check me-2"></i> <span style="font-size: 20px;">Plan y Estado</span>
-            </a>
-            <div class="collapse" id="planestado">
-              <div class="mb-4 border border-dark rounded p-3">
-                <div class="row g-3">
-                  <div class="col-md-3">
-                    <div class="form-floating">
-                      {{ empresa_form.estado }}
-                      <label for="{{ empresa_form.estado.id_for_label }}">Estado</label>
-                    </div>
-                  </div>
-                  <div class="col-md-3">
-                    <div class="form-check form-switch mt-3">
-                      <input type="checkbox" class="form-check-input" id="id_vigente" name="vigente" checked>
-                      <label class="form-check-label" for="id_vigente">Vigente</label>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.email }}
-                      <label for="{{ empresa_form.email.id_for_label }}">Email Corporativo</label>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      {{ empresa_form.web }}
-                      <label for="{{ empresa_form.web.id_for_label }}">Sitio Web</label>
-                    </div>
-                  </div>
-                </div>
-                <!-- Botón Siguiente -->
-                <div class="text-end mt-3">
-                  <button type="button" class="btn btn-primary next-btn" data-current="planestado" data-next="representantelegal">
-                    Anterior
-                  </button>
-                  <button type="button" class="btn btn-primary next-btn" data-current="planestado" data-next="vigencia">
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-             <!-- Sección Vigencia de Planes (PlanVigenciaForm) -->
-             <a class="nav-link" data-bs-toggle="collapse" href="#vigencia" role="button">
-              <i class="bi bi-building me-2"></i> <span style="font-size: 20px;">Vigencia de Planes</span>
-            </a>
-            <div class="collapse" id="vigencia">
-              <div class="mb-4 border border-dark rounded p-3">
-                <div class="row g-3 mb-4">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <select name="plan" class="form-select {% if vigencia_form.plan.errors %}is-invalid{% endif %}" id="{{ vigencia_form.plan.id_for_label }}">
-                        {% for plan in vigencia_form.plan.field.queryset %}
-                          <option value="{{ plan.id }}" data-valor="{{ plan.valor }}" {% if vigencia_form.plan.value == plan.id %}selected{% endif %}>
-                            {{ plan.nombre }}
-                          </option>
-                        {% endfor %}
-                      </select>
-                      <label>Código de Plan</label>
-                      <div class="invalid-feedback">{{ vigencia_form.plan.errors }}</div>
-                    </div>
-                  </div>
-                </div>
-                {# El campo Código Vigencia se genera y se envía pero se oculta #}
-                {{ vigencia_form.codigo_plan.as_hidden }}
-                <div class="row g-3 mb-4">
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      <input type="date" name="fecha_inicio" id="id_fecha_inicio" class="form-control {% if vigencia_form.fecha_inicio.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_inicio.value|default_if_none:'' }}" required>
-                      <label>Fecha Inicio</label>
-                      <div class="invalid-feedback">{{ vigencia_form.fecha_inicio.errors }}</div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      <input type="date" name="fecha_fin" id="id_fecha_fin" class="form-control {% if vigencia_form.fecha_fin.errors %}is-invalid{% endif %}" value="{{ vigencia_form.fecha_fin.value|default_if_none:'' }}">
-                      <label>Fecha Fin (Opcional)</label>
-                      <div class="invalid-feedback">{{ vigencia_form.fecha_fin.errors }}</div>
-                    </div>
-                    <div class="form-check mt-2">
-                      <input type="checkbox" class="form-check-input" id="id_indefinido" name="indefinido" checked>
-                      <label class="form-check-label" for="id_indefinido">Indefinido</label>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="form-floating">
-                      <input type="number" name="descuento" id="id_descuento" class="form-control {% if vigencia_form.descuento.errors %}is-invalid{% endif %}" min="0" max="100" value="{{ vigencia_form.descuento.value|default_if_none:'' }}" required>
-                      <label>% Descuento (0-100)</label>
-                      <div class="invalid-feedback">{{ vigencia_form.descuento.errors }}</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-3 mb-4">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <input type="number" name="precio_original" id="id_precio_original"
-                             class="form-control {% if vigencia_form.precio_original.errors %}is-invalid{% endif %}"
-                             placeholder="Precio Original"
-                             value="{{ vigencia_form.precio_original.value|default:'100000' }}"
-                             required>
-                      <label>Precio Original</label>
-                      <div class="invalid-feedback">{{ vigencia_form.precio_original.errors }}</div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <input type="text" name="precio_final" id="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
-                      <label>Precio Final</label>
-                    </div>
-                  </div>
-                </div>
-              
-                <!-- Botón Siguiente -->
-                <div class="text-end mt-3">
-                  <button type="button" class="btn btn-primary next-btn" data-current="vigencia" data-next="planestado">
-                    Anterior
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Botones -->
+            <!-- Fin del contenido de las pestañas -->
+
+            <!-- Botones de acción -->
             <div class="mt-5 border-top pt-4">
               <div class="d-flex justify-content-between">
                 <a href="{% url 'listar_clientes' %}" class="btn btn-outline-secondary px-4">
-                  <i class="bi bi-arrow-left me-2" id="volver"></i>Volver
+                  <i class="bi bi-arrow-left me-2"></i>Volver
                 </a>
                 <button type="submit" id="guardar-btn" class="btn btn-primary px-4">
-                  <i class="bi bi-save me-2" id="guardar"></i>Guardar
+                  <i class="bi bi-save me-2"></i>Guardar
                 </button>
               </div>
             </div>
@@ -364,8 +372,6 @@
     </div>
   </div>
 </div>
-
-
 
 <!-- Script Unificado -->
 <script>
@@ -404,8 +410,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
   
-    // Manejo de fechas, descuento y precio final
-    const descuentoInput = document.getElementById("id_descuento");
+  // Manejo de fechas, descuento y precio final
+  const descuentoInput = document.getElementById("id_descuento");
   const precioOriginalInput = document.getElementById("id_precio_original");
   const precioFinalInput = document.getElementById("precio_final");
   const fechaInicioInput = document.getElementById("id_fecha_inicio");
@@ -471,7 +477,7 @@ document.addEventListener("DOMContentLoaded", function() {
   
   actualizarCodigoVigencia();
   
-  // Validación del Formulario
+  // Validación del Formulario antes de guardar
   const guardarBtn = document.getElementById("guardar-btn");
   if (guardarBtn) {
     guardarBtn.addEventListener("click", function(event) {
@@ -483,17 +489,17 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
   
-  // Seleccionamos todos los botones de siguiente
+  // Manejo de botones "Siguiente" y "Anterior" para cambiar de pestaña sin modificar funcionalidad
   const nextButtons = document.querySelectorAll('.next-btn');
   nextButtons.forEach(button => {
     button.addEventListener('click', function() {
-      // Obtenemos los ids de la sección actual y la siguiente
+      // Obtenemos los ids de la pestaña actual y la siguiente
       const currentSectionId = this.getAttribute('data-current');
       const nextSectionId = this.getAttribute('data-next');
-      const currentSection = document.getElementById(currentSectionId);
       let valid = true;
       
-      // Validar todos los campos (input, select, textarea) dentro de la sección actual
+      // Validar todos los campos (input, select, textarea) dentro de la pestaña actual
+      const currentSection = document.getElementById(currentSectionId);
       const inputs = currentSection.querySelectorAll('input, select, textarea');
       inputs.forEach(input => {
         if (!input.checkValidity()) {
@@ -504,12 +510,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       });
       
-      
       if (valid) {
-        const bsCurrent = bootstrap.Collapse.getInstance(currentSection) || new bootstrap.Collapse(currentSection, { toggle: false });
-        bsCurrent.hide();
-        const nextSection = document.getElementById(nextSectionId);
-        new bootstrap.Collapse(nextSection, { toggle: false }).show();
+        // Activar la pestaña siguiente mediante Bootstrap Tab
+        const nextTabButton = document.querySelector(`[data-bs-target="#${nextSectionId}"]`);
+        if (nextTabButton) {
+          const tab = new bootstrap.Tab(nextTabButton);
+          tab.show();
+        }
       } else {
         currentSection.classList.add('was-validated');
       }

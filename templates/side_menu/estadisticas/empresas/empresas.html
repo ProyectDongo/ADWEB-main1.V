@@ -6,74 +6,56 @@
 {% block content %}
 <div class="container py-5">
   <div class="card shadow-lg border-0">
-    <!-- Header con título en color negro -->
+    <!-- Encabezado -->
     <div class="card-header bg-gradient-primary text-dark py-4">
       <h1 class="h4 mb-0 text-center">
         <i class="bi bi-building me-2"></i>Estadísticas de Empresas
       </h1>
     </div>
-
     <div class="card-body">
-      <div class="accordion" id="graficosAccordion">
-        <!-- Gráfico Lineal -->
-        <div class="accordion-item border-0 mb-3">
-          <div class="accordion-header">
-            <button class="accordion-button d-flex align-items-center bg-light py-3" type="button" data-bs-toggle="collapse" data-bs-target="#lineChartCollapse" aria-expanded="true">
-              <i class="bi bi-graph-up me-3 text-primary"></i>
-              <h5 class="mb-0">Tendencia Mensual</h5>
-            </button>
-          </div>
-          <div id="lineChartCollapse" class="accordion-collapse collapse show">
-            <div class="accordion-body pt-0">
-              <div class="chart-container w-100" style="height: 400px;">
-                <canvas id="empresasLineChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Pestañas -->
+      <ul class="nav nav-tabs mb-4" id="empresaTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="lineal-tab" data-bs-toggle="tab" data-bs-target="#lineal" type="button" role="tab">Tendencia Mensual</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="barras-tab" data-bs-toggle="tab" data-bs-target="#barras" type="button" role="tab">Comparación Mensual</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="detallados-tab" data-bs-toggle="tab" data-bs-target="#detallados" type="button" role="tab">Datos Detallados</button>
+        </li>
+      </ul>
 
-        <!-- Gráfico de Barras -->
-        <div class="accordion-item border-0 mb-3">
-          <div class="accordion-header">
-            <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#barChartCollapse" aria-expanded="false">
-              <i class="bi bi-bar-chart me-3 text-primary"></i>
-              <h5 class="mb-0">Comparación Mensual</h5>
-            </button>
-          </div>
-          <div id="barChartCollapse" class="accordion-collapse collapse">
-            <div class="accordion-body pt-0">
-              <div class="chart-container w-100" style="height: 400px;">
-                <canvas id="empresasBarChart"></canvas>
-              </div>
-            </div>
+      <!-- Contenido de las pestañas -->
+      <div class="tab-content" id="empresaTabContent">
+        <!-- Pestaña Tendencia Mensual -->
+        <div class="tab-pane fade show active" id="lineal" role="tabpanel">
+          <div class="chart-container w-100" style="height: 400px;">
+            <canvas id="empresasLineChart"></canvas>
           </div>
         </div>
-
-        <!-- Datos Detallados (colapsable) -->
-        <div class="accordion-item border-0 mb-3">
-          <div class="accordion-header">
-            <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#detallesCollapse" aria-expanded="false">
-              <i class="bi bi-table me-2 text-primary"></i>
-              <h5 class="mb-0">Datos Detallados</h5>
-            </button>
-          </div>
-          <div id="detallesCollapse" class="accordion-collapse collapse">
-            <div class="accordion-body pt-0">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Mes</th>
-                      <th class="text-end">Empresas Registradas</th>
-                    </tr>
-                  </thead>
-                  <tbody id="empresas-table-body" class="fw-semibold"></tbody>
-                </table>
-              </div>
-            </div>
+        <!-- Pestaña Comparación Mensual -->
+        <div class="tab-pane fade" id="barras" role="tabpanel">
+          <div class="chart-container w-100" style="height: 400px;">
+            <canvas id="empresasBarChart"></canvas>
           </div>
         </div>
-      </div> <!-- Fin del acordeón -->
+        <!-- Pestaña Datos Detallados -->
+        <div class="tab-pane fade" id="detallados" role="tabpanel">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Mes</th>
+                  <th class="text-end">Empresas Registradas</th>
+                </tr>
+              </thead>
+              <tbody id="empresas-table-body" class="fw-semibold"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Fin de contenido de pestañas -->
     </div>
   </div>
 </div>
@@ -84,7 +66,7 @@
 {{ empresas_por_mes|json_script:"empresas-data" }}
 
 <script>
-  // Array con los nombres de los meses en español
+  // Nombres de los meses en español
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -101,7 +83,7 @@
     return found ? found[field] : 0;
   }
 
-  // Generar arreglo con datos para cada mes
+  // Generar arreglo con los datos de cada mes
   const empresasCount = fullLabels.map((_, index) => getValueForMonth(empresasDataRaw, 'total', index));
 
   // Configuración del gráfico lineal
@@ -152,7 +134,7 @@
       }
   });
 
-  // Rellenar la tabla de datos
+  // Rellenar la tabla con los datos
   const tableBody = document.getElementById('empresas-table-body');
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>

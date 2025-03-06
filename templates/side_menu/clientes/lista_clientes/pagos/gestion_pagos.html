@@ -224,11 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function calcularMonto() {
         const selectedOption = planSelector.options[planSelector.selectedIndex];
         if (selectedOption.value === 'todos') {
-            let total = 0;
-            {% for vigencia in vigencias %}
-                total += {{ vigencia.monto_final }};
-            {% endfor %}
-            valorInput.value = total.toFixed(2);
+            valorInput.value = "{{ total_vigencias }}";
         } else {
             const monto = selectedOption.getAttribute('data-monto');
             valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';

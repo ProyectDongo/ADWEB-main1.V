@@ -1,10 +1,21 @@
-from django.shortcuts import redirect, render
-from django.contrib.auth import logout
+from django.shortcuts import redirect, render, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from WEB.forms import *
 from WEB.models import *
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('redirect_after_login')  # Redirige a la página principal después de iniciar sesión
+        else:
+            messages.error(request, 'Credenciales incorrectas. Por favor, inténtelo de nuevo.')
+    return render(request, 'login/login.html')
 
 @login_required
 def redirect_after_login(request):
@@ -26,11 +37,10 @@ def logout_view(request):
 
 @login_required
 def admin_home(request):
-
     return render(request, 'home/admin_home.html')
 
 @login_required
-def supervisor_home(request,empresa_id):
+def supervisor_home(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     supervisores = empresa.usuarios.filter(role='supervisor')
     trabajadores = empresa.usuarios.filter(role='trabajador')
@@ -41,19 +51,8 @@ def supervisor_home(request,empresa_id):
     }
     return render(request, 'home/home_supervisor/supervisor_home.html', context)
 
-
 @login_required
 def trabajador_home(request):
-    """
-    Vista principal del trabajador para registro de entradas/salidas.
-    
-    :param request: HttpRequest de usuario con rol trabajador
-    :return: Renderizado de template con formularios correspondientes
-    
-    Maneja dos tipos de POST:
-    - 'entrada': Registra hora de entrada con validación de 6 horas
-    - 'salida': Registra hora de salida si existe entrada sin cerrar
-    """
     if request.method == 'POST':
         if 'entrada' in request.POST:
             hace_seis_horas = timezone.now() - timezone.timedelta(hours=6)
@@ -94,11 +93,6 @@ def trabajador_home(request):
         'form_entrada': RegistroEntradaForm(),
         'form_salida': RegistroSalidaForm()
     })
+
 def configuracion_home(request):
-    """
-    Vista para la página de configuración del home.
-    
-    :param request: HttpRequest
-    :return: Renderizado del template de configuración del home
-    """
     return render(request, 'home/configuracion_home.html')

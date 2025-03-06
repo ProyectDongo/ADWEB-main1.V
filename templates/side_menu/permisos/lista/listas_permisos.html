@@ -6,24 +6,39 @@
 <div class="container py-4">
     <div class="card shadow-sm">
         <div class="card-header text-center">
-            <h1 class="h4 mb-0">Lista de Permisos</h1>
+            <h1 class="h4 mb-0">
+                <i class="bi bi-card-list me-2"></i>
+                Lista de Permisos
+            </h1>
         </div>
         <div class="card-body">
             <ul class="list-group list-group-flush">
                 {% for permiso in permisos %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="mb-1">{{ permiso.nombre }}</h5>
+                            <h5 class="mb-1">
+                                <i class="bi bi-key me-2"></i>
+                                {{ permiso.nombre }}
+                            </h5>
                             <p class="mb-0">{{ permiso.descripcion }}</p>
                         </div>
                     </li>
                 {% empty %}
-                    <li class="list-group-item text-center">No hay permisos disponibles.</li>
+                    <li class="list-group-item text-center">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        No hay permisos disponibles.
+                    </li>
                 {% endfor %}
             </ul>
             <div class="d-flex justify-content-end mt-4 gap-2">
-                <a href="{% url 'crear_permiso' %}" class="btn btn-success">Crear Permiso</a>
-                <a href="{% url 'listar_clientes' %}" class="btn btn-secondary">Volver a Lista de Empresas</a>
+                <a href="{% url 'crear_permiso' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Crear Permiso
+                </a>
+                <a href="{% url 'listar_clientes' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle me-1"></i>
+                    Volver a Lista de Empresas
+                </a>
             </div>
         </div>
     </div>

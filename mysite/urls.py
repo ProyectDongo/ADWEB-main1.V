@@ -16,47 +16,54 @@ Including another URLconf
 """
 
 
+from site import venv
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from WEB.views.clientes import empresas
 
-"from WEB.views import suspender_empresa,habilitar_empresa,estadisticas_empresas,estadisticas_pagos,actualizar_estado_pago,historial_pagos,notificaciones_json,notificar_cobranza,lista_deudas"
-from WEB.views import autenticacion,sofware,planes,estadisticas,permisos,utilidades
-from WEB.views.clientes.pagos import pagos
-from WEB.views.clientes.empresas import empresas
+from WEB.views.config.views import sofware
+from WEB.views.estadisticas.views import estadisticas
+from WEB.views.sso.views import autenticacion, permisos
+from WEB.views.tools.views import utilidades
+
+from WEB.views.clientes.pagos.views import pagos
+from WEB.views.clientes.empresas.views import empresas,planes
+
 urlpatterns = [
 
  # Autenticación URLS:
-
+    path('login/', autenticacion.login_view, name='login'),
     path('', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
-    path('accounts/redirect/', autenticacion.redirect_after_login, name='login_redirect'),
+#redirige a la pagina principal despues de iniciar sesion:
+    path('redirect_after_login/', autenticacion.redirect_after_login, name='redirect_after_login'),
+#cerras sesion:
     path('logout/', autenticacion.logout_view, name='logout'),
-    
+
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #home URLS:
     #admin:
-    path('admin/home/', autenticacion.admin_home, name='admin_home'),
+    path('admin_home/', autenticacion.admin_home, name='admin_home'),
     #supervisor:
-    path('supervisor/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
+    path('supervisor_home/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
     #usuario:
-    path('trabajador/home/', autenticacion.trabajador_home, name='trabajador_home'),
+    path('trabajador_home/', autenticacion.trabajador_home, name='trabajador_home'),
     #configuracion:
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
+    
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 # Sofware URLS:
-
+    #crear admin:
     path('crear_admin/', sofware.crear_admin, name='crear_admin'),
+    #crear supervisor:
     path('crear_supervisor/', sofware.crear_supervisor, name='crear_supervisor'),
+    #crear trabajador:  
     path('crear_trabajador/', sofware.crear_trabajador, name='crear_trabajador'),
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 # Clientes  URLS:
-
     #lista de clientes:
     path('listar_clientes/', empresas.listar_clientes, name='listar_clientes'),
         #Crear Empresa:
             path('crear_empresa/', empresas.crear_empresa, name='crear_empresa'),
-
         #listar empresas eliminadas - recuperar - eliminar:
             path('eliminar_empresa/<int:pk>/', empresas.eliminar_empresa, name='eliminar_empresa'),
             path('empresas/eliminadas/', empresas.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
@@ -72,11 +79,6 @@ urlpatterns = [
         # boton para redirigir a pagos  :
         path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
             #desactivar pagos - servicios :
-           
-
-
-            #hisorial de pagos :
-          
                 #btn de actualziar pags de pendiente a aldia:
                     path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
        
@@ -121,4 +123,16 @@ urlpatterns = [
     # Otras rutas necesarias…
     path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
     path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
+    path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
+    path('api/get_comunas/',utilidades.get_comunas, name='get_comunas'),
+
+   
+    
+   
+    
+    
+    
+    
+    
+
     ] 

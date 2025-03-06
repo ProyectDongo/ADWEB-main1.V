@@ -7,6 +7,8 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404,redirect,render
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Prefetch
+
 @login_required
 @permiso_requerido("crear_empresa")
 def crear_empresa(request):
@@ -53,7 +55,7 @@ def crear_empresa(request):
                 f"Empresa creada correctamente. Se ha creado un usuario supervisor con username: {supervisor.username} y contraseña: {password}"
             )
             
-            return redirect('listar_empresas')
+            return redirect('listar_clientes')
     else:
         empresa_form = EmpresaForm()
         vigencia_form = PlanVigenciaForm()
@@ -132,26 +134,44 @@ def detalle_empresa(request, pk):
 
 @login_required
 @permiso_requerido("vista_empresas")
+
 def listar_clientes(request):
-    """
-    Lista todas las empresas registradas con capacidad de búsqueda.
-    
-    :param request: HttpRequest
-    :return: Renderizado de template con lista de empresas
-    """
     empresas = RegistroEmpresas.objects.filter(eliminada=False)
     
     query = request.GET.get('q')
     if query:
         empresas = empresas.filter(nombre__icontains=query)
     
-    # Agregar atributo 'tiene_pendientes' a cada empresa
-    for empresa in empresas:
-        empresa.tiene_pendientes = empresa.pagos.filter(pagado=False).exists()
+    # Prefetch related Cobros y Vigencias
+    empresas = empresas.prefetch_related(
+        Prefetch('cobros', queryset=Cobro.objects.filter(vigencia_plan__isnull=True)),
+        Prefetch('vigencias', queryset=VigenciaPlan.objects.prefetch_related(
+            Prefetch('cobros_relacionados', queryset=Cobro.objects.all()),
+            Prefetch('cobros_planes', queryset=Cobro.objects.all())
+        ))
+    )
     
-    return render(request, 'side_menu/clientes/lista_clientes/listar_clientes.html', {'empresas': empresas})
-
-
+    for empresa in empresas:
+        # Verificar si existe algún cobro sin asignación a vigencia_plan y cuyo estado sea 'pagado'
+        one_time_cobro_paid = any(
+            cobro.vigencia_plan is None and cobro.estado == 'pagado'
+            for cobro in empresa.cobros.all()
+        )
+        
+        # Procesar cada vigencia de la empresa
+        for vigencia in empresa.vigencias.all():
+            if one_time_cobro_paid:
+                # Si existe un cobro sin vigencia_plan y pagado, se considera que no hay pago pendiente
+                vigencia.pago_pendiente = False
+            else:
+                # Si no se cumple la condición anterior, se evalúan los cobros asociados a la vigencia
+                cobros_fk = vigencia.cobros_relacionados.all()
+                cobros_m2m = vigencia.cobros_planes.all()
+                # Se verifica si alguno de los cobros asociados está en estado 'pendiente'
+                has_pending = any(c.estado == 'pendiente' for c in cobros_fk) or any(c.estado == 'pendiente' for c in cobros_m2m)
+                vigencia.pago_pendiente = has_pending
+    
+    return render(request, 'side_menu/clientes/lista_clientes/home/listar_clientes.html', {'empresas': empresas})
 @login_required
 def eliminar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, id=pk)

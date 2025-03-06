@@ -5,93 +5,76 @@
 
 {% block content %}
 <div class="container py-5">
-    <div class="card shadow-lg border-0">
-      <div class="card-header bg-gradient-primary text-dark py-4">
-          <h1 class="h4 mb-0 text-center titulo-azul-claro">
-            <i class="bi bi-currency-dollar me-2"></i>Estadísticas de Pagos
-        </h1>
-        </div>
-        
-        <div class="card-body">
-            <div class="accordion" id="graficosAccordion">
-                <!-- Gráfico Lineal -->
-                <div class="accordion-item border-0 mb-3">
-                    <div class="accordion-header">
-                        <button class="accordion-button d-flex align-items-center bg-light py-3" type="button" data-bs-toggle="collapse" data-bs-target="#lineChartCollapse">
-                            <i class="bi bi-graph-up me-3 text-primary"></i>
-                            <h5 class="mb-0">Tendencia Mensual</h5>
-                        </button>
-                    </div>
-                    <div id="lineChartCollapse" class="accordion-collapse collapse show">
-                        <div class="accordion-body pt-0">
-                            <div class="chart-container" style="height: 400px;">
-                                <canvas id="pagosLineChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gráfico de Barras -->
-                <div class="accordion-item border-0 mb-3">
-                    <div class="accordion-header">
-                        <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#barChartCollapse">
-                            <i class="bi bi-bar-chart me-3 text-primary"></i>
-                            <h5 class="mb-0">Comparación Mensual</h5>
-                        </button>
-                    </div>
-                    <div id="barChartCollapse" class="accordion-collapse collapse">
-                        <div class="accordion-body pt-0">
-                            <div class="chart-container" style="height: 400px;">
-                                <canvas id="pagosBarChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Datos Detallados (colapsable) -->
-                <div class="accordion-item border-0 mb-3">
-                    <div class="accordion-header">
-                        <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#detallesCollapse">
-                            <i class="bi bi-table me-3 text-primary"></i>
-                            <h5 class="mb-0">Datos Detallados</h5>
-                        </button>
-                    </div>
-                    <div id="detallesCollapse" class="accordion-collapse collapse">
-                        <div class="accordion-body pt-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Mes</th>
-                                            <th class="text-end">Cantidad</th>
-                                            <th class="text-end">Monto Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="pagos-table-body" class="fw-semibold"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- Fin del acordeón -->
-        </div>
+  <div class="card shadow-lg border-0">
+    <!-- Encabezado -->
+    <div class="card-header bg-gradient-primary text-dark py-4">
+      <h1 class="h4 mb-0 text-center titulo-azul-claro">
+        <i class="bi bi-currency-dollar me-2"></i>Estadísticas de Pagos
+      </h1>
     </div>
+    <div class="card-body">
+      <!-- Pestañas -->
+      <ul class="nav nav-tabs mb-4" id="pagosTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="lineal-tab" data-bs-toggle="tab" data-bs-target="#lineal" type="button" role="tab">Tendencia Mensual</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="barras-tab" data-bs-toggle="tab" data-bs-target="#barras" type="button" role="tab">Comparación Mensual</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="detallados-tab" data-bs-toggle="tab" data-bs-target="#detallados" type="button" role="tab">Datos Detallados</button>
+        </li>
+      </ul>
+
+      <!-- Contenido de las pestañas -->
+      <div class="tab-content" id="pagosTabContent">
+        <!-- Pestaña Tendencia Mensual -->
+        <div class="tab-pane fade show active" id="lineal" role="tabpanel">
+          <div class="chart-container" style="height: 400px;">
+            <canvas id="pagosLineChart"></canvas>
+          </div>
+        </div>
+        <!-- Pestaña Comparación Mensual -->
+        <div class="tab-pane fade" id="barras" role="tabpanel">
+          <div class="chart-container" style="height: 400px;">
+            <canvas id="pagosBarChart"></canvas>
+          </div>
+        </div>
+        <!-- Pestaña Datos Detallados -->
+        <div class="tab-pane fade" id="detallados" role="tabpanel">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Mes</th>
+                  <th class="text-end">Cantidad</th>
+                  <th class="text-end">Monto Total</th>
+                </tr>
+              </thead>
+              <tbody id="pagos-table-body" class="fw-semibold"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Fin de contenido de pestañas -->
+    </div>
+  </div>
 </div>
 
 <!-- Incluir Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Datos JSON (asegúrate de pasar 'pagos_por_mes' desde la vista) -->
+<!-- Datos JSON: Asegúrate de pasar 'pagos_por_mes' desde la vista -->
 {{ pagos_por_mes|json_script:"pagos-data" }}
 
 <script>
-  // Nombres de meses predefinidos
+  // Nombres de los meses en español
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
   const fullLabels = monthNames;
 
-  // Parsear los datos JSON pasados desde la vista
+  // Parsear los datos JSON
   const pagosDataRaw = JSON.parse(document.getElementById('pagos-data').textContent);
 
   // Función para obtener el valor correspondiente para cada mes
@@ -105,7 +88,7 @@
   const pagosCount = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'cantidad', index));
   const pagosMonto = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'monto_total', index));
 
-  // Configuración y renderización del gráfico lineal
+  // Configuración del gráfico lineal
   const ctxLine = document.getElementById('pagosLineChart').getContext('2d');
   new Chart(ctxLine, {
       type: 'line',
@@ -138,7 +121,7 @@
       }
   });
 
-  // Configuración y renderización del gráfico de barras
+  // Configuración del gráfico de barras
   const ctxBar = document.getElementById('pagosBarChart').getContext('2d');
   new Chart(ctxBar, {
       type: 'bar',
@@ -171,7 +154,7 @@
       }
   });
 
-  // Rellenar la tabla de datos con los valores obtenidos
+  // Rellenar la tabla con los datos
   const tableBody = document.getElementById('pagos-table-body');
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>
@@ -181,5 +164,4 @@
                             </tr>`;
   });
 </script>
-
 {% endblock %}
