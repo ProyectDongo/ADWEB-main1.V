@@ -1,178 +1,107 @@
 {% extends "central.html" %}
-{% load static %}
-{% block title %}Crear Usuario{% endblock %}
 
 {% block content %}
-{% block css-page %}
-<link rel="stylesheet" href="{% static 'bootstrap/css/styles.css' %}">
-
-{% endblock %}
-
-<div class="container py-5 " style="margin-top:100px ;">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8 "style="width:1000px!important;">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="h4 mb-0 text-center">
-                       
-                        <i class="bi bi-person-badge me-2"></i>Crear Usuario
+        <div class="col-xl-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white py-3">
+                    <h2 class="h5 mb-0">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Nuevo Uusario
                     </h2>
                 </div>
+
                 <div class="card-body p-4">
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        <div class="row g-3">
-                            <!-- Usuario -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.username }}
-                                    <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
-                                    {% if form.username.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.username.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Empresa -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.empresa }}
-                                    <label for="{{ form.empresa.id_for_label }}">Empresa</label>
-                                    {% if form.empresa.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.empresa.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                               <!-- rut -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.rut }}
-                                    <label for="{{ form.empresa.id_for_label }}">Rut</label>
-                                    {% if form.rut.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.rut.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- nombre -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.nombre }}
-                                    <label for="{{ form.empresa.id_for_label }}">Nombre</label>
-                                    {% if form.nombre.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.nombre.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                             <!-- apellido Paterno -->
-                             <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.last_name }}
-                                    <label for="{{ form.empresa.id_for_label }}">Apellido Paterno</label>
-                                    {% if form.last_name.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.last_name.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                              <!-- apellido Materno -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.apellidoM }}
-                                    <label for="{{ form.empresa.id_for_label }}">Apellido Materno</label>
-                                    {% if form.apellidoM.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.apellidom.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                              <!-- celular -->
+                        
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                  {{ form.celular }}
-                                  <label for="{{ empresa_form.celular_contacto.id_for_label }}">Celular</label>
-                                  <div class="invalid-feedback">
-                                    {{ form.celular.errors }}
-                                   
-                                  </div>
+                                    {{ form.username }}
+                                    <label>Nombre de usuario</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.username.errors|first }}
+                                    </div>
                                 </div>
-                              </div>
-                              <!-- email -->
+                            </div>
                             <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    {{ form.email }}
-                                    <label for="{{ form.empresa.id_for_label }}">Email</label>
-                                    {% if form.email.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.email.errors|first }}
-                                        </div>
-                                    {% endif %}
+                                <div class="form-floating">
+                                    {{ form.empresa }}
+                                    <label>Empresa</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.empresa.errors|first }}
+                                    </div>
                                 </div>
                             </div>
-                            
-
-                            <!-- Contraseñas -->
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    <input type="password" name="password1" class="form-control" id="{{ form.password1.id_for_label }}" required>
-                                    <label for="{{ form.password1.id_for_label }}">Contraseña</label>
-                                    {% if form.password1.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.password1.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-floating mb-4">
-                                    <input type="password" name="password2" class="form-control" id="{{ form.password2.id_for_label }}" required>
-                                    <label for="{{ form.password2.id_for_label }}">Confirmar contraseña</label>
-                                    {% if form.password2.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ form.password2.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Permisos -->
-                            <div class="form-group">
-                                <div class="mb-4">
-                                    <label class="form-label" for="{{ form.permisos.id_for_label }}">Permisos</label>
-                                    {{ form.permisos }}
-                                    {% if form.permisos.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.permisos.errors|first }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            
                         </div>
-                        
-                        <!-- Botones -->
-                        <div class="mt-5 border-top pt-4">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'configuracion_home' %}" class="btn btn-outline-secondary px-4">
-                                    <i class="bi bi-arrow-left me-2"></i>Volver
-                                </a>
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="bi bi-save me-2"></i>Guardar
-                                </button>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.rut }}
+                                    <label>RUT</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.rut.errors|first }}
+                                    </div>
+                                </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.nombre }}
+                                    <label>Nombre</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.nombre.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    {{ form.last_name }}
+                                    <label>Apellido Paterno</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.last_name.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.email }}
+                                    <label>Email</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.email.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.celular }}
+                                    <label>Celular</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.celular.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-bold">Permisos</label>
+                            <div class="border rounded-3 p-3">
+                                {{ form.permisos }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between border-top pt-4">
+                            <a href="{% url 'configuracion_home' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Guardar
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -180,4 +109,40 @@
         </div>
     </div>
 </div>
+
+<style>
+    .dual-listbox {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .dual-listbox .dual-listbox__container {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .dual-listbox__available,
+    .dual-listbox__selected {
+        flex: 1;
+        min-width: 300px;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#id_permisos').bootstrapDualListbox({
+            nonSelectedListLabel: 'Permisos Disponibles',
+            selectedListLabel: 'Permisos Asignados',
+            preserveSelectionOnMove: 'moved',
+            moveOnSelect: false,
+            infoText: 'Mostrando {0} elementos',
+            infoTextFiltered: '<span class="badge bg-warning">Filtrado</span> {0} de {1}',
+            filterPlaceHolder: 'Buscar...',
+            filterTextClear: 'Limpiar',
+            moveAllLabel: 'Mover todos',
+            removeAllLabel: 'Quitar todos',
+            selectorMinimalHeight: 300
+        });
+    });
+</script>
 {% endblock %}

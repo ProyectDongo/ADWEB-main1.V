@@ -1,6 +1,7 @@
 python manage.py makemigrations WEB
 python manage.py makemigrations
-python manage.py migrate
+pip install anymail
+
 pip install django-crispy-forms
 pip install crispy_bootstrap5 
 pip install django-widget-tweaks

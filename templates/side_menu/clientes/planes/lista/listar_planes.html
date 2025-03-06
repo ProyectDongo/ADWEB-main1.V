@@ -4,67 +4,74 @@
 
 {% block content %}
 <div class="container py-5">
-    <!-- Tarjeta que envuelve el contenido -->
-    <div class="card shadow rounded border-0">
-        <!-- Encabezado de la tarjeta con fondo #e9ecef -->
-        <div class="card-header" style="background-color:rgba(0, 106, 255, 0.707);">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary bg-gradient text-white py-3">
             <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">Lista de Planes</h2>
+                <h2 class="h4 mb-0"><i class="bi bi-card-list me-2"></i>Catálogo de Planes</h2>
                 <a href="{% url 'crear_plan' %}" class="btn btn-light">
-                    <i class="bi bi-plus-lg"></i> Crear Plan
+                    <i class="bi bi-plus-lg me-2"></i>Nuevo Plan
                 </a>
             </div>
         </div>
-        <!-- Cuerpo de la tarjeta -->
+        
         <div class="card-body">
             <div class="mb-4">
-                <input type="text" id="search" class="form-control form-control-lg" placeholder="Buscar plan por código...">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-primary text-white">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="search" class="form-control" placeholder="Buscar plan por código o nombre...">
+                </div>
             </div>
+            
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Código Plan</th>
+                            <th>Código</th>
                             <th>Estado</th>
                             <th>Nombre</th>
                             <th>Valor</th>
-                            <th>Cantidad de Usuarios</th>
-                            <th>Descripcion del Plan</th>
-                           
+                            <th>Usuarios</th>
+                            <th>Descripción</th>
                         </tr>
                     </thead>
-                    <tbody id="plan-list">
+                    <tbody id="plan-list" class="border-top-0">
                         {% for plan in planes %}
-                        <tr>
-                            <td>{{ plan.codigo }}</td>
-                            <td>  {% if plan.activo == 1 %}
-                                <span class="badge bg-success">Activo</span>
-                               {% else %}
-                                <span class="badge bg-danger">Suspendio</span>
-                                {% endif %}</td>
+                        <tr class="clickable-row" data-href="#">
+                            <td class="fw-bold text-primary">{{ plan.codigo }}</td>
+                            <td>
+                                <span class="badge bg-{% if plan.activo == 1 %}success{% else %}danger{% endif %}">
+                                    {{ plan.activo|yesno:"Activo,Suspendido" }}
+                                </span>
+                            </td>
                             <td>{{ plan.nombre }}</td>
-                            <td>{{ plan.valor }}</td>
+                            <td>${{ plan.valor }}</td>
                             <td>{{ plan.max_usuarios }}</td>
-                            <td>{{ plan.descripcion }}</td>
-                            
+                            <td class="text-truncate" style="max-width: 200px;">{{ plan.descripcion }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center">No hay planes disponibles.</td>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle me-2"></i> No se encontraron planes registrados
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <!-- Botón para volver -->
+            
             <div class="mt-4">
                 <a href="{% url 'listar_clientes' %}" class="btn btn-outline-primary">
-                    <i class="bi bi-arrow-left me-2"></i> Volver
+                    <i class="bi bi-arrow-left me-2"></i>Volver al Listado
                 </a>
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
     document.getElementById('search').addEventListener('input', function() {

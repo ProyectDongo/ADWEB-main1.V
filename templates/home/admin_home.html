@@ -1,39 +1,81 @@
 {% extends "central.html" %}
+{% load static %}
 
 {% block title %}Bienvenido Administrador{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <h1 class="card-title display-5">Bienvenido, Administrador {{ user.username }}!</h1>
-            <p class="card-text lead">
-                Este sistema te permite gestionar el control de asistencia de múltiples empresas, junto con sus supervisores y trabajadores.
-            </p>
-            <hr>
-            <h4>Instrucciones para comenzar:</h4>
-            <ul class="list-group list-group-flush mb-4">
-                <li class="list-group-item">
-                    <strong>Registrar Empresas:</strong> Agrega y administra las empresas que forman parte del sistema.
-                </li>
-                <li class="list-group-item">
-                    <strong>Asignar Supervisores:</strong> Designa a los supervisores responsables de cada empresa.
-                </li>
-                <li class="list-group-item">
-                    <strong>Control de Asistencia:</strong> Consulta y registra las entradas y salidas de los trabajadores.
-                </li>
-                <li class="list-group-item">
-                    <strong>Generar Reportes:</strong> Visualiza reportes detallados para analizar la asistencia y detectar inconsistencias.
-                </li>
-            </ul>
-            <p>
-                Utiliza el menú de navegación o los botones a continuación para acceder a las secciones clave del sistema.
-            </p>
-            <div class="d-flex flex-wrap gap-3">
-                <a href="{% url 'listar_clientes' %}" class="btn btn-primary btn-lg">
-                    <i class="bi bi-building"></i> Gestión de Clientes
-                </a>
+    <div class="card border-0 shadow-lg overflow-hidden">
+        <div class="card-header bg-primary bg-gradient text-dark py-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 mb-0"><i class="bi bi-speedometer2 me-3"></i>Bienvenido, {{ user.username }}</h1>
+                    <p class="lead mb-0 mt-2">Panel de Control de Gestión Empresarial</p>
+                </div>
+               
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <h4 class="text-primary mb-3"><i class="bi bi-info-circle me-2"></i>Guía Rápida</h4>
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        <div class="col">
+                            <div class="card h-100 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-building me-2"></i>Gestión de Empresas</h5>
+                                    <p class="card-text small">Registro y administración de empresas clientes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-people me-2"></i>Control de Usuarios</h5>
+                                    <p class="card-text small">Administración de supervisores y trabajadores</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-graph-up me-2"></i>Reportes Analíticos</h5>
+                                    <p class="card-text small">Generación de informes y estadísticas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100 border-start border-primary border-3">
+                                <div class="card-body">
+                                    <h5 class="card-title"><i class="bi bi-shield-check me-2"></i>Configuraciones</h5>
+                                    <p class="card-text small">Ajustes del sistema y permisos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
+                <div class="col-lg-4">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Acciones Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-3">
+                                <a href="{% url 'listar_clientes' %}" class="btn btn-outline-primary text-start">
+                                    <i class="bi bi-building me-2"></i>Gestión de Clientes
+                                </a>
+                                <button class="btn btn-outline-primary text-start">
+                                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Generar Reporte
+                                </button>
+                                <button class="btn btn-outline-primary text-start">
+                                    <i class="bi bi-gear me-2"></i>Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

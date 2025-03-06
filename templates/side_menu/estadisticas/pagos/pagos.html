@@ -1,95 +1,111 @@
 {% extends "central.html" %}
 {% load static %}
-{% block title %}Estadísticas Pagos{% endblock %}
+
+{% block title %}Estadísticas de Pagos{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1 class="text-center mb-4">Pagos Mensuales</h1>
-
-  <!-- Accordion para los gráficos -->
-  <div class="accordion" id="accordionPagos">
-    <!-- Gráfico Lineal -->
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingLinePagos">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLinePagos" aria-expanded="true" aria-controls="collapseLinePagos">
-          Gráfico Lineal
-        </button>
-      </h2>
-      <div id="collapseLinePagos" class="accordion-collapse collapse show" aria-labelledby="headingLinePagos" data-bs-parent="#accordionPagos">
-        <div class="accordion-body">
-          <canvas id="pagosLineChart" style="height: 400px;"></canvas>
+<div class="container py-5">
+    <div class="card shadow-lg border-0">
+      <div class="card-header bg-gradient-primary text-dark py-4">
+          <h1 class="h4 mb-0 text-center titulo-azul-claro">
+            <i class="bi bi-currency-dollar me-2"></i>Estadísticas de Pagos
+        </h1>
         </div>
-      </div>
-    </div>
-    <!-- Gráfico de Barras -->
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingBarPagos">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBarPagos" aria-expanded="false" aria-controls="collapseBarPagos">
-          Gráfico de Barras
-        </button>
-      </h2>
-      <div id="collapseBarPagos" class="accordion-collapse collapse" aria-labelledby="headingBarPagos" data-bs-parent="#accordionPagos">
-        <div class="accordion-body">
-          <canvas id="pagosBarChart" style="height: 400px;"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
+        
+        <div class="card-body">
+            <div class="accordion" id="graficosAccordion">
+                <!-- Gráfico Lineal -->
+                <div class="accordion-item border-0 mb-3">
+                    <div class="accordion-header">
+                        <button class="accordion-button d-flex align-items-center bg-light py-3" type="button" data-bs-toggle="collapse" data-bs-target="#lineChartCollapse">
+                            <i class="bi bi-graph-up me-3 text-primary"></i>
+                            <h5 class="mb-0">Tendencia Mensual</h5>
+                        </button>
+                    </div>
+                    <div id="lineChartCollapse" class="accordion-collapse collapse show">
+                        <div class="accordion-body pt-0">
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="pagosLineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- Accordion para el cuadro de datos -->
-  <div class="accordion mt-4" id="accordionPagosDatos">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingDatosPagos">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatosPagos" aria-expanded="false" aria-controls="collapseDatosPagos">
-          Datos Mensuales
-        </button>
-      </h2>
-      <div id="collapseDatosPagos" class="accordion-collapse collapse" aria-labelledby="headingDatosPagos" data-bs-parent="#accordionPagosDatos">
-        <div class="accordion-body">
-          <div class="card">
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Mes</th>
-                      <th>Cantidad de Pagos</th>
-                      <th>Monto Total</th>
-                    </tr>
-                  </thead>
-                  <tbody id="pagos-table-body"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                <!-- Gráfico de Barras -->
+                <div class="accordion-item border-0 mb-3">
+                    <div class="accordion-header">
+                        <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#barChartCollapse">
+                            <i class="bi bi-bar-chart me-3 text-primary"></i>
+                            <h5 class="mb-0">Comparación Mensual</h5>
+                        </button>
+                    </div>
+                    <div id="barChartCollapse" class="accordion-collapse collapse">
+                        <div class="accordion-body pt-0">
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="pagosBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Datos Detallados (colapsable) -->
+                <div class="accordion-item border-0 mb-3">
+                    <div class="accordion-header">
+                        <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#detallesCollapse">
+                            <i class="bi bi-table me-3 text-primary"></i>
+                            <h5 class="mb-0">Datos Detallados</h5>
+                        </button>
+                    </div>
+                    <div id="detallesCollapse" class="accordion-collapse collapse">
+                        <div class="accordion-body pt-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th class="text-end">Cantidad</th>
+                                            <th class="text-end">Monto Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pagos-table-body" class="fw-semibold"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Fin del acordeón -->
+        </div>
+    </div>
 </div>
 
 <!-- Incluir Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Datos JSON -->
+<!-- Datos JSON (asegúrate de pasar 'pagos_por_mes' desde la vista) -->
 {{ pagos_por_mes|json_script:"pagos-data" }}
 
 <script>
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  // Nombres de meses predefinidos
+  const monthNames = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
   const fullLabels = monthNames;
 
+  // Parsear los datos JSON pasados desde la vista
   const pagosDataRaw = JSON.parse(document.getElementById('pagos-data').textContent);
 
+  // Función para obtener el valor correspondiente para cada mes
   function getValueForMonth(data, field, monthIndex) {
     const monthNumber = String(monthIndex + 1).padStart(2, '0');
     const found = data.find(item => item.mes.substring(5,7) === monthNumber);
     return found ? found[field] : 0;
   }
 
+  // Generar arreglos para cantidad de pagos y monto total
   const pagosCount = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'cantidad', index));
   const pagosMonto = fullLabels.map((_, index) => getValueForMonth(pagosDataRaw, 'monto_total', index));
 
-  // Configuración del gráfico lineal
+  // Configuración y renderización del gráfico lineal
   const ctxLine = document.getElementById('pagosLineChart').getContext('2d');
   new Chart(ctxLine, {
       type: 'line',
@@ -122,7 +138,7 @@
       }
   });
 
-  // Configuración del gráfico de barras
+  // Configuración y renderización del gráfico de barras
   const ctxBar = document.getElementById('pagosBarChart').getContext('2d');
   new Chart(ctxBar, {
       type: 'bar',
@@ -155,14 +171,15 @@
       }
   });
 
-  // Rellenar la tabla de datos
+  // Rellenar la tabla de datos con los valores obtenidos
   const tableBody = document.getElementById('pagos-table-body');
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>
                               <td>${label}</td>
-                              <td>${pagosCount[index]}</td>
-                              <td>${pagosMonto[index]}</td>
+                              <td class="text-end">${pagosCount[index]}</td>
+                              <td class="text-end">${pagosMonto[index]}</td>
                             </tr>`;
   });
 </script>
+
 {% endblock %}

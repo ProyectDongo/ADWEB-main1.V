@@ -1,81 +1,94 @@
 {% extends "central.html" %}
 {% load static %}
-{% block title %}Estadísticas Empresas{% endblock %}
+
+{% block title %}Estadísticas de Empresas{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1 class="text-center mb-4">Empresas Inscritas Mensuales</h1>
-
-  <!-- Accordion para los gráficos -->
-  <div class="accordion" id="accordionEmpresas">
-    <!-- Gráfico Lineal -->
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingLineEmpresas">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLineEmpresas" aria-expanded="true" aria-controls="collapseLineEmpresas">
-          Gráfico Lineal
-        </button>
-      </h2>
-      <div id="collapseLineEmpresas" class="accordion-collapse collapse show" aria-labelledby="headingLineEmpresas" data-bs-parent="#accordionEmpresas">
-        <div class="accordion-body">
-          <canvas id="empresasLineChart" style="height: 400px;"></canvas>
-        </div>
-      </div>
+<div class="container py-5">
+  <div class="card shadow-lg border-0">
+    <!-- Header con título en color negro -->
+    <div class="card-header bg-gradient-primary text-dark py-4">
+      <h1 class="h4 mb-0 text-center">
+        <i class="bi bi-building me-2"></i>Estadísticas de Empresas
+      </h1>
     </div>
-    <!-- Gráfico de Barras -->
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingBarEmpresas">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBarEmpresas" aria-expanded="false" aria-controls="collapseBarEmpresas">
-          Gráfico de Barras
-        </button>
-      </h2>
-      <div id="collapseBarEmpresas" class="accordion-collapse collapse" aria-labelledby="headingBarEmpresas" data-bs-parent="#accordionEmpresas">
-        <div class="accordion-body">
-          <canvas id="empresasBarChart" style="height: 400px;"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Accordion para el cuadro de datos -->
-  <div class="accordion mt-4" id="accordionEmpresasDatos">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingDatosEmpresas">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDatosEmpresas" aria-expanded="false" aria-controls="collapseDatosEmpresas">
-          Datos Mensuales
-        </button>
-      </h2>
-      <div id="collapseDatosEmpresas" class="accordion-collapse collapse" aria-labelledby="headingDatosEmpresas" data-bs-parent="#accordionEmpresasDatos">
-        <div class="accordion-body">
-          <div class="card">
-            <div class="card-body">
+    <div class="card-body">
+      <div class="accordion" id="graficosAccordion">
+        <!-- Gráfico Lineal -->
+        <div class="accordion-item border-0 mb-3">
+          <div class="accordion-header">
+            <button class="accordion-button d-flex align-items-center bg-light py-3" type="button" data-bs-toggle="collapse" data-bs-target="#lineChartCollapse" aria-expanded="true">
+              <i class="bi bi-graph-up me-3 text-primary"></i>
+              <h5 class="mb-0">Tendencia Mensual</h5>
+            </button>
+          </div>
+          <div id="lineChartCollapse" class="accordion-collapse collapse show">
+            <div class="accordion-body pt-0">
+              <div class="chart-container w-100" style="height: 400px;">
+                <canvas id="empresasLineChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico de Barras -->
+        <div class="accordion-item border-0 mb-3">
+          <div class="accordion-header">
+            <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#barChartCollapse" aria-expanded="false">
+              <i class="bi bi-bar-chart me-3 text-primary"></i>
+              <h5 class="mb-0">Comparación Mensual</h5>
+            </button>
+          </div>
+          <div id="barChartCollapse" class="accordion-collapse collapse">
+            <div class="accordion-body pt-0">
+              <div class="chart-container w-100" style="height: 400px;">
+                <canvas id="empresasBarChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos Detallados (colapsable) -->
+        <div class="accordion-item border-0 mb-3">
+          <div class="accordion-header">
+            <button class="accordion-button d-flex align-items-center bg-light py-3 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#detallesCollapse" aria-expanded="false">
+              <i class="bi bi-table me-2 text-primary"></i>
+              <h5 class="mb-0">Datos Detallados</h5>
+            </button>
+          </div>
+          <div id="detallesCollapse" class="accordion-collapse collapse">
+            <div class="accordion-body pt-0">
               <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
                     <tr>
                       <th>Mes</th>
-                      <th>Empresas Registradas</th>
+                      <th class="text-end">Empresas Registradas</th>
                     </tr>
                   </thead>
-                  <tbody id="empresas-table-body"></tbody>
+                  <tbody id="empresas-table-body" class="fw-semibold"></tbody>
                 </table>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </div> <!-- Fin del acordeón -->
     </div>
   </div>
-
 </div>
 
 <!-- Incluir Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Datos JSON -->
+<!-- Datos JSON: Asegúrate de pasar 'empresas_por_mes' desde la vista -->
 {{ empresas_por_mes|json_script:"empresas-data" }}
 
 <script>
   // Array con los nombres de los meses en español
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const monthNames = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
   const fullLabels = monthNames;
 
   // Parsear datos JSON
@@ -144,7 +157,7 @@
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>
                               <td>${label}</td>
-                              <td>${empresasCount[index]}</td>
+                              <td class="text-end">${empresasCount[index]}</td>
                             </tr>`;
   });
 </script>

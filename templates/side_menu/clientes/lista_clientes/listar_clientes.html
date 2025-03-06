@@ -44,7 +44,6 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{% url 'listar_planes' %}"><i class="bi bi-list me-2"></i>Lista de Planes</a></li>
                             <li><a class="dropdown-item" href="{% url 'listar_empresas_eliminadas' %}"><i class="bi bi-trash me-2"></i>Eliminadas</a></li>
-                            
                         </ul>
                     </div>
                 </div>
@@ -431,7 +430,20 @@ async function actualizarNotificaciones() {
     });
   });
 
-
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropdowns = document.querySelectorAll('.dropdown-toggle');
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('click', function(event) {
+            const menu = this.nextElementSibling;
+            if (menu) {
+                menu.style.position = 'fixed';
+                const rect = this.getBoundingClientRect();
+                menu.style.top = `${rect.bottom}px`;
+                menu.style.right = `${rect.right}-10px`; // Cambiar de right a left si es necesario
+            }
+        });
+    });
+});
 </script>
 
 <style>
@@ -444,16 +456,19 @@ async function actualizarNotificaciones() {
     font-weight: 500;
 }
 .notificaciones-container {
-    position: relative;
-    margin-bottom: 10px;
+    position: absolute;
     z-index: 1000;
     width: 350px;
 }
-
-
-
+.card {
+    margin-top: 50px; /* Ajustar según sea necesario */
+}
 .dropdown-menu {
-    z-index: 2000;
+    z-index: 1050;
+    position: fixed;
+    top: auto;
+    left: auto;
+    transform: none;
 }
 </style>
 {% endblock %}
