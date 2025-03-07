@@ -27,7 +27,7 @@ from WEB.views.sso.views import autenticacion, permisos
 from WEB.views.tools.views import utilidades
 
 from WEB.views.clientes.pagos.views import pagos
-from WEB.views.clientes.empresas.views import empresas,planes
+from WEB.views.clientes.empresa.views import empresas,planes
 
 urlpatterns = [
 
@@ -125,8 +125,9 @@ urlpatterns = [
     path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
     path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
     path('api/get_comunas/',utilidades.get_comunas, name='get_comunas'),
-
    
+    path('gestion-pagos/<int:empresa_id>/', pagos.gestion_pagos, name='gestion_pagos'),
+    path('enviar-notificacion/<int:empresa_id>/', pagos.enviar_notificacion, name='enviar_notificacion'),
     
    
     

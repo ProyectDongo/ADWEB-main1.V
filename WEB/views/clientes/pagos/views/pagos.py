@@ -1,4 +1,5 @@
-from WEB.models import *
+from WEB.models import empresa, plan, pago, historial
+from django.shortcuts import render, redirect, get_object_or_404
 from WEB.forms import *
 from WEB.views import *
 from WEB.decorators import permiso_requerido
@@ -10,13 +11,16 @@ from email.mime.image import MIMEImage
 from django.utils.html import strip_tags
 from django.contrib.auth.decorators import login_required
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
+from django.urls import reverse
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse
 from email.header import decode_header
 from django.forms import modelformset_factory
 from django.db.models import  Sum
-
+from django.views.decorators.http import require_POST
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +136,10 @@ def gestion_pagos(request, empresa_id):
     vigencias = empresa.vigencias.all()
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
     
+    historial_notificaciones = HistorialNotificaciones.objects.filter(
+        empresa=empresa
+    ).order_by('-fecha_envio')[:10]
+    
     historial = HistorialPagos.objects.filter(
         pago__empresa=empresa
     ).select_related('pago', 'usuario', 'pago__cobro').order_by('-fecha')
@@ -141,54 +149,51 @@ def gestion_pagos(request, empresa_id):
         'vigencias': vigencias,
         'cobros': cobros_pendientes,
         'historial': historial,
+        'historial_notificaciones': historial_notificaciones,  # Añadir al contexto
     }
     return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
-
-# de aqui empiezan lo correos
-def actualizar_estado_pago(request, pago_id):
-    pago = get_object_or_404(Pago, id=pago_id)
-    pago.pagado = not pago.pagado
-    pago.save()
-    messages.success(request, f"El estado del pago se actualizó a: {'Pagado' if pago.pagado else 'Pendiente'}.")
-    return redirect('historial_pagos', empresa_id=pago.empresa.id)
-
-def send_manual_payment_email(empresa, next_due): 
+def send_manual_payment_email(empresa, next_due):
     """Envía correo con instrucciones para pago manual."""
-    transfer_data = {
-        'banco': 'Banco Ficticio',
-        'tipo_cuenta': 'Cuenta Corriente',
-        'numero_cuenta': '9876543210',
-        'titular': empresa.nombre,
-    }
-    subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente} | EmpresaID: {empresa.id}"
-    from_email = settings.DEFAULT_FROM_EMAIL
-    to = [empresa.email]
-    logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
-    context = {
-        'empresa': empresa,
-        'codigo_cliente': empresa.codigo_cliente,
-        'transfer_data': transfer_data,
-        'proximo_mes': next_due,
-        'empresa_id': empresa.id,
-    }
-    html_content = render_to_string('empresas/email/instrucciones_pago_manual.html', context)
-    text_content = strip_tags(html_content)
-    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
-    msg.attach_alternative(html_content, "text/html")
-    with open(logo_path, "rb") as img:
-        logo = MIMEImage(img.read())
-        logo.add_header("Content-ID", "<logo_cid>")
-        logo.add_header("Content-Disposition", "inline")
-        msg.attach(logo)
-    msg.send()
+    try:
+        transfer_data = {
+            'banco': 'Banco Ficticio',
+            'tipo_cuenta': 'Cuenta Corriente',
+            'numero_cuenta': '9876543210',
+            'titular': empresa.nombre,
+        }
 
-
-def planes_por_empresa(request, empresa_id):
-    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencias = VigenciaPlanes.objects.filter(empresa=empresa)
-    return render(request, 'planes_por_empresa.html', {'vigencias': vigencias})
-
+        subject = f"Instrucciones de Pago Manual | Cliente: {empresa.codigo_cliente} | EmpresaID: {empresa.id}"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to = [empresa.email]
+        logo_path = os.path.join(settings.BASE_DIR, "static/png/logo.png")
+        
+        context = {
+            'empresa': empresa,
+            'codigo_cliente': empresa.codigo_cliente,
+            'transfer_data': transfer_data,
+            'proximo_mes': next_due,
+            'empresa_id': empresa.id,
+        }
+        html_content = render_to_string('email/instrucciones_pago.html', context)
+        text_content = strip_tags(html_content)
+        msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+        msg.attach_alternative(html_content, "text/html")
+        
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as img:
+                logo = MIMEImage(img.read())
+                logo.add_header("Content-ID", "<logo_cid>")
+                logo.add_header("Content-Disposition", "inline")
+                msg.attach(logo)
+        else:
+            logger.warning("Logo no encontrado en: %s", logo_path)
+            
+        msg.send(fail_silently=False)
+        return True
+    except Exception as e:
+        logger.error("Error enviando correo: %s", str(e), exc_info=True)
+        return False
 
 def get_comprobantes():
     """Obtiene comprobantes de pago extrayendo el código cliente y empresa_id."""
@@ -196,7 +201,7 @@ def get_comprobantes():
     try:
         IMAP_SERVER = 'imap.gmail.com'
         EMAIL_ACCOUNT = 'anghello3569molina@gmail.com'
-        PASSWORD = 'bncuzhavbtvuqjpi'
+        PASSWORD = 'qzvebjzifrjwphgg'
         mail = imaplib.IMAP4_SSL(IMAP_SERVER, timeout=10)
         try:
             mail.login(EMAIL_ACCOUNT, PASSWORD)
@@ -300,39 +305,41 @@ def notificaciones_json(request):
             'detalle': str(e)
         }, status=500, safe=False)
 
-def lista_deudas(request):
-    """
-    Vista que recopila todas las empresas que tienen pagos pendientes,
-    calculando la deuda total (suma de los montos de pagos no confirmados).
-    """
-    empresas = RegistroEmpresas.objects.all()
-    empresas_con_deuda = []
-    for empresa in empresas:
-        pending_payments = empresa.pagos.filter(pagado=False)
-        deuda = sum(p.monto for p in pending_payments)
-        if deuda > 0:
-            empresa.deuda_pendiente = deuda
-            empresas_con_deuda.append(empresa)
-    return render(request, 'side_menu/clientes/lista_clientes/pagos/deudas/deudas_empresas.html', {'empresas': empresas_con_deuda})
 
+# de aqui empiezan lo correos
+def actualizar_estado_pago(request, pago_id):
+    pago = get_object_or_404(Pago, id=pago_id)
+    pago.pagado = not pago.pagado
+    pago.save()
+    messages.success(request, f"El estado del pago se actualizó a: {'Pagado' if pago.pagado else 'Pendiente'}.")
+    return redirect('historial_pagos', empresa_id=pago.empresa.id)
 
-def actualizar_pagos_vencidos(request):
-    """
-    Recorre los pagos con fecha de creación mayor a 1 mes y que aún no se han confirmado,
-    marcando la empresa como pendiente y suspendiendo los planes activos.
-    """
-    one_month_ago = timezone.now() - relativedelta(months=1)
-    overdue_payments = Pago.objects.filter(pagado=False, fecha_pago__lt=one_month_ago)
-    for pago in overdue_payments:
-        empresa = pago.empresa
-        empresa.estado = 'pendiente'
-        empresa.save()
-        vigencias = empresa.vigencias.filter(estado='indefinido')
-        for vp in vigencias:
-            vp.estado = 'suspendido'
-            vp.save()
-    messages.success(request, "Se han actualizado los pagos vencidos a pendiente y suspendido los planes correspondientes.")
-    return redirect('listar_clientes')
+@require_POST
+def enviar_notificacion(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    try:
+        ultimo_cobro = empresa.cobros.order_by('-fecha_fin').first()
+        next_due = (ultimo_cobro.fecha_fin + relativedelta(months=1)) if ultimo_cobro else timezone.now().date()
+        
+        success = send_manual_payment_email(empresa, next_due)
+        
+        HistorialNotificaciones.objects.create(
+            empresa=empresa,
+            usuario=request.user,
+            estado=success,
+            fecha_envio=timezone.now()
+        )
+        
+        if success:
+            messages.success(request, 'Notificación enviada exitosamente')
+        else:
+            messages.error(request, 'Error al enviar la notificación')
+            
+    except Exception as e:
+        logger.error(f"Error crítico: {str(e)}", exc_info=True)
+        messages.error(request, 'Error grave al procesar la solicitud')
+    
+    return redirect('gestion_pagos', empresa_id=empresa_id)
 
 
 

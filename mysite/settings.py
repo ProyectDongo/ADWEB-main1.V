@@ -163,8 +163,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-LOGIN_REDIRECT_URL = '/accounts/redirect/'  # Asegura que siempre pase por la función de redirección
-LOGOUT_REDIRECT_URL = '/accounts/login/'  # Para que después del logout vuelva al login
+LOGIN_REDIRECT_URL = 'redirect_after_login'  # Asegura que siempre pase por la función de redirección
+LOGOUT_REDIRECT_URL = 'login'  # Para que después del logout vuelva al login
  # Redirige a esta vista después del login
 AUTH_USER_MODEL = 'WEB.Usuario'
 
@@ -174,5 +174,5 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "anghello3569molina@gmail.com"  # Reemplaza con tu correo
-EMAIL_HOST_PASSWORD = "bncuzhavbtvuqjpi"  # Reemplaza con la contraseña generada
+EMAIL_HOST_PASSWORD = "qzvebjzifrjwphgg"  # Reemplaza con la contraseña generada
 DEFAULT_FROM_EMAIL = "tu_correo@gmail.com"

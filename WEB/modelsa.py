@@ -672,3 +672,14 @@ class EmailNotification(models.Model):
 
     def __str__(self):
         return f"{self.subject} - {self.sender}"
+    
+
+class HistorialNotificaciones(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+    fecha_envio = models.DateTimeField(auto_now_add=True)
+    estado = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name_plural = "Historial de Notificaciones"
+        ordering = ['-fecha_envio']
