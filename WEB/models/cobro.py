@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import Sum
-from .empresa import RegistroEmpresas
-from .plan import VigenciaPlan
+from .empresa import RegistroEmpresas,VigenciaPlan
 
 
 class Cobro(models.Model):

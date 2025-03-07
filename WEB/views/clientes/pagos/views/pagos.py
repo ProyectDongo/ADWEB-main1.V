@@ -1,4 +1,4 @@
-from WEB.models import empresa, plan, pago, historial
+from WEB.models import empresa, pago, historial
 from django.shortcuts import render, redirect, get_object_or_404
 from WEB.forms import *
 from WEB.views import *

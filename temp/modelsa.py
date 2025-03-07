@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from django.db.models import Max
 from django.utils import timezone
 from django.conf import settings
-from .validators import validar_rut
+from ..WEB.validators import validar_rut
 from django.forms import modelformset_factory
 from django.db.models import  Sum
 from django.urls import reverse

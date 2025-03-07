@@ -1,6 +1,5 @@
 from django.db import models
-from .empresa import RegistroEmpresas
-from .plan import VigenciaPlan
+from .empresa import RegistroEmpresas, VigenciaPlan
 from .cobro import Cobro
 
     

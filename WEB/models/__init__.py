@@ -1,8 +1,7 @@
 
 from .region import Region, Provincia, Comuna
-from .empresa import RegistroEmpresas
+from .empresa import RegistroEmpresas,Plan, VigenciaPlan
 from .usuario import Usuario
-from .plan import Plan
 from .cobro import Cobro
 from .pago import Pago
 from .historial import HistorialPagos, HistorialCambios
