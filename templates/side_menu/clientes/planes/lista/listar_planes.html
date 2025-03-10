@@ -79,9 +79,11 @@
         const rows = document.querySelectorAll('#plan-list tr');
         rows.forEach(row => {
             const codigoPlan = row.querySelector('td:first-child').textContent.toLowerCase();
-            const match = codigoPlan.includes(searchValue);
+            const nombrePlan = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const match = codigoPlan.includes(searchValue) || nombrePlan.includes(searchValue);
             row.style.display = match ? '' : 'none';
         });
     });
 </script>
+
 {% endblock %}

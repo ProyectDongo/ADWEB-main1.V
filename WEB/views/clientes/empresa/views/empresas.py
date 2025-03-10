@@ -198,7 +198,7 @@ def recuperar_empresa(request, id):
 def vigencia_planes(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, id=pk)
     
-    # Si existe un plan_id en la query string, lo obtenemos (opcional)
+    # Si existe un plan_id en la query string, lo obtenemos y lo asignamos al formulario
     plan_id = request.GET.get('plan_id')
     plan = None
     if plan_id:
@@ -220,7 +220,7 @@ def vigencia_planes(request, pk):
                 form.add_error(None, str(e))
     else:
         form = PlanVigenciaForm(initial={'empresa': empresa, 'plan': plan})
-        # Opcional: si no deseas que se pueda modificar la empresa, deshabilita el campo
+        
         form.fields['empresa'].disabled = True
     
     return render(request, 'side_menu/clientes/lista_clientes/nuevo_plan/vigencia_planes.html', {

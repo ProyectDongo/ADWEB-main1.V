@@ -181,7 +181,7 @@
                                                                 <h6 class="card-title mb-1">
                                                                     {{ vigencia.plan.nombre }}
                                                                     <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
-                                                                        {{ vigencia.codigo_plan }}
+                                                                        {{  vigencia.plan.nombre }}
                                                                     </span>
                                                                 </h6>
                                                                 <small class="text-muted">
@@ -414,7 +414,7 @@ async function actualizarNotificaciones() {
       if (isMatch) {
         // Si coincide, mostramos la fila del cliente
         mainRow.style.display = 'table-row';
-        // Y también mostramos la fila de planes vigentes sin alterar su estado interno
+        // Y también mostramos la fila de planes vigentes 
         const siblingRow = mainRow.nextElementSibling;
         if (siblingRow && siblingRow.classList.contains('planes-vigentes-row')) {
           siblingRow.style.display = 'table-row';
@@ -439,7 +439,7 @@ async function actualizarNotificaciones() {
                 menu.style.position = 'fixed';
                 const rect = this.getBoundingClientRect();
                 menu.style.top = `${rect.bottom}px`;
-                menu.style.right = `${rect.right}-15px`; // Cambiar de right a left si es necesario
+                menu.style.right = `${rect.right}-15px`; 
             }
         });
     });
@@ -461,7 +461,7 @@ async function actualizarNotificaciones() {
     width: 350px;
 }
 .card {
-    margin-top: 50px; /* Ajustar según sea necesario */
+    margin-top: 50px; 
 
 #ranura{
     position: fixed;

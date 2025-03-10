@@ -150,8 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const guardarBtn = document.getElementById("guardar-btn");
     const fechaInicioInput = document.getElementById("fecha_inicio");
     const fechaFinInput = document.getElementById("fecha_fin");
-    // El checkbox "indefinido" puede no estar presente en este template,
-    // por lo que se verifica su existencia:
+
     const indefinidoCheckbox = document.getElementById("indefinido");
 
     // Si no hay fecha de inicio, se asigna la fecha actual
@@ -190,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function() {
         planSelect.addEventListener("change", function() {
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             let planValor = selectedOption.getAttribute("data-valor") || "";
-            // Asegurarse de usar el punto como separador decimal
+            
             planValor = planValor.replace(',', '.');
             precioOriginalInput.value = planValor;
             calcularPrecioFinal();

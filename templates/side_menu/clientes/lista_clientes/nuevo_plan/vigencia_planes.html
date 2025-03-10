@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", function() {
         planSelect.addEventListener("change", function() {
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             let planValor = selectedOption.getAttribute("data-valor") || "";
-            // Reemplazar la coma decimal por punto, si es necesario
+            // Reemplazar la coma decimal por punto
             planValor = planValor.replace(',', '.');
             precioOriginalInput.value = planValor;
             calcularPrecioFinal();
