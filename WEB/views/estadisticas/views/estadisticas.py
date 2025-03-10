@@ -1,7 +1,6 @@
 from WEB.models import *
-from WEB.forms import *
 from django.shortcuts import render, redirect
-from WEB.decorators import permiso_requerido
+from WEB.views.scripts import *
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum

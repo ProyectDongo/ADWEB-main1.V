@@ -1,7 +1,7 @@
 from WEB.models import *
 from WEB.forms import *
 from django.shortcuts import render, redirect
-from WEB.decorators import permiso_requerido
+from WEB.views.scripts import *
 from django.contrib.auth.decorators import login_required
 
 @login_required

@@ -1,6 +1,6 @@
 from WEB.models import *
 from WEB.forms import *
-from WEB.decorators import permiso_requerido
+from WEB.views.scripts import *
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,7 +10,9 @@ from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 
 @login_required
+
 @permiso_requerido("crear_empresa")
+
 def crear_empresa(request):
     """
     Vista para crear una nueva empresa junto con la vigencia de su plan y crear un usuario supervisor.

@@ -1,10 +1,10 @@
 
-from .region import Region, Provincia, Comuna
-from .empresa import RegistroEmpresas,Plan, VigenciaPlan
-from .usuario import Usuario
-from .cobro import Cobro
-from .pago import Pago
-from .historial import HistorialPagos, HistorialCambios
-from .notificacion import EmailNotification, HistorialNotificaciones
-from .asistencia import RegistroEntrada
-from .permisos import RegistroPermisos
+from .asistencia.asistencia import RegistroEntrada
+from .empresa.empresa import RegistroEmpresas, VigenciaPlan,Plan
+from .pagos.pago import Pago
+from .cobro.cobro import Cobro
+from .historial.historial import HistorialCambios,HistorialPagos
+from .usuarios.usuario import Usuario
+from .notificaciones.notificacion import EmailNotification,HistorialNotificaciones
+from .ubicacion.region import Region, Provincia, Comuna
+from .secure.permisos import RegistroPermisos

@@ -2,9 +2,10 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from WEB.forms import *
+from WEB.models.asistencia.asistencia import RegistroEntrada
 from WEB.models import *
-
+from WEB.forms.asistencia.forms import RegistroEntradaForm, RegistroSalidaForm
+from django.utils import timezone
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']

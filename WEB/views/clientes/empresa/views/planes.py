@@ -1,6 +1,6 @@
 from WEB.models import *
 from WEB.forms import *
-from WEB.decorators import permiso_requerido
+from WEB.views.scripts import *
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages

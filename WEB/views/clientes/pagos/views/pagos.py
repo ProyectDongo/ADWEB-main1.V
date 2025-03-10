@@ -1,8 +1,7 @@
-from WEB.models import empresa, pago, historial
 from django.shortcuts import render, redirect, get_object_or_404
-from WEB.forms import *
+from WEB.models import *
 from WEB.views import *
-from WEB.decorators import permiso_requerido
+from WEB.views.scripts import *
 import datetime,email,logging,os,imaplib,base64
 from django.shortcuts import render, redirect
 from django.core.mail import EmailMultiAlternatives
@@ -21,6 +20,7 @@ from django.forms import modelformset_factory
 from django.db.models import  Sum
 from django.views.decorators.http import require_POST
 from django.conf import settings
+import re
 
 logger = logging.getLogger(__name__)
 
