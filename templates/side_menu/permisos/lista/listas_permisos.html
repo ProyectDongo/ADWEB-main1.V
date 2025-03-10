@@ -5,31 +5,34 @@
 {% block content %}
 <div class="container py-4">
     <div class="card shadow-sm">
-        <div class="card-header text-center">
+        <div class="card-header text-center bg-primary text-white">
             <h1 class="h4 mb-0">
                 <i class="bi bi-card-list me-2"></i>
                 Lista de Permisos
             </h1>
         </div>
         <div class="card-body">
-            <ul class="list-group list-group-flush">
-                {% for permiso in permisos %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-1">
-                                <i class="bi bi-key me-2"></i>
-                                {{ permiso.nombre }}
-                            </h5>
-                            <p class="mb-0">{{ permiso.descripcion }}</p>
-                        </div>
-                    </li>
-                {% empty %}
-                    <li class="list-group-item text-center">
-                        <i class="bi bi-exclamation-circle me-1"></i>
-                        No hay permisos disponibles.
-                    </li>
-                {% endfor %}
-            </ul>
+            {% if permisos %}
+                <ul class="list-group list-group-flush">
+                    {% for permiso in permisos %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="bi bi-key me-2"></i>
+                                    {{ permiso.nombre }}
+                                </h5>
+                                <p class="mb-0 text-muted">{{ permiso.descripcion }}</p>
+                            </div>
+                            
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-warning text-center" role="alert">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    No hay permisos disponibles.
+                </div>
+            {% endif %}
             <div class="d-flex justify-content-end mt-4 gap-2">
                 <a href="{% url 'crear_permiso' %}" class="btn btn-success">
                     <i class="bi bi-plus-circle me-1"></i>

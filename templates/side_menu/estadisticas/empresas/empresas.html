@@ -60,33 +60,35 @@
   </div>
 </div>
 
-<!-- Incluir Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Datos JSON: Asegúrate de pasar 'empresas_por_mes' desde la vista -->
-{{ empresas_por_mes|json_script:"empresas-data" }}
 
+<div class="container py-3 text-center">
+  <a href="{% url 'home_estadisticas' %}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Volver al Home
+  </a>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ empresas_por_mes|json_script:"empresas-data" }}
 <script>
-  // Nombres de los meses en español
+
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
   const fullLabels = monthNames;
 
-  // Parsear datos JSON
+
   const empresasDataRaw = JSON.parse(document.getElementById('empresas-data').textContent);
 
-  // Función para obtener el valor para cada mes (0 si no hay datos)
   function getValueForMonth(data, field, monthIndex) {
     const monthNumber = String(monthIndex + 1).padStart(2, '0');
     const found = data.find(item => item.mes.substring(5,7) === monthNumber);
     return found ? found[field] : 0;
   }
 
-  // Generar arreglo con los datos de cada mes
   const empresasCount = fullLabels.map((_, index) => getValueForMonth(empresasDataRaw, 'total', index));
 
-  // Configuración del gráfico lineal
   const ctxLine = document.getElementById('empresasLineChart').getContext('2d');
   new Chart(ctxLine, {
       type: 'line',
@@ -110,7 +112,6 @@
       }
   });
 
-  // Configuración del gráfico de barras
   const ctxBar = document.getElementById('empresasBarChart').getContext('2d');
   new Chart(ctxBar, {
       type: 'bar',
@@ -134,7 +135,6 @@
       }
   });
 
-  // Rellenar la tabla con los datos
   const tableBody = document.getElementById('empresas-table-body');
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>

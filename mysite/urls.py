@@ -101,14 +101,17 @@ urlpatterns = [
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #estadisticas URLS:
-    
-    path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
-    path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
+    #home estadisticas:
+     path('home_estadisticas', estadisticas.home_estadisticas, name='home_estadisticas'),
+
+        #estadisticas de empresas:
+        path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
+        #estadisticas de pagos:
+        path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #Permisos URLS:
-
     #Creaar permisos:
         path('crear_permiso/', permisos.crear_permiso, name='crear_permiso'),
     #listar permisos:

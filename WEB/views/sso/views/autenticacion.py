@@ -6,6 +6,7 @@ from WEB.models.asistencia.asistencia import RegistroEntrada
 from WEB.models import *
 from WEB.forms.asistencia.forms import RegistroEntradaForm, RegistroSalidaForm
 from django.utils import timezone
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']

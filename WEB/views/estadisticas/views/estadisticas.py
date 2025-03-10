@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum
 
-
+def home_estadisticas(request):
+    return render(request, 'side_menu/estadisticas/home/home.html')
 
 def estadisticas_empresas(request):
     empresas_por_mes = RegistroEmpresas.objects.annotate(
