@@ -20,7 +20,7 @@ def crear_admin(request):
             return redirect('home')
     else:
         form = AdminForm()
-    return render(request, 'side_menu/Sofware/crear_admin.html', {'form': form})
+    return render(request, 'side_menu/Sofware/admin/crear_admin.html', {'form': form})
 
 @login_required
 @permiso_requerido("crear_supervisor")
@@ -35,7 +35,7 @@ def crear_supervisor(request):
             return redirect('configuracion_home')
     else:
         form = SupervisorForm(user=request.user)
-    return render(request, 'side_menu/Sofware/crear_supervisor.html', {'form': form})
+    return render(request, 'side_menu/Sofware/supervisor/crear_supervisor.html', {'form': form})
 
 @login_required
 @permiso_requerido("crear_trabajador")
@@ -61,4 +61,4 @@ def crear_trabajador(request):
                 return redirect('detalles_empresa', empresa_id=trabajador.empresa.id)
     else:
         form = TrabajadorForm(user=request.user)
-    return render(request, 'side_menu/Sofware/crear_trabajador.html', {'form': form})
+    return render(request, 'side_menu/Sofware/user/crear_trabajador.html', {'form': form})

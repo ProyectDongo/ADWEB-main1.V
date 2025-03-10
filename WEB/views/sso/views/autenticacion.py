@@ -97,4 +97,4 @@ def trabajador_home(request):
     })
 
 def configuracion_home(request):
-    return render(request, 'home/configuracion_home.html')
+    return render(request, 'side_menu/sofware/home/configuracion_home.html')

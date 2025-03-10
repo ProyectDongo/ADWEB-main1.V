@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from WEB.models import RegistroEmpresas, Usuario
-
+# este comando esta desctualizado :) no usar 
 class Command(BaseCommand):
     help = 'Crea 10 empresas, 1 supervisor por empresa y 10 trabajadores por empresa'
 
