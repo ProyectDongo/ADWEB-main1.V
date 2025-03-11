@@ -121,156 +121,37 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex gap-2 justify-content-end">
-                                    <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-sm btn-light" title="Administrar">
+
+                                    <a href="{% url 'detalle_empresa' empresa.id %}" 
+                                    class="btn btn-sm btn-light" 
+                                    title="Edicion / Detalles de la empresa">
                                         <i class="bi bi-gear"></i>
                                     </a>
-                                    <button class="btn btn-sm btn-light toggle-planes" 
-                                            data-bs-toggle="collapse" 
-                                            data-bs-target="#planes-{{ empresa.id }}"
-                                            title="Servicios">
-                                        <i class="bi bi-clipboard2-pulse"></i>
-                                    </button>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'vigencia_planes' empresa.id %}">
-                                                    <i class="bi bi-plus-circle me-2"></i>Nuevo Servicio
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{% url 'gestion_pagos' empresa.id %}">
-                                                    <i class="bi bi-credit-card me-2"></i>Gestionar Pagos
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a class="dropdown-item text-danger" href="{% url 'eliminar_empresa' empresa.id %}" 
-                                                   onclick="return confirm('¿Seguro que deseas eliminar esta empresa?');">
-                                                    <i class="bi bi-trash me-2"></i>Eliminar
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- Sección de planes -->
-                        <tr class="planes-vigentes-row">
-                            <td colspan="7" class="p-0 border-0">
-                                <div class="collapse" id="planes-{{ empresa.id }}">
-                                    <div class="p-3 bg-light rounded-3 m-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <h5 class="mb-0"><i class="bi bi-clipboard2-data me-2"></i>Servicios Contratados</h5>
-                                            <span class="badge bg-primary bg-opacity-10 text-primary">
-                                                {{ empresa.vigencias.count }} servicio{{ empresa.vigencias.count|pluralize }}
-                                            </span>
-                                        </div>
-                                        
-                                        {% if empresa.vigencias.all %}
-                                        <div class="row g-4">
-                                            {% for vigencia in empresa.vigencias.all %}
-                                            <div class="col-12">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div class="card-body">
-                                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                                            <div>
-                                                                <h6 class="card-title mb-1">
-                                                                    {{ vigencia.plan.nombre }}
-                                                                    <span class="badge bg-primary bg-opacity-10 text-primary ms-2">
-                                                                        {{  vigencia.plan.nombre }}
-                                                                    </span>
-                                                                </h6>
-                                                                <small class="text-muted">
-                                                                    {{ vigencia.fecha_inicio|date:"d/m/Y" }} - 
-                                                                    {{ vigencia.fecha_fin|date:"d/m/Y"|default:"Indefinido" }}
-                                                                </small>
-                                                            </div>
-                                                            <span class="badge {% if vigencia.estado == 'suspendido' %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if vigencia.estado == 'suspendido' %}danger{% else %}success{% endif %}">
-                                                                {{ vigencia.get_estado_display }}
-                                                            </span>
-                                                        </div>
-                                                        
-                                                        <div class="row">
-                                                            <div class="col-md-4">
-                                                                <div class="d-flex align-items-center gap-3 mb-3">
-                                                                    <div class="bg-primary bg-opacity-10 p-2 rounded">
-                                                                        <i class="bi bi-currency-dollar text-primary fs-5"></i>
-                                                                    </div>
-                                                                    <div>
-                                                                        <small class="text-muted d-block">Monto Final</small>
-                                                                        <span class="fw-bold">${{ vigencia.monto_final }}</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="col-md-4">
-                                                                <div class="d-flex align-items-center gap-3 mb-3">
-                                                                    <div class="bg-info bg-opacity-10 p-2 rounded">
-                                                                        <i class="bi bi-percent text-info fs-5"></i>
-                                                                    </div>
-                                                                    <div>
-                                                                        <small class="text-muted d-block">Descuento</small>
-                                                                        <span class="fw-bold">{{ vigencia.descuento }}%</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="col-md-4">
-                                                                <div class="d-flex align-items-center gap-3 mb-3">
-                                                                    <div class="bg-warning bg-opacity-10 p-2 rounded">
-                                                                        <i class="bi bi-clock-history text-warning fs-5"></i>
-                                                                    </div>
-                                                                    <div>
-                                                                        <small class="text-muted d-block">Estado Pagos</small>
-                                                                        <span class="badge {% if vigencia.pago_pendiente %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 text-{% if vigencia.pago_pendiente %}danger{% else %}success{% endif %}">
-                                                                            {% if vigencia.pago_pendiente %}Pendientes{% else %}Al día{% endif %}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="d-flex gap-2">
-                                                            <a href="{% url 'generar_boleta' vigencia.empresa.id %}" 
-                                                               class="btn btn-sm btn-outline-primary {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
-                                                                <i class="bi bi-receipt me-2"></i>Generar Boleta
-                                                            </a>
-                                                            <a href="{% url 'editar_vigencia_plan' vigencia.id %}" 
-                                                               class="btn btn-sm btn-outline-secondary {% if vigencia.estado == 'suspendido' %}disabled{% endif %}">
-                                                                <i class="bi bi-pencil-square me-2"></i>Editar
-                                                            </a>
-                                                            <button class="btn btn-sm {% if vigencia.estado == 'suspendido' %}btn-outline-success{% else %}btn-outline-warning{% endif %}" 
-                                                                    onclick="toggleEstado('{{ vigencia.id }}', this)">
-                                                                {% if vigencia.estado == 'suspendido' %}
-                                                                    <i class="bi bi-play-circle me-2"></i>Habilitar
-                                                                {% else %}
-                                                                    <i class="bi bi-pause-circle me-2"></i>Deshabilitar
-                                                                {% endif %}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div class="alert alert-info mb-0">
-                                            <i class="bi bi-info-circle me-2"></i> No se encontraron servicios activos
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="alert alert-info mb-0">
-                                    <i class="bi bi-info-circle me-2"></i> No se encontraron empresas registradas
+
+                                    <a href="{% url 'servicios' empresa.id %}?q={{ request.GET.q|urlencode }}" 
+                                      title="Listado Servicios"
+                                      class="btn btn-sm btn-light">
+                                      <i class="bi bi-clipboard2-pulse"></i>
+                                    </a>
+                                    
+                                    <a href="{% url 'vigencia_planes' empresa.id %}" 
+                                    class="btn btn-sm btn-light" 
+                                    title="Asociacion de nuevo servicio">
+                                        <i class="bi bi-plus-circle "></i>
+                                    </a>
+
+                                    <a href="{% url 'gestion_pagos' empresa.id %}"
+                                    class="btn btn-sm btn-light" 
+                                    title=" Gestion de pagos">
+                                        <i class="bi bi-credit-card "></i>
+                                    </a>
+                                    <a href="{% url 'eliminar_empresa' empresa.id %}" 
+                                    class="btn btn-sm btn-light text-danger" 
+                                    onclick="return confirm('¿Seguro que deseas eliminar esta empresa?');"
+                                    title="eliminar">
+                                        <i class="bi bi-trash "></i>
+                                    </a>
+                               
                                 </div>
                             </td>
                         </tr>

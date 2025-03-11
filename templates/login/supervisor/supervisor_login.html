@@ -1,0 +1,66 @@
+<!-- supervisor_login.html -->
+{% extends "login/home/login_base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 security-box">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                    <h3><i class="bi bi-person-badge"></i> Acceso Supervisores</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="supervisor-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Usuario Supervisor</label>
+                            <input type="text" name="username" class="form-control" 
+                                   required autocomplete="off" autocorrect="off"
+                                   pattern="[a-zA-Z0-9]+" title="Solo caracteres alfanuméricos">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <input type="password" name="password" class="form-control" 
+                                       required autocomplete="current-password"
+                                       minlength="8" maxlength="30">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <small class="form-text text-muted">Mínimo 8 caracteres</small>
+                        </div>
+                        
+                        {% if form.captcha %}
+                        <div class="mb-3">
+                            {{ form.captcha }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-box-arrow-in-right"></i> Acceder
+                            </button>
+                            <a href="#" class="btn btn-link">
+                                ¿Olvidó su contraseña?
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="bi bi-exclamation-triangle"></i> Acceso restringido a supervisores autorizados
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.querySelector('input[name="password"]');
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    this.querySelector('i').classList.toggle('bi-eye-slash');
+});
+</script>
+{% endblock %}

@@ -189,6 +189,16 @@ document.addEventListener("DOMContentLoaded", function() {
     // Actualizar al cargar la página
     actualizarCodigoPlan();
 });
+  // Función para actualizar el Código Vigencia (generado pero no mostrado)
+  function actualizarCodigoVigencia() {
+    const razonSocialInput = document.getElementById('id_nombre');
+    const codigoVigenciaInput = document.getElementById('{{ vigencia_form.codigo_plan.id_for_label }}');
+    if (razonSocialInput && planSelect && codigoVigenciaInput) {
+      const razonSocial = razonSocialInput.value.trim();
+      const planName = planSelect.options[planSelect.selectedIndex].text.trim();
+      codigoVigenciaInput.value = razonSocial + " " + planName;
+    }
+  }
 
 </script>
 {% endblock %}

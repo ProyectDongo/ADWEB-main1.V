@@ -75,9 +75,10 @@
     <div class="collapse navbar-collapse" id="navbarContent">
       <div class="ms-auto user-info"> <!-- ms-auto empuja el contenido a la derecha -->
         <span class="user-name">{{ user.username }}</span>
-        <a href="{% url 'logout' %}" class="btn logout-btn">
-          <i class="bi bi-box-arrow-right"></i>
-          Cerrar Sesión
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Cerrar sesión</button>
+        </form>
         </a>
       </div>
     </div>

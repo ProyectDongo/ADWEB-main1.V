@@ -73,6 +73,26 @@ class Usuario(AbstractUser):
         related_name='usuario_permissions',
         help_text='Permisos específicos para este usuario'
     )
+    #seguridad 
+    is_locked = models.BooleanField(
+        default=False,
+        verbose_name="Cuenta bloqueada",
+        help_text="Indica si la cuenta está bloqueada por seguridad"
+    )
+    
+    #  campo para seguimiento de intentos fallidos
+    failed_login_attempts = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Intentos fallidos"
+    )
+    
+    # Fecha del último intento fallido
+    last_failed_login = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Último intento fallido"
+    )
+    
 
     class Meta:
         verbose_name = "Usuario"
@@ -85,3 +105,14 @@ class Usuario(AbstractUser):
         :return: Cadena con el formato "username (Rol)", donde Rol es la descripción del rol.
         """
         return f"{self.username} ({self.get_role_display()})"
+    
+
+
+#modelo parafurutro uso
+class AuditoriaAcceso(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    exito = models.BooleanField(default=False)
+    motivo = models.TextField(blank=True)

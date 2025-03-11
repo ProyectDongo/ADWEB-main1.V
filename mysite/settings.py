@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
+    'django_recaptcha',
     'widget_tweaks',
     'crispy_bootstrap5',
 
@@ -164,7 +165,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_REDIRECT_URL = 'redirect_after_login'  # Asegura que siempre pase por la función de redirección
-LOGOUT_REDIRECT_URL = 'login'  # Para que después del logout vuelva al login
+LOGOUT_REDIRECT_URL = 'login_selector'  # Para que después del logout vuelva al login
  # Redirige a esta vista después del login
 AUTH_USER_MODEL = 'WEB.Usuario'
 
@@ -176,3 +177,20 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "anghello3569molina@gmail.com"  # Reemplaza con tu correo
 EMAIL_HOST_PASSWORD = "qzvebjzifrjwphgg"  # Reemplaza con la contraseña generada
 DEFAULT_FROM_EMAIL = "tu_correo@gmail.com"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+ESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Configuración de CAPTCHA
+RECAPTCHA_PUBLIC_KEY = '321'
+RECAPTCHA_PRIVATE_KEY = '0101'
+RECAPTCHA_REQUIRED_SCORE = 0.85
+
+# Rate limiting
+RATELIMIT_ENABLE = True

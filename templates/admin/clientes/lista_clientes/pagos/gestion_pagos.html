@@ -281,14 +281,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const valorInput = document.getElementById('valorInput');
     
     function calcularMonto() {
-        const selectedOption = planSelector.options[planSelector.selectedIndex];
-        if (selectedOption.value === 'todos') {
-            valorInput.value = "{{ total_vigencias }}";
-        } else {
-            const monto = selectedOption.getAttribute('data-monto');
-            valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
-        }
+    const selectedOption = planSelector.options[planSelector.selectedIndex];
+    if (selectedOption.value === 'todos') {
+        // Usar el valor numérico directamente del contexto
+        const total = parseFloat("{{ total_vigencias|default:0 }}") || 0;
+        valorInput.value = total.toFixed(2);
+    } else {
+        const monto = selectedOption.getAttribute('data-monto');
+        valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
     }
+}
     
     planSelector.addEventListener('change', calcularMonto);
     calcularMonto();

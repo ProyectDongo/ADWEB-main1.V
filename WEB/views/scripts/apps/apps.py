@@ -12,7 +12,7 @@ app.secret_key = 'your_secret_key'
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
-    return redirect(url_for('login'))
+    return redirect(url_for(''))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404,redirect,render
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.http import require_POST
 
-
+# Vistas de planes
 @login_required
 def crear_plan(request):
     """
@@ -25,7 +25,7 @@ def crear_plan(request):
             return redirect('listar_planes')
     else:
         form = PlanForm()
-    return render(request, 'side_menu/clientes/planes/crear/crear_plan.html', {'form': form})
+    return render(request, 'admin/clientes/planes/crear/crear_plan.html', {'form': form})
 
 def listar_planes(request):
     """
@@ -35,4 +35,4 @@ def listar_planes(request):
     :return: Renderizado de template con lista de planes
     """
     planes = Plan.objects.all()
-    return render(request, 'side_menu/clientes/planes/lista/listar_planes.html', {'planes': planes})
+    return render(request, 'admin/clientes/planes/lista/listar_planes.html', {'planes': planes})

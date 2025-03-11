@@ -79,4 +79,4 @@ def editar_vigencia_plan(request, plan_id):
         form = PlanVigenciaForm(instance=plan)
     
     # Renderizar el template con el formulario y el plan
-    return render(request, 'side_menu/clientes/lista_clientes/servicios/editar/editar_vigencia_plan.html', {'form': form, 'plan': plan})
+    return render(request, 'admin/clientes/lista_clientes/servicios/editar/editar_vigencia_plan.html', {'form': form, 'plan': plan})

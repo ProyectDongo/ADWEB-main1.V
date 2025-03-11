@@ -8,3 +8,6 @@ pip install django-widget-tweaks
 
 pip install python-dateutil
 pip install django-anymail
+
+Set-Location -Path "C:\Users\facil\Desktop\ADWEB-main"
+python manage.py crearadmin

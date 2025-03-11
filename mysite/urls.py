@@ -28,20 +28,18 @@ from WEB.views.tools.views import utilidades
 
 from WEB.views.clientes.pagos.views import pagos
 from WEB.views.clientes.empresa.views import empresas,planes
-
+from django.contrib.auth.views import LogoutView
+from django_ratelimit.decorators import ratelimit
+from django.views.generic import RedirectView
 urlpatterns = [
+    path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
+    path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
+    path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),
+    path('supervisor/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.SupervisorLoginView.as_view()), name='supervisor_login'),
+    path('trabajador/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.TrabajadorLoginView.as_view()), name='trabajador_login'),
+    path('logout/', LogoutView.as_view(next_page='login_selector'), name='logout'),
+    path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
 
- # Autenticación URLS:
-    path('login/', autenticacion.login_view, name='login'),
-    path('', auth_views.LoginView.as_view(template_name='login/login.html', redirect_authenticated_user=True), name='login'),
-#redirige a la pagina principal despues de iniciar sesion:
-    path('redirect_after_login/', autenticacion.redirect_after_login, name='redirect_after_login'),
-#cerras sesion:
-    path('logout/', autenticacion.logout_view, name='logout'),
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-#home URLS:
-    #admin:
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
     #supervisor:
     path('supervisor_home/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
@@ -49,7 +47,7 @@ urlpatterns = [
     path('trabajador_home/', autenticacion.trabajador_home, name='trabajador_home'),
     #configuracion:
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
-    
+
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 # Sofware URLS:
     #crear admin:
@@ -68,7 +66,9 @@ urlpatterns = [
             path('eliminar_empresa/<int:pk>/', empresas.eliminar_empresa, name='eliminar_empresa'),
             path('empresas/eliminadas/', empresas.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
             path('empresa/recuperar/<int:id>/', empresas.recuperar_empresa, name='recuperar_empresa'),
-        #desplliega los planes (servicios:)
+        #home los planes (servicios:)
+        path('servicios/<int:empresa_id>/', empresas.servicios, name='servicios'),
+            #botn para asociar nuevo servicio:
             path('vigencia_planes/<int:pk>/', empresas.vigencia_planes, name='vigencia_planes'),
                 #botones dentro del despliegue:
                     #generar boleta:

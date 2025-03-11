@@ -36,6 +36,8 @@ def registrar_cobro(request, empresa_id):
         
         if selector == 'todos':
             valor_total = vigencias_activas.aggregate(total=Sum('monto_final'))['total'] or 0
+            valor_total = sum(vigencia.monto_final for vigencia in vigencias_activas)
+            valor_total = round(valor_total, 2)
             cobro = Cobro.objects.create(
                 empresa=empresa,
                 vigencia_plan=None,
@@ -76,13 +78,15 @@ def registrar_cobro(request, empresa_id):
     else:
         vigencias = empresa.vigencias.all()
         cobros_pendientes = empresa.cobros.filter(estado='pendiente').prefetch_related('vigencia_plan')
-        
+        total_vigencias = vigencias.aggregate(total=Sum('monto_final'))['total'] or 0
+        total_vigencias = round(total_vigencias, 2)
         context = {
             'empresa': empresa,
             'vigencias': vigencias,
             'cobros': cobros_pendientes,
+            'total_vigencias': total_vigencias,
         }
-        return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
+        return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
 def actualizar_cobro(request, empresa_id, cobro_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
@@ -134,6 +138,11 @@ def actualizar_cobro(request, empresa_id, cobro_id):
 def gestion_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     vigencias = empresa.vigencias.all()
+    
+    # Calcular total de todas las vigencias
+    total_vigencias = vigencias.aggregate(total=Sum('monto_final'))['total'] or 0
+    total_vigencias = round(total_vigencias, 2)  # Asegurar 2 decimales
+    
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
     
     historial_notificaciones = HistorialNotificaciones.objects.filter(
@@ -149,9 +158,10 @@ def gestion_pagos(request, empresa_id):
         'vigencias': vigencias,
         'cobros': cobros_pendientes,
         'historial': historial,
-        'historial_notificaciones': historial_notificaciones,  # Añadir al contexto
+        'historial_notificaciones': historial_notificaciones,
+        'total_vigencias': total_vigencias,  # Añadir al contexto
     }
-    return render(request, 'side_menu/clientes/lista_clientes/pagos/gestion_pagos.html', context)
+    return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
 def send_manual_payment_email(empresa, next_due):
     """Envía correo con instrucciones para pago manual."""

@@ -1,0 +1,31 @@
+
+{% extends "login/home/login_base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2 class="mb-4">Seleccione su tipo de acceso</h2>
+            <div class="d-grid gap-3">
+                <a href="{% url 'admin_login' %}" class="btn btn-danger btn-lg">
+                    <i class="bi bi-shield-lock"></i> Acceso Administrador
+                </a>
+                <a href="{% url 'supervisor_login' %}" class="btn btn-warning btn-lg">
+                    <i class="bi bi-person-badge"></i> Acceso Supervisor
+                </a>
+                <a href="{% url 'trabajador_login' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person"></i> Acceso Trabajador
+                </a>
+            </div>
+            
+            <div class="mt-5 alert alert-info">
+                <h5>Medidas de Seguridad</h5>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-shield-check"></i> Autenticación en dos pasos disponible</li>
+                    <li><i class="bi bi-clock-history"></i> Bloqueo temporal tras múltiples intentos</li>
+                    <li><i class="bi bi-patch-check"></i> Conexión SSL/TLS habilitada</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

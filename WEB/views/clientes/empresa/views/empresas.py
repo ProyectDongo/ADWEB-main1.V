@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404,redirect,render
 from django.http import JsonResponse,HttpResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
-
+from django.forms.models import modelformset_factory
 @login_required
 
 @permiso_requerido("crear_empresa")
@@ -63,7 +63,7 @@ def crear_empresa(request):
         vigencia_form = PlanVigenciaForm()
         vigencia_form.fields.pop('empresa', None)  
 
-    return render(request, 'side_menu/clientes/lista_clientes/crear_empresa/crear_empresa.html', {
+    return render(request, 'admin/clientes/lista_clientes/crear_empresa/crear_empresa.html', {
         'empresa_form': empresa_form,
         'vigencia_form': vigencia_form
     })
@@ -125,7 +125,7 @@ def detalle_empresa(request, pk):
         form = EmpresaForm(instance=empresa)
 
     # Renderizar el template con la empresa, el formulario, los supervisores, los trabajadores y el historial
-    return render(request, 'side_menu/clientes/lista_clientes/administrar/detalles_empresa.html', {
+    return render(request, 'admin/clientes/lista_clientes/administrar/detalles_empresa.html', {
         'empresa': empresa,
         'vigencias': vigencias,
         'form': form,
@@ -173,7 +173,7 @@ def listar_clientes(request):
                 has_pending = any(c.estado == 'pendiente' for c in cobros_fk) or any(c.estado == 'pendiente' for c in cobros_m2m)
                 vigencia.pago_pendiente = has_pending
     
-    return render(request, 'side_menu/clientes/lista_clientes/home/listar_clientes.html', {'empresas': empresas})
+    return render(request, 'admin/clientes/lista_clientes/home/listar_clientes.html', {'empresas': empresas})
 @login_required
 def eliminar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, id=pk)
@@ -184,7 +184,7 @@ def eliminar_empresa(request, pk):
 
 def listar_empresas_eliminadas(request):
     empresas = RegistroEmpresas.objects.filter(eliminada=True)
-    return render(request, 'side_menu/clientes/lista_clientes/ver_eliminados/listar_empresas_eliminadas.html', {'empresas': empresas})
+    return render(request, 'admin/clientes/lista_clientes/ver_eliminados/listar_empresas_eliminadas.html', {'empresas': empresas})
 
 def recuperar_empresa(request, id):
     empresa = get_object_or_404(RegistroEmpresas, id=id)
@@ -223,7 +223,7 @@ def vigencia_planes(request, pk):
         
         form.fields['empresa'].disabled = True
     
-    return render(request, 'side_menu/clientes/lista_clientes/nuevo_plan/vigencia_planes.html', {
+    return render(request, 'admin/clientes/lista_clientes/nuevo_plan/vigencia_planes.html', {
         'form': form,
         'plan': plan,
         'empresa': empresa
@@ -288,3 +288,37 @@ def toggle_estado(request, pk):
         'new_estado_display': vigencia.get_estado_display()
     })
 
+
+
+def servicios(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
+    search_query = request.GET.get('q', '')
+    
+    VigenciaPlanFormSet = modelformset_factory(
+        VigenciaPlan,
+        fields=('codigo_plan', 'fecha_inicio','fecha_fin' , 'monto_final', 'estado'),
+        extra=0
+    )
+    
+    if request.method == 'POST':
+        formset = VigenciaPlanFormSet(
+            request.POST,
+            queryset=VigenciaPlan.objects.filter(empresa=empresa)
+        )
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.empresa = empresa
+                instance.save()
+            messages.success(request, 'Cambios en planes guardados exitosamente!')
+            return redirect('servicios', empresa_id=empresa_id)
+    else:
+        formset = VigenciaPlanFormSet(
+            queryset=VigenciaPlan.objects.filter(empresa=empresa))
+    
+    context = {
+        'empresa': empresa,
+        'search_query': search_query,
+        'formset': formset,
+    }
+    return render(request, 'admin/clientes/lista_clientes/servicios/home/servicios.html', context)

@@ -6,7 +6,7 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum
 
 def home_estadisticas(request):
-    return render(request, 'side_menu/estadisticas/home/home.html')
+    return render(request, 'admin/estadisticas/home/home.html')
 
 def estadisticas_empresas(request):
     empresas_por_mes = RegistroEmpresas.objects.annotate(
@@ -17,7 +17,7 @@ def estadisticas_empresas(request):
     context = {
         'empresas_por_mes': list(empresas_por_mes),
     }
-    return render(request, 'side_menu/estadisticas/empresas/empresas.html', context)
+    return render(request, 'admin/estadisticas/empresas/empresas.html', context)
 
 def estadisticas_pagos(request):
     pagos_por_mes = Pago.objects.annotate(
@@ -29,7 +29,7 @@ def estadisticas_pagos(request):
     context = {
         'pagos_por_mes': list(pagos_por_mes),
     }
-    return render(request, 'side_menu/estadisticas/pagos/pagos.html', context)
+    return render(request, 'admin/estadisticas/pagos/pagos.html', context)
 
 
 

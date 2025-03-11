@@ -21,7 +21,7 @@ def crear_permiso(request):
             return redirect('lista_permisos')
     else:
         form = PermisoForm()
-    return render(request, 'side_menu/permisos/crear/crear_permiso.html', {'form': form})
+    return render(request, 'admin/permisos/crear/crear_permiso.html', {'form': form})
 
 @login_required
 @permiso_requerido("lista_permisos")
@@ -33,4 +33,4 @@ def lista_permisos(request):
     :return: Renderizado de template con lista de permisos
     """
     permisos = RegistroPermisos.objects.all()
-    return render(request, 'side_menu/permisos/lista/listas_permisos.html', {'permisos': permisos})
+    return render(request, 'admin/permisos/lista/listas_permisos.html', {'permisos': permisos})
