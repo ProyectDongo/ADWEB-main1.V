@@ -19,7 +19,7 @@ Including another URLconf
 from site import venv
 from django.contrib.auth import views as auth_views
 from django.urls import path
-
+from django.contrib import admin
 
 from WEB.views.config.views import sofware
 from WEB.views.estadisticas.views import estadisticas
@@ -32,6 +32,8 @@ from django.contrib.auth.views import LogoutView
 from django_ratelimit.decorators import ratelimit
 from django.views.generic import RedirectView
 urlpatterns = [
+    #super_user
+    path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
     path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),

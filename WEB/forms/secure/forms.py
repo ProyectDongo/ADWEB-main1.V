@@ -1,6 +1,6 @@
 import re
 from django import forms
-from WEB.models.secure.permisos import RegistroPermisos
+
 
 class PermisoForm(forms.ModelForm):
     """
@@ -12,7 +12,7 @@ class PermisoForm(forms.ModelForm):
         Meta.widgets (dict): Configuración de widgets para cada campo
     """
     class Meta:
-        model = RegistroPermisos
+        
         fields = ['nombre', 'descripcion']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),

@@ -48,7 +48,7 @@ class Plan(models.Model):
         """
         return f"{self.nombre} (U: {self.max_usuarios})"
     
-
+#---------------------------------------------------------------------------------------------------------
 
 class RegistroEmpresas(models.Model):
     """
@@ -164,6 +164,15 @@ class RegistroEmpresas(models.Model):
     class Meta:
         verbose_name = "Empresa"
         verbose_name_plural = "Empresas"
+        permissions = [
+            ('crear_empresa', 'Puede crear empresas'),
+            ('eliminar_empresa', 'Puede eliminar empresas'),
+            ('detalles_empresa', 'Puede ver detalles de empresas'),
+            ('lista_empresas', 'Puede listar empresas'),
+            ('vista_empresas', 'Puede ver las empresas'),
+            ('vista_planes', 'Puede ver los planes'),
+            ('crear_plan', 'Puede crear los planes'),
+        ]
 
     def __str__(self):
         """
@@ -194,6 +203,9 @@ class RegistroEmpresas(models.Model):
             self.limite_usuarios = self.plan_contratado.max_usuarios
             
         super().save(*args, **kwargs)
+
+
+#---------------------------------------------------------------------------------------------------------
 
 class VigenciaPlan(models.Model):
     """

@@ -44,7 +44,7 @@ class Usuario(AbstractUser):
         ('supervisor', 'Supervisor'),
         ('trabajador', 'Trabajador'),
     )
-    role = models.CharField(max_length=20, choices=ROLES, default='trabajador')
+    role = models.CharField(max_length=20, choices=ROLES, default='admin')
     empresa = models.ForeignKey(
         RegistroEmpresas, 
         on_delete=models.CASCADE, 
@@ -52,7 +52,7 @@ class Usuario(AbstractUser):
         blank=True, 
         related_name="usuarios"
     )
-    permisos = models.ManyToManyField("RegistroPermisos", blank=True, related_name='usuarios')
+    
     rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
     apellidoM = models.CharField(max_length=12, blank=True)
     nombre = models.CharField(max_length=100)
@@ -97,6 +97,16 @@ class Usuario(AbstractUser):
     class Meta:
         verbose_name = "Usuario"
         verbose_name_plural = "Usuarios"
+        permissions = [
+            ("eliminar_trabajador", "Permiso para eliminar trabajadores"),
+            ("eliminar_supervisor", "Permiso para eliminar supervisores"),
+            ("eliminar_admin", "Permiso para eliminar administradores"),
+            ("crear_admin", "Permiso para crear administradores"),
+            ("crear_supervisor", "Permiso para crear supervisores"),
+            ("crear_trabajador", "Permiso para crear trabajadores"),
+            ("editar_supervisor", "permiso para editar supervisores"),
+            ("editar_trabajador", "permiso para editar trabajadores"),
+        ]
 
     def __str__(self):
         """
