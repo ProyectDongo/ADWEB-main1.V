@@ -40,3 +40,7 @@ class Pago(models.Model):
         super().save(*args, **kwargs)
     def __str__(self):
         return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
+    class Meta:
+           permissions = [
+                ('Registrar_pago', 'permite registar un pago')
+        ]

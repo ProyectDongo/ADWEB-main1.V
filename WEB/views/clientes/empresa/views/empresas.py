@@ -9,9 +9,9 @@ from django.http import JsonResponse,HttpResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from django.forms.models import modelformset_factory
-@login_required
 
-@permiso_requerido("crear_empresa")
+@login_required
+@permiso_requerido("WEB.crear_empresa")
 
 def crear_empresa(request):
     """
@@ -70,7 +70,7 @@ def crear_empresa(request):
 
 
 @login_required
-
+@permiso_requerido("WEB.detalles_empresa")
 def detalle_empresa(request, pk):
     """
     Vista para mostrar y editar los detalles de una empresa específica.
@@ -135,7 +135,7 @@ def detalle_empresa(request, pk):
     })
 
 @login_required
-@permiso_requerido("vista_empresas")
+@permiso_requerido("WEB.vista_empresas")
 
 def listar_clientes(request):
     empresas = RegistroEmpresas.objects.filter(eliminada=False)
@@ -181,11 +181,11 @@ def eliminar_empresa(request, pk):
     empresa.save()
     messages.success(request, 'Empresa marcada como eliminada')
     return redirect('listar_clientes')
-
+@login_required
 def listar_empresas_eliminadas(request):
     empresas = RegistroEmpresas.objects.filter(eliminada=True)
     return render(request, 'admin/clientes/lista_clientes/ver_eliminados/listar_empresas_eliminadas.html', {'empresas': empresas})
-
+@login_required
 def recuperar_empresa(request, id):
     empresa = get_object_or_404(RegistroEmpresas, id=id)
     empresa.eliminada = False
@@ -231,6 +231,7 @@ def vigencia_planes(request, pk):
 
 
 @login_required
+@permiso_requerido("WEB.generar_boloeta")
 def generar_boleta(request, empresa_id):
     """
     Genera una boleta en PDF para una empresa (actualmente deshabilitado).
@@ -248,7 +249,7 @@ def generar_boleta(request, empresa_id):
     # Implementación futura de generación de PDF
     return HttpResponse("Generación de PDF actualmente deshabilitada")
 
-
+@login_required
 @require_POST
 def suspender_empresa(request, empresa_id):
     """
@@ -288,8 +289,8 @@ def toggle_estado(request, pk):
         'new_estado_display': vigencia.get_estado_display()
     })
 
-
-
+@login_required
+@permiso_requerido("WEB.vista_servicios")
 def servicios(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
     search_query = request.GET.get('q', '')

@@ -1,33 +1,96 @@
-{% extends "centralUser.html" %}
-
-{% block title %}Home Trabajador {% endblock %}
+{% extends "central.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container d-flex flex-column align-items-center" style="min-height: 100vh;">
-    <div class="card w-75 shadow-lg mt-5">
-        <div class="card-body text-center">
-            <h1 class="card-title my-4">Bienvenido, {{ user.username }}</h1>
-            <p class="card-text">Estamos encantados de verte de nuevo. Por favor, registra tu entrada para comenzar tu jornada laboral.</p>
-            <hr>
-            <h2 class="my-4">Registrar Entrada</h2>
-            {% if messages %}
-                <div class="alert alert-warning" role="alert">
-                    {% for message in messages %}
-                        {{ message }}
-                    {% endfor %}
+<div class="container">
+    <h2>Registro de Asistencia</h2>
+    
+    <!-- Sección Entrada -->
+    <div class="card mb-4">
+        <div class="card-header">Registrar Entrada</div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="entradaForm">
+                {% csrf_token %}
+                {{ form_entrada.metodo }}
+                
+                <div id="firmaSection" class="metodo-section">
+                    {{ form_entrada.firma_digital.label_tag }}
+                    {{ form_entrada.firma_digital }}
                 </div>
-            {% endif %}
-            <form method="post" class="w-50 mx-auto">
-                {% csrf_token %}
-                <button type="submit" name="entrada" class="btn btn-primary btn-lg mt-3">Registrar Entrada</button>
+                
+                <div id="huellaSection" class="metodo-section">
+                    <button type="button" class="btn btn-secondary" onclick="leerHuella()">
+                        Escanear Huella
+                    </button>
+                    {{ form_entrada.huella_id }}
+                </div>
+                
+                <div id="geoSection" class="metodo-section">
+                    <button type="button" class="btn btn-secondary" onclick="obtenerGeolocalizacion()">
+                        Obtener Ubicación
+                    </button>
+                    {{ form_entrada.latitud }}
+                    {{ form_entrada.longitud }}
+                </div>
+                
+                <button type="submit" name="entrada" class="btn btn-primary mt-3">
+                    Registrar Entrada
+                </button>
             </form>
-            <hr>
-            <h2 class="my-4">Registrar Salida</h2>
-            <form method="post" class="w-50 mx-auto">
+        </div>
+    </div>
+
+    <!-- Sección Salida -->
+    <div class="card">
+        <div class="card-header">Registrar Salida</div>
+        <div class="card-body">
+            <form method="post" id="salidaForm">
                 {% csrf_token %}
-                <button type="submit" name="salida" class="btn btn-secondary btn-lg mt-3">Registrar Salida</button>
+                {{ form_salida.metodo }}
+                <button type="submit" name="salida" class="btn btn-danger">
+                    Registrar Salida
+                </button>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+// Mostrar/ocultar secciones según método seleccionado
+document.querySelectorAll('input[name="metodo"]').forEach(input => {
+    input.addEventListener('change', function() {
+        document.querySelectorAll('.metodo-section').forEach(section => {
+            section.style.display = 'none';
+        });
+        
+        const sectionId = this.value + 'Section';
+        document.getElementById(sectionId).style.display = 'block';
+    });
+});
+
+function obtenerGeolocalizacion() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            document.getElementById('id_latitud').value = position.coords.latitude;
+            document.getElementById('id_longitud').value = position.coords.longitude;
+        });
+    } else {
+        alert('Geolocalización no soportada en este navegador');
+    }
+}
+
+function leerHuella() {
+    // Integración con dispositivo de huellas (ejemplo genérico)
+    HuellaDigital.escannear().then(id => {
+        document.getElementById('id_huella_id').value = id;
+    }).catch(error => {
+        alert('Error leyendo huella: ' + error);
+    });
+}
+</script>
+
+<style>
+.metodo-section { display: none; }
+.metodo-section.active { display: block; }
+</style>
 {% endblock %}

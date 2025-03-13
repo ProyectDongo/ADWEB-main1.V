@@ -4,10 +4,13 @@ from WEB.views.scripts import *
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum
-
+@login_required
+@permiso_requerido("WEB.vista_estadisticas")
 def home_estadisticas(request):
     return render(request, 'admin/estadisticas/home/home.html')
 
+@login_required
+@permiso_requerido("WEB.vista_estadisticas")
 def estadisticas_empresas(request):
     empresas_por_mes = RegistroEmpresas.objects.annotate(
         mes=TruncMonth('fecha_ingreso')
@@ -19,6 +22,8 @@ def estadisticas_empresas(request):
     }
     return render(request, 'admin/estadisticas/empresas/empresas.html', context)
 
+@login_required
+@permiso_requerido("WEB.vista_estadisticas")
 def estadisticas_pagos(request):
     pagos_por_mes = Pago.objects.annotate(
         mes=TruncMonth('fecha_pago')

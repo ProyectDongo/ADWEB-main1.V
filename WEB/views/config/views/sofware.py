@@ -5,7 +5,7 @@ from WEB.views.scripts import *
 from django.contrib.auth.decorators import login_required
 
 @login_required
-@permiso_requerido("crear_admin")
+@permiso_requerido("WEB.crear_trabajador")
 def crear_admin(request):
     """
     Vista para creación de nuevos usuarios administradores.
@@ -23,7 +23,7 @@ def crear_admin(request):
     return render(request, 'admin/Sofware/admin/crear_admin.html', {'form': form})
 
 @login_required
-@permiso_requerido("crear_supervisor")
+@permiso_requerido("WEB.crear_trabajador")
 def crear_supervisor(request):
     """
     Vista para la creación de supervisores.
@@ -38,7 +38,7 @@ def crear_supervisor(request):
     return render(request, 'admin/Sofware/supervisor/crear_supervisor.html', {'form': form})
 
 @login_required
-@permiso_requerido("crear_trabajador")
+@permiso_requerido("WEB.crear_trabajador")
 def crear_trabajador(request):
     """
     Vista para creación de nuevos usuarios trabajadores.

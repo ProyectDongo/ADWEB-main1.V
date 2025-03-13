@@ -45,3 +45,5 @@ class Cobro(models.Model):
 
     def __str__(self):
         return f"Cobro {self.id} - {self.vigencia_plan.plan.nombre if self.vigencia_plan else 'Todos'}"
+ 
+    

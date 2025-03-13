@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 
 @login_required
-@permiso_requerido("crear_permiso")
+@permiso_requerido("web.crear_permiso")
 def crear_permiso(request):
     """
     Vista para creación de nuevos permisos de usuario.
@@ -24,7 +24,7 @@ def crear_permiso(request):
     return render(request, 'admin/permisos/crear/crear_permiso.html', {'form': form})
 
 @login_required
-@permiso_requerido("lista_permisos")
+@permiso_requerido("WEB.lista_permisos")
 def lista_permisos(request):
     """
     Lista todos los permisos registrados.
@@ -32,5 +32,5 @@ def lista_permisos(request):
     :param request: HttpRequest
     :return: Renderizado de template con lista de permisos
     """
-    permisos = RegistroPermisos.objects.all()
+    permisos =request.user.user_permissions.all()
     return render(request, 'admin/permisos/lista/listas_permisos.html', {'permisos': permisos})

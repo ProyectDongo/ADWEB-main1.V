@@ -147,7 +147,7 @@ def admin_home(request):
     return render(request, 'home/admin_home.html')
 
 def configuracion_home(request):
-    return render(request, 'side_menu/sofware/home/configuracion_home.html')
+    return render(request, 'admin/sofware/home/configuracion_home.html')
 
 @login_required
 def supervisor_home(request, empresa_id):
@@ -163,43 +163,67 @@ def supervisor_home(request, empresa_id):
 
 @login_required
 def trabajador_home(request):
-    if request.method == 'POST':
-        if 'entrada' in request.POST:
-            hace_seis_horas = timezone.now() - timezone.timedelta(hours=6)
-            ultima_entrada = RegistroEntrada.objects.filter(
-                trabajador=request.user,
-                hora_entrada__gte=hace_seis_horas,
-                permitir_otra_entrada=False
-            ).exists()
-            
-            if ultima_entrada:
-                messages.warning(request, 'Usted ya ha registrado su entrada. Vuelva en 6 horas o comuníquese con su supervisor.')
-                return redirect('trabajador_home')
-            
-            form_entrada = RegistroEntradaForm(request.POST)
-            if form_entrada.is_valid():
-                entrada = form_entrada.save(commit=False)
-                entrada.trabajador = request.user
-                entrada.save()
-                messages.success(request, 'Entrada registrada exitosamente.')
-                return redirect('trabajador_home')
-                
-        elif 'salida' in request.POST:
-            entrada_sin_salida = RegistroEntrada.objects.filter(
-                trabajador=request.user,
-                hora_salida__isnull=True
-            ).last()
-            
-            if entrada_sin_salida:
-                entrada_sin_salida.hora_salida = timezone.now()
-                entrada_sin_salida.save()
-                messages.success(request, 'Salida registrada exitosamente.')
-                return redirect('trabajador_home')
-            
-            messages.warning(request, 'No hay una entrada sin salida registrada.')
-            return redirect('trabajador_home')
-    
-    return render(request, 'home/trabajador_home.html', {
+    context = {
         'form_entrada': RegistroEntradaForm(),
         'form_salida': RegistroSalidaForm()
-    })
+    }
+
+    if request.method == 'POST':
+        if 'entrada' in request.POST:
+            return handle_entrada(request, context)
+        elif 'salida' in request.POST:
+            return handle_salida(request, context)
+
+    return render(request, 'home/trabajador_home.html', context)
+
+def handle_entrada(request, context):
+    form = RegistroEntradaForm(request.POST, request.FILES)
+    
+    if form.is_valid():
+        entrada = form.save(commit=False)
+        entrada.trabajador = request.user
+        
+        # Validación de entrada única
+        if not puede_registrar_entrada(request.user):
+            messages.warning(request, 'Ya tiene una entrada activa')
+            return redirect('trabajador_home')
+        
+        entrada.save()
+        messages.success(request, 'Entrada registrada correctamente')
+        return redirect('trabajador_home')
+    
+    context['form_entrada'] = form
+    return render(request, 'home/trabajador_home.html', context)
+
+def handle_salida(request, context):
+    form = RegistroSalidaForm(request.POST)
+    entrada_activa = get_entrada_activa(request.user)
+    
+    if not entrada_activa:
+        messages.warning(request, 'No hay entrada activa')
+        return redirect('trabajador_home')
+    
+    if form.is_valid():
+        entrada_activa.hora_salida = timezone.now()
+        entrada_activa.save()
+        messages.success(request, 'Salida registrada correctamente')
+        return redirect('trabajador_home')
+    
+    context['form_salida'] = form
+    return render(request, 'home/trabajador_home.html', context)
+
+# Funciones auxiliares
+def puede_registrar_entrada(user):
+    return not RegistroEntrada.objects.filter(
+        trabajador=user,
+        hora_salida__isnull=True
+    ).exists()
+
+def get_entrada_activa(user):
+    try:
+        return RegistroEntrada.objects.get(
+            trabajador=user,
+            hora_salida__isnull=True
+        )
+    except RegistroEntrada.DoesNotExist:
+        return None

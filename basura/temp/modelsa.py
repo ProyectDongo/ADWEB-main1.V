@@ -1,77 +1,10 @@
-from wsgiref.validate import validator
+modelos 
+
+from math import perm
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group, Permission
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.db.models import Max
+from WEB.models.ubicacion.region import Region, Provincia, Comuna
+from WEB.views.scripts  import *
 from django.utils import timezone
-from django.conf import settings
-from ..WEB.views.scripts.validators import validar_rut
-from django.forms import modelformset_factory
-from django.db.models import  Sum
-from django.urls import reverse
-
-
-
-class Region(models.Model):
-    """
-    Modelo que representa una región geográfica.
-
-    Atributos:
-        nombre (CharField): Nombre de la región, limitado a 100 caracteres.
-    """
-    nombre = models.CharField(max_length=100)
-
-    def __str__(self):
-        """
-        Retorna la representación en cadena de la región.
-
-        :return: Nombre de la región.
-        """
-        return self.nombre
-
-
-class Provincia(models.Model):
-    """
-    Modelo que representa una provincia, vinculada a una región específica.
-
-    Atributos:
-        nombre (CharField): Nombre de la provincia, limitado a 100 caracteres.
-        region (ForeignKey): Relación a la región a la que pertenece la provincia. 
-                             Si se elimina la región, se eliminarán sus provincias asociadas.
-    """
-    nombre = models.CharField(max_length=100)
-    region = models.ForeignKey(Region, on_delete=models.CASCADE)
-
-    def __str__(self):
-        """
-        Retorna la representación en cadena de la provincia.
-
-        :return: Cadena con el formato "Nombre (Región)".
-        """
-        return f"{self.nombre} ({self.region})"
-
-
-class Comuna(models.Model):
-    """
-    Modelo que representa una comuna, perteneciente a una provincia.
-
-    Atributos:
-        nombre (CharField): Nombre de la comuna, limitado a 100 caracteres.
-        provincia (ForeignKey): Relación a la provincia a la que pertenece la comuna. 
-                                Se elimina en cascada junto con la provincia.
-    """
-    nombre = models.CharField(max_length=100)
-    provincia = models.ForeignKey(Provincia, on_delete=models.CASCADE)
-
-    def __str__(self):
-        """
-        Retorna la representación en cadena de la comuna.
-
-        :return: Cadena con el formato "Nombre (Provincia)".
-        """
-        return f"{self.nombre} ({self.provincia})"
-
 
 class Plan(models.Model):
     """
@@ -109,6 +42,11 @@ class Plan(models.Model):
     class Meta:
         verbose_name = "Plan"
         verbose_name_plural = "Planes"
+        permissions = [
+            ('crear_plan', 'Puede crear los planes'),
+            ('vista_planes', 'Puede listar los planes'),
+           
+        ]
 
     def __str__(self):
         """
@@ -117,7 +55,8 @@ class Plan(models.Model):
         :return: Cadena con el formato "Nombre (U: Máximo de usuarios)".
         """
         return f"{self.nombre} (U: {self.max_usuarios})"
-
+    
+#---------------------------------------------------------------------------------------------------------
 
 class RegistroEmpresas(models.Model):
     """
@@ -233,6 +172,19 @@ class RegistroEmpresas(models.Model):
     class Meta:
         verbose_name = "Empresa"
         verbose_name_plural = "Empresas"
+        permissions = [
+            ('crear_empresa', 'Puede crear empresas'),
+            ('eliminar_empresa', 'Puede eliminar empresas'),
+            ('detalles_empresa', 'Puede ver detalles de empresas'),
+            ('lista_empresas', 'Puede listar empresas'),
+            ('vista_empresas', 'Puede ver las empresas'),
+            ('vista_planes', 'Puede ver los planes'),
+            ('crear_plan', 'Puede crear los planes'),
+            ('generar_boleta', 'puede generar boletas'),
+            ('vista_servicios', 'puede ver los servicios y editarlos'),
+            ('vista_estadisticas', 'puede ver las estadusticas de las empresas'),
+            
+        ]
 
     def __str__(self):
         """
@@ -256,7 +208,7 @@ class RegistroEmpresas(models.Model):
         :param kwargs: Argumentos con nombre.
         """
         if not self.codigo_cliente:
-            ultimo_id = RegistroEmpresas.objects.aggregate(Max('id'))['id__max'] or 0
+            ultimo_id = RegistroEmpresas.objects.aggregate(max('id'))['id__max'] or 0
             self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
         
         if self.plan_contratado:
@@ -264,172 +216,8 @@ class RegistroEmpresas(models.Model):
             
         super().save(*args, **kwargs)
 
-class Usuario(AbstractUser):
-    """
-    Modelo que extiende AbstractUser para representar a un usuario en el sistema.
 
-    Este modelo incorpora campos adicionales a los definidos en AbstractUser para
-    manejar roles específicos (Administrador, Supervisor, Trabajador), la asociación
-    a una empresa y permisos adicionales personalizados.
-
-    Atributos:
-        role (CharField): Rol del usuario, con opciones:
-            - 'admin' para Administrador,
-            - 'supervisor' para Supervisor,
-            - 'trabajador' para Trabajador.
-            Valor por defecto: 'trabajador'.
-        empresa (ForeignKey): Relación con el modelo RegistroEmpresas, que define la empresa
-            a la que pertenece el usuario. Este campo es opcional.
-        permisos (ManyToManyField): Relación con el modelo RegistroPermisos para asignar
-            permisos personalizados al usuario.
-        rut (CharField): RUT del usuario, debe ser único y se valida mediante la función 'validar_rut'.
-            Se permite que esté en blanco.
-        apellidoM (CharField): Apellido materno del usuario (opcional).
-        nombre (CharField): Nombre del usuario.
-        celular (CharField): Número de celular del usuario (opcional).
-        email (EmailField): Correo electrónico del usuario.
-        groups (ManyToManyField): Grupos a los que pertenece el usuario.
-        user_permissions (ManyToManyField): Permisos específicos asignados al usuario.
-
-    Meta:
-        verbose_name: "Usuario"
-        verbose_name_plural: "Usuarios"
-
-    Métodos:
-        __str__: Retorna una representación en cadena del usuario, que incluye el nombre
-                 de usuario y la descripción de su rol.
-    """
-    ROLES = (
-        ('admin', 'Administrador'),
-        ('supervisor', 'Supervisor'),
-        ('trabajador', 'Trabajador'),
-    )
-    role = models.CharField(max_length=20, choices=ROLES, default='trabajador')
-    empresa = models.ForeignKey(
-        RegistroEmpresas, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name="usuarios"
-    )
-    permisos = models.ManyToManyField("RegistroPermisos", blank=True, related_name='usuarios')
-    rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
-    apellidoM = models.CharField(max_length=12, blank=True)
-    nombre = models.CharField(max_length=100)
-    celular = models.CharField(max_length=20, blank=True)
-    email = models.EmailField()
-
-    groups = models.ManyToManyField(
-        Group,
-        verbose_name='groups',
-        blank=True,
-        related_name='usuario_groups',
-        help_text='Grupos a los que pertenece el usuario'
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        verbose_name='user permissions',
-        blank=True,
-        related_name='usuario_permissions',
-        help_text='Permisos específicos para este usuario'
-    )
-
-    class Meta:
-        verbose_name = "Usuario"
-        verbose_name_plural = "Usuarios"
-
-    def __str__(self):
-        """
-        Retorna una representación en cadena del usuario.
-
-        :return: Cadena con el formato "username (Rol)", donde Rol es la descripción del rol.
-        """
-        return f"{self.username} ({self.get_role_display()})"
-
-
-class RegistroPermisos(models.Model):
-    """
-    Modelo que representa un permiso personalizado para los usuarios.
-
-    Este modelo se utiliza para definir permisos adicionales que pueden asignarse
-    a los usuarios, complementando los permisos predeterminados del sistema.
-
-    Atributos:
-        nombre (CharField): Nombre del permiso.
-        descripcion (TextField): Descripción detallada del permiso (opcional).
-
-    Métodos:
-        __str__: Retorna el nombre del permiso.
-    """
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        """
-        Retorna la representación en cadena del permiso.
-
-        :return: Nombre del permiso.
-        """
-        return self.nombre
-
-
-class RegistroEntrada(models.Model):
-    """
-    Modelo que representa el registro de entrada y salida de un trabajador.
-
-    Este modelo almacena la hora en la que un trabajador inicia y finaliza su jornada,
-    y permite indicar si se permite registrar otra entrada (por ejemplo, en caso de turnos múltiples).
-
-    Atributos:
-        trabajador (ForeignKey): Relación con el usuario (trabajador) que realiza el registro.
-                                  Se asocia mediante settings.AUTH_USER_MODEL y se elimina en cascada.
-        hora_entrada (DateTimeField): Fecha y hora en que se registra la entrada.
-                                      Se asigna automáticamente al crearse el registro.
-        hora_salida (DateTimeField): Fecha y hora en que se registra la salida. Es opcional.
-        permitir_otra_entrada (BooleanField): Indica si se permite registrar otra entrada para el mismo trabajador.
-    """
-    trabajador = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='entradas'
-    )
-    hora_entrada = models.DateTimeField(auto_now_add=True)
-    hora_salida = models.DateTimeField(null=True, blank=True)
-    permitir_otra_entrada = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = "Registro de Entrada"
-        verbose_name_plural = "Registros de Entrada"
-        ordering = ['-hora_entrada']
-
-    def __str__(self):
-        """
-        Retorna una representación en cadena del registro de entrada.
-
-        :return: Cadena con el formato "username - AAAA-MM-DD HH:MM", donde 'username' es el nombre
-                 de usuario del trabajador y la fecha/hora corresponde a 'hora_entrada'.
-        """
-        return f"{self.trabajador.username} - {self.hora_entrada.strftime('%Y-%m-%d %H:%M')}"
-
-
-@receiver(post_save, sender=RegistroEntrada)
-def notificar_registro_entrada(sender, instance, created, **kwargs):
-    """
-    Función receptora para la señal post_save del modelo RegistroEntrada.
-
-    Cuando se crea un nuevo registro de entrada, esta función notifica (mediante un print)
-    que se ha registrado la entrada para el trabajador asociado, mostrando el nombre de usuario
-    y la hora de entrada.
-
-    Parámetros:
-        sender: La clase del modelo que envió la señal (RegistroEntrada).
-        instance: La instancia del modelo RegistroEntrada que se acaba de guardar.
-        created (bool): Indica si la instancia fue creada (True) o actualizada (False).
-        **kwargs: Argumentos adicionales de la señal.
-    """
-    if created:
-        print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
-
+#---------------------------------------------------------------------------------------------------------
 
 class VigenciaPlan(models.Model):
     """
@@ -528,48 +316,75 @@ class VigenciaPlan(models.Model):
         :param kwargs: Argumentos con nombre.
         """
         self.calcular_monto()
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs)}
+------------------------------------------------------------------------------------------------------------------------------
+from django.db import models
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-class HistorialCambios(models.Model):
+class RegistroEntrada(models.Model):
     """
-    Modelo que representa un registro en el historial de cambios de una empresa.
+    Modelo que representa el registro de entrada y salida de un trabajador.
 
-    Este modelo almacena información sobre modificaciones o acciones realizadas en una
-    empresa, incluyendo el usuario que realizó el cambio, la fecha en que se efectuó y una
-    descripción detallada del cambio.
+    Este modelo almacena la hora en la que un trabajador inicia y finaliza su jornada,
+    y permite indicar si se permite registrar otra entrada (por ejemplo, en caso de turnos múltiples).
 
     Atributos:
-        empresa (ForeignKey): Relación con el modelo RegistroEmpresas, representa la empresa
-            a la que corresponde el cambio. Se elimina en cascada.
-        usuario (ForeignKey): Relación con el modelo de usuario (settings.AUTH_USER_MODEL) que realizó
-            el cambio. Si el usuario es eliminado, se asigna el valor null.
-        fecha (DateTimeField): Fecha y hora en que se registra el cambio, asignada automáticamente al crear el registro.
-        descripcion (TextField): Descripción detallada del cambio realizado.
-
-    Meta:
-        verbose_name: "Historial de Cambios"
-        verbose_name_plural: "Historial de Cambios"
-        ordering: Lista los registros en orden descendente por fecha.
-
-    Métodos:
-        __str__: Retorna una representación en cadena del historial en formato "AAAA-MM-DD HH:MM - usuario".
+        trabajador (ForeignKey): Relación con el usuario (trabajador) que realiza el registro.
+                                  Se asocia mediante settings.AUTH_USER_MODEL y se elimina en cascada.
+        hora_entrada (DateTimeField): Fecha y hora en que se registra la entrada.
+                                      Se asigna automáticamente al crearse el registro.
+        hora_salida (DateTimeField): Fecha y hora en que se registra la salida. Es opcional.
+        permitir_otra_entrada (BooleanField): Indica si se permite registrar otra entrada para el mismo trabajador.
     """
-    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    fecha = models.DateTimeField(auto_now_add=True)
-    descripcion = models.TextField()
+    trabajador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='entradas'
+    )
+    hora_entrada = models.DateTimeField(auto_now_add=True)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    permitir_otra_entrada = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = "Historial de Cambios"
-        verbose_name_plural = "Historial de Cambios"
-        ordering = ['-fecha']
+        verbose_name = "Registro de Entrada"
+        verbose_name_plural = "Registros de Entrada"
+        ordering = ['-hora_entrada']
 
     def __str__(self):
-        return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario}"
+        """
+        Retorna una representación en cadena del registro de entrada.
+
+        :return: Cadena con el formato "username - AAAA-MM-DD HH:MM", donde 'username' es el nombre
+                 de usuario del trabajador y la fecha/hora corresponde a 'hora_entrada'.
+        """
+        return f"{self.trabajador.username} - {self.hora_entrada.strftime('%Y-%m-%d %H:%M')}"
 
 
+@receiver(post_save, sender=RegistroEntrada)
+def notificar_registro_entrada(sender, instance, created, **kwargs):
+    """
+    Función receptora para la señal post_save del modelo RegistroEntrada.
 
-    
+    Cuando se crea un nuevo registro de entrada, esta función notifica (mediante un print)
+    que se ha registrado la entrada para el trabajador asociado, mostrando el nombre de usuario
+    y la hora de entrada.
+
+    Parámetros:
+        sender: La clase del modelo que envió la señal (RegistroEntrada).
+        instance: La instancia del modelo RegistroEntrada que se acaba de guardar.
+        created (bool): Indica si la instancia fue creada (True) o actualizada (False).
+        **kwargs: Argumentos adicionales de la señal.
+    """
+    if created:
+        print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+---------------------------------------------------------------------------------------------------------------
+from django.db import models
+from django.db.models import Sum
+from ..empresa.empresa import RegistroEmpresas,VigenciaPlan
+
+
 class Cobro(models.Model):
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='cobros')
     vigencia_plan = models.ForeignKey(
@@ -612,6 +427,86 @@ class Cobro(models.Model):
 
     def __str__(self):
         return f"Cobro {self.id} - {self.vigencia_plan.plan.nombre if self.vigencia_plan else 'Todos'}"
+---------------------------------------------------------------------------------------------------------------
+from django.db import models
+from django.conf import settings
+from ..empresa.empresa import RegistroEmpresas
+from ..usuarios.usuario import Usuario
+from ..pagos.pago import Pago
+
+class HistorialPagos(models.Model):
+    pago = models.ForeignKey(Pago, on_delete=models.CASCADE, related_name='historial')
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    descripcion = models.TextField()
+
+    def __str__(self):
+        return f"Historial Pago {self.pago.id} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
+
+class HistorialCambios(models.Model):
+    """
+    Modelo que representa un registro en el historial de cambios de una empresa.
+
+    Este modelo almacena información sobre modificaciones o acciones realizadas en una
+    empresa, incluyendo el usuario que realizó el cambio, la fecha en que se efectuó y una
+    descripción detallada del cambio.
+
+    Atributos:
+        empresa (ForeignKey): Relación con el modelo RegistroEmpresas, representa la empresa
+            a la que corresponde el cambio. Se elimina en cascada.
+        usuario (ForeignKey): Relación con el modelo de usuario (settings.AUTH_USER_MODEL) que realizó
+            el cambio. Si el usuario es eliminado, se asigna el valor null.
+        fecha (DateTimeField): Fecha y hora en que se registra el cambio, asignada automáticamente al crear el registro.
+        descripcion (TextField): Descripción detallada del cambio realizado.
+
+    Meta:
+        verbose_name: "Historial de Cambios"
+        verbose_name_plural: "Historial de Cambios"
+        ordering: Lista los registros en orden descendente por fecha.
+
+    Métodos:
+        __str__: Retorna una representación en cadena del historial en formato "AAAA-MM-DD HH:MM - usuario".
+    """
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    descripcion = models.TextField()
+
+    class Meta:
+        verbose_name = "Historial de Cambios"
+        verbose_name_plural = "Historial de Cambios"
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario}"
+-------------------------------------------------------------------------------------------------------------------------
+from django.db import models
+from ..empresa.empresa import RegistroEmpresas
+from ..usuarios.usuario import Usuario
+
+class EmailNotification(models.Model):
+    subject = models.CharField(max_length=255)
+    sender = models.CharField(max_length=255)
+    received_date = models.DateTimeField()
+    procesado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.subject} - {self.sender}"
+
+class HistorialNotificaciones(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+    fecha_envio = models.DateTimeField(auto_now_add=True)
+    estado = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name_plural = "Historial de Notificaciones"
+        ordering = ['-fecha_envio']
+--------------------------------------------------------------------------------------------------------------------
+from django.db import models
+from ..empresa.empresa import RegistroEmpresas, VigenciaPlan
+from ..cobro.cobro import Cobro
+
     
 class Pago(models.Model):
     """
@@ -650,36 +545,200 @@ class Pago(models.Model):
         super().save(*args, **kwargs)
     def __str__(self):
         return f"Pago {self.id} - {self.empresa.nombre} ({self.fecha_pago})"
-
-class HistorialPagos(models.Model):
-    """
-    Modelo para llevar un registro detallado de las operaciones y cambios en los pagos.
-    Permite rastrear cada acción (creación, actualización, cambio de estado) realizada sobre un pago.
-    """
-    pago = models.ForeignKey(Pago, on_delete=models.CASCADE, related_name='historial')
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    fecha = models.DateTimeField(auto_now_add=True)
-    descripcion = models.TextField()
-
-    def __str__(self):
-        return f"Historial Pago {self.pago.id} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
-
-class EmailNotification(models.Model):
-    subject = models.CharField(max_length=255)
-    sender = models.CharField(max_length=255)
-    received_date = models.DateTimeField()
-    procesado = models.BooleanField(default=False)  # Para marcar si ya se revisó el comprobante
-
-    def __str__(self):
-        return f"{self.subject} - {self.sender}"
-    
-
-class HistorialNotificaciones(models.Model):
-    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
-    fecha_envio = models.DateTimeField(auto_now_add=True)
-    estado = models.BooleanField(default=True)
-    
     class Meta:
-        verbose_name_plural = "Historial de Notificaciones"
-        ordering = ['-fecha_envio']
+           permissions = [
+                ('Registrar_pago', 'permite registar un pago')
+        ]
+---------------------------------------------------------------------------------------------------
+from django.db import models
+
+class Region(models.Model):
+    """
+    Modelo que representa una región geográfica.
+
+    Atributos:
+        nombre (CharField): Nombre de la región, limitado a 100 caracteres.
+    """
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        """
+        Retorna la representación en cadena de la región.
+
+        :return: Nombre de la región.
+        """
+        return self.nombre
+
+
+class Provincia(models.Model):
+    """
+    Modelo que representa una provincia, vinculada a una región específica.
+
+    Atributos:
+        nombre (CharField): Nombre de la provincia, limitado a 100 caracteres.
+        region (ForeignKey): Relación a la región a la que pertenece la provincia. 
+                             Si se elimina la región, se eliminarán sus provincias asociadas.
+    """
+    nombre = models.CharField(max_length=100)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+
+    def __str__(self):
+        """
+        Retorna la representación en cadena de la provincia.
+
+        :return: Cadena con el formato "Nombre (Región)".
+        """
+        return f"{self.nombre} ({self.region})"
+
+
+class Comuna(models.Model):
+    """
+    Modelo que representa una comuna, perteneciente a una provincia.
+
+    Atributos:
+        nombre (CharField): Nombre de la comuna, limitado a 100 caracteres.
+        provincia (ForeignKey): Relación a la provincia a la que pertenece la comuna. 
+                                Se elimina en cascada junto con la provincia.
+    """
+    nombre = models.CharField(max_length=100)
+    provincia = models.ForeignKey(Provincia, on_delete=models.CASCADE)
+
+    def __str__(self):
+        """
+        Retorna la representación en cadena de la comuna.
+
+        :return: Cadena con el formato "Nombre (Provincia)".
+        """
+        return f"{self.nombre} ({self.provincia})"
+------------------------------------------------------------------------------------------------------
+from django.db import models
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from WEB.models.empresa.empresa import *
+from WEB.views.scripts import *
+
+
+class Usuario(AbstractUser):
+    """
+    Modelo que extiende AbstractUser para representar a un usuario en el sistema.
+
+    Este modelo incorpora campos adicionales a los definidos en AbstractUser para
+    manejar roles específicos (Administrador, Supervisor, Trabajador), la asociación
+    a una empresa y permisos adicionales personalizados.
+
+    Atributos:
+        role (CharField): Rol del usuario, con opciones:
+            - 'admin' para Administrador,
+            - 'supervisor' para Supervisor,
+            - 'trabajador' para Trabajador.
+            Valor por defecto: 'trabajador'.
+        empresa (ForeignKey): Relación con el modelo RegistroEmpresas, que define la empresa
+            a la que pertenece el usuario. Este campo es opcional.
+        permisos (ManyToManyField): Relación con el modelo RegistroPermisos para asignar
+            permisos personalizados al usuario.
+        rut (CharField): RUT del usuario, debe ser único y se valida mediante la función 'validar_rut'.
+            Se permite que esté en blanco.
+        apellidoM (CharField): Apellido materno del usuario (opcional).
+        nombre (CharField): Nombre del usuario.
+        celular (CharField): Número de celular del usuario (opcional).
+        email (EmailField): Correo electrónico del usuario.
+        groups (ManyToManyField): Grupos a los que pertenece el usuario.
+        user_permissions (ManyToManyField): Permisos específicos asignados al usuario.
+
+    Meta:
+        verbose_name: "Usuario"
+        verbose_name_plural: "Usuarios"
+
+    Métodos:
+        __str__: Retorna una representación en cadena del usuario, que incluye el nombre
+                 de usuario y la descripción de su rol.
+    """
+    ROLES = (
+        ('admin', 'Administrador'),
+        ('supervisor', 'Supervisor'),
+        ('trabajador', 'Trabajador'),
+    )
+    role = models.CharField(max_length=20, choices=ROLES, default='admin')
+    empresa = models.ForeignKey(
+        RegistroEmpresas, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="usuarios"
+    )
+    
+    rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
+    apellidoM = models.CharField(max_length=12, blank=True)
+    nombre = models.CharField(max_length=100)
+    celular = models.CharField(max_length=20, blank=True)
+    email = models.EmailField()
+
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name='groups',
+        blank=True,
+        related_name='usuario_groups',
+        help_text='Grupos a los que pertenece el usuario'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name='user permissions',
+        blank=True,
+        related_name='usuario_permissions',
+        help_text='Permisos específicos para este usuario'
+    )
+    #seguridad 
+    is_locked = models.BooleanField(
+        default=False,
+        verbose_name="Cuenta bloqueada",
+        help_text="Indica si la cuenta está bloqueada por seguridad"
+    )
+    
+    #  campo para seguimiento de intentos fallidos
+    failed_login_attempts = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Intentos fallidos"
+    )
+    
+    # Fecha del último intento fallido
+    last_failed_login = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Último intento fallido"
+    )
+    
+
+    class Meta:
+        verbose_name = "Usuario"
+        verbose_name_plural = "Usuarios"
+        permissions = [
+            ("eliminar_trabajador", "Permiso para eliminar trabajadores"),
+            ("eliminar_supervisor", "Permiso para eliminar supervisores"),
+            ("eliminar_admin", "Permiso para eliminar administradores"),
+            ("crear_admin", "Permiso para crear administradores"),
+            ("crear_supervisor", "Permiso para crear supervisores"),
+            ("crear_trabajador", "Permiso para crear trabajadores"),
+            ("editar_supervisor", "permiso para editar supervisores"),
+            ("editar_trabajador", "permiso para editar trabajadores"),
+        ]
+
+    def __str__(self):
+        """
+        Retorna una representación en cadena del usuario.
+
+        :return: Cadena con el formato "username (Rol)", donde Rol es la descripción del rol.
+        """
+        return f"{self.username} ({self.get_role_display()})"
+    
+
+
+#modelo parafurutro uso
+class AuditoriaAcceso(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    exito = models.BooleanField(default=False)
+    motivo = models.TextField(blank=True)
+
+ 
+    

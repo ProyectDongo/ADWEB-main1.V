@@ -187,8 +187,7 @@
                 </a>
                 <div class="collapse" id="configuracionEmpresas">
                     <ul class="nav flex-column">
-                        {% for permiso in user_permisos %}
-                            {% if permiso.nombre == "vista_empresas" %}
+                        
                                 <li class="nav-item">
                                     <a class="nav-link" href="{% url 'listar_clientes' %}">
                                         <i class="bi bi-card-list"></i>
@@ -201,8 +200,6 @@
                                         <span>Planes Contratados</span>
                                     </a>
                                 </li>
-                            {% endif %}
-                        {% endfor %}
                     </ul>
                 </div>
             </li>

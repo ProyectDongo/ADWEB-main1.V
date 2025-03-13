@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 # Vistas de planes
 @login_required
+@permiso_requerido("WEB.crear_plan")
 def crear_plan(request):
     """
     Vista para crear un nuevo plan.
@@ -27,6 +28,8 @@ def crear_plan(request):
         form = PlanForm()
     return render(request, 'admin/clientes/planes/crear/crear_plan.html', {'form': form})
 
+@login_required
+@permiso_requerido("WEB.vista_planes")
 def listar_planes(request):
     """
     Lista todos los planes registrados.

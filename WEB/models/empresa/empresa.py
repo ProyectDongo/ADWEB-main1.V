@@ -1,3 +1,4 @@
+from math import perm
 from django.db import models
 from WEB.models.ubicacion.region import Region, Provincia, Comuna
 from WEB.views.scripts  import *
@@ -39,6 +40,11 @@ class Plan(models.Model):
     class Meta:
         verbose_name = "Plan"
         verbose_name_plural = "Planes"
+        permissions = [
+            ('crear_plan', 'Puede crear los planes'),
+            ('vista_planes', 'Puede listar los planes'),
+           
+        ]
 
     def __str__(self):
         """
@@ -172,6 +178,10 @@ class RegistroEmpresas(models.Model):
             ('vista_empresas', 'Puede ver las empresas'),
             ('vista_planes', 'Puede ver los planes'),
             ('crear_plan', 'Puede crear los planes'),
+            ('generar_boleta', 'puede generar boletas'),
+            ('vista_servicios', 'puede ver los servicios y editarlos'),
+            ('vista_estadisticas', 'puede ver las estadusticas de las empresas'),
+            
         ]
 
     def __str__(self):

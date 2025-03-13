@@ -23,7 +23,7 @@ from django.conf import settings
 import re
 
 logger = logging.getLogger(__name__)
-
+@login_required
 def registrar_cobro(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     
@@ -87,7 +87,8 @@ def registrar_cobro(request, empresa_id):
             'total_vigencias': total_vigencias,
         }
         return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
-
+#----------------------------------------------------------------------------------------------------
+@login_required
 def actualizar_cobro(request, empresa_id, cobro_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     cobro = get_object_or_404(Cobro, id=cobro_id, empresa=empresa)
@@ -134,7 +135,9 @@ def actualizar_cobro(request, empresa_id, cobro_id):
     
     messages.error(request, "Método no permitido.")
     return redirect('gestion_pagos', empresa_id=empresa.id)
-
+#----------------------------------------------------------------------------------------------------
+@login_required
+@permiso_requerido("WEB.Registrar_pago")
 def gestion_pagos(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     vigencias = empresa.vigencias.all()
@@ -163,6 +166,8 @@ def gestion_pagos(request, empresa_id):
     }
     return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
+#----------------------------------------------------------------------------------------------------
+@login_required
 def send_manual_payment_email(empresa, next_due):
     """Envía correo con instrucciones para pago manual."""
     try:
@@ -204,7 +209,8 @@ def send_manual_payment_email(empresa, next_due):
     except Exception as e:
         logger.error("Error enviando correo: %s", str(e), exc_info=True)
         return False
-
+#----------------------------------------------------------------------------------------------------
+@login_required
 def get_comprobantes():
     """Obtiene comprobantes de pago extrayendo el código cliente y empresa_id."""
     comprobantes = []
@@ -288,7 +294,7 @@ def get_comprobantes():
         logger.error(f"Error general: {e}", exc_info=True)
         raise
     return comprobantes
-
+#----------------------------------------------------------------------------------------------------
 def notificaciones_json(request):
     """Endpoint para obtener notificaciones en formato JSON."""
     try:
@@ -315,8 +321,8 @@ def notificaciones_json(request):
             'detalle': str(e)
         }, status=500, safe=False)
 
-
-# de aqui empiezan lo correos
+#----------------------------------------------------------------------------------------------------
+@login_required
 def actualizar_estado_pago(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
     pago.pagado = not pago.pagado
@@ -324,7 +330,9 @@ def actualizar_estado_pago(request, pago_id):
     messages.success(request, f"El estado del pago se actualizó a: {'Pagado' if pago.pagado else 'Pendiente'}.")
     return redirect('historial_pagos', empresa_id=pago.empresa.id)
 
+#----------------------------------------------------------------------------------------------------
 @require_POST
+@login_required
 def enviar_notificacion(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     try:
