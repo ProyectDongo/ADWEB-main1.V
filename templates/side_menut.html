@@ -1,159 +1,263 @@
-<style>
-  #sidebarMenu {
-    margin-top: 130px;
-    background-color: #f8f9fa; 
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2); 
-    border-radius: 8px; 
-    padding: 10px;
-  }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  .nav-link {
-    color: #333;
-    padding: 10px;
-    border-radius: 5px;
-    transition: all 0.3s ease-in-out;
-  }
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --primary-color: #2A4D8E;
+            --secondary-color: #3A6FCA;
+            --accent-color: #F5B63F;
+            --text-dark: #2D3748;
+            --text-light: #718096;
+        }
 
+        #sidebarMenu {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: relative;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-right: 1px solid #e2e8f0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 1.5rem 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-  .nav-link:hover {
-    background-color: #e9ecef;
-    color: #000;
-    transform: scale(1.05);
-  }
+        .sidebar-header {
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
 
-  .sidebar-sticky {
-    padding: 15px;
-  }
+        .nav-link {
+            color: var(--text-dark);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
+        }
 
-  .collapse ul {
-    padding-left: 15px;
-  }
+        .nav-link:hover {
+            background: rgba(42, 77, 142, 0.08);
+            transform: translateX(5px);
+        }
 
-  .nav-item {
-    margin-bottom: 5px;
-  }
-  #clientes{
-    font-size: 20px;
-  }
-  #permisos{
-    font-size: 20px ;
-  }
-</style>
-  
-  <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-    <div class="sidebar-sticky pt-3">
-      <ul class="nav flex-column">
-        <!-- Home según el rol -->
-        <li class="nav-item">
-          {% if role == "admin" %}
-            <a class="nav-link active" href="{% url 'admin_home' %}">
-              <span data-feather="home"></span> Home
-            </a>
-          {% elif role == "supervisor" %}
-            <a class="nav-link active" href="{% url 'supervisor_home' %}">
-              <span data-feather="home"></span> Home
-            </a>
-          {% elif role == "trabajador" %}
-            <a class="nav-link active" href="{% url 'trabajador_home' %}">
-              <span data-feather="home"></span> Home
-            </a>
-          {% endif %}
-        </li>
-  
-        <!-- Lista de Empresas -->
-        {% for permiso in user_permisos %}
-          {% if permiso.nombre == "lista_empresas" %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'lista_empresas' %}">
-              <span data-feather="briefcase"></span> Lista de Empresas
-            </a>  
-          </li>
-          {% endif %}
-        {% endfor %}
-  
-        <!-- Configuración de Software -->
-        <li class="nav-item">
-          <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware" role="button" aria-expanded="false" aria-controls="configuracionSoftware">
-            <span data-feather="settings"></span> Configuración de Software
-          </a>
-          <div class="collapse" id="configuracionSoftware">
-            <ul class="nav flex-column ms-3">
-              {% for permiso in user_permisos %}
-                {% if permiso.nombre == "crear_empresa" %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'crear_empresa' %}">
-                    <span data-feather="plus-circle"></span> Crear Empresa
-                  </a>
-                </li>
+        .nav-link.active {
+            background: rgba(42, 77, 142, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+            box-shadow: inset 3px 0 0 var(--primary-color);
+        }
+
+        .menu-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .collapse ul {
+            padding-left: 1.5rem;
+            border-left: 2px solid #e2e8f0;
+            margin-left: 1rem;
+        }
+
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        [aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+
+       
+        @media (max-width: 992px) {
+            #sidebarMenu {
+                width: 100%;
+                height: auto;
+                position: relative;
+                box-shadow: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+      
+        #sidebarMenu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebarMenu::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #sidebarMenu::-webkit-scrollbar-thumb {
+            background: rgba(42, 77, 142, 0.3);
+            border-radius: 4px;
+        }
+
+    </style>
+</head>
+<body>
+    <nav id="sidebarMenu">
+        <div class="sidebar-header">
+            <h5 class="mb-0 text-primary">Gestión Empresarial</h5>
+            <small class="text-muted">Panel de Administración</small>
+        </div>
+        
+        <ul class="nav flex-column">
+            <!-- Dashboard -->
+            <li class="nav-item">
+                {% if role == "admin" %}
+                    <a class="nav-link active" href="{% url 'admin_home' %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                {% elif role == "supervisor" %}
+                    <a class="nav-link active" href="{% url 'supervisor_home' empresa_id=empresa.id %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                {% elif role == "trabajador" %}
+                    <a class="nav-link active" href="{% url 'trabajador_home' %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
                 {% endif %}
-                {% if permiso.nombre == "crear_admin" %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'crear_admin' %}">
-                    <span data-feather="user-plus"></span> Crear Administrador
-                  </a>
-                </li>
-                {% endif %}
-                {% if permiso.nombre == "crear_supervisor" %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'crear_supervisor' %}">
-                    <span data-feather="user-check"></span> Crear Supervisor
-                  </a>
-                </li>
-                {% endif %}
-                {% if permiso.nombre == "crear_trabajador" %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'crear_trabajador' %}">
-                    <span data-feather="user-plus"></span> Crear Trabajador
-                  </a>
-                </li>
-                {% endif %}
-              {% endfor %}
-            </ul>
-          </div>
-        </li>
+            </li>
+
+            <!-- Configuración del Sistema -->
+            <div class="menu-section-title">Administración del Sistema</div>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionSoftware">
+                    <i class="bi bi-gear"></i>
+                    <span>Configuración</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="configuracionSoftware">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'crear_admin' %}">
+                                <i class="bi bi-person-badge"></i>
+                                <span>Administradores</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'crear_supervisor' %}">
+                                <i class="bi bi-person-check"></i>
+                                <span>Supervisores</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'crear_trabajador' %}">
+                                <i class="bi bi-people"></i>
+                                <span>Usuarios</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Gestión de Clientes -->
+            <div class="menu-section-title">Gestión Comercial</div>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas">
+                    <i class="bi bi-building"></i>
+                    <span>Clientes</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="configuracionEmpresas">
+                    <ul class="nav flex-column">
+                        
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'listar_clientes' %}">
+                                        <i class="bi bi-card-list"></i>
+                                        <span>Listado de Clientes</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'listar_planes' %}">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                        <span>Planes Contratados</span>
+                                    </a>
+                                </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Analítica y Reportes -->
+            <div class="menu-section-title">Analítica Avanzada</div>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEstadisticas">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>Estadísticas</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="configuracionEstadisticas">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'estadisticas_empresas' %}">
+                                <i class="bi bi-pie-chart"></i>
+                                <span>Datos Empresariales</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'estadisticas_pagos' %}">
+                                <i class="bi bi-graph-up"></i>
+                                <span>Rendimiento Financiero</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- Seguridad y Permisos -->
+            <div class="menu-section-title">Control de Accesos</div>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Seguridad</span>
+                    <i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="configuracionPermisos">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'crear_permiso' %}">
+                                <i class="bi bi-plus-circle"></i>
+                                <span>Gestión de Permisos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'lista_permisos' %}">
+                                <i class="bi bi-clipboard-data"></i>
+                                <span>Auditoría de Accesos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
   
-        <!-- Otras opciones basadas en permisos -->
-        {% for permiso in user_permisos %}
-          {% if permiso.nombre == "detalles_empresa" and role != "admin" %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'detalles_empresa' empresa.id %}">
-              <span data-feather="bar-chart-2"></span> Ver Empresa
-            </a>
-          </li>
-          {% endif %}
-  
-          {% if permiso.nombre == "crear_permiso" %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'crear_permiso' %}">
-              <span data-feather="file"></span> Crear Opciones del Sistema
-            </a>
-          </li>
-          {% endif %}
-  
-          {% if permiso.nombre == "lista_permisos" %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'lista_permisos' %}">
-              <span data-feather="list"></span> Lista de Permisos
-            </a>
-          </li>
-          {% if user.role == "admin" %}
-          <li class="nav-item">
-            <a class="nav-link active" href="{% url 'listar_empresas' %}">
-              <span data-feather="bar-chart-2"></span> Actualizar Empresas
-            </a>  
-          </li>
-          {% endif %}
-          {% endif %}
-  
-          {% if permiso.nombre == "lista_empresas" %}
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'lista_empresas' %}">
-              <span data-feather="briefcase"></span> Lista de Empresas
-            </a>  
-          </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
-  </nav>
-  
+</body>
+</html>

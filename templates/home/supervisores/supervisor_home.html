@@ -1,0 +1,309 @@
+{% extends "central.html" %}
+{% load static %}
+
+{% block title %}{{ empresa.nombre }} | Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-building me-2"></i>{{ empresa.nombre|truncatechars:30 }}
+        </h1>
+        <a href="#" class="btn btn-primary btn-icon-split" data-bs-toggle="modal" data-bs-target="#editarEmpresaModal">
+            <span class="icon text-white-50"><i class="fas fa-cog"></i></span>
+            <span class="text">Configuración</span>
+        </a>
+    </div>
+
+    <!-- Tarjeta Información Empresa -->
+    <div class="card border-left-primary shadow h-100 py-2 mb-4 animate__animated animate__fadeIn">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Detalles de la empresa
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-id-card me-2"></i>RUT: {{ empresa.rut }}</li>
+                            <li><i class="fas fa-map-marker-alt me-2"></i>{{ empresa.direccion }}</li>
+                            <li><i class="fas fa-phone me-2"></i>{{ empresa.telefono }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-building fa-3x text-gray-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" 
+                    data-bs-target="#supervisores" type="button" role="tab"
+                    aria-controls="supervisores" aria-selected="true">
+                <i class="fas fa-user-shield me-2"></i>Supervisores ({{ supervisores.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab"
+                    data-bs-target="#trabajadores" type="button" role="tab"
+                    aria-controls="trabajadores" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Trabajadores ({{ trabajadores.count }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido Pestañas -->
+    <div class="tab-content" id="mainTabsContent">
+        <!-- Pestaña Supervisores -->
+        <div class="tab-pane fade show active" id="supervisores" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administrar Supervisores</h4>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="supervisor">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
+                </button>
+            </div>
+            
+            <div class="row">
+                {% for supervisor in supervisores %}
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card border-left-warning shadow h-100 animate__animated animate__zoomIn">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-user-tie text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold text-primary text-truncate">
+                                        {{ supervisor.get_full_name }}
+                                    </div>
+                                    <div class="text-xs text-muted text-truncate">
+                                        @{{ supervisor.username }}
+                                    </div>
+                                </div>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-item editar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                                        <i class="fas fa-edit text-primary me-2"></i>Editar
+                                    </a>
+                                    <a class="dropdown-item eliminar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal">
+                                        <i class="fas fa-trash text-danger me-2"></i>Eliminar
+                                    </a>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No se han encontrado supervisores</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Pestaña Trabajadores -->
+        <div class="tab-pane fade" id="trabajadores" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Administrar Trabajadores</h4>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="trabajador">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
+                </button>
+            </div>
+            <div class="row">
+                {% for trabajador in trabajadores %}
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card border-left-info shadow h-100 animate__animated animate__zoomIn">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-info">
+                                        <i class="fas fa-hard-hat text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold text-primary text-truncate">
+                                        {{ trabajador.get_full_name }}
+                                    </div>
+                                    <div class="text-xs text-muted text-truncate">
+                                        @{{ trabajador.username }}
+                                    </div>
+                                </div>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-item editar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                                        <i class="fas fa-edit text-primary me-2"></i>Editar
+                                    </a>
+                                    <a class="dropdown-item eliminar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal">
+                                        <i class="fas fa-trash text-danger me-2"></i>Eliminar
+                                    </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No se han encontrado trabajadores</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Crear/Editar Usuario -->
+<div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="crearUsuarioModalLabel">
+                    <i class="fas fa-user-plus me-2"></i><span id="modalTitulo">Nuevo Usuario</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="usuarioForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="tipo_usuario" id="tipoUsuario">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre completo</label>
+                        <input type="text" class="form-control" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de usuario</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar Usuario -->
+<div class="modal fade" id="eliminarUsuarioModal" tabindex="-1" aria-labelledby="eliminarUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="eliminarUsuarioModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="eliminarForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    ¿Estás seguro de eliminar este usuario?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Empresa -->
+<div class="modal fade" id="editarEmpresaModal" tabindex="-1" aria-labelledby="editarEmpresaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editarEmpresaModalLabel">
+                    <i class="fas fa-edit me-2"></i>Editar Empresa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'editar_empresa' empresa.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" value="{{ empresa.nombre }}" required>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">RUT</label>
+                            <input type="text" class="form-control" name="rut" value="{{ empresa.rut }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" name="telefono" value="{{ empresa.telefono }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar modales
+        $('#crearUsuarioModal').on('show.bs.modal', function(event) {
+            const button = $(event.relatedTarget);
+            const tipo = button.data('tipo');
+            $('#tipoUsuario').val(tipo);
+            $('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
+        });
+    
+        $('.editar-usuario').click(function() {
+            const usuarioId = $(this).data('id');
+            const action = `/editar_usuario/${usuarioId}/`;
+            $('#usuarioForm').attr('action', action);
+        });
+    
+        $('.eliminar-usuario').click(function() {
+            const usuarioId = $(this).data('id');
+            $('#eliminarForm').attr('action', `/eliminar_usuario/${usuarioId}/`);
+        });
+    });
+    </script>
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    .icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    .dropdown-menu {
+        min-width: 8rem;
+    }
+</style>
+{% endblock %}

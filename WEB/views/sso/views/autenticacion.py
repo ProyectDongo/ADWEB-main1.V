@@ -13,7 +13,7 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from WEB.models import *
-from WEB.forms import RegistroEntradaForm, RegistroSalidaForm
+from WEB.forms import RegistroEntradaForm, RegistroSalidaForm, UsuarioForm
 
 
 
@@ -101,7 +101,7 @@ class RoleBasedLoginMixin:
             user.is_locked = True
             user.save()
             messages.error(self.request, 'Cuenta bloqueada por seguridad')
-
+#----------------------------------------------------------------------
 class AdminLoginView(RoleBasedLoginMixin, LoginView):
     role = 'admin'
     template_name = 'login/admin/admin_login.html'
@@ -144,7 +144,7 @@ def redirect_after_login(request):
     
 @login_required
 def admin_home(request):
-    return render(request, 'home/admin_home.html')
+    return render(request, 'home/admin/admin_home.html')
 
 def configuracion_home(request):
     return render(request, 'admin/sofware/home/configuracion_home.html')
@@ -159,7 +159,7 @@ def supervisor_home(request, empresa_id):
         'supervisores': supervisores,
         'trabajadores': trabajadores,
     }
-    return render(request, 'home/home_supervisor/supervisor_home.html', context)
+    return render(request, 'home/supervisores/supervisor_home.html', context)
 
 @login_required
 def trabajador_home(request):
@@ -227,3 +227,123 @@ def get_entrada_activa(user):
         )
     except RegistroEntrada.DoesNotExist:
         return None
+#----------------------------------------------------------------------
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.views.generic import ListView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+class AdminUserMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.role == 'admin'
+    
+class AdminAsistenciaView(LoginRequiredMixin, TemplateView):
+    template_name = 'home/admin/asistencia/modulo_asistencia.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['empresas'] = RegistroEmpresas.objects.filter(
+            plan_contratado__nombre__icontains='asistencia'
+        )
+        return context
+
+class GestionUsuariosView(AdminUserMixin, ListView):
+    model = Usuario
+    template_name = 'admin/gestion_usuarios.html'
+    context_object_name = 'usuarios'
+    
+    def get_queryset(self):
+        return Usuario.objects.all()
+
+class EditarLimitePlanView(AdminUserMixin, UpdateView):
+    model = Plan
+    fields = ['max_usuarios']
+    template_name = 'admin/editar_limite_plan.html'
+    success_url = reverse_lazy('gestion_planes')
+
+class EliminarUsuarioView(AdminUserMixin, DeleteView):
+    model = Usuario
+    template_name = 'admin/confirmar_eliminacion.html'
+    success_url = reverse_lazy('gestion_usuarios')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipo_usuario'] = self.object.get_role_display()
+        return context
+#----------------------------------------------------------------------
+
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from django.urls import reverse
+
+class CrearUsuarioMixin:
+    form_class = UsuarioForm
+    template_name = 'admin/crear_usuario.html'
+    role = None
+    success_message = "Usuario creado exitosamente"
+
+    def form_valid(self, form):
+        form.instance.role = self.role
+        form.instance.empresa_id = self.kwargs['empresa_id']
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('supervisor_home', kwargs={'empresa_id': self.kwargs['empresa_id']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_id'])
+        return context
+
+# Vistas para Supervisores
+class EditarEmpresaView(UpdateView):
+    model = RegistroEmpresas
+    fields = ['nombre', 'rut', 'direccion', 'telefono']
+    template_name = 'empresa/editar_empresa.html'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Empresa actualizada exitosamente")
+        return response
+
+    def get_success_url(self):
+        return reverse('supervisor_home', kwargs={'empresa_id': self.object.id})
+    
+def crear_usuario(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo_usuario')
+        form = UsuarioForm(request.POST)
+        
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            usuario.role = tipo
+            usuario.empresa = empresa
+            usuario.set_password(form.cleaned_data['password'])
+            usuario.save()
+            messages.success(request, f'{tipo.capitalize()} creado exitosamente!')
+            return redirect('supervisor_home', empresa_id=empresa_id)
+        
+        messages.error(request, 'Corrige los errores en el formulario')
+        return redirect('supervisor_home', empresa_id=empresa_id)
+    
+    return redirect('supervisor_home', empresa_id=empresa_id)
+
+def editar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Usuario actualizado correctamente!')
+            return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+        
+        messages.error(request, 'Error al actualizar el usuario')
+        return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+    
+    return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+
+def eliminar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    empresa_id = usuario.empresa.id
+    usuario.delete()
+    messages.success(request, 'Usuario eliminado correctamente!')
+    return redirect('supervisor_home', empresa_id=empresa_id)

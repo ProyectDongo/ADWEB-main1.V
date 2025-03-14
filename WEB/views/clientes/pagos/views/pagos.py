@@ -210,7 +210,7 @@ def send_manual_payment_email(empresa, next_due):
         logger.error("Error enviando correo: %s", str(e), exc_info=True)
         return False
 #----------------------------------------------------------------------------------------------------
-@login_required
+
 def get_comprobantes():
     """Obtiene comprobantes de pago extrayendo el código cliente y empresa_id."""
     comprobantes = []
@@ -332,7 +332,6 @@ def actualizar_estado_pago(request, pago_id):
 
 #----------------------------------------------------------------------------------------------------
 @require_POST
-@login_required
 def enviar_notificacion(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     try:

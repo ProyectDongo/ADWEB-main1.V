@@ -1,96 +1,184 @@
+<!-- templates/home/trabajador_home.html -->
 {% extends "central.html" %}
 {% load static %}
 
 {% block content %}
 <div class="container">
-    <h2>Registro de Asistencia</h2>
-    
-    <!-- Sección Entrada -->
-    <div class="card mb-4">
-        <div class="card-header">Registrar Entrada</div>
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data" id="entradaForm">
-                {% csrf_token %}
-                {{ form_entrada.metodo }}
-                
-                <div id="firmaSection" class="metodo-section">
-                    {{ form_entrada.firma_digital.label_tag }}
-                    {{ form_entrada.firma_digital }}
-                </div>
-                
-                <div id="huellaSection" class="metodo-section">
-                    <button type="button" class="btn btn-secondary" onclick="leerHuella()">
-                        Escanear Huella
-                    </button>
-                    {{ form_entrada.huella_id }}
-                </div>
-                
-                <div id="geoSection" class="metodo-section">
-                    <button type="button" class="btn btn-secondary" onclick="obtenerGeolocalizacion()">
-                        Obtener Ubicación
-                    </button>
-                    {{ form_entrada.latitud }}
-                    {{ form_entrada.longitud }}
-                </div>
-                
-                <button type="submit" name="entrada" class="btn btn-primary mt-3">
-                    Registrar Entrada
-                </button>
-            </form>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Registro de Asistencia</h6>
         </div>
-    </div>
-
-    <!-- Sección Salida -->
-    <div class="card">
-        <div class="card-header">Registrar Salida</div>
         <div class="card-body">
-            <form method="post" id="salidaForm">
-                {% csrf_token %}
-                {{ form_salida.metodo }}
-                <button type="submit" name="salida" class="btn btn-danger">
-                    Registrar Salida
-                </button>
-            </form>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card border-left-primary h-100">
+                        <div class="card-header">Registrar Entrada</div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" id="entradaForm">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label>Método de Registro</label>
+                                    <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                                        <label class="btn btn-outline-primary active">
+                                            <input type="radio" name="metodo" value="firma" required> Firma
+                                        </label>
+                                        <label class="btn btn-outline-primary">
+                                            <input type="radio" name="metodo" value="huella"> Huella
+                                        </label>
+                                        <label class="btn btn-outline-primary">
+                                            <input type="radio" name="metodo" value="geo"> Geolocalización
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="firmaSection" class="metodo-section">
+                                    <div class="form-group">
+                                        <label>Firma Digital</label>
+                                        <canvas id="firmaCanvas" class="border rounded" width="300" height="150"></canvas>
+                                        <input type="hidden" name="firma_digital" id="firmaInput">
+                                        <button type="button" class="btn btn-secondary mt-2" onclick="limpiarFirma()">
+                                            Limpiar Firma
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="huellaSection" class="metodo-section d-none">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-fingerprint fa-2x"></i>
+                                        <p class="mt-2">Coloque su dedo en el lector de huellas</p>
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">Leyendo...</span>
+                                        </div>
+                                        <input type="hidden" name="huella_id" id="huellaInput">
+                                    </div>
+                                </div>
+
+                                <div id="geoSection" class="metodo-section d-none">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-map-marker-alt fa-2x"></i>
+                                        <p class="mt-2">Obteniendo ubicación...</p>
+                                        <input type="hidden" name="latitud" id="latitudInput">
+                                        <input type="hidden" name="longitud" id="longitudInput">
+                                    </div>
+                                </div>
+
+                                <button type="submit" name="entrada" class="btn btn-primary btn-block mt-3">
+                                    <i class="fas fa-sign-in-alt mr-2"></i>Registrar Entrada
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card border-left-success h-100">
+                        <div class="card-header">Registrar Salida</div>
+                        <div class="card-body">
+                            <form method="post" id="salidaForm">
+                                {% csrf_token %}
+                                <div class="alert alert-secondary">
+                                    <p class="mb-2">Última entrada registrada:</p>
+                                    <h5 class="mb-0">
+                                        {% if ultima_entrada %}
+                                            {{ ultima_entrada.hora_entrada|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            Sin registros
+                                        {% endif %}
+                                    </h5>
+                                </div>
+                                <button type="submit" name="salida" class="btn btn-danger btn-block" 
+                                    {% if not ultima_entrada %}disabled{% endif %}>
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Registrar Salida
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// Mostrar/ocultar secciones según método seleccionado
+// Control de métodos de registro
 document.querySelectorAll('input[name="metodo"]').forEach(input => {
     input.addEventListener('change', function() {
         document.querySelectorAll('.metodo-section').forEach(section => {
-            section.style.display = 'none';
+            section.classList.add('d-none');
         });
+        document.getElementById(this.value + 'Section').classList.remove('d-none');
         
-        const sectionId = this.value + 'Section';
-        document.getElementById(sectionId).style.display = 'block';
+        if(this.value === 'geo') obtenerGeolocalizacion();
+        if(this.value === 'huella') iniciarLecturaHuella();
     });
 });
 
+// Geolocalización
 function obtenerGeolocalizacion() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            document.getElementById('id_latitud').value = position.coords.latitude;
-            document.getElementById('id_longitud').value = position.coords.longitude;
-        });
+    if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('latitudInput').value = pos.coords.latitude;
+            document.getElementById('longitudInput').value = pos.coords.longitude;
+        }, error => {
+            alert('Error obteniendo ubicación: ' + error.message);
+        }, {timeout: 10000});
     } else {
         alert('Geolocalización no soportada en este navegador');
     }
 }
 
-function leerHuella() {
-    // Integración con dispositivo de huellas (ejemplo genérico)
-    HuellaDigital.escannear().then(id => {
-        document.getElementById('id_huella_id').value = id;
-    }).catch(error => {
-        alert('Error leyendo huella: ' + error);
-    });
+// Firma Digital
+const canvas = document.getElementById('firmaCanvas');
+const ctx = canvas.getContext('2d');
+let dibujando = false;
+
+canvas.addEventListener('mousedown', iniciarDibujo);
+canvas.addEventListener('mousemove', dibujar);
+canvas.addEventListener('mouseup', terminarDibujo);
+canvas.addEventListener('mouseout', terminarDibujo);
+
+function iniciarDibujo(e) {
+    dibujando = true;
+    dibujar(e);
+}
+
+function dibujar(e) {
+    if(!dibujando) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    
+    document.getElementById('firmaInput').value = canvas.toDataURL();
+}
+
+function terminarDibujo() {
+    dibujando = false;
+    ctx.beginPath();
+}
+
+function limpiarFirma() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('firmaInput').value = '';
+}
+
+// Integración Huella Digital (Ejemplo)
+function iniciarLecturaHuella() {
+    // Implementar lógica real según dispositivo
+    setTimeout(() => {
+        document.getElementById('huellaInput').value = 'huella_' + Date.now();
+    }, 2000);
 }
 </script>
 
 <style>
-.metodo-section { display: none; }
-.metodo-section.active { display: block; }
+.metodo-section { min-height: 200px; }
+#firmaCanvas { touch-action: none; background: #f8f9fa; }
 </style>
 {% endblock %}

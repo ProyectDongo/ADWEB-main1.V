@@ -134,9 +134,21 @@ urlpatterns = [
     path('gestion-pagos/<int:empresa_id>/', pagos.gestion_pagos, name='gestion_pagos'),
     path('enviar-notificacion/<int:empresa_id>/', pagos.enviar_notificacion, name='enviar_notificacion'),
     
+
+    #modulo asistencia:
    
-    
-    
+    path('admin/asistencia/', autenticacion.AdminAsistenciaView.as_view(), name='modulo_asistencia'),
+    path('admin/usuarios/', autenticacion.GestionUsuariosView.as_view(), name='gestion_usuarios'),
+    path('admin/usuarios/<int:pk>/eliminar/', autenticacion.EliminarUsuarioView.as_view(), name='eliminar_usuario'),
+    path('admin/planes/editar/<int:pk>/', autenticacion.EditarLimitePlanView.as_view(), name='editar_limite_plan'),
+
+   
+    path('crear_usuario/<int:empresa_id>/', autenticacion.crear_usuario, name='crear_usuario'),
+    path('editar_usuario/<int:usuario_id>/',autenticacion.editar_usuario, name='editar_usuario'),
+    path('eliminar_usuario/<int:usuario_id>/', autenticacion.eliminar_usuario, name='eliminar_usuario'),
+    # Empresa
+    path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
+   
     
     
     
