@@ -12,9 +12,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+#from django.contrib.gis.geos import Point
 from WEB.models import *
-from WEB.forms import RegistroEntradaForm, RegistroSalidaForm, UsuarioForm
-
+from WEB.forms import *
 
 
 
@@ -179,21 +179,24 @@ def trabajador_home(request):
 def handle_entrada(request, context):
     form = RegistroEntradaForm(request.POST, request.FILES)
     
-    if form.is_valid():
-        entrada = form.save(commit=False)
-        entrada.trabajador = request.user
+    #if form.is_valid():
+        #entrada = form.save(commit=False)
+       # entrada.trabajador = request.user
         
-        # Validación de entrada única
-        if not puede_registrar_entrada(request.user):
-            messages.warning(request, 'Ya tiene una entrada activa')
-            return redirect('trabajador_home')
+        # Registrar geolocalización
+        #if form.cleaned_data['metodo'] == 'geo':
+           # entrada.ubicacion = Point(
+               # float(request.POST.get('longitud')),
+                #float(request.POST.get('latitud'))
+           # )
+           # entrada.precision = float(request.POST.get('precision', 0))
+            
+            #if not entrada.esta_dentro_rango(request.user.empresa):
+              #  raise forms.ValidationError("Está fuera del área permitida")
         
-        entrada.save()
-        messages.success(request, 'Entrada registrada correctamente')
-        return redirect('trabajador_home')
-    
-    context['form_entrada'] = form
-    return render(request, 'home/trabajador_home.html', context)
+       # entrada.save()
+       # messages.success(request, 'Entrada registrada correctamente')
+       # return redirect('trabajador_home')
 
 def handle_salida(request, context):
     form = RegistroSalidaForm(request.POST)
@@ -273,6 +276,7 @@ class EliminarUsuarioView(AdminUserMixin, DeleteView):
 
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.urls import reverse
+from django.http import JsonResponse
 
 class CrearUsuarioMixin:
     form_class = UsuarioForm
@@ -317,13 +321,16 @@ def crear_usuario(request, empresa_id):
             usuario = form.save(commit=False)
             usuario.role = tipo
             usuario.empresa = empresa
-            usuario.set_password(form.cleaned_data['password'])
+            if form.cleaned_data['password']:
+                usuario.set_password(form.cleaned_data['password'])
             usuario.save()
             messages.success(request, f'{tipo.capitalize()} creado exitosamente!')
             return redirect('supervisor_home', empresa_id=empresa_id)
-        
-        messages.error(request, 'Corrige los errores en el formulario')
-        return redirect('supervisor_home', empresa_id=empresa_id)
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            return redirect('supervisor_home', empresa_id=empresa_id)
     
     return redirect('supervisor_home', empresa_id=empresa_id)
 
@@ -332,15 +339,25 @@ def editar_usuario(request, usuario_id):
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
+            if form.cleaned_data['password']:
+                usuario.set_password(form.cleaned_data['password'])
             form.save()
             messages.success(request, 'Usuario actualizado correctamente!')
             return redirect('supervisor_home', empresa_id=usuario.empresa.id)
-        
-        messages.error(request, 'Error al actualizar el usuario')
-        return redirect('supervisor_home', empresa_id=usuario.empresa.id)
-    
-    return redirect('supervisor_home', empresa_id=usuario.empresa.id)
-
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+            return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+    else:
+        data = {
+            'rut': usuario.rut,
+            'username': usuario.username,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
+            'email': usuario.email,
+        }
+        return JsonResponse(data)
 def eliminar_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     empresa_id = usuario.empresa.id

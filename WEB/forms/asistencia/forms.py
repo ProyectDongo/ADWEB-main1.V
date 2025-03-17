@@ -2,42 +2,25 @@ from django import forms
 from WEB.models import *
 
 class RegistroEntradaForm(forms.ModelForm):
-    METODO_CHOICES = [
-        ('firma', 'Firma Digital'),
-        ('huella', 'Huella Digital'),
-        ('geo', 'Geolocalización'),
-    ]
-    
-    metodo = forms.ChoiceField(
-        choices=METODO_CHOICES,
-        widget=forms.RadioSelect,
-        required=True
-    )
-
     class Meta:
         model = RegistroEntrada
-        fields = ['metodo', 'firma_digital', 'huella_id', 'latitud', 'longitud']
-        widgets = {
-            'huella_id': forms.HiddenInput(),
-            'latitud': forms.HiddenInput(),
-            'longitud': forms.HiddenInput(),
-        }
-
+        fields = ['metodo', 'firma_digital', 'huella_id']
+        
     def clean(self):
         cleaned_data = super().clean()
         metodo = cleaned_data.get('metodo')
         
-        if metodo == 'firma' and not cleaned_data.get('firma_digital'):
-            raise forms.ValidationError("Debe subir una firma digital")
+        if metodo == 'geo':
+            lat = self.data.get('latitud')
+            lon = self.data.get('longitud')
             
-        if metodo == 'huella' and not cleaned_data.get('huella_id'):
-            raise forms.ValidationError("Error en la lectura de huella")
-            
-        if metodo == 'geo' and (not cleaned_data.get('latitud') or (not cleaned_data.get('longitud'))):
-            raise forms.ValidationError("Geolocalización no detectada")
-        
-        return cleaned_data
-
+            if not lat or not lon:
+                raise forms.ValidationError("Debe habilitar la geolocalización")
+                
+            # Validar precisión mínima
+            precision = float(self.data.get('precision', 100))
+            if precision > 50:  # 50 metros máximo de error
+                raise forms.ValidationError("Precisión de ubicación insuficiente")
 class RegistroSalidaForm(forms.ModelForm):
     class Meta:
         model = RegistroEntrada

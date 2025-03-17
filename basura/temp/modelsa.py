@@ -6,6 +6,56 @@ from WEB.models.ubicacion.region import Region, Provincia, Comuna
 from WEB.views.scripts  import *
 from django.utils import timezone
 
+from math import perm
+from django.db import models
+from WEB.models.ubicacion.region import Region, Provincia, Comuna
+from WEB.views.scripts  import *
+from django.utils import timezone
+
+
+
+
+class RegistroEntrada(models.Model):
+    METODOS_REGISTRO = [
+        ('firma', 'Firma Digital'),
+        ('huella', 'Huella Digital'),
+        ('geo', 'Geolocalización'),
+    ]
+    
+    trabajador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='entradas'
+    )
+    metodo = models.CharField(max_length=20, choices=METODOS_REGISTRO,default='firma')
+    hora_entrada = models.DateTimeField(auto_now_add=True)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    
+    # Campos específicos por método
+    latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    firma_digital = models.ImageField(upload_to='firmas/', null=True, blank=True)
+    huella_id = models.CharField(max_length=100, null=True, blank=True)
+
+@receiver(post_save, sender=RegistroEntrada)
+def notificar_registro_entrada(sender, instance, created, **kwargs):
+    """
+    Función receptora para la señal post_save del modelo RegistroEntrada.
+
+    Cuando se crea un nuevo registro de entrada, esta función notifica (mediante un print)
+    que se ha registrado la entrada para el trabajador asociado, mostrando el nombre de usuario
+    y la hora de entrada.
+
+    Parámetros:
+        sender: La clase del modelo que envió la señal (RegistroEntrada).
+        instance: La instancia del modelo RegistroEntrada que se acaba de guardar.
+        created (bool): Indica si la instancia fue creada (True) o actualizada (False).
+        **kwargs: Argumentos adicionales de la señal.
+    """
+    if created:
+        print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+#---------------------------------------------------------------------------------------------------------
+
 class Plan(models.Model):
     """
     Modelo que representa un plan de suscripción o servicio.
@@ -123,31 +173,47 @@ class RegistroEmpresas(models.Model):
     ]
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
+
     fecha_ingreso = models.DateField(auto_now_add=True)
+
     rut = models.CharField(max_length=13, unique=True, validators=[validar_rut])
+
     nombre = models.CharField(max_length=100)
+
     giro = models.CharField(max_length=100)
+
     direccion = models.CharField(max_length=200)
+
     numero = models.CharField(max_length=20)
+
     oficina = models.CharField(max_length=20, blank=True)
+
     region = models.ForeignKey(Region, on_delete=models.PROTECT)
+
     provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
+
     comuna = models.ForeignKey(Comuna, on_delete=models.PROTECT)
+
     telefono = models.CharField(max_length=20)
+
     celular = models.CharField(max_length=20, blank=True)
+
     email = models.EmailField()
+
     web = models.URLField(blank=True)
+
     vigente = models.BooleanField(default=True)
+
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
+
+    planes = models.ManyToManyField(Plan, through='VigenciaPlan', related_name='empresas')
     
-    rut_representante = models.CharField(max_length=12, validators=[validar_rut])
+    rut_representante = models.CharField(max_length=12, validators=[validar_rut],unique=True)
     nombre_representante = models.CharField(max_length=100)
     
     nombre_contacto = models.CharField(max_length=100)
     celular_contacto = models.CharField(max_length=20)
     mail_contacto = models.EmailField()
-    
-    plan_contratado = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name='empresas')
     limite_usuarios = models.PositiveIntegerField(default=0)
 
     eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  # Nuevo campo
@@ -179,7 +245,6 @@ class RegistroEmpresas(models.Model):
             ('lista_empresas', 'Puede listar empresas'),
             ('vista_empresas', 'Puede ver las empresas'),
             ('vista_planes', 'Puede ver los planes'),
-            ('crear_plan', 'Puede crear los planes'),
             ('generar_boleta', 'puede generar boletas'),
             ('vista_servicios', 'puede ver los servicios y editarlos'),
             ('vista_estadisticas', 'puede ver las estadusticas de las empresas'),
@@ -208,12 +273,9 @@ class RegistroEmpresas(models.Model):
         :param kwargs: Argumentos con nombre.
         """
         if not self.codigo_cliente:
-            ultimo_id = RegistroEmpresas.objects.aggregate(max('id'))['id__max'] or 0
-            self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
-        
-        if self.plan_contratado:
-            self.limite_usuarios = self.plan_contratado.max_usuarios
-            
+            with transaction.atomic():
+                ultimo_id = RegistroEmpresas.objects.aggregate(models.Max('id'))['id__max'] or 0
+                self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
         super().save(*args, **kwargs)
 
 
@@ -270,7 +332,10 @@ class VigenciaPlan(models.Model):
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
     estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefinido')
+    
+    
 
+    
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"
@@ -316,13 +381,8 @@ class VigenciaPlan(models.Model):
         :param kwargs: Argumentos con nombre.
         """
         self.calcular_monto()
-        super().save(*args, **kwargs)}
-------------------------------------------------------------------------------------------------------------------------------
-
----------------------------------------------------------------------------------------------------------------
-from django.db import models
-from django.db.models import Sum
-from ..empresa.empresa import RegistroEmpresas,VigenciaPlan
+        super().save(*args, **kwargs)
+#---------------------------------------------------------------------------------------------------------------
 
 
 class Cobro(models.Model):
@@ -341,7 +401,7 @@ class Cobro(models.Model):
         if self.vigencia_plan:
             return [self.vigencia_plan]
         return self.vigencias_planes.all()
-    vigencias_planes = models.ManyToManyField(VigenciaPlan, related_name='cobros_planes', blank=True)
+   
     
     monto_total = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_inicio = models.DateField()
@@ -367,12 +427,8 @@ class Cobro(models.Model):
 
     def __str__(self):
         return f"Cobro {self.id} - {self.vigencia_plan.plan.nombre if self.vigencia_plan else 'Todos'}"
----------------------------------------------------------------------------------------------------------------
-from django.db import models
-from django.conf import settings
-from ..empresa.empresa import RegistroEmpresas
-from ..usuarios.usuario import Usuario
-from ..pagos.pago import Pago
+#---------------------------------------------------------------------------------------------------------------
+
 
 class HistorialPagos(models.Model):
     pago = models.ForeignKey(Pago, on_delete=models.CASCADE, related_name='historial')
@@ -419,10 +475,8 @@ class HistorialCambios(models.Model):
 
     def __str__(self):
         return f"{self.fecha.strftime('%Y-%m-%d %H:%M')} - {self.usuario}"
--------------------------------------------------------------------------------------------------------------------------
-from django.db import models
-from ..empresa.empresa import RegistroEmpresas
-from ..usuarios.usuario import Usuario
+#-------------------------------------------------------------------------------------------------------------------------
+
 
 class EmailNotification(models.Model):
     subject = models.CharField(max_length=255)
@@ -442,10 +496,8 @@ class HistorialNotificaciones(models.Model):
     class Meta:
         verbose_name_plural = "Historial de Notificaciones"
         ordering = ['-fecha_envio']
---------------------------------------------------------------------------------------------------------------------
-from django.db import models
-from ..empresa.empresa import RegistroEmpresas, VigenciaPlan
-from ..cobro.cobro import Cobro
+#--------------------------------------------------------------------------------------------------------------------
+
 
     
 class Pago(models.Model):
@@ -489,7 +541,7 @@ class Pago(models.Model):
            permissions = [
                 ('Registrar_pago', 'permite registar un pago')
         ]
----------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
 from django.db import models
 
 class Region(models.Model):
@@ -550,7 +602,7 @@ class Comuna(models.Model):
         :return: Cadena con el formato "Nombre (Provincia)".
         """
         return f"{self.nombre} ({self.provincia})"
-------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from WEB.models.empresa.empresa import *
@@ -679,47 +731,4 @@ class AuditoriaAcceso(models.Model):
     user_agent = models.TextField()
     exito = models.BooleanField(default=False)
     motivo = models.TextField(blank=True)
-
-
-    class RegistroEntrada(models.Model):
-    METODOS_REGISTRO = [
-        ('firma', 'Firma Digital'),
-        ('huella', 'Huella Digital'),
-        ('geo', 'Geolocalización'),
-    ]
-    
-    trabajador = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='entradas'
-    )
-    metodo = models.CharField(max_length=20, choices=METODOS_REGISTRO,default='firma')
-    hora_entrada = models.DateTimeField(auto_now_add=True)
-    hora_salida = models.DateTimeField(null=True, blank=True)
-    
-    # Campos específicos por método
-    latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    firma_digital = models.ImageField(upload_to='firmas/', null=True, blank=True)
-    huella_id = models.CharField(max_length=100, null=True, blank=True)
-
-@receiver(post_save, sender=RegistroEntrada)
-def notificar_registro_entrada(sender, instance, created, **kwargs):
-    """
-    Función receptora para la señal post_save del modelo RegistroEntrada.
-
-    Cuando se crea un nuevo registro de entrada, esta función notifica (mediante un print)
-    que se ha registrado la entrada para el trabajador asociado, mostrando el nombre de usuario
-    y la hora de entrada.
-
-    Parámetros:
-        sender: La clase del modelo que envió la señal (RegistroEntrada).
-        instance: La instancia del modelo RegistroEntrada que se acaba de guardar.
-        created (bool): Indica si la instancia fue creada (True) o actualizada (False).
-        **kwargs: Argumentos adicionales de la señal.
-    """
-    if created:
-        print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
-
- 
     

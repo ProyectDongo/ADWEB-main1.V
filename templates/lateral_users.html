@@ -120,8 +120,8 @@
 <body>
     <nav id="sidebarMenu">
         <div class="sidebar-header">
-            <h5 class="mb-0 text-primary">Gestión Empresarial</h5>
-            <small class="text-muted">Panel de Administración</small>
+            <h5 class="mb-0 text-primary">Gestión Supervisor</h5>
+            <small class="text-muted">Panel </small>
         </div>
         
         <ul class="nav flex-column">
@@ -130,17 +130,17 @@
                 {% if role == "admin" %}
                     <a class="nav-link active" href="{% url 'admin_home' %}">
                         <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
+                        <span>BIENVENIDO</span>
                     </a>
                 {% elif role == "supervisor" %}
                     <a class="nav-link active" href="{% url 'supervisor_home' empresa_id=empresa.id %}">
                         <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
+                        <span>BIENVENIDO</span>
                     </a>
                 {% elif role == "trabajador" %}
                     <a class="nav-link active" href="{% url 'trabajador_home' %}">
                         <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
+                        <span>BIENVENIDO</span>
                     </a>
                 {% endif %}
             </li>
@@ -156,21 +156,15 @@
                 <div class="collapse" id="configuracionSoftware">
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'crear_admin' %}">
-                                <i class="bi bi-person-badge"></i>
-                                <span>Administradores</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'crear_supervisor' %}">
+                            <a class="nav-link" href="#">
                                 <i class="bi bi-person-check"></i>
-                                <span>Supervisores</span>
+                                <span>Asistencia</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'crear_trabajador' %}">
+                            <a class="nav-link" href="#">
                                 <i class="bi bi-people"></i>
-                                <span>Usuarios</span>
+                                <span>contabilidad</span>
                             </a>
                         </li>
                     </ul>
@@ -178,83 +172,20 @@
             </li>
 
             <!-- Gestión de Clientes -->
-            <div class="menu-section-title">Gestión Comercial</div>
+            <div class="menu-section-title">ACCIONES ADICIONALES </div>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEmpresas">
                     <i class="bi bi-building"></i>
-                    <span>Clientes</span>
+                    <span>ACCIONES</span>
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <div class="collapse" id="configuracionEmpresas">
-                    <ul class="nav flex-column">
-                        
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'listar_clientes' %}">
-                                        <i class="bi bi-card-list"></i>
-                                        <span>Listado de Clientes</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{% url 'listar_planes' %}">
-                                        <i class="bi bi-file-earmark-text"></i>
-                                        <span>Planes Contratados</span>
-                                    </a>
-                                </li>
-                    </ul>
-                </div>
+                
             </li>
 
-            <!-- Analítica y Reportes -->
-            <div class="menu-section-title">Analítica Avanzada</div>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionEstadisticas">
-                    <i class="bi bi-bar-chart-line"></i>
-                    <span>Estadísticas</span>
-                    <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse" id="configuracionEstadisticas">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'estadisticas_empresas' %}">
-                                <i class="bi bi-pie-chart"></i>
-                                <span>Datos Empresariales</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'estadisticas_pagos' %}">
-                                <i class="bi bi-graph-up"></i>
-                                <span>Rendimiento Financiero</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
+            
+            
 
-            <!-- Seguridad y Permisos -->
-            <div class="menu-section-title">Control de Accesos</div>
-            <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="collapse" href="#configuracionPermisos">
-                    <i class="bi bi-shield-lock"></i>
-                    <span>Seguridad</span>
-                    <i class="bi bi-chevron-down ms-auto"></i>
-                </a>
-                <div class="collapse" id="configuracionPermisos">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'crear_permiso' %}">
-                                <i class="bi bi-plus-circle"></i>
-                                <span>Gestión de Permisos</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'lista_permisos' %}">
-                                <i class="bi bi-clipboard-data"></i>
-                                <span>Auditoría de Accesos</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
+            
         </ul>
     </nav>
 

@@ -1,4 +1,5 @@
 from django.db import models
+#from django.contrib.gis.db import models 
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -17,6 +18,7 @@ class RegistroEntrada(models.Model):
         on_delete=models.CASCADE,
         related_name='entradas'
     )
+
     metodo = models.CharField(max_length=20, choices=METODOS_REGISTRO)
     hora_entrada = models.DateTimeField(auto_now_add=True)
     hora_salida = models.DateTimeField(null=True, blank=True)
@@ -24,14 +26,24 @@ class RegistroEntrada(models.Model):
     longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     firma_digital = models.ImageField(upload_to='firmas/', null=True, blank=True)
     huella_id = models.CharField(max_length=100, null=True, blank=True)
+
+    huella_validada = models.BooleanField(default=False)
+
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='registros_asistencia',null=True, blank=True)
 
+    #ubicacion = models.PointField(srid=4326, null=True, blank=True)
+    precision = models.FloatField(null=True, blank=True)  # Precisión en metros
 
     class Meta:
         permissions = [
             ('registro_asistencia', 'Acceso al módulo de asistencia'),
         ]
-
+    def esta_dentro_rango(self, empresa):
+        if not self.ubicacion or not empresa.radio_permitido:
+            return False
+            
+        return self.ubicacion.distance(empresa.ubicacion_central) * 100000 <= empresa.radio_permitido
+    
     def clean(self):
         if not self.empresa.vigencia_plan.plan.nombre.lower() == 'asistencia':
             raise ValidationError("La empresa no tiene un plan de asistencia activo")

@@ -1,4 +1,4 @@
-{% extends "central.html" %}
+{% extends "central_user.html" %}
 {% load static %}
 
 {% block title %}{{ empresa.nombre }} | Panel{% endblock %}
@@ -139,23 +139,21 @@
                                     </div>
                                 </div>
                                 <div class="dropdown no-arrow">
-                                    <a class="dropdown-item editar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                                    <a class="dropdown-item editar-usuario" href="#" 
+                                       data-id="{{ trabajador.id }}" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#crearUsuarioModal">
                                         <i class="fas fa-edit text-primary me-2"></i>Editar
                                     </a>
-                                    <a class="dropdown-item eliminar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal">
+                                    <a class="dropdown-item eliminar-usuario" href="#" 
+                                       data-id="{{ trabajador.id }}" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#eliminarUsuarioModal">
                                         <i class="fas fa-trash text-danger me-2"></i>Eliminar
                                     </a>
-                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="text-center py-4">
-                        <i class="fas fa-user-times fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No se han encontrado trabajadores</p>
                     </div>
                 </div>
                 {% endfor %}
@@ -178,12 +176,20 @@
                 <div class="modal-body">
                     <input type="hidden" name="tipo_usuario" id="tipoUsuario">
                     <div class="mb-3">
-                        <label class="form-label">Nombre completo</label>
-                        <input type="text" class="form-control" name="nombre" required>
+                        <label class="form-label">Rut</label>
+                        <input type="text" class="form-control" name="rut" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Nombre de usuario</label>
+                        <label class="form-label">Nombre Usuario</label>
                         <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombres completo </label>
+                        <input type="text" class="form-control" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" name="last_name" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Correo electrónico</label>
@@ -266,26 +272,37 @@
 
 {% endblock %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Configurar modales
-        $('#crearUsuarioModal').on('show.bs.modal', function(event) {
-            const button = $(event.relatedTarget);
-            const tipo = button.data('tipo');
-            $('#tipoUsuario').val(tipo);
-            $('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
-        });
-    
-        $('.editar-usuario').click(function() {
-            const usuarioId = $(this).data('id');
-            const action = `/editar_usuario/${usuarioId}/`;
-            $('#usuarioForm').attr('action', action);
-        });
-    
-        $('.eliminar-usuario').click(function() {
-            const usuarioId = $(this).data('id');
-            $('#eliminarForm').attr('action', `/eliminar_usuario/${usuarioId}/`);
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    $('#crearUsuarioModal').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const tipo = button.data('tipo');
+        const isEdit = button.hasClass('editar-usuario');
+        const modal = $(this);
+        
+        if (isEdit) {
+            const usuarioId = button.data('id');
+            fetch(`/editar_usuario/${usuarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    modal.find('#modalTitulo').text('Editar Usuario');
+                    modal.find('#tipoUsuario').val(tipo);
+                    modal.find('input[name="rut"]').val(data.rut);
+                    modal.find('input[name="username"]').val(data.username);
+                    modal.find('input[name="first_name"]').val(data.first_name);
+                    modal.find('input[name="last_name"]').val(data.last_name);
+                    modal.find('input[name="email"]').val(data.email);
+                    modal.find('input[name="password"]').val('').removeAttr('required');
+                    modal.find('form').attr('action', `/editar_usuario/${usuarioId}/`);
+                });
+        } else {
+            modal.find('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
+            modal.find('#tipoUsuario').val(tipo);
+            modal.find('form')[0].reset();
+            modal.find('input[name="password"]').attr('required', 'required');
+            modal.find('form').attr('action', `/crear_usuario/{{ empresa.id }}/`);
+        }
     });
+});
     </script>
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">

@@ -19,7 +19,6 @@ class Cobro(models.Model):
         if self.vigencia_plan:
             return [self.vigencia_plan]
         return self.vigencias_planes.all()
-    vigencias_planes = models.ManyToManyField(VigenciaPlan, related_name='cobros_planes', blank=True)
     
     monto_total = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_inicio = models.DateField()

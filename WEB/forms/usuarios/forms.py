@@ -46,13 +46,11 @@ class SupervisorForm(UserCreationForm):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'rut', 'nombre', 'last_name', 'apellidoM', 'celular', 'email', 'password1', 'password2', 'empresa', 'grupos']
+        fields = ['username', 'rut', 'last_name',  'celular', 'email', 'password1', 'password2', 'empresa', 'grupos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellidoM': forms.TextInput(attrs={'class': 'form-control'}),
             'celular': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -110,13 +108,11 @@ class TrabajadorForm(UserCreationForm):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'rut', 'nombre', 'last_name', 'apellidoM', 'celular', 'email', 'password1', 'password2', 'empresa', 'grupos']
+        fields = ['username', 'rut', 'last_name', 'celular', 'email', 'password1', 'password2', 'empresa', 'grupos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellidoM': forms.TextInput(attrs={'class': 'form-control'}),
             'celular': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -232,18 +228,53 @@ class TrabajadorEditForm(UserChangeForm):
 
 #-----------------------------------------------------------------------------------#
 # PARA EL supervisor:
-
 class UsuarioForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(),
+        required=False,
+        help_text="Dejar en blanco para no cambiar la contraseña."
+    )
+
     class Meta:
         model = Usuario
-        fields = ['username', 'first_name', 'last_name', 'email', 'password']
-        widgets = {
-            'password': forms.PasswordInput()
-        }
+        fields = ['rut', 'username', 'first_name', 'last_name', 'email', 'password']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['password'].required = False
+
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        queryset = Usuario.objects.filter(rut=rut)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError("Este RUT ya está registrado.")
+        return rut
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        queryset = Usuario.objects.filter(username=username)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError("Este nombre de usuario ya está en uso.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        queryset = Usuario.objects.filter(email=email)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise forms.ValidationError("Este correo electrónico ya está registrado.")
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
+        if self.cleaned_data['password']:
+            user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
         return user

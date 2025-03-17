@@ -3,6 +3,8 @@ from django.db import models
 from WEB.models.ubicacion.region import Region, Provincia, Comuna
 from WEB.views.scripts  import *
 from django.utils import timezone
+from django.db import transaction
+
 
 class Plan(models.Model):
     """
@@ -121,31 +123,47 @@ class RegistroEmpresas(models.Model):
     ]
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
+
     fecha_ingreso = models.DateField(auto_now_add=True)
+
     rut = models.CharField(max_length=13, unique=True, validators=[validar_rut])
+
     nombre = models.CharField(max_length=100)
+
     giro = models.CharField(max_length=100)
+
     direccion = models.CharField(max_length=200)
+
     numero = models.CharField(max_length=20)
+
     oficina = models.CharField(max_length=20, blank=True)
+
     region = models.ForeignKey(Region, on_delete=models.PROTECT)
+
     provincia = models.ForeignKey(Provincia, on_delete=models.PROTECT)
+
     comuna = models.ForeignKey(Comuna, on_delete=models.PROTECT)
+
     telefono = models.CharField(max_length=20)
+
     celular = models.CharField(max_length=20, blank=True)
+
     email = models.EmailField()
+
     web = models.URLField(blank=True)
+
     vigente = models.BooleanField(default=True)
+
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
+
+    planes = models.ManyToManyField(Plan, through='VigenciaPlan', related_name='empresas')
     
-    rut_representante = models.CharField(max_length=12, validators=[validar_rut])
+    rut_representante = models.CharField(max_length=12, validators=[validar_rut],unique=True)
     nombre_representante = models.CharField(max_length=100)
     
     nombre_contacto = models.CharField(max_length=100)
     celular_contacto = models.CharField(max_length=20)
     mail_contacto = models.EmailField()
-    
-    plan_contratado = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name='empresas')
     limite_usuarios = models.PositiveIntegerField(default=0)
 
     eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  # Nuevo campo
@@ -177,7 +195,6 @@ class RegistroEmpresas(models.Model):
             ('lista_empresas', 'Puede listar empresas'),
             ('vista_empresas', 'Puede ver las empresas'),
             ('vista_planes', 'Puede ver los planes'),
-            ('crear_plan', 'Puede crear los planes'),
             ('generar_boleta', 'puede generar boletas'),
             ('vista_servicios', 'puede ver los servicios y editarlos'),
             ('vista_estadisticas', 'puede ver las estadusticas de las empresas'),
@@ -206,12 +223,12 @@ class RegistroEmpresas(models.Model):
         :param kwargs: Argumentos con nombre.
         """
         if not self.codigo_cliente:
-            ultimo_id = RegistroEmpresas.objects.aggregate(max('id'))['id__max'] or 0
-            self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
-        
-        if self.plan_contratado:
-            self.limite_usuarios = self.plan_contratado.max_usuarios
-            
+            with transaction.atomic():
+
+                ultimo_id = RegistroEmpresas.objects.select_for_update().aggregate(models.Max('id'))['id__max'] or 0
+
+                self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
+                
         super().save(*args, **kwargs)
 
 
@@ -268,7 +285,10 @@ class VigenciaPlan(models.Model):
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
     estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefinido')
+    
+    
 
+    
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"
