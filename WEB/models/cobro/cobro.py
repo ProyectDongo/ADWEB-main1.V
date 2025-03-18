@@ -13,6 +13,11 @@ class Cobro(models.Model):
         blank=True
     )
     # Agregar campo ManyToMany para asociar múltiples planes
+    vigencias_planes = models.ManyToManyField(  
+        VigenciaPlan, 
+        related_name='cobros_planes',
+        blank=True
+    )
     ultima_actualizacion = models.DateTimeField(auto_now=True)
     
     def planes_asociados(self):

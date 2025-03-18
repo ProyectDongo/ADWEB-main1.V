@@ -216,8 +216,8 @@ def get_comprobantes():
     comprobantes = []
     try:
         IMAP_SERVER = 'imap.gmail.com'
-        EMAIL_ACCOUNT = 'anghello3569molina@gmail.com'
-        PASSWORD = 'qzvebjzifrjwphgg'
+        EMAIL_ACCOUNT = os.getenv("EMAIL_USER")
+        PASSWORD = os.getenv("EMAIL_PASSWORD")
         mail = imaplib.IMAP4_SSL(IMAP_SERVER, timeout=10)
         try:
             mail.login(EMAIL_ACCOUNT, PASSWORD)

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from django.conf import settings 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 
 
@@ -170,13 +171,14 @@ LOGOUT_REDIRECT_URL = 'login_selector'  # Para que después del logout vuelva al
 AUTH_USER_MODEL = 'WEB.Usuario'
 
 #envios de correo
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "anghello3569molina@gmail.com"  # Reemplaza con tu correo
-EMAIL_HOST_PASSWORD = "qzvebjzifrjwphgg"  # Reemplaza con la contraseña generada
-DEFAULT_FROM_EMAIL = "tu_correo@gmail.com"
+load_dotenv()  # Carga variables de .env
+
+EMAIL_HOST_USER = os.getenv("EMAIL_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
+RECAPTCHA_PUBLIC_KEY = os.getenv("RECAPTCHA_PUBLIC")
+RECAPTCHA_PRIVATE_KEY = os.getenv("RECAPTCHA_PRIVATE")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

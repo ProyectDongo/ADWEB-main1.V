@@ -1,41 +1,46 @@
-
+<!-- admin_login.html -->
 {% extends "login/home/login_base.html" %}
 {% block content %}
-<div class="container">
+<div class="animate-slide-in">
     <div class="row justify-content-center">
-        <div class="col-md-6 security-box">
-            <div class="card shadow-lg">
-                <div class="card-header bg-danger text-white">
-                    <h3><i class="bi bi-shield-lock"></i> Acceso Administrativo</h3>
+        <div class="col-md-8 col-lg-6">
+            <a href="{% url 'login_selector' %}" class="btn-return d-inline-flex align-items-center mb-4">
+                <i class="fas fa-arrow-left me-2"></i> Volver al Selector
+            </a>
+            
+            <div class="glass-card p-4">
+                <div class="text-center mb-4">
+                    <i class="fas fa-shield-alt fa-3x text-danger mb-3"></i>
+                    <h2 class="h4">Acceso Administrativo</h2>
+                    <p class="text-muted small">Credenciales de alto privilegio</p>
                 </div>
-                <div class="card-body">
-                    <form method="post" id="secure-form">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Usuario Administrador</label>
-                            <input type="text" name="username" class="form-control" 
-                                   required autocomplete="off" autocorrect="off">
+                
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user-shield"></i>
+                            </span>
+                            <input type="text" name="username" class="form-control" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Contraseña</label>
-                            <input type="password" name="password" class="form-control" 
-                                   required autocomplete="current-password">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" name="password" class="form-control" required>
                         </div>
-                        
-                        {% if form.captcha %}
-                            <div class="mb-3">
-                                {{ form.captcha }}
-                            </div>
-                        {% endif %}
-                        
-                        <button type="submit" class="btn btn-danger w-100">
-                            <i class="bi bi-lock"></i> Acceder
-                        </button>
-                    </form>
-                </div>
-                <div class="card-footer text-muted small">
-                    <i class="bi bi-info-circle"></i> Acceso restringido a personal autorizado
-                </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i> Acceder
+                    </button>
+                </form>
             </div>
         </div>
     </div>

@@ -137,6 +137,7 @@ def detalle_empresa(request, pk):
 @login_required
 @permiso_requerido("WEB.vista_empresas")
 
+#
 def listar_clientes(request):
     empresas = RegistroEmpresas.objects.filter(eliminada=False)
     
@@ -144,33 +145,25 @@ def listar_clientes(request):
     if query:
         empresas = empresas.filter(nombre__icontains=query)
     
-    # Prefetch related Cobros y Vigencias
+  
     empresas = empresas.prefetch_related(
         Prefetch('cobros', queryset=Cobro.objects.filter(vigencia_plan__isnull=True)),
-        Prefetch('vigencias', queryset=VigenciaPlan.objects.prefetch_related(
-            Prefetch('cobros_relacionados', queryset=Cobro.objects.all()),
-            Prefetch('cobros_planes', queryset=Cobro.objects.all())
-        ))
+        Prefetch('vigencias', queryset=VigenciaPlan.objects.prefetch_related('cobros_relacionados'))
     )
     
     for empresa in empresas:
-        # Verificar si existe algún cobro sin asignación a vigencia_plan y cuyo estado sea 'pagado'
+    
         one_time_cobro_paid = any(
             cobro.vigencia_plan is None and cobro.estado == 'pagado'
             for cobro in empresa.cobros.all()
         )
         
-        # Procesar cada vigencia de la empresa
         for vigencia in empresa.vigencias.all():
             if one_time_cobro_paid:
-                # Si existe un cobro sin vigencia_plan y pagado, se considera que no hay pago pendiente
                 vigencia.pago_pendiente = False
             else:
-                # Si no se cumple la condición anterior, se evalúan los cobros asociados a la vigencia
-                cobros_fk = vigencia.cobros_relacionados.all()
-                cobros_m2m = vigencia.cobros_planes.all()
-                # Se verifica si alguno de los cobros asociados está en estado 'pendiente'
-                has_pending = any(c.estado == 'pendiente' for c in cobros_fk) or any(c.estado == 'pendiente' for c in cobros_m2m)
+                
+                has_pending = any(c.estado == 'pendiente' for c in vigencia.cobros_relacionados.all())
                 vigencia.pago_pendiente = has_pending
     
     return render(request, 'admin/clientes/lista_clientes/home/listar_clientes.html', {'empresas': empresas})

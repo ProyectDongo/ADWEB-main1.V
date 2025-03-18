@@ -4,7 +4,7 @@ from WEB.models.ubicacion.region import Region, Provincia, Comuna
 from WEB.views.scripts  import *
 from django.utils import timezone
 from django.db import transaction
-
+from django.db.models import Sum
 
 class Plan(models.Model):
     """
@@ -157,33 +157,24 @@ class RegistroEmpresas(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='aldia')
 
     planes = models.ManyToManyField(Plan, through='VigenciaPlan', related_name='empresas')
-    
+
+    #representate
     rut_representante = models.CharField(max_length=12, validators=[validar_rut],unique=True)
     nombre_representante = models.CharField(max_length=100)
-    
+
+    #contacto
     nombre_contacto = models.CharField(max_length=100)
     celular_contacto = models.CharField(max_length=20)
     mail_contacto = models.EmailField()
-    limite_usuarios = models.PositiveIntegerField(default=0)
+    eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  
 
-    eliminada = models.BooleanField(default=False, verbose_name="Eliminada")  # Nuevo campo
-    metodo_pago = models.CharField(
-        max_length=20, 
-        choices=[('manual', 'Manual'), ('automatico', 'Automático')], 
-        default='manual'
-    )
-    frecuencia_pago = models.CharField(
-        max_length=20, 
-        choices=[('mensual', 'Mensual'), ('anual', 'Anual')], 
-        blank=True, null=True
-    )
-    banco = models.CharField(max_length=100, blank=True, null=True)
-    tipo_cuenta = models.CharField(
-        max_length=20, 
-        choices=[('ahorro', 'Ahorro'), ('corriente', 'Corriente')], 
-        blank=True, null=True
-    )
-    numero_cuenta = models.CharField(max_length=50, blank=True, null=True)
+
+    @property
+    def limite_usuarios(self):
+        return self.vigencias.filter(estado='indefinido').aggregate(
+            total=Sum('plan__max_usuarios')
+        )['total'] or 0
+    
 
     class Meta:
         verbose_name = "Empresa"
