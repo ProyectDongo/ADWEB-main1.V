@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from WEB.models import RegistroEmpresas
+from django.contrib.auth.models import User
 # models.py - Modificar modelo RegistroEntrada y agregar validaciones
 class RegistroEntrada(models.Model):
     METODOS_REGISTRO = [
@@ -71,3 +72,4 @@ def notificar_registro_entrada(sender, instance, created, **kwargs):
     """
     if created:
         print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+#_________________________________________________________________________________________________

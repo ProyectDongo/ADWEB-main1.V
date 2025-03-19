@@ -15,11 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-
 from site import venv
 from django.contrib.auth import views as auth_views
-from django.urls import path
+from django.urls import path,include
 from django.contrib import admin
+
+
+
 
 from WEB.views.config.views import sofware
 from WEB.views.estadisticas.views import estadisticas
@@ -31,6 +33,8 @@ from WEB.views.clientes.empresa.views import empresas,planes
 from django.contrib.auth.views import LogoutView
 from django_ratelimit.decorators import ratelimit
 from django.views.generic import RedirectView
+
+
 urlpatterns = [
     #super_user
     path('django-admin/', admin.site.urls),
@@ -149,8 +153,11 @@ urlpatterns = [
     # Empresa
     path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
    
+    # biomtrica 
+
+
     
-    
+    path('biometrics/', include('biometrics.urls')),
     
 
     ] 

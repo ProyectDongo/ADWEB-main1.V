@@ -1,0 +1,121 @@
+{% extends "central_user.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Registro Biométrico</h2>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Estado del dispositivo -->
+            <div id="deviceStatus" class="alert alert-info">
+                <i class="bi bi-usb-symbol"></i> Conectando al lector...
+            </div>
+
+            <!-- Interfaz de captura -->
+            <div id="captureSection" class="text-center" style="display: none;">
+                <button id="btnCapture1" class="btn btn-lg btn-primary m-2">
+                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 1
+                </button>
+                <button id="btnCapture2" class="btn btn-lg btn-secondary m-2">
+                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 2
+                </button>
+            </div>
+
+            <!-- Indicador de progreso -->
+            <div id="progress" class="text-center my-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Procesando huella...</p>
+            </div>
+
+            <!-- Resultados -->
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const state = {
+        templates: {},
+        deviceReady: false,
+        processing: false
+    };
+
+    // Elementos UI
+    const elements = {
+        status: document.getElementById('deviceStatus'),
+        captureSection: document.getElementById('captureSection'),
+        progress: document.getElementById('progress'),
+        result: document.getElementById('result'),
+        btn1: document.getElementById('btnCapture1'),
+        btn2: document.getElementById('btnCapture2')
+    };
+
+    // Inicializar dispositivo
+    const initDevice = async () => {
+        try {
+            const response = await fetch('/biometrics/capture/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'init'})
+            });
+            
+            if (response.ok) {
+                elements.status.innerHTML = 
+                    '<i class="bi bi-check-circle"></i> Dispositivo listo';
+                elements.captureSection.style.display = 'block';
+                state.deviceReady = true;
+            }
+        } catch (error) {
+            elements.status.innerHTML = 
+                '<i class="bi bi-x-circle"></i> Error de conexión';
+        }
+    };
+
+    // Manejar captura
+    const handleCapture = async (attempt) => {
+        if (!state.deviceReady || state.processing) return;
+        
+        state.processing = true;
+        elements.progress.style.display = 'block';
+        
+        try {
+            const response = await fetch('/biometrics/capture/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    deviceId: 0,
+                    quality: 70
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.ErrorCode === 0) {
+                state.templates[`template${attempt}`] = data.Template;
+                
+                if (Object.keys(state.templates).length === 2) {
+                    const match = await verifyMatch();
+                    showResult(match);
+                }
+            }
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            state.processing = false;
+            elements.progress.style.display = 'none';
+        }
+    };
+
+    // Event listeners
+    elements.btn1.addEventListener('click', () => handleCapture(1));
+    elements.btn2.addEventListener('click', () => handleCapture(2));
+    
+    // Inicializar
+    initDevice();
+});
+</script>
+{% endblock %}

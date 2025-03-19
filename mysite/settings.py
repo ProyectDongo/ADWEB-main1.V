@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'django_recaptcha',
     'widget_tweaks',
     'crispy_bootstrap5',
+    'biometrics.apps.BiometricsConfig',
+    
 
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
@@ -182,10 +184,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'biometrics.backends.FingerprintBackend',
 ]
 
 ESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
@@ -196,3 +199,6 @@ RECAPTCHA_REQUIRED_SCORE = 0.85
 
 # Rate limiting
 RATELIMIT_ENABLE = True
+
+CSRF_COOKIE_SECURE = False  # Solo para desarrollo
+CSRF_COOKIE_HTTPONLY = False
