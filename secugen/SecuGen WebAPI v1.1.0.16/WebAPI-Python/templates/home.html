@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Page</title>
+</head>
+<body>
+    <h1>SecuGen WebAPI - Python</h1>
+    <table>
+        <tr><td><b>WebAPI has 3 requirements:</b></td></tr>
+        <tr><td>1.  SecuGen fingerprint devices. (USB connected) <b><a href="https://secugen.com/products/#fingerprint"> Examples</a></b> --Hardware--</td></tr>
+        <tr><td>2.  SecuGen fingerprint <b><a href="http://www.secugen.com/download/drivers.htm">driver</a></b> for SecuGen fingerprint device. --Software--</td></tr>
+        <tr><td>3.  WebAPI client installed.  You can find these <b><a href="https://webapi-1-n.secugen.com/Pages/Downloads">here</a></b>. --Software--</td></tr>
+    </table>
+
+    <br><br>
+    <table>
+        <tr><td><b>WebAPI is operational using these tools:</b></td></tr>
+        <tr><td>1.  Win10 (x86 or x64 architectures); Win11 (x64 architecture)</td></tr>
+        <tr><td>2.  Modern Browser.   Examples:  Chrome, Edge, Opera, etc...</td></tr>
+    </table>
+    <br><br>
+    <p>
+        This site is a python/javascipt demo page to show the featues of WebAPI.  Click on the links below to view the features.
+    </p>
+    <ul>
+        <li><a href="{{ url_for('SimpleScan') }}">Simple Scan</a></li>
+        <li><a href="{{ url_for('AdvancedScan') }}">Advanced Scan</a></li>
+        <li><a href="{{ url_for('scan1') }}">Compare</a></li>
+    </ul>
+</body>
+</html>
