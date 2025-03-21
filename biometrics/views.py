@@ -1,165 +1,155 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views import View
-from django.views.decorators import csrf
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import get_user_model, login, logout
-import json
+from django.contrib.auth import logout
 import requests
 import logging
+from urllib.parse import urlencode, parse_qs
 from .models import UserFingerprint
-
+from django.views.decorators.http import require_http_methods
 logger = logging.getLogger(__name__)
 
-class FingerprintBaseView(View):
-    API_URL = "http://localhost:52000/SGFDMSUWebAPI"
-    
-    def get_headers(self):
-        return {
-            'Content-Type': 'application/json',
-            'API_KEY': '846681907'  # Verificar en documentación SecuGen
-        }
+class SecuGenAPI:
+    BASE_URL = "http://localhost:8000"
+    LICSTR = "846681907"
 
-@method_decorator(csrf_exempt, name='dispatch')
-class CaptureFingerprint(FingerprintBaseView):
-    
-    @method_decorator(login_required)
-    def post(self, request):
-        logger.info("Iniciando captura de huella")
-        logger.debug(f"Body recibido: {request.body.decode()}")
+    @classmethod
+    def capture_fingerprint(cls, timeout=10000, quality=70):
+        endpoint = f"{cls.BASE_URL}/SGIFPCapture"
+        params = {
+            "Licstr": cls.LICSTR,
+            "Timeout": timeout,
+            "Quality": quality,
+            "TemplateFormat": "ISO",
+            "ImageWSQRate": "0.75"  # ⬅️ Usar string según doc
+        }
         
         try:
-            data = json.loads(request.body)
-            device_id = data.get('deviceId', 0)
-            quality = data.get('quality', 70)
-
-            # Validación extendida de parámetros
-            if not isinstance(device_id, int) or device_id < 0:
-                raise ValueError("DeviceID inválido")
-            
-            if quality < 1 or quality > 100:
-                raise ValueError("Calidad debe estar entre 1-100")
-
-            # Verificar estado del servicio
-            try:
-                health_check = requests.get(
-                    f"{self.API_URL}/GetDeviceInfo",
-                    headers=self.get_headers(),
-                    timeout=5
-                )
-                logger.debug(f"Respuesta health check: {health_check.text}")
-            except Exception as e:
-                logger.error(f"Health check fallido: {str(e)}")
-                return JsonResponse(
-                    {"ErrorCode": 5, "Message": "El servicio SecuGen no responde"},
-                    status=503
-                )
-
-            # Captura de huella
+            # Codificar parámetros correctamente
+            encoded_params = urlencode(params, doseq=True)
             response = requests.post(
-                f"{self.API_URL}/CaptureFinger",
-                headers=self.get_headers(),
-                json={
-                    "DeviceID": device_id,
-                    "Quality": quality,
-                    "TemplateFormat": "ISO",
-                    "Timeout": 15000
-                },
-                timeout=20
+                endpoint,
+                data=encoded_params,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                verify=False
             )
-            
-            logger.debug(f"Respuesta cruda del API: {response.text}")
-            
-            response.raise_for_status()
-            response_data = response.json()
-
-            if response_data.get('ErrorCode') != 0:
-                error_msg = response_data.get('Message', 'Error desconocido en dispositivo')
-                logger.error(f"Error del dispositivo: {error_msg}")
-                return JsonResponse(
-                    {"ErrorCode": response_data['ErrorCode'], "Message": error_msg},
-                    status=400
-                )
-
-            return JsonResponse({
-                "ErrorCode": 0,
-                "Template": response_data.get('FingerData', '')
-            })
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Error JSON: {str(e)}")
-            return JsonResponse(
-                {"ErrorCode": 6, "Message": "Formato de datos inválido"},
-                status=400
-            )
-        except requests.exceptions.Timeout:
-            logger.error("Tiempo de espera agotado")
-            return JsonResponse(
-                {"ErrorCode": 7, "Message": "Tiempo de espera excedido"},
-                status=504
-            )
+            return response.json()
         except Exception as e:
-            logger.exception("Error crítico en captura de huella")
+            logger.error(f"Error en SGIFPCapture: {str(e)}")
+            return {"ErrorCode": 99, "Message": "Error de comunicación"}
+
+    @classmethod
+    def match_templates(cls, template1, template2):
+        endpoint = f"{cls.BASE_URL}/SGIMatchScore"
+        params = {
+            "Licstr": cls.LICSTR,
+            "Template1": template1,
+            "Template2": template2,
+            "TemplateFormat": "ISO"
+        }
+        
+        try:
+            encoded_params = urlencode(params, doseq=True)
+            response = requests.post(
+                endpoint,
+                data=encoded_params,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                verify=False
+            )
+            return response.json()
+        except Exception as e:
+            logger.error(f"Error en SGIMatchScore: {str(e)}")
+            return {"ErrorCode": 99, "Message": "Error en comparación"}
+
+@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(login_required, name='dispatch')
+class CaptureFingerprintView(View):
+    @require_http_methods(["POST", "OPTIONS"])
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def options(self, request, *args, **kwargs):
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = 'http://localhost:8001'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, X-CSRFToken'
+        response['Access-Control-Max-Age'] = '86400'
+        return response
+    def post(self, request):
+        try:
+            # Parámetros obligatorios para SecuGen
+            params = {
+                "Licstr": "846681907",
+                "Timeout": 10000,
+                "Quality": 70,
+                "TemplateFormat": "ISO",
+                "ImageWSQRate": "0.75"
+            }
+            
+            # Llamada CORRECTA a la API de SecuGen
+            response = requests.post(
+                "http://localhost:8000/SGIFPCapture",
+                data=urlencode(params),
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                verify=False
+            )
+            
+            # Forzar decodificación UTF-8
+            response.encoding = 'utf-8'  
+            secugen_data = response.json()
+            
+            return JsonResponse(secugen_data)
+            
+        except Exception as e:
             return JsonResponse(
                 {"ErrorCode": 99, "Message": str(e)},
                 status=500
             )
 
+    def _translate_error(self, error_code):
+        error_map = {
+            54: "Tiempo de espera agotado",
+            55: "Dispositivo no encontrado",
+            57: "Imagen inválida",
+            10001: "Licencia inválida",
+            # Agregar más códigos según documentación
+        }
+        return error_map.get(error_code, f"Error desconocido ({error_code})")
+
 @method_decorator(login_required, name='dispatch')
-class FingerprintRegistrationView(FingerprintBaseView):
-    
-    def get(self, request):
+class FingerprintRegistrationView(View):
+    def get(self, request):  # Permite GET para cargar el template
         return render(request, 'biometrics/register_fingerprint.html')
-
+    
     def post(self, request):
-        try:
-            data = json.loads(request.body)
-            template1 = data.get('template1')
-            template2 = data.get('template2')
+        template1 = request.session.get('captured_template')
+        template2 = request.POST.get('template2')
 
-            if not template1 or not template2:
-                raise ValueError("Faltan plantillas requeridas")
+        if not template1 or not template2:
+            return JsonResponse({"error": "Faltan plantillas"}, status=400)
 
-            # Validación de formato ISO
-            if len(template1) < 100 or len(template2) < 100:
-                logger.warning("Plantilla con formato inválido recibida")
-                raise ValueError("Formato de plantilla inválido")
-
-            # Verificar coincidencia
-            match_response = requests.post(
-                f"{self.API_URL}/Match",
-                headers=self.get_headers(),
-                json={
-                    "Template1": template1,
-                    "Template2": template2,
-                    "TemplateFormat": "ISO"
-                },
-                timeout=15
-            )
-            
-            match_data = match_response.json()
-            logger.debug(f"Respuesta de coincidencia: {match_data}")
-            
-            if match_data.get('Result') == 1:
-                UserFingerprint.objects.update_or_create(
-                    user=request.user,
-                    defaults={'template': template1, 'quality': 100}
-                )
-                return JsonResponse({'status': 'success', 'message': 'Huella registrada'})
-            
+        match_result = SecuGenAPI.match_templates(template1, template2)
+        
+        if match_result.get("ErrorCode") != 0:
             return JsonResponse({
-                'status': 'error',
-                'message': 'Las huellas no coinciden'
+                "error": self._translate_error(match_result["ErrorCode"])
             }, status=400)
 
-        except Exception as e:
-            logger.error(f"Error en registro: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': str(e)
-            }, status=500)
+        if match_result.get("MatchingScore", 0) >= 100:  # Ajustar umbral según necesidades
+            UserFingerprint.objects.update_or_create(
+                user=request.user,
+                defaults={'template': template1}
+            )
+            return JsonResponse({'status': 'success'})
+        
+        return JsonResponse({'status': 'no_match', "score": match_result["MatchingScore"]})
+
+    def _translate_error(self, error_code):
+        # Mapeo de errores de SGIMatchScore
+        return "Error en comparación"
 
 def fingerprint_logout(request):
     logout(request)

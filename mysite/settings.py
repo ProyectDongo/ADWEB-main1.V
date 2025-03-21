@@ -47,6 +47,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 INSTALLED_APPS = [
     'WEB',
     "anymail",
+    'corsheaders',
     'django.contrib.admin', 
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -63,10 +64,23 @@ INSTALLED_APPS = [
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_ALLOWED_TEMPLATE_PACKS = ('bootstrap5',)
-
+# Configuración CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8001",
+    "http://localhost:8001"
+]
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'GET',
+    'OPTIONS',
+    'POST',
+]
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django_session_timeout.middleware.SessionTimeoutMiddleware',

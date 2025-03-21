@@ -1,14 +1,9 @@
 from django.urls import path
-from .views import (
-    CaptureFingerprint,
-    FingerprintRegistrationView,
-  
-    fingerprint_logout
-)
+from . import views
+
 
 urlpatterns = [
-   path('capture/', CaptureFingerprint.as_view(), name='capture'),
-   path('register/', FingerprintRegistrationView.as_view(), name='register'),
-
-    path('logout/', fingerprint_logout, name='fingerprint_logout'),
+    path('register/', views.FingerprintRegistrationView.as_view(), name='register'),  # Ruta limpia
+    path('capture/', views.CaptureFingerprintView.as_view(), name='capture'),
+    path('biometrics/logout/', views.fingerprint_logout, name='logout'),
 ]

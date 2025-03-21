@@ -3,15 +3,12 @@
 {% block content %}
 <div class="container">
     <h2 class="mb-4">Registro Biométrico</h2>
-    
     <div class="card shadow">
         <div class="card-body">
-            <!-- Estado del dispositivo -->
             <div id="deviceStatus" class="alert alert-info">
                 <i class="bi bi-usb-symbol"></i> Conectando al lector...
             </div>
 
-            <!-- Interfaz de captura -->
             <div id="captureSection" class="text-center" style="display: none;">
                 <button id="btnCapture1" class="btn btn-lg btn-primary m-2">
                     <i class="bi bi-fingerprint me-2"></i>Capturar Huella 1
@@ -21,101 +18,126 @@
                 </button>
             </div>
 
-            <!-- Indicador de progreso -->
+            <div id="preview" class="text-center my-4"></div>
+
             <div id="progress" class="text-center my-3" style="display: none;">
                 <div class="spinner-border text-primary" role="status"></div>
                 <p class="mt-2">Procesando huella...</p>
             </div>
 
-            <!-- Resultados -->
             <div id="result" class="mt-4"></div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const state = {
-        templates: {},
-        deviceReady: false,
-        processing: false
-    };
-
-    // Elementos UI
-    const elements = {
-        status: document.getElementById('deviceStatus'),
-        captureSection: document.getElementById('captureSection'),
-        progress: document.getElementById('progress'),
-        result: document.getElementById('result'),
-        btn1: document.getElementById('btnCapture1'),
-        btn2: document.getElementById('btnCapture2')
-    };
-
-    // Inicializar dispositivo
-    const initDevice = async () => {
-        try {
-            const response = await fetch('/biometrics/capture/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'init'})
-            });
-            
-            if (response.ok) {
-                elements.status.innerHTML = 
-                    '<i class="bi bi-check-circle"></i> Dispositivo listo';
-                elements.captureSection.style.display = 'block';
-                state.deviceReady = true;
-            }
-        } catch (error) {
-            elements.status.innerHTML = 
-                '<i class="bi bi-x-circle"></i> Error de conexión';
-        }
-    };
-
-    // Manejar captura
-    const handleCapture = async (attempt) => {
-        if (!state.deviceReady || state.processing) return;
-        
-        state.processing = true;
-        elements.progress.style.display = 'block';
-        
-        try {
-            const response = await fetch('/biometrics/capture/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    deviceId: 0,
-                    quality: 70
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.ErrorCode === 0) {
-                state.templates[`template${attempt}`] = data.Template;
-                
-                if (Object.keys(state.templates).length === 2) {
-                    const match = await verifyMatch();
-                    showResult(match);
-                }
-            }
-        } catch (error) {
-            showError(error.message);
-        } finally {
-            state.processing = false;
-            elements.progress.style.display = 'none';
-        }
-    };
-
-    // Event listeners
-    elements.btn1.addEventListener('click', () => handleCapture(1));
-    elements.btn2.addEventListener('click', () => handleCapture(2));
+    document.addEventListener('DOMContentLoaded', () => {
+        const state = {
+            template1: null,
+            template2: null
+        };
     
-    // Inicializar
-    initDevice();
-});
+        const elements = {
+            status: document.getElementById('deviceStatus'),
+            captureSection: document.getElementById('captureSection'),
+            progress: document.getElementById('progress'),
+            result: document.getElementById('result'),
+            btn1: document.getElementById('btnCapture1'),
+            btn2: document.getElementById('btnCapture2'),
+            preview: document.getElementById('preview')
+        };
+    
+        // Función para traducir errores
+        const traducirError = (codigo) => {
+            const errores = {
+                54: "Tiempo de espera agotado",
+                55: "Dispositivo no encontrado",
+                57: "Imagen inválida",
+                10001: "Licencia no válida"
+            };
+            return errores[codigo] || `Error desconocido (${codigo})`;
+        };
+    
+        // Inicializar dispositivo
+        const initDevice = async () => {
+            try {
+                const test = await fetch('http://localhost:8000/SGIFPCapture', {
+                    method: 'POST',
+                    body: new URLSearchParams({ Licstr: '846681907' })
+                });
+                
+                if (test.ok) {
+                    elements.status.innerHTML = '<i class="bi bi-check-circle"></i> Dispositivo listo';
+                    elements.captureSection.style.display = 'block';
+                }
+            } catch (error) {
+                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error de conexión';
+            }
+        };
+            
+        // Manejar captura (CÓDIGO CORREGIDO)
+        const handleCapture = async (attempt) => {
+            if (attempt === 2 && !state.template1) {
+                elements.result.innerHTML = '<div class="alert alert-warning">¡Captura la primera huella primero!</div>';
+                return;
+            }
+            
+            elements.progress.style.display = 'block';
+            
+            try {
+                const params = new URLSearchParams({
+                    Licstr: '846681907',
+                    Timeout: 10000,
+                    Quality: 70,
+                    TemplateFormat: 'ISO',
+                    ImageWSQRate: '0.75'
+                });
+                
+                const response = await fetch('http://localhost:8001/biometrics/capture/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'  // Asegurar que el token está presente
+                    },
+                    credentials: 'include'  // Enviar cookies
+                });
+                                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (data.ErrorCode === 0) {
+                    if (attempt === 1) {
+                        state.template1 = data.TemplateBase64;
+                        elements.preview.innerHTML = `<img src="data:image/bmp;base64,${data.BMPBase64}" class="img-fluid" style="max-width: 300px;">`;
+                    } else {
+                        state.template2 = data.TemplateBase64;
+                        const matchResponse = await fetch('/biometrics/register/', {
+                            method: 'POST',
+                            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                            body: JSON.stringify({ template2: state.template2 })
+                        });
+                        const result = await matchResponse.json();
+                        elements.result.innerHTML = result.status === 'success' 
+                            ? '<div class="alert alert-success">Huella registrada!</div>'
+                            : `<div class="alert alert-danger">No coincide (Score: ${result.score})</div>`;
+                    }
+                } else {
+                    elements.result.innerHTML = `<div class="alert alert-danger">Error ${data.ErrorCode}: ${traducirError(data.ErrorCode)}</div>`;
+                }
+            } catch (error) {
+                elements.result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            } finally {
+                elements.progress.style.display = 'none';
+            }
+        };
+    
+        // Event listeners
+        elements.btn1.addEventListener('click', () => handleCapture(1));
+        elements.btn2.addEventListener('click', () => handleCapture(2));
+        
+        // Iniciar
+        initDevice();
+    });
 </script>
 {% endblock %}
