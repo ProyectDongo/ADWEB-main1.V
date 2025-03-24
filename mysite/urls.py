@@ -148,8 +148,9 @@ urlpatterns = [
 
    
     path('crear_usuario/<int:empresa_id>/', autenticacion.crear_usuario, name='crear_usuario'),
-    path('editar_usuario/<int:usuario_id>/',autenticacion.editar_usuario, name='editar_usuario'),
-    path('eliminar_usuario/<int:usuario_id>/', autenticacion.eliminar_usuario, name='eliminar_usuario'),
+    path('editar_usuario/<int:usuario_id>/', autenticacion.editar_usuario, name='editar_usuario'),
+    path('eliminar_usuario/<int:usuario_id>/',autenticacion.eliminar_usuario, name='eliminar_usuario'),
+    path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
     # Empresa
     path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
    

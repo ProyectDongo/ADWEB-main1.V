@@ -297,7 +297,7 @@ class CrearUsuarioMixin:
         context['empresa'] = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_id'])
         return context
 
-# Vistas para Supervisores
+# Vista para editar empresa
 class EditarEmpresaView(UpdateView):
     model = RegistroEmpresas
     fields = ['nombre', 'rut', 'direccion', 'telefono']
@@ -310,45 +310,33 @@ class EditarEmpresaView(UpdateView):
 
     def get_success_url(self):
         return reverse('supervisor_home', kwargs={'empresa_id': self.object.id})
-    
+
+# Vista para crear usuario
 def crear_usuario(request, empresa_id):
     empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
     if request.method == 'POST':
-        tipo = request.POST.get('tipo_usuario')
         form = UsuarioForm(request.POST)
-        
         if form.is_valid():
             usuario = form.save(commit=False)
-            usuario.role = tipo
+            usuario.role = request.POST.get('tipo_usuario')
             usuario.empresa = empresa
-            if form.cleaned_data['password']:
-                usuario.set_password(form.cleaned_data['password'])
             usuario.save()
-            messages.success(request, f'{tipo.capitalize()} creado exitosamente!')
-            return redirect('supervisor_home', empresa_id=empresa_id)
+            return JsonResponse({'success': True})
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
-            return redirect('supervisor_home', empresa_id=empresa_id)
-    
-    return redirect('supervisor_home', empresa_id=empresa_id)
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 def editar_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     if request.method == 'POST':
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
-            if form.cleaned_data['password']:
-                usuario.set_password(form.cleaned_data['password'])
             form.save()
-            messages.success(request, 'Usuario actualizado correctamente!')
-            return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+            return JsonResponse({'success': True})
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
-            return redirect('supervisor_home', empresa_id=usuario.empresa.id)
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
     else:
         data = {
             'rut': usuario.rut,
@@ -358,9 +346,11 @@ def editar_usuario(request, usuario_id):
             'email': usuario.email,
         }
         return JsonResponse(data)
+# Vista para eliminar usuario
 def eliminar_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     empresa_id = usuario.empresa.id
-    usuario.delete()
-    messages.success(request, 'Usuario eliminado correctamente!')
+    if request.method == 'POST':
+        usuario.delete()
+        messages.success(request, 'Usuario eliminado correctamente!')
     return redirect('supervisor_home', empresa_id=empresa_id)

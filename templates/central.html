@@ -9,7 +9,7 @@
     <meta name="generator" content="Jekyll v4.1.1">
     <title>{% block title %}Mi Sitio{% endblock %}</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-duallistbox@4.0.2/dist/bootstrap-duallistbox.min.css">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/dashboard/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -117,8 +117,14 @@
       {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
 <script>
+   console.log(typeof $); // Debería imprimir "function" si jQuery está cargado
+if (typeof $ === "undefined") {
+    console.error("jQuery no se ha cargado correctamente.");
+}
+</script>
+<script>
     $(document).ready(function() {
-        // Configuración mejorada del Dual Listbox
+       
         $('#id_permisos').bootstrapDualListbox({
             nonSelectedListLabel: 'Permisos disponibles',
             selectedListLabel: 'Permisos asignados',

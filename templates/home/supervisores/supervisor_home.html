@@ -94,7 +94,6 @@
                                     <a class="dropdown-item eliminar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal">
                                         <i class="fas fa-trash text-danger me-2"></i>Eliminar
                                     </a>
-                                    
                                 </div>
                             </div>
                         </div>
@@ -161,6 +160,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal Crear/Editar Usuario -->
 <div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -171,33 +171,39 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" id="usuarioForm">
+            <form id="usuarioForm" method="post">
                 {% csrf_token %}
                 <div class="modal-body">
                     <input type="hidden" name="tipo_usuario" id="tipoUsuario">
                     <div class="mb-3">
-                        <label class="form-label">Rut</label>
+                        <label class="form-label">RUT</label>
                         <input type="text" class="form-control" name="rut" required>
+                        <div class="invalid-feedback" id="rut-error">RUT INVALIDO</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Nombre Usuario</label>
+                        <label class="form-label">Nombre de Usuario</label>
                         <input type="text" class="form-control" name="username" required>
+                        <div class="invalid-feedback" id="username-error">ERROR YA EXISTE</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Nombres completo </label>
+                                               <label class="form-label">Nombres</label>
                         <input type="text" class="form-control" name="first_name" required>
+                        <div class="invalid-feedback" id="first_name-error"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Apellidos</label>
                         <input type="text" class="form-control" name="last_name" required>
+                        <div class="invalid-feedback" id="last_name-error"></div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Correo electrónico</label>
+                        <label class="form-label">Correo Electrónico</label>
                         <input type="email" class="form-control" name="email" required>
+                        <div class="invalid-feedback" id="email-error"> ERROR YA EXISTE</div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="passwordField">
                         <label class="form-label">Contraseña</label>
                         <input type="password" class="form-control" name="password" required>
+                        <div class="invalid-feedback" id="password-error"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -219,7 +225,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" id="eliminarForm">
+            <form method="post" id="eliminarForm" action="">
                 {% csrf_token %}
                 <div class="modal-body">
                     ¿Estás seguro de eliminar este usuario?
@@ -269,8 +275,11 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
+
+{% block extra_scripts %}
+<!-- Asegúrate de incluir jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     $('#crearUsuarioModal').on('show.bs.modal', function(event) {
@@ -292,18 +301,61 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.find('input[name="last_name"]').val(data.last_name);
                     modal.find('input[name="email"]').val(data.email);
                     modal.find('input[name="password"]').val('').removeAttr('required');
-                    modal.find('form').attr('action', `/editar_usuario/${usuarioId}/`);
-                });
+                    modal.find('#usuarioForm').attr('data-action', `/editar_usuario/${usuarioId}/`);
+                })
+                .catch(error => console.error('Error al cargar datos del usuario:', error));
         } else {
             modal.find('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
             modal.find('#tipoUsuario').val(tipo);
-            modal.find('form')[0].reset();
+            modal.find('#usuarioForm')[0].reset();
             modal.find('input[name="password"]').attr('required', 'required');
-            modal.find('form').attr('action', `/crear_usuario/{{ empresa.id }}/`);
+            modal.find('#usuarioForm').attr('data-action', `/crear_usuario/{{ empresa.id }}/`);
         }
+        
+        // Limpiar errores previos
+        modal.find('.invalid-feedback').text('');
+        modal.find('.form-control').removeClass('is-invalid');
+    });
+
+    // Manejar submit del formulario con AJAX
+    $('#usuarioForm').on('submit', function(event) {
+        event.preventDefault();
+        const form = $(this);
+        const action = form.attr('data-action');
+        const formData = form.serialize();
+        
+        $.ajax({
+            type: 'POST',
+            url: action,
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    $('#crearUsuarioModal').modal('hide');
+                    location.reload();
+                } else {
+                    // Mostrar errores en el formulario
+                    for (const field in response.errors) {
+                        const errorDiv = $(`#${field}-error`);
+                        errorDiv.text(response.errors[field][0]);
+                        form.find(`[name="${field}"]`).addClass('is-invalid');
+                    }
+                }
+            },
+            error: function(xhr) {
+                console.error('Error en la solicitud:', xhr);
+            }
+        });
+    });
+
+    // Manejar eliminación de usuario
+    $('.eliminar-usuario').on('click', function() {
+        const usuarioId = $(this).data('id');
+        $('#eliminarForm').attr('action', `/eliminar_usuario/${usuarioId}/`);
     });
 });
-    </script>
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <style>

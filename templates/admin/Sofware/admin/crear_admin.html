@@ -1,9 +1,9 @@
 {% extends "central.html" %}
-
+{% load static %}
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-xl-8">
+        <div class="col-xl-10">
             <div class="card">
                 <div class="card-header bg-primary text-white py-3">
                     <h2 class="h5 mb-0">
@@ -17,12 +17,21 @@
                         {% csrf_token %}
                         
                         <div class="row g-3 mb-4">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="form-floating">
                                     {{ form.username }}
-                                    <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+                                    <label>Nombre de usuario</label>
                                     <div class="invalid-feedback">
                                         {{ form.username.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.rut }}
+                                    <label>RUT</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.rut.errors|first }}
                                     </div>
                                 </div>
                             </div>
@@ -31,15 +40,56 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="password" name="password1" class="form-control" required>
-                                    <label>Contraseña</label>
+                                    {{ form.email }}
+                                    <label>Email</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.email.errors|first }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="password" name="password2" class="form-control" required>
-                                    <label>Confirmar Contraseña</label>
+                                    {{ form.celular }}
+                                    <label>Celular</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.celular.errors|first }}
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.password1 }}
+                                    <label>Contraseña</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.password1.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.password2 }}
+                                    <label>Confirmar Contraseña</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.password2.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-bold">Grupos</label>
+                            <div class="border rounded-3 p-3">
+                                {{ form.grupos }}
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label fw-bold">Permisos Individuales</label>
+                            <div class="border rounded-3 p-3">
+                                {{ form.permisos }}
                             </div>
                         </div>
 
@@ -57,4 +107,38 @@
         </div>
     </div>
 </div>
+
+<style>
+    .dual-listbox {
+        display: flex;
+        flex-direction: column;
+    }
+    .dual-listbox .dual-listbox__container {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    .dual-listbox__available,
+    .dual-listbox__selected {
+        flex: 1;
+        min-width: 300px;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#id_permisos').bootstrapDualListbox({
+            nonSelectedListLabel: 'Permisos Disponibles',
+            selectedListLabel: 'Permisos Asignados',
+            preserveSelectionOnMove: 'moved',
+            moveOnSelect: false,
+            infoText: 'Mostrando {0} elementos',
+            infoTextFiltered: '<span class="badge bg-warning">Filtrado</span> {0} de {1}',
+            filterPlaceHolder: 'Buscar...',
+            filterTextClear: 'Limpiar',
+            moveAllLabel: 'Mover todos',
+            removeAllLabel: 'Quitar todos',
+            selectorMinimalHeight: 300
+        });
+    });
+</script>
 {% endblock %}
