@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container">
+    {% csrf_token %}
     <h2 class="mb-4">Registro Biométrico</h2>
     <div class="card shadow">
         <div class="card-body">
@@ -36,7 +37,7 @@
             template1: null,
             template2: null
         };
-    
+
         const elements = {
             status: document.getElementById('deviceStatus'),
             captureSection: document.getElementById('captureSection'),
@@ -46,84 +47,141 @@
             btn2: document.getElementById('btnCapture2'),
             preview: document.getElementById('preview')
         };
-    
-        // Función para traducir errores
+
+        // Reemplaza con tu licencia válida de SecuGen
+        const LICSTR = '846681907'; // Cambia esto por tu licencia válida cuando la obtengas
+
+        // Traducción de códigos de error de SecuGen
         const traducirError = (codigo) => {
             const errores = {
                 54: "Tiempo de espera agotado",
                 55: "Dispositivo no encontrado",
                 57: "Imagen inválida",
-                10001: "Licencia no válida"
+                98: "Respuesta inválida del dispositivo",
+                99: "Error interno",
+                10001: "Licencia no válida",
+                10003: "Licencia expirada",
+                401: "Autenticación requerida"
             };
             return errores[codigo] || `Error desconocido (${codigo})`;
         };
-    
-        // Inicializar dispositivo
+
+        // Inicializar el dispositivo
         const initDevice = async () => {
             try {
-                const test = await fetch('http://localhost:8000/SGIFPCapture', {
+                const params = new URLSearchParams({ Licstr: LICSTR });
+                const response = await fetch('http://localhost:8000/SGIFPCapture', {
                     method: 'POST',
-                    body: new URLSearchParams({ Licstr: '846681907' })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params
                 });
-                
-                if (test.ok) {
+
+                if (response.ok) {
                     elements.status.innerHTML = '<i class="bi bi-check-circle"></i> Dispositivo listo';
                     elements.captureSection.style.display = 'block';
+                } else {
+                    elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error al conectar con el dispositivo';
                 }
             } catch (error) {
-                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error de conexión';
+                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error al conectar: ' + error.message;
             }
         };
-            
-        // Manejar captura (CÓDIGO CORREGIDO)
+
+        // Capturar huella
+        const captureFingerprint = async () => {
+            const params = new URLSearchParams({
+                Licstr: LICSTR,
+                Timeout: 10000,
+                Quality: 70,
+                TemplateFormat: 'ISO',
+                ImageWSQRate: '0.75'
+            });
+
+            const response = await fetch('http://localhost:8000/SGIFPCapture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.ErrorCode !== 0) {
+                throw new Error(`Error ${data.ErrorCode}: ${traducirError(data.ErrorCode)}`);
+            }
+
+            return data;
+        };
+
+        // Comparar plantillas
+        const matchTemplates = async (template1, template2) => {
+            const params = new URLSearchParams({
+                Licstr: LICSTR,
+                Template1: template1,
+                Template2: template2,
+                TemplateFormat: 'ISO'
+            });
+
+            const response = await fetch('http://localhost:8000/SGIMatchScore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.ErrorCode !== 0) {
+                throw new Error(`Error ${data.ErrorCode}: ${traducirError(data.ErrorCode)}`);
+            }
+
+            return data.MatchingScore;
+        };
+
+        // Manejar la captura de huellas
         const handleCapture = async (attempt) => {
             if (attempt === 2 && !state.template1) {
                 elements.result.innerHTML = '<div class="alert alert-warning">¡Captura la primera huella primero!</div>';
                 return;
             }
-            
+
             elements.progress.style.display = 'block';
-            
+            elements.result.innerHTML = '';
+
             try {
-                const params = new URLSearchParams({
-                    Licstr: '846681907',
-                    Timeout: 10000,
-                    Quality: 70,
-                    TemplateFormat: 'ISO',
-                    ImageWSQRate: '0.75'
-                });
-                
-                const response = await fetch('http://localhost:8001/biometrics/capture/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': '{{ csrf_token }}'  // Asegurar que el token está presente
-                    },
-                    credentials: 'include'  // Enviar cookies
-                });
-                                
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const data = await response.json();
-                
-                if (data.ErrorCode === 0) {
-                    if (attempt === 1) {
-                        state.template1 = data.TemplateBase64;
-                        elements.preview.innerHTML = `<img src="data:image/bmp;base64,${data.BMPBase64}" class="img-fluid" style="max-width: 300px;">`;
-                    } else {
-                        state.template2 = data.TemplateBase64;
-                        const matchResponse = await fetch('/biometrics/register/', {
-                            method: 'POST',
-                            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                            body: JSON.stringify({ template2: state.template2 })
-                        });
-                        const result = await matchResponse.json();
-                        elements.result.innerHTML = result.status === 'success' 
-                            ? '<div class="alert alert-success">Huella registrada!</div>'
-                            : `<div class="alert alert-danger">No coincide (Score: ${result.score})</div>`;
-                    }
+                const data = await captureFingerprint();
+
+                if (attempt === 1) {
+                    state.template1 = data.TemplateBase64;
+                    elements.preview.innerHTML = `<img src="data:image/bmp;base64,${data.BMPBase64}" class="img-fluid" style="max-width: 300px;">`;
+                    elements.result.innerHTML = '<div class="alert alert-success">Primera huella capturada</div>';
                 } else {
-                    elements.result.innerHTML = `<div class="alert alert-danger">Error ${data.ErrorCode}: ${traducirError(data.ErrorCode)}</div>`;
+                    state.template2 = data.TemplateBase64;
+                    // Comparar las plantillas directamente en el cliente
+                    const matchScore = await matchTemplates(state.template1, state.template2);
+
+                    // Enviar las plantillas y el puntaje al servidor para registro
+                    const registerResponse = await fetch('/biometrics/register/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({ template1: state.template1, template2: state.template2, match_score: matchScore })
+                    });
+                    const result = await registerResponse.json();
+
+                    if (result.status === 'success') {
+                        elements.result.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+                    } else if (result.status === 'no_match') {
+                        elements.result.innerHTML = `<div class="alert alert-warning">${result.message} (Score: ${result.score})</div>`;
+                    } else {
+                        elements.result.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
+                    }
                 }
             } catch (error) {
                 elements.result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
@@ -131,12 +189,12 @@
                 elements.progress.style.display = 'none';
             }
         };
-    
-        // Event listeners
+
+        // Asignar eventos a los botones
         elements.btn1.addEventListener('click', () => handleCapture(1));
         elements.btn2.addEventListener('click', () => handleCapture(2));
-        
-        // Iniciar
+
+        // Inicializar el dispositivo al cargar la página
         initDevice();
     });
 </script>
