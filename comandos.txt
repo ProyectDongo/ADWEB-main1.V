@@ -5,9 +5,18 @@ pip install anymail
 pip install django-crispy-forms
 pip install crispy_bootstrap5 
 pip install django-widget-tweaks
+pip install flask flask-cors
 
 pip install python-dateutil
 pip install django-anymail
 
 Set-Location -Path "C:\Users\facil\Desktop\ADWEB-main"
 python manage.py crearadmin
+
+
+-- crear  poersehll am admin
+
+
+reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v DevicePath /t REG_SZ /d "C:\Users\facil\Desktop\ADWEB-main\bin" /f
+reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLogEnable /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLevel /t REG_DWORD /d 0 /f

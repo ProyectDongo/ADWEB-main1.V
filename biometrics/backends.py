@@ -1,14 +1,18 @@
 from django.contrib.auth.backends import BaseBackend
 from django.conf import settings
 from .models import UserFingerprint
+import base64
 
 class FingerprintBackend(BaseBackend):
     def authenticate(self, request, fingerprint=None, **kwargs):
         try:
+            fingerprint_bytes = base64.b64decode(fingerprint)
             return UserFingerprint.objects.select_related('user').get(
-                template=fingerprint
+                template=fingerprint_bytes
             ).user
         except UserFingerprint.DoesNotExist:
+            return None
+        except Exception as e:
             return None
 
     def get_user(self, user_id):
