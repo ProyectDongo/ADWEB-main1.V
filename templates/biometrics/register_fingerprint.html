@@ -5,7 +5,6 @@
     <h2 class="mb-4">Registro Biométrico</h2>
     <div class="card shadow">
         <div class="card-body">
-            <!-- Agregar el token CSRF como input oculto -->
             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             <div id="deviceStatus" class="alert alert-info">
                 <i class="bi bi-usb-symbol"></i> Conectando al lector...
@@ -24,7 +23,7 @@
 
             <div id="progress" class="text-center my-3" style="display: none;">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2">Procesando huella...</p>
+                <p class="mt-2">Coloque su dedo en el sensor (10 segundos)...</p>
             </div>
 
             <div id="result" class="mt-4"></div>
@@ -33,7 +32,6 @@
 </div>
 
 <script>
-    // El script sigue igual, ya que está bien configurado
     document.addEventListener('DOMContentLoaded', () => {
         const state = {
             template1: null,
@@ -52,8 +50,7 @@
 
         const initDevice = async () => {
             try {
-                // Corregir la URL a /init
-                const response = await fetch('http://localhost:9000/init', { // <- Cambiado a /init
+                const response = await fetch('http://localhost:9000/init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
