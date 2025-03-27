@@ -1,117 +1,71 @@
 {% extends "central_user.html" %}
-
 {% block content %}
 <div class="container">
-    <h2 class="mb-4">Registro de Asistencia</h2>
-    <div class="card shadow">
-        <div class="card-body">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-            <div id="deviceStatus" class="alert alert-info">
-                <i class="bi bi-usb-symbol"></i> Conectando al lector...
-            </div>
-
-            <div id="captureSection" class="text-center" style="display: none;">
-                <button id="btnCapture" class="btn btn-lg btn-primary m-2">
-                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella
-                </button>
-            </div>
-
-            <div id="progress" class="text-center my-3" style="display: none;">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2">Coloque su dedo en el sensor (10 segundos)...</p>
-            </div>
-
-            <div id="result" class="mt-4"></div>
-        </div>
+    <h2>Registro de Asistencia</h2>
+    <div id="deviceStatus" class="alert alert-info">Conectando al lector...</div>
+    <div id="captureSection" style="display: none;">
+        <button id="btnCaptureEntrada" class="btn btn-primary">Registrar Entrada</button>
+        <button id="btnCaptureSalida" class="btn btn-secondary">Registrar Salida</button>
     </div>
+    <div id="progress" style="display: none;">
+        <div class="spinner-border"></div>
+        <p>Coloque su dedo en el sensor...</p>
+    </div>
+    <div id="result"></div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const elements = {
-            status: document.getElementById('deviceStatus'),
-            captureSection: document.getElementById('captureSection'),
-            progress: document.getElementById('progress'),
-            result: document.getElementById('result'),
-            btnCapture: document.getElementById('btnCapture')
-        };
+document.addEventListener('DOMContentLoaded', () => {
+    const status = document.getElementById('deviceStatus');
+    const captureSection = document.getElementById('captureSection');
+    const progress = document.getElementById('progress');
+    const result = document.getElementById('result');
+    const btnEntrada = document.getElementById('btnCaptureEntrada');
+    const btnSalida = document.getElementById('btnCaptureSalida');
 
-        const initDevice = async () => {
-            try {
-                const response = await fetch('http://localhost:9000/init', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                if (response.ok) {
-                    elements.status.innerHTML = '<i class="bi bi-check-circle"></i> Dispositivo listo';
-                    elements.captureSection.style.display = 'block';
-                } else {
-                    const data = await response.json();
-                    elements.status.innerHTML = `<i class="bi bi-x-circle"></i> Error: ${data.error}`;
-                }
-            } catch (error) {
-                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error al conectar: ' + error.message;
+    fetch('http://localhost:9000/init', { method: 'POST' })
+        .then(res => {
+            if (res.ok) {
+                status.innerHTML = 'Dispositivo listo';
+                captureSection.style.display = 'block';
             }
-        };
+        });
 
-        const captureFingerprint = async () => {
-            const response = await fetch('http://localhost:9000/capture', {
+    const captureFingerprint = async () => {
+        const res = await fetch('http://localhost:9000/capture', { method: 'POST' });
+        const data = await res.json();
+        return data.template;
+    };
+
+    const handleCapture = async (action) => {
+        progress.style.display = 'block';
+        result.innerHTML = '';
+        try {
+            const template = await captureFingerprint();
+            const authRes = await fetch('/biometrics/authenticate/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ template, action })
             });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
+            const resultData = await authRes.json();
+            if (resultData.status === 'success') {
+                result.innerHTML = `<div class="alert alert-success">${resultData.message}</div>`;
+                setTimeout(() => window.location.href = resultData.redirect, 2000);
+            } else {
+                result.innerHTML = `<div class="alert alert-danger">${resultData.error || resultData.message}</div>`;
             }
+        } catch (e) {
+            result.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        } finally {
+            progress.style.display = 'none';
+        }
+    };
 
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            return data.template;
-        };
-
-        const handleCapture = async () => {
-            elements.progress.style.display = 'block';
-            elements.result.innerHTML = '';
-
-            try {
-                const template = await captureFingerprint();
-
-                const authResponse = await fetch('/biometrics/authenticate/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: JSON.stringify({ template })
-                });
-
-                if (!authResponse.ok) {
-                    throw new Error(`Error del servidor: ${authResponse.status}`);
-                }
-
-                const result = await authResponse.json();
-
-                if (result.status === 'success') {
-                    elements.result.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
-                } else if (result.status === 'no_match') {
-                    elements.result.innerHTML = `<div class="alert alert-warning">${result.message}</div>`;
-                } else {
-                    elements.result.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
-                }
-            } catch (error) {
-                elements.result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-            } finally {
-                elements.progress.style.display = 'none';
-            }
-        };
-
-        elements.btnCapture.addEventListener('click', handleCapture);
-
-        initDevice();
-    });
+    btnEntrada.addEventListener('click', () => handleCapture('entrada'));
+    btnSalida.addEventListener('click', () => handleCapture('salida'));
+});
 </script>
 {% endblock %}

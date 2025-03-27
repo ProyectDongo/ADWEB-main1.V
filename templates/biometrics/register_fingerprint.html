@@ -151,10 +151,10 @@
                             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                         },
                         body: JSON.stringify({
-                            template1: "template_data_1",
-                            template2: "template_data_2",
-                            match_score: 120,
-                            user_id: 1
+                            template1: state.template1,  // Huella capturada en el primer intento
+                            template2: state.template2,  // Huella capturada en el segundo intento
+                            match_score: matchScore,     // Puntaje real de la comparación
+                            user_id: userId              // ID del usuario seleccionado en el dropdown
                         })
                     });
 
