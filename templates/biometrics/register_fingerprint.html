@@ -1,189 +1,154 @@
 {% extends "central_user.html" %}
+{% block title %}Registro Biométrico{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2 class="mb-4">Registro Biométrico</h2>
-    <div class="card shadow">
-        <div class="card-body">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h2 class="mb-0"><i class="fas fa-fingerprint me-2"></i>Registro Biométrico</h2>
+        </div>
+        <div class="card-body p-4">
             {% if request.user.role == 'supervisor' or request.user.role == 'admin' %}
-            <div class="mb-3">
-                <label for="userSelect" class="form-label">Seleccionar Trabajador</label>
+            <div class="mb-4">
+                <label for="userSelect" class="form-label fw-bold">Seleccionar Usuario</label>
                 <select id="userSelect" class="form-select">
-                    <option value="">Seleccione un trabajador</option>
-                    {% for trabajador in trabajadores %}
-                        <option value="{{ trabajador.id }}">{{ trabajador.username }}</option>
+                    <option value="">Seleccione un usuario</option>
+                    {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if selected_user and selected_user.id == usuario.id %}selected{% endif %}>
+                            {{ usuario.username }} ({{ usuario.get_role_display }})
+                        </option>
                     {% endfor %}
                 </select>
             </div>
             {% endif %}
-
-            <div id="deviceStatus" class="alert alert-info">
-                <i class="bi bi-usb-symbol"></i> Conectando al lector...
+            <div id="deviceStatus" class="alert alert-info text-center mb-4">
+                <i class="fas fa-usb me-2"></i>Conectando al lector...
             </div>
-
-            <div id="captureSection" class="text-center" style="display: none;">
-                <button id="btnCapture1" class="btn btn-lg btn-primary m-2">
-                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 1
+            <div id="captureSection" class="text-center mb-4" style="display: none;">
+                <button id="btnCapture1" class="btn btn-primary btn-lg mx-2">
+                    <i class="fas fa-fingerprint me-2"></i>Capturar Huella 1
                 </button>
-                <button id="btnCapture2" class="btn btn-lg btn-secondary m-2">
-                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 2
+                <button id="btnCapture2" class="btn btn-secondary btn-lg mx-2">
+                    <i class="fas fa-fingerprint me-2"></i>Capturar Huella 2
                 </button>
             </div>
-
-            <div id="preview" class="text-center my-4"></div>
-
-            <div id="progress" class="text-center my-3" style="display: none;">
+            <div id="progress" class="text-center mb-4" style="display: none;">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2">Coloque su dedo en el sensor (10 segundos)...</p>
+                <p class="mt-2 fw-bold">Coloque su dedo en el sensor...</p>
             </div>
-
-            <div id="result" class="mt-4"></div>
+            <div id="result" class="text-center"></div>
+            <div class="text-center mt-4">
+                <a href="{% url 'supervisor_home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const state = {
-            template1: null,
-            template2: null
-        };
+document.addEventListener('DOMContentLoaded', () => {
+    const state = { template1: null, template2: null };
+    const elements = {
+        status: document.getElementById('deviceStatus'),
+        captureSection: document.getElementById('captureSection'),
+        progress: document.getElementById('progress'),
+        result: document.getElementById('result'),
+        btn1: document.getElementById('btnCapture1'),
+        btn2: document.getElementById('btnCapture2'),
+        userSelect: document.getElementById('userSelect')
+    };
 
-        const elements = {
-            status: document.getElementById('deviceStatus'),
-            captureSection: document.getElementById('captureSection'),
-            progress: document.getElementById('progress'),
-            result: document.getElementById('result'),
-            btn1: document.getElementById('btnCapture1'),
-            btn2: document.getElementById('btnCapture2'),
-            preview: document.getElementById('preview'),
-            userSelect: document.getElementById('userSelect')
-        };
+    fetch('http://localhost:9000/init', { method: 'POST' })
+        .then(res => {
+            if (res.ok) {
+                elements.status.innerHTML = '<i class="fas fa-check-circle me-2"></i>Dispositivo listo';
+                elements.status.classList.remove('alert-info');
+                elements.status.classList.add('alert-success');
+                elements.captureSection.style.display = 'block';
+            }
+        });
 
-        const initDevice = async () => {
-            try {
-                const response = await fetch('http://localhost:9000/init', {
+    const captureFingerprint = async () => {
+        const res = await fetch('http://localhost:9000/capture', { method: 'POST' });
+        const data = await res.json();
+        return data.template;
+    };
+
+    const matchTemplates = async (template1, template2) => {
+        const res = await fetch('http://localhost:9000/match', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ template1, template2 })
+        });
+        const data = await res.json();
+        return data.score;
+    };
+
+    const handleCapture = async (attempt) => {
+        if (attempt === 2 && !state.template1) {
+            elements.result.innerHTML = '<div class="alert alert-warning">¡Captura la primera huella primero!</div>';
+            return;
+        }
+
+        elements.progress.style.display = 'block';
+        elements.result.innerHTML = '';
+
+        try {
+            const template = await captureFingerprint();
+            if (attempt === 1) {
+                state.template1 = template;
+                elements.result.innerHTML = '<div class="alert alert-success">Primera huella capturada</div>';
+            } else {
+                state.template2 = template;
+                const matchScore = await matchTemplates(state.template1, state.template2);
+                const userId = elements.userSelect ? elements.userSelect.value : null;
+
+                if (userId === "" && elements.userSelect) {
+                    elements.result.innerHTML = '<div class="alert alert-warning">Seleccione un usuario primero</div>';
+                    elements.progress.style.display = 'none';
+                    return;
+                }
+
+                const registerRes = await fetch('/biometrics/register-fingerprint/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        template1: state.template1,
+                        template2: state.template2,
+                        match_score: matchScore,
+                        user_id: userId
+                    })
                 });
-
-                if (response.ok) {
-                    elements.status.innerHTML = '<i class="bi bi-check-circle"></i> Dispositivo listo';
-                    elements.captureSection.style.display = 'block';
+                const resultData = await registerRes.json();
+                if (resultData.status === 'success') {
+                    elements.result.innerHTML = `<div class="alert alert-success">${resultData.message}</div>`;
                 } else {
-                    const data = await response.json();
-                    elements.status.innerHTML = `<i class="bi bi-x-circle"></i> Error: ${data.error}`;
+                    elements.result.innerHTML = `<div class="alert alert-danger">${resultData.error || resultData.message}</div>`;
                 }
-            } catch (error) {
-                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error al conectar: ' + error.message;
             }
-        };
+        } catch (e) {
+            elements.result.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        } finally {
+            elements.progress.style.display = 'none';
+        }
+    };
 
-        const captureFingerprint = async () => {
-            const response = await fetch('http://localhost:9000/capture', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            return data.template;
-        };
-
-        const matchTemplates = async (template1, template2) => {
-            const response = await fetch('http://localhost:9000/match', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ template1, template2 })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            return data.score;
-        };
-
-        const handleCapture = async (attempt) => {
-            if (attempt === 2 && !state.template1) {
-                elements.result.innerHTML = '<div class="alert alert-warning">¡Captura la primera huella primero!</div>';
-                return;
-            }
-
-            elements.progress.style.display = 'block';
-            elements.result.innerHTML = '';
-
-            try {
-                const template = await captureFingerprint();
-
-                if (attempt === 1) {
-                    state.template1 = template;
-                    elements.preview.innerHTML = '<p>Huella capturada</p>';
-                    elements.result.innerHTML = '<div class="alert alert-success">Primera huella capturada</div>';
-                } else {
-                    state.template2 = template;
-                    const matchScore = await matchTemplates(state.template1, state.template2);
-                    const userId = elements.userSelect ? elements.userSelect.value : null;
-
-                    if (userId === "" && elements.userSelect) {
-                        elements.result.innerHTML = '<div class="alert alert-warning">Seleccione un trabajador primero</div>';
-                        elements.progress.style.display = 'none';
-                        return;
-                    }
-
-                    const registerResponse = await fetch('/biometrics/register-fingerprint/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        },
-                        body: JSON.stringify({
-                            template1: state.template1,  // Huella capturada en el primer intento
-                            template2: state.template2,  // Huella capturada en el segundo intento
-                            match_score: matchScore,     // Puntaje real de la comparación
-                            user_id: userId              // ID del usuario seleccionado en el dropdown
-                        })
-                    });
-
-                        if (!registerResponse.ok) {
-                            const errorText = await registerResponse.text();
-                            console.error('Respuesta de error:', errorText);
-                            throw new Error(`Error del servidor: ${registerResponse.status} - ${errorText}`);
-                        }
-
-                        const result = await registerResponse.json();
-                        if (result.status === 'success') {
-                            elements.result.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
-                        } else if (result.status === 'no_match') {
-                            elements.result.innerHTML = `<div class="alert alert-warning">${result.message} (Score: ${result.score})</div>`;
-                        } else {
-                            elements.result.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
-                        }
-                }
-            } catch (error) {
-                elements.result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-            } finally {
-                elements.progress.style.display = 'none';
-            }
-        };
-
-        elements.btn1.addEventListener('click', () => handleCapture(1));
-        elements.btn2.addEventListener('click', () => handleCapture(2));
-
-        initDevice();
-    });
+    elements.btn1.addEventListener('click', () => handleCapture(1));
+    elements.btn2.addEventListener('click', () => handleCapture(2));
+});
 </script>
+
+<style>
+    .card-header {
+        border-radius: 10px 10px 0 0;
+    }
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1.2rem;
+    }
+</style>
 {% endblock %}

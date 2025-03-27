@@ -1,17 +1,38 @@
 {% extends "central_user.html" %}
+{% block title %}Registro de Asistencia{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Registro de Asistencia</h2>
-    <div id="deviceStatus" class="alert alert-info">Conectando al lector...</div>
-    <div id="captureSection" style="display: none;">
-        <button id="btnCaptureEntrada" class="btn btn-primary">Registrar Entrada</button>
-        <button id="btnCaptureSalida" class="btn btn-secondary">Registrar Salida</button>
+<div class="container mt-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h2 class="mb-0"><i class="bi bi-clock me-2"></i>Registro de Asistencia</h2>
+        </div>
+        <div class="card-body p-4">
+            <div id="deviceStatus" class="alert alert-info text-center mb-4">
+                <i class="bi bi-usb-symbol me-2"></i>Conectando al lector...
+            </div>
+            <div id="captureSection" class="text-center mb-4" style="display: none;">
+                <button id="btnCaptureEntrada" class="btn btn-primary btn-lg mx-2">
+                    <i class="bi bi-arrow-right-circle me-2"></i>Registrar Entrada
+                </button>
+                <button id="btnCaptureSalida" class="btn btn-secondary btn-lg mx-2">
+                    <i class="bi bi-arrow-left-circle me-2"></i>Registrar Salida
+                </button>
+            </div>
+            <div id="progress" class="text-center mb-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 fw-bold">Coloque su dedo en el sensor...</p>
+            </div>
+            <div id="result" class="text-center">
+                <h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>
+            </div>
+            <div class="text-center mt-4">
+                <a href="#" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver al Selector
+                </a>
+            </div>
+        </div>
     </div>
-    <div id="progress" style="display: none;">
-        <div class="spinner-border"></div>
-        <p>Coloque su dedo en el sensor...</p>
-    </div>
-    <div id="result"></div>
 </div>
 
 <script>
@@ -23,11 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnEntrada = document.getElementById('btnCaptureEntrada');
     const btnSalida = document.getElementById('btnCaptureSalida');
 
+    // Inicializar dispositivo
     fetch('http://localhost:9000/init', { method: 'POST' })
         .then(res => {
             if (res.ok) {
-                status.innerHTML = 'Dispositivo listo';
+                status.innerHTML = '<i class="bi bi-check-circle me-2"></i>Dispositivo listo';
+                status.classList.remove('alert-info');
+                status.classList.add('alert-success');
                 captureSection.style.display = 'block';
+                startAutoCapture();
+            } else {
+                status.innerHTML = '<i class="bi bi-x-circle me-2"></i>Dispositivo no conectado';
+                status.classList.remove('alert-info');
+                status.classList.add('alert-danger');
             }
         });
 
@@ -52,20 +81,41 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const resultData = await authRes.json();
             if (resultData.status === 'success') {
-                result.innerHTML = `<div class="alert alert-success">${resultData.message}</div>`;
-                setTimeout(() => window.location.href = resultData.redirect, 2000);
+                result.innerHTML = `<h3 class="display-4 fw-bold text-success">${resultData.message}</h3>`;
             } else {
-                result.innerHTML = `<div class="alert alert-danger">${resultData.error || resultData.message}</div>`;
+                result.innerHTML = `<h3 class="display-4 fw-bold text-danger">${resultData.error || resultData.message}</h3>`;
             }
+            setTimeout(() => {
+                result.innerHTML = '<h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>';
+                if (captureSection.style.display === 'block') startAutoCapture();
+            }, 3000);
         } catch (e) {
-            result.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+            result.innerHTML = `<h3 class="display-4 fw-bold text-danger">Error: ${e.message}</h3>`;
         } finally {
             progress.style.display = 'none';
         }
+    };
+
+    const startAutoCapture = () => {
+        setInterval(async () => {
+            if (progress.style.display === 'none') {
+                await handleCapture('entrada'); // Por defecto intenta entrada
+            }
+        }, 5000); // Cada 5 segundos
     };
 
     btnEntrada.addEventListener('click', () => handleCapture('entrada'));
     btnSalida.addEventListener('click', () => handleCapture('salida'));
 });
 </script>
+
+<style>
+    .card-header {
+        border-radius: 10px 10px 0 0;
+    }
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1.2rem;
+    }
+</style>
 {% endblock %}

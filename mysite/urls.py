@@ -157,7 +157,7 @@ urlpatterns = [
     # biomtrica 
 
 
-    
+    path('supervisor/home/', autenticacion.SupervisorHomeView.as_view(), name='supervisor_home'),
     path('biometrics/', include('biometrics.urls')),
     
 

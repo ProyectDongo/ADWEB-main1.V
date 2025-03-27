@@ -1,31 +1,37 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
-import logging
 import json
 import base64
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from .models import UserFingerprint
-from WEB.models import *
+from WEB.models import RegistroEntrada, Usuario
 import requests
-
-logger = logging.getLogger(__name__)
 
 class CaptureFingerprintView(View):
     def get(self, request):
-        if request.user.role in ['supervisor', 'admin']:
-            trabajadores = Usuario.objects.filter(role='trabajador', empresa=request.user.empresa)
-            return render(request, 'biometrics/register_fingerprint.html', {'trabajadores': trabajadores})
-        return render(request, 'biometrics/register_fingerprint.html')
+        if request.user.role not in ['supervisor', 'admin']:
+            return render(request, 'access_denied.html')
+        
+        empresa = request.user.empresa
+        usuarios = Usuario.objects.filter(empresa=empresa, role__in=['trabajador', 'supervisor'])
+        selected_user_id = request.GET.get('user_id')
+        
+        selected_user = None
+        if selected_user_id:
+            try:
+                selected_user = usuarios.get(id=selected_user_id)
+            except Usuario.DoesNotExist:
+                selected_user = None
+        
+        return render(request, 'biometrics/register_fingerprint.html', {
+            'usuarios': usuarios,
+            'selected_user': selected_user
+        })
 
 class FingerprintRegistrationView(LoginRequiredMixin, View):
-    def get(self, request):
-        return JsonResponse({'error': 'Método GET no permitido en esta ruta'}, status=405)
-
-
-
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -40,15 +46,11 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
             if user_id:
                 if request.user.role not in ['supervisor', 'admin']:
                     raise PermissionDenied("No tienes permiso para registrar huellas")
-                try:
-                    user_id = int(user_id)  
-                    target_user = Usuario.objects.get(id=user_id, role='trabajador')
-                except ValueError:
-                    return JsonResponse({"error": "El user_id debe ser un número entero"}, status=400)
-                except Usuario.DoesNotExist:
-                    return JsonResponse({"error": "Usuario no encontrado o no es un trabajador"}, status=404)
+                target_user = Usuario.objects.get(id=user_id)
+                if target_user.empresa != request.user.empresa:
+                    raise PermissionDenied("No puedes registrar huellas de usuarios de otras empresas")
             else:
-                target_user = request.user  
+                target_user = request.user
 
             if match_score >= 100:
                 template_bytes = base64.b64decode(template1)
@@ -56,10 +58,9 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
                     user=target_user,
                     defaults={'template': template_bytes, 'quality': 70}
                 )
-                return JsonResponse({"status": "success", "message": "Huella registrada"})
+                return JsonResponse({"status": "success", "message": "Huella registrada correctamente"})
             else:
                 return JsonResponse({"status": "no_match", "score": match_score})
-
         except json.JSONDecodeError:
             return JsonResponse({"error": "JSON inválido"}, status=400)
         except PermissionDenied as e:
@@ -72,7 +73,7 @@ class AuthenticateFingerprintView(View):
         try:
             data = json.loads(request.body)
             captured_template = data.get('template')
-            action = data.get('action', 'entrada')  # Por defecto es 'entrada' si no se especifica
+            action = data.get('action', 'entrada')
             if not captured_template:
                 return JsonResponse({"error": "Se requiere la plantilla de huella"}, status=400)
 
@@ -94,7 +95,7 @@ class AuthenticateFingerprintView(View):
 
                     if action == 'entrada':
                         if entries_today.filter(hora_salida__isnull=True).exists():
-                            return JsonResponse({"error": "Ya hay una entrada sin salida registrada"}, status=400)
+                            return JsonResponse({"error": "Usted ya está ingresado hoy, debe registrar una salida primero"}, status=400)
                         if entries_today.count() >= 3:
                             return JsonResponse({"error": "Máximo de 3 entradas por día alcanzado"}, status=400)
                         RegistroEntrada.objects.create(
@@ -106,8 +107,7 @@ class AuthenticateFingerprintView(View):
                         )
                         return JsonResponse({
                             'status': 'success',
-                            'message': f'Entrada registrada para {user.username}',
-                            'redirect': '/attendance/'
+                            'message': f'Entrada registrada para {user.username}'
                         })
                     elif action == 'salida':
                         last_entry = entries_today.filter(hora_salida__isnull=True).first()
@@ -119,12 +119,12 @@ class AuthenticateFingerprintView(View):
                         last_entry.save()
                         return JsonResponse({
                             'status': 'success',
-                            'message': f'Salida registrada para {user.username}',
-                            'redirect': '/attendance/'
+                            'message': f'Salida registrada para {user.username}'
                         })
             return JsonResponse({'status': 'no_match', 'message': 'No se encontró coincidencia'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
 class AttendanceView(View):
     def get(self, request):
         return render(request, 'biometrics/attendance.html')

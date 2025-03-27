@@ -15,7 +15,7 @@ from django.utils import timezone
 #from django.contrib.gis.geos import Point
 from WEB.models import *
 from WEB.forms import *
-
+from django.views import View
 
 
 class RoleBasedLoginMixin:
@@ -354,3 +354,18 @@ def eliminar_usuario(request, usuario_id):
         usuario.delete()
         messages.success(request, 'Usuario eliminado correctamente!')
     return redirect('supervisor_home', empresa_id=empresa_id)
+
+class SupervisorHomeView(LoginRequiredMixin, View):
+    def get(self, request):
+        if request.user.role != 'supervisor':
+            return render(request, 'access_denied.html')  # O redirigir a otra página
+        
+        empresa = request.user.empresa
+        supervisores = Usuario.objects.filter(empresa=empresa, role='supervisor')
+        trabajadores = Usuario.objects.filter(empresa=empresa, role='trabajador')
+        
+        return render(request, 'supervisor_home.html', {
+            'empresa': empresa,
+            'supervisores': supervisores,
+            'trabajadores': trabajadores
+        })

@@ -1,11 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
-from WEB.models.empresa.empresa import *
-from WEB.views.scripts import *
-
+from WEB.models.empresa.empresa import RegistroEmpresas
+from WEB.views.scripts import validar_rut
 
 class Usuario(AbstractUser):
- 
     ROLES = (
         ('admin', 'Administrador'),
         ('supervisor', 'Supervisor'),
@@ -19,11 +17,9 @@ class Usuario(AbstractUser):
         blank=True, 
         related_name="usuarios"
     )
-    
     rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
-    huella_credential = models.JSONField(null=True, blank=True)
     
     groups = models.ManyToManyField(
         Group,
@@ -39,26 +35,25 @@ class Usuario(AbstractUser):
         related_name='usuario_permissions',
         help_text='Permisos específicos para este usuario'
     )
-    #seguridad 
     is_locked = models.BooleanField(
         default=False,
         verbose_name="Cuenta bloqueada",
         help_text="Indica si la cuenta está bloqueada por seguridad"
     )
-    
-    #  campo para seguimiento de intentos fallidos
     failed_login_attempts = models.PositiveIntegerField(
         default=0,
         verbose_name="Intentos fallidos"
     )
-    
-    # Fecha del último intento fallido
     last_failed_login = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Último intento fallido"
     )
-    
+
+    @property
+    def has_fingerprint(self):
+        """Verifica si el usuario tiene una huella asociada."""
+        return hasattr(self, 'userfingerprint')
 
     class Meta:
         verbose_name = "Usuario"
@@ -75,16 +70,8 @@ class Usuario(AbstractUser):
         ]
 
     def __str__(self):
-        """
-        Retorna una representación en cadena del usuario.
-
-        :return: Cadena con el formato "username (Rol)", donde Rol es la descripción del rol.
-        """
         return f"{self.username} ({self.get_role_display()})"
-    
 
-
-#modelo parafurutro uso
 class AuditoriaAcceso(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,1144 @@
+un supervisor ingresa - puede crear usuarios trabajadores  o supervisores 
+
+editarlos, eliminarlas etc., también puede registrar las huellas de los usuarios
+
+para registrar los en la base de datos, para que luego puedan ingresar mediante su huella para registrar una entrada o salida.
+
+-pero los supervisores solo pueden registrar las huellas de los usuarios ya sea trabajador o supervisor de su misma empresa.
+
+-créame un intermediario esto porque en el futuro van a ver mas módulos no solo de asistencia, también de contabilidad , registro bodega, entonces luego de iniciar sesión un selector de a cual quiero ingresar, pero solo déjalo con la de asistencia, que sea atractivo y responsivo 
+
+- esta de mas decir que tienen que tener botones de redireccion como de volver para mejor manejo del usuario
+esto es el contexto básico 
+-biometrics es un app dentro de mi proyecto django
+-el principal seria web
+te daras cuenta por las urls e importaciones
+
+ERRORES:
+
+- el error que noto es que en mi modelo usuario hay huella_credential pero esta no refleja nada no esta unida a nada, quiero que refleje si hay o no un huella asociada a este cuenta,
+
+-pero para aclarar, el programa registra bien las huellas digitales, también al registrar entrada o salida se asocia correctamente al usuario mostrando quien inicio ya lo probé
+
+
+- al registrar una salida o una entrada esta me redirige a Page not found (404)
+Request Method:	GET
+Request URL:	http://127.0.0.1:8001/attendance/
+
+- yo no quiero que esto pase, esta app debe permanecer siempre en modo espera
+- no debe redirigir a ninguna parte, solo notificar en grande ingreso x persona registrada o salida , otro punto es que no sea necesario presionar  el botón registro entrada, que esta siempre este esperando registrar una entrada , pero no elimines el botón registre entrada ni el de salida, solo que esta si y pongo mi dedo en el lector esta me la detecte automáticamente y acepta la entrada y si no hay salida arroje usted ya esta ingresado hoy , tiene que registrar salida para registrar otra entrada, asi con las validaciones ya existentes  
+
+mejoras:
+
+mejórame el diseño de los template con bootraps y css para que sean mas atractivos  y profesionales  
+
+formato respuesta:
+me entregaras todos los códigos correctamente formateado con los requerimientos solicitados, los códigos completos para copiar, pegar ya aplicar , pero completos, nada de frackmentos 
+
+
+-----------------
+
+códigos:
+modeelos :
+from django.db import models
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from WEB.models.empresa.empresa import *
+from WEB.views.scripts import *
+
+
+class Usuario(AbstractUser):
+ 
+    ROLES = (
+        ('admin', 'Administrador'),
+        ('supervisor', 'Supervisor'),
+        ('trabajador', 'Trabajador'),
+    )
+    role = models.CharField(max_length=20, choices=ROLES, default='admin')
+    empresa = models.ForeignKey(
+        RegistroEmpresas, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="usuarios"
+    )
+    
+    rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
+    celular = models.CharField(max_length=20, blank=True)
+    email = models.EmailField()
+    huella_credential = models.JSONField(null=True, blank=True)
+    
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name='groups',
+        blank=True,
+        related_name='usuario_groups',
+        help_text='Grupos a los que pertenece el usuario'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name='user permissions',
+        blank=True,
+        related_name='usuario_permissions',
+        help_text='Permisos específicos para este usuario'
+    )
+    #seguridad 
+    is_locked = models.BooleanField(
+        default=False,
+        verbose_name="Cuenta bloqueada",
+        help_text="Indica si la cuenta está bloqueada por seguridad"
+    )
+    
+    #  campo para seguimiento de intentos fallidos
+    failed_login_attempts = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Intentos fallidos"
+    )
+    
+    # Fecha del último intento fallido
+    last_failed_login = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Último intento fallido"
+    )
+    
+
+    class Meta:
+        verbose_name = "Usuario"
+        verbose_name_plural = "Usuarios"
+        permissions = [
+            ("eliminar_trabajador", "Permiso para eliminar trabajadores"),
+            ("eliminar_supervisor", "Permiso para eliminar supervisores"),
+            ("eliminar_admin", "Permiso para eliminar administradores"),
+            ("crear_admin", "Permiso para crear administradores"),
+            ("crear_supervisor", "Permiso para crear supervisores"),
+            ("crear_trabajador", "Permiso para crear trabajadores"),
+            ("editar_supervisor", "permiso para editar supervisores"),
+            ("editar_trabajador", "permiso para editar trabajadores"),
+        ]
+
+    def __str__(self):
+        """
+        Retorna una representación en cadena del usuario.
+
+        :return: Cadena con el formato "username (Rol)", donde Rol es la descripción del rol.
+        """
+        return f"{self.username} ({self.get_role_display()})"
+    
+
+
+#modelo parafurutro uso
+class AuditoriaAcceso(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    exito = models.BooleanField(default=False)
+    motivo = models.TextField(blank=True)
+
+-----------
+from django.db import models
+#from django.contrib.gis.db import models 
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+from WEB.models import RegistroEmpresas
+from django.contrib.auth.models import User
+# models.py - Modificar modelo RegistroEntrada y agregar validaciones
+class RegistroEntrada(models.Model):
+    METODOS_REGISTRO = [
+        ('firma', 'Firma Digital'),
+        ('huella', 'Huella Digital'),
+        ('geo', 'Geolocalización'),
+    ]
+    
+    trabajador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='entradas'
+    )
+
+    metodo = models.CharField(max_length=20, choices=METODOS_REGISTRO)
+    hora_entrada = models.DateTimeField(auto_now_add=True)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    firma_digital = models.ImageField(upload_to='firmas/', null=True, blank=True)
+    huella_id = models.CharField(max_length=100, null=True, blank=True)
+
+    huella_validada = models.BooleanField(default=False)
+
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE, related_name='registros_asistencia',null=True, blank=True)
+
+    #ubicacion = models.PointField(srid=4326, null=True, blank=True)
+    precision = models.FloatField(null=True, blank=True)  # Precisión en metros
+
+    class Meta:
+        permissions = [
+            ('registro_asistencia', 'Acceso al módulo de asistencia'),
+        ]
+    def esta_dentro_rango(self, empresa):
+        if not self.ubicacion or not empresa.radio_permitido:
+            return False
+            
+        return self.ubicacion.distance(empresa.ubicacion_central) * 100000 <= empresa.radio_permitido
+    
+    def clean(self):
+        if not self.empresa.vigencia_plan.plan.nombre.lower() == 'asistencia':
+            raise ValidationError("La empresa no tiene un plan de asistencia activo")
+        
+        if self.empresa.usuarios.count() >= self.empresa.limite_usuarios:
+            raise ValidationError("Límite de usuarios excedido para este plan")
+
+    def save(self, *args, **kwargs):
+        self.empresa = self.trabajador.empresa
+        super().save(*args, **kwargs)
+@receiver(post_save, sender=RegistroEntrada)
+def notificar_registro_entrada(sender, instance, created, **kwargs):
+    """
+    Función receptora para la señal post_save del modelo RegistroEntrada.
+
+    Cuando se crea un nuevo registro de entrada, esta función notifica (mediante un print)
+    que se ha registrado la entrada para el trabajador asociado, mostrando el nombre de usuario
+    y la hora de entrada.
+
+    Parámetros:
+        sender: La clase del modelo que envió la señal (RegistroEntrada).
+        instance: La instancia del modelo RegistroEntrada que se acaba de guardar.
+        created (bool): Indica si la instancia fue creada (True) o actualizada (False).
+        **kwargs: Argumentos adicionales de la señal.
+    """
+    if created:
+        print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+urls---
+hay muchas mas pero claramente no te las voy a pasar todas 
+ path('crear_usuario/<int:empresa_id>/', autenticacion.crear_usuario, name='crear_usuario'),
+    path('editar_usuario/<int:usuario_id>/', autenticacion.editar_usuario, name='editar_usuario'),
+    path('eliminar_usuario/<int:usuario_id>/',autenticacion.eliminar_usuario, name='eliminar_usuario'),
+    path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
+    # Empresa
+    path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
+   
+    # biomtrica 
+
+
+    
+    path('biometrics/', include('biometrics.urls')),
+    
+
+    ] 
+---
+views :
+--------
+def redirect_after_login(request):
+    """
+    Redirige al usuario según su rol después del login
+    """
+    if not hasattr(request.user, 'role'):
+        return redirect('login_selector')
+    
+    role = request.user.role
+    if role == 'admin':
+        return redirect('admin_home')
+    elif role == 'supervisor':
+        return redirect('supervisor_home', empresa_id=request.user.empresa_id)
+    elif role == 'trabajador':
+        return redirect('trabajador_home')
+    return redirect('login_selector')
+---------
+@login_required
+def supervisor_home(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    supervisores = empresa.usuarios.filter(role='supervisor')
+    trabajadores = empresa.usuarios.filter(role='trabajador')
+    context = {
+        'empresa': empresa,
+        'supervisores': supervisores,
+        'trabajadores': trabajadores,
+    }
+    return render(request, 'home/supervisores/supervisor_home.html', context)
+------------------
+
+de supervisor para crear usuarios
+
+
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView
+from django.urls import reverse
+from django.http import JsonResponse
+
+class CrearUsuarioMixin:
+    form_class = UsuarioForm
+    template_name = 'admin/crear_usuario.html'
+    role = None
+    success_message = "Usuario creado exitosamente"
+
+    def form_valid(self, form):
+        form.instance.role = self.role
+        form.instance.empresa_id = self.kwargs['empresa_id']
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('supervisor_home', kwargs={'empresa_id': self.kwargs['empresa_id']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_id'])
+        return context
+
+# Vista para editar empresa
+class EditarEmpresaView(UpdateView):
+    model = RegistroEmpresas
+    fields = ['nombre', 'rut', 'direccion', 'telefono']
+    template_name = 'empresa/editar_empresa.html'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Empresa actualizada exitosamente")
+        return response
+
+    def get_success_url(self):
+        return reverse('supervisor_home', kwargs={'empresa_id': self.object.id})
+
+# Vista para crear usuario
+def crear_usuario(request, empresa_id):
+    empresa = get_object_or_404(RegistroEmpresas, pk=empresa_id)
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            usuario.role = request.POST.get('tipo_usuario')
+            usuario.empresa = empresa
+            usuario.save()
+            return JsonResponse({'success': True})
+        else:
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+def editar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True})
+        else:
+            errors = {field: errors[0] for field, errors in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors})
+    else:
+        data = {
+            'rut': usuario.rut,
+            'username': usuario.username,
+            'first_name': usuario.first_name,
+            'last_name': usuario.last_name,
+            'email': usuario.email,
+        }
+        return JsonResponse(data)
+# Vista para eliminar usuario
+def eliminar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, pk=usuario_id)
+    empresa_id = usuario.empresa.id
+    if request.method == 'POST':
+        usuario.delete()
+        messages.success(request, 'Usuario eliminado correctamente!')
+    return redirect('supervisor_home', empresa_id=empresa_id)
+----------------------------template
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block title %}{{ empresa.nombre }} | Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-building me-2"></i>{{ empresa.nombre|truncatechars:30 }}
+        </h1>
+        <a href="#" class="btn btn-primary btn-icon-split" data-bs-toggle="modal" data-bs-target="#editarEmpresaModal">
+            <span class="icon text-white-50"><i class="fas fa-cog"></i></span>
+            <span class="text">Configuración</span>
+        </a>
+    </div>
+
+    <!-- Tarjeta Información Empresa -->
+    <div class="card border-left-primary shadow h-100 py-2 mb-4 animate__animated animate__fadeIn">
+        <div class="card-body">
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Detalles de la empresa
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-id-card me-2"></i>RUT: {{ empresa.rut }}</li>
+                            <li><i class="fas fa-map-marker-alt me-2"></i>{{ empresa.direccion }}</li>
+                            <li><i class="fas fa-phone me-2"></i>{{ empresa.telefono }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-building fa-3x text-gray-300"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" 
+                    data-bs-target="#supervisores" type="button" role="tab"
+                    aria-controls="supervisores" aria-selected="true">
+                <i class="fas fa-user-shield me-2"></i>Supervisores ({{ supervisores.count }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab"
+                    data-bs-target="#trabajadores" type="button" role="tab"
+                    aria-controls="trabajadores" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Trabajadores ({{ trabajadores.count }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido Pestañas -->
+    <div class="tab-content" id="mainTabsContent">
+        <!-- Pestaña Supervisores -->
+        <div class="tab-pane fade show active" id="supervisores" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administrar Supervisores</h4>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="supervisor">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
+                </button>
+            </div>
+            
+            <div class="row">
+                {% for supervisor in supervisores %}
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card border-left-warning shadow h-100 animate__animated animate__zoomIn">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-user-tie text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold text-primary text-truncate">
+                                        {{ supervisor.get_full_name }}
+                                    </div>
+                                    <div class="text-xs text-muted text-truncate">
+                                        @{{ supervisor.username }}
+                                    </div>
+                                </div>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-item editar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                                        <i class="fas fa-edit text-primary me-2"></i>Editar
+                                    </a>
+                                    <a class="dropdown-item eliminar-usuario" href="#" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal">
+                                        <i class="fas fa-trash text-danger me-2"></i>Eliminar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No se han encontrado supervisores</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Pestaña Trabajadores -->
+        <div class="tab-pane fade" id="trabajadores" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Administrar Trabajadores</h4>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="trabajador">
+                    <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
+                </button>
+            </div>
+            <div class="row">
+                {% for trabajador in trabajadores %}
+                <div class="col-md-6 col-xl-4 mb-4">
+                    <div class="card border-left-info shadow h-100 animate__animated animate__zoomIn">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-info">
+                                        <i class="fas fa-hard-hat text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold text-primary text-truncate">
+                                        {{ trabajador.get_full_name }}
+                                    </div>
+                                    <div class="text-xs text-muted text-truncate">
+                                        @{{ trabajador.username }}
+                                    </div>
+                                </div>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-item editar-usuario" href="#" 
+                                       data-id="{{ trabajador.id }}" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#crearUsuarioModal">
+                                        <i class="fas fa-edit text-primary me-2"></i>Editar
+                                    </a>
+                                    <a class="dropdown-item eliminar-usuario" href="#" 
+                                       data-id="{{ trabajador.id }}" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#eliminarUsuarioModal">
+                                        <i class="fas fa-trash text-danger me-2"></i>Eliminar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear/Editar Usuario -->
+<div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="crearUsuarioModalLabel">
+                    <i class="fas fa-user-plus me-2"></i><span id="modalTitulo">Nuevo Usuario</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="usuarioForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="tipo_usuario" id="tipoUsuario">
+                    <div class="mb-3">
+                        <label class="form-label">RUT</label>
+                        <input type="text" class="form-control" name="rut" required>
+                        <div class="invalid-feedback" id="rut-error">RUT INVALIDO</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" name="username" required>
+                        <div class="invalid-feedback" id="username-error">ERROR YA EXISTE</div>
+                    </div>
+                    <div class="mb-3">
+                                               <label class="form-label">Nombres</label>
+                        <input type="text" class="form-control" name="first_name" required>
+                        <div class="invalid-feedback" id="first_name-error"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" name="last_name" required>
+                        <div class="invalid-feedback" id="last_name-error"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" name="email" required>
+                        <div class="invalid-feedback" id="email-error"> ERROR YA EXISTE</div>
+                    </div>
+                    <div class="mb-3" id="passwordField">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" required>
+                        <div class="invalid-feedback" id="password-error"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar Usuario -->
+<div class="modal fade" id="eliminarUsuarioModal" tabindex="-1" aria-labelledby="eliminarUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="eliminarUsuarioModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="eliminarForm" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    ¿Estás seguro de eliminar este usuario?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Empresa -->
+<div class="modal fade" id="editarEmpresaModal" tabindex="-1" aria-labelledby="editarEmpresaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editarEmpresaModalLabel">
+                    <i class="fas fa-edit me-2"></i>Editar Empresa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'editar_empresa' empresa.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" value="{{ empresa.nombre }}" required>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">RUT</label>
+                            <input type="text" class="form-control" name="rut" value="{{ empresa.rut }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" name="telefono" value="{{ empresa.telefono }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Asegúrate de incluir jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#crearUsuarioModal').on('show.bs.modal', function(event) {
+        const button = $(event.relatedTarget);
+        const tipo = button.data('tipo');
+        const isEdit = button.hasClass('editar-usuario');
+        const modal = $(this);
+        
+        if (isEdit) {
+            const usuarioId = button.data('id');
+            fetch(`/editar_usuario/${usuarioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    modal.find('#modalTitulo').text('Editar Usuario');
+                    modal.find('#tipoUsuario').val(tipo);
+                    modal.find('input[name="rut"]').val(data.rut);
+                    modal.find('input[name="username"]').val(data.username);
+                    modal.find('input[name="first_name"]').val(data.first_name);
+                    modal.find('input[name="last_name"]').val(data.last_name);
+                    modal.find('input[name="email"]').val(data.email);
+                    modal.find('input[name="password"]').val('').removeAttr('required');
+                    modal.find('#usuarioForm').attr('data-action', `/editar_usuario/${usuarioId}/`);
+                })
+                .catch(error => console.error('Error al cargar datos del usuario:', error));
+        } else {
+            modal.find('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
+            modal.find('#tipoUsuario').val(tipo);
+            modal.find('#usuarioForm')[0].reset();
+            modal.find('input[name="password"]').attr('required', 'required');
+            modal.find('#usuarioForm').attr('data-action', `/crear_usuario/{{ empresa.id }}/`);
+        }
+        
+        // Limpiar errores previos
+        modal.find('.invalid-feedback').text('');
+        modal.find('.form-control').removeClass('is-invalid');
+    });
+
+    // Manejar submit del formulario con AJAX
+    $('#usuarioForm').on('submit', function(event) {
+        event.preventDefault();
+        const form = $(this);
+        const action = form.attr('data-action');
+        const formData = form.serialize();
+        
+        $.ajax({
+            type: 'POST',
+            url: action,
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    $('#crearUsuarioModal').modal('hide');
+                    location.reload();
+                } else {
+                    // Mostrar errores en el formulario
+                    for (const field in response.errors) {
+                        const errorDiv = $(`#${field}-error`);
+                        errorDiv.text(response.errors[field][0]);
+                        form.find(`[name="${field}"]`).addClass('is-invalid');
+                    }
+                }
+            },
+            error: function(xhr) {
+                console.error('Error en la solicitud:', xhr);
+            }
+        });
+    });
+
+    // Manejar eliminación de usuario
+    $('.eliminar-usuario').on('click', function() {
+        const usuarioId = $(this).data('id');
+        $('#eliminarForm').attr('action', `/eliminar_usuario/${usuarioId}/`);
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    .icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    .dropdown-menu {
+        min-width: 8rem;
+    }
+</style>
+{% endblock %}
+---------------------------
+modelo de biometrics y sus views todo 
+---
+
+from django.db import models
+from django.conf import settings
+
+class UserFingerprint(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    template = models.BinaryField()
+    quality = models.IntegerField()
+
+---------------
+{% extends "central_user.html" %}
+{% block content %}
+<div class="container">
+    <h2>Registro de Asistencia</h2>
+    <div id="deviceStatus" class="alert alert-info">Conectando al lector...</div>
+    <div id="captureSection" style="display: none;">
+        <button id="btnCaptureEntrada" class="btn btn-primary">Registrar Entrada</button>
+        <button id="btnCaptureSalida" class="btn btn-secondary">Registrar Salida</button>
+    </div>
+    <div id="progress" style="display: none;">
+        <div class="spinner-border"></div>
+        <p>Coloque su dedo en el sensor...</p>
+    </div>
+    <div id="result"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const status = document.getElementById('deviceStatus');
+    const captureSection = document.getElementById('captureSection');
+    const progress = document.getElementById('progress');
+    const result = document.getElementById('result');
+    const btnEntrada = document.getElementById('btnCaptureEntrada');
+    const btnSalida = document.getElementById('btnCaptureSalida');
+
+    fetch('http://localhost:9000/init', { method: 'POST' })
+        .then(res => {
+            if (res.ok) {
+                status.innerHTML = 'Dispositivo listo';
+                captureSection.style.display = 'block';
+            }
+        });
+
+    const captureFingerprint = async () => {
+        const res = await fetch('http://localhost:9000/capture', { method: 'POST' });
+        const data = await res.json();
+        return data.template;
+    };
+
+    const handleCapture = async (action) => {
+        progress.style.display = 'block';
+        result.innerHTML = '';
+        try {
+            const template = await captureFingerprint();
+            const authRes = await fetch('/biometrics/authenticate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ template, action })
+            });
+            const resultData = await authRes.json();
+            if (resultData.status === 'success') {
+                result.innerHTML = `<div class="alert alert-success">${resultData.message}</div>`;
+                setTimeout(() => window.location.href = resultData.redirect, 2000);
+            } else {
+                result.innerHTML = `<div class="alert alert-danger">${resultData.error || resultData.message}</div>`;
+            }
+        } catch (e) {
+            result.innerHTML = `<div class="alert alert-danger">Error: ${e.message}</div>`;
+        } finally {
+            progress.style.display = 'none';
+        }
+    };
+
+    btnEntrada.addEventListener('click', () => handleCapture('entrada'));
+    btnSalida.addEventListener('click', () => handleCapture('salida'));
+});
+</script>
+{% endblock %}
+------------------------------
+{% extends "central_user.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Registro Biométrico</h2>
+    <div class="card shadow">
+        <div class="card-body">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            {% if request.user.role == 'supervisor' or request.user.role == 'admin' %}
+            <div class="mb-3">
+                <label for="userSelect" class="form-label">Seleccionar Trabajador</label>
+                <select id="userSelect" class="form-select">
+                    <option value="">Seleccione un trabajador</option>
+                    {% for trabajador in trabajadores %}
+                        <option value="{{ trabajador.id }}">{{ trabajador.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div id="deviceStatus" class="alert alert-info">
+                <i class="bi bi-usb-symbol"></i> Conectando al lector...
+            </div>
+
+            <div id="captureSection" class="text-center" style="display: none;">
+                <button id="btnCapture1" class="btn btn-lg btn-primary m-2">
+                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 1
+                </button>
+                <button id="btnCapture2" class="btn btn-lg btn-secondary m-2">
+                    <i class="bi bi-fingerprint me-2"></i>Capturar Huella 2
+                </button>
+            </div>
+
+            <div id="preview" class="text-center my-4"></div>
+
+            <div id="progress" class="text-center my-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Coloque su dedo en el sensor (10 segundos)...</p>
+            </div>
+
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const state = {
+            template1: null,
+            template2: null
+        };
+
+        const elements = {
+            status: document.getElementById('deviceStatus'),
+            captureSection: document.getElementById('captureSection'),
+            progress: document.getElementById('progress'),
+            result: document.getElementById('result'),
+            btn1: document.getElementById('btnCapture1'),
+            btn2: document.getElementById('btnCapture2'),
+            preview: document.getElementById('preview'),
+            userSelect: document.getElementById('userSelect')
+        };
+
+        const initDevice = async () => {
+            try {
+                const response = await fetch('http://localhost:9000/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    elements.status.innerHTML = '<i class="bi bi-check-circle"></i> Dispositivo listo';
+                    elements.captureSection.style.display = 'block';
+                } else {
+                    const data = await response.json();
+                    elements.status.innerHTML = `<i class="bi bi-x-circle"></i> Error: ${data.error}`;
+                }
+            } catch (error) {
+                elements.status.innerHTML = '<i class="bi bi-x-circle"></i> Error al conectar: ' + error.message;
+            }
+        };
+
+        const captureFingerprint = async () => {
+            const response = await fetch('http://localhost:9000/capture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            return data.template;
+        };
+
+        const matchTemplates = async (template1, template2) => {
+            const response = await fetch('http://localhost:9000/match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template1, template2 })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            return data.score;
+        };
+
+        const handleCapture = async (attempt) => {
+            if (attempt === 2 && !state.template1) {
+                elements.result.innerHTML = '<div class="alert alert-warning">¡Captura la primera huella primero!</div>';
+                return;
+            }
+
+            elements.progress.style.display = 'block';
+            elements.result.innerHTML = '';
+
+            try {
+                const template = await captureFingerprint();
+
+                if (attempt === 1) {
+                    state.template1 = template;
+                    elements.preview.innerHTML = '<p>Huella capturada</p>';
+                    elements.result.innerHTML = '<div class="alert alert-success">Primera huella capturada</div>';
+                } else {
+                    state.template2 = template;
+                    const matchScore = await matchTemplates(state.template1, state.template2);
+                    const userId = elements.userSelect ? elements.userSelect.value : null;
+
+                    if (userId === "" && elements.userSelect) {
+                        elements.result.innerHTML = '<div class="alert alert-warning">Seleccione un trabajador primero</div>';
+                        elements.progress.style.display = 'none';
+                        return;
+                    }
+
+                    const registerResponse = await fetch('/biometrics/register-fingerprint/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            template1: state.template1,  // Huella capturada en el primer intento
+                            template2: state.template2,  // Huella capturada en el segundo intento
+                            match_score: matchScore,     // Puntaje real de la comparación
+                            user_id: userId              // ID del usuario seleccionado en el dropdown
+                        })
+                    });
+
+                        if (!registerResponse.ok) {
+                            const errorText = await registerResponse.text();
+                            console.error('Respuesta de error:', errorText);
+                            throw new Error(`Error del servidor: ${registerResponse.status} - ${errorText}`);
+                        }
+
+                        const result = await registerResponse.json();
+                        if (result.status === 'success') {
+                            elements.result.innerHTML = '<div class="alert alert-success">' + result.message + '</div>';
+                        } else if (result.status === 'no_match') {
+                            elements.result.innerHTML = `<div class="alert alert-warning">${result.message} (Score: ${result.score})</div>`;
+                        } else {
+                            elements.result.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
+                        }
+                }
+            } catch (error) {
+                elements.result.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            } finally {
+                elements.progress.style.display = 'none';
+            }
+        };
+
+        elements.btn1.addEventListener('click', () => handleCapture(1));
+        elements.btn2.addEventListener('click', () => handleCapture(2));
+
+        initDevice();
+    });
+</script>
+{% endblock %}
+--------------------
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views import View
+import logging
+import json
+import base64
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
+from .models import UserFingerprint
+from WEB.models import *
+import requests
+
+logger = logging.getLogger(__name__)
+
+class CaptureFingerprintView(View):
+    def get(self, request):
+        if request.user.role in ['supervisor', 'admin']:
+            trabajadores = Usuario.objects.filter(role='trabajador', empresa=request.user.empresa)
+            return render(request, 'biometrics/register_fingerprint.html', {'trabajadores': trabajadores})
+        return render(request, 'biometrics/register_fingerprint.html')
+
+class FingerprintRegistrationView(LoginRequiredMixin, View):
+    def get(self, request):
+        return JsonResponse({'error': 'Método GET no permitido en esta ruta'}, status=405)
+
+
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            template1 = data.get('template1')
+            template2 = data.get('template2')
+            match_score = data.get('match_score')
+
+            if not all([template1, template2, match_score is not None]):
+                return JsonResponse({"error": "Faltan datos requeridos"}, status=400)
+
+            if user_id:
+                if request.user.role not in ['supervisor', 'admin']:
+                    raise PermissionDenied("No tienes permiso para registrar huellas")
+                try:
+                    user_id = int(user_id)  
+                    target_user = Usuario.objects.get(id=user_id, role='trabajador')
+                except ValueError:
+                    return JsonResponse({"error": "El user_id debe ser un número entero"}, status=400)
+                except Usuario.DoesNotExist:
+                    return JsonResponse({"error": "Usuario no encontrado o no es un trabajador"}, status=404)
+            else:
+                target_user = request.user  
+
+            if match_score >= 100:
+                template_bytes = base64.b64decode(template1)
+                UserFingerprint.objects.update_or_create(
+                    user=target_user,
+                    defaults={'template': template_bytes, 'quality': 70}
+                )
+                return JsonResponse({"status": "success", "message": "Huella registrada"})
+            else:
+                return JsonResponse({"status": "no_match", "score": match_score})
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+        except PermissionDenied as e:
+            return JsonResponse({"error": str(e)}, status=403)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+class AuthenticateFingerprintView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            captured_template = data.get('template')
+            action = data.get('action', 'entrada')  # Por defecto es 'entrada' si no se especifica
+            if not captured_template:
+                return JsonResponse({"error": "Se requiere la plantilla de huella"}, status=400)
+
+            captured_bytes = base64.b64decode(captured_template)
+
+            for fp in UserFingerprint.objects.all():
+                stored_template = fp.template
+                match_response = requests.post('http://localhost:9000/match', json={
+                    'template1': base64.b64encode(stored_template).decode(),
+                    'template2': captured_template
+                })
+                if match_response.ok and match_response.json()['score'] >= 100:
+                    user = fp.user
+                    today = timezone.now().date()
+                    entries_today = RegistroEntrada.objects.filter(
+                        trabajador=user,
+                        hora_entrada__date=today
+                    ).order_by('hora_entrada')
+
+                    if action == 'entrada':
+                        if entries_today.filter(hora_salida__isnull=True).exists():
+                            return JsonResponse({"error": "Ya hay una entrada sin salida registrada"}, status=400)
+                        if entries_today.count() >= 3:
+                            return JsonResponse({"error": "Máximo de 3 entradas por día alcanzado"}, status=400)
+                        RegistroEntrada.objects.create(
+                            trabajador=user,
+                            metodo='huella',
+                            huella_id='fingerprint_match',
+                            empresa=user.empresa,
+                            hora_entrada=timezone.now()
+                        )
+                        return JsonResponse({
+                            'status': 'success',
+                            'message': f'Entrada registrada para {user.username}',
+                            'redirect': '/attendance/'
+                        })
+                    elif action == 'salida':
+                        last_entry = entries_today.filter(hora_salida__isnull=True).first()
+                        if not last_entry:
+                            return JsonResponse({"error": "No hay entrada previa para registrar salida"}, status=400)
+                        if entries_today.filter(hora_salida__isnull=False).count() >= 3:
+                            return JsonResponse({"error": "Máximo de 3 salidas por día alcanzado"}, status=400)
+                        last_entry.hora_salida = timezone.now()
+                        last_entry.save()
+                        return JsonResponse({
+                            'status': 'success',
+                            'message': f'Salida registrada para {user.username}',
+                            'redirect': '/attendance/'
+                        })
+            return JsonResponse({'status': 'no_match', 'message': 'No se encontró coincidencia'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+class AttendanceView(View):
+    def get(self, request):
+        return render(request, 'biometrics/attendance.html')
+-----------
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('register/', views.CaptureFingerprintView.as_view(), name='register'),
+    path('register-fingerprint/', views.FingerprintRegistrationView.as_view(), name='fingerprint_register'),
+    path('authenticate/', views.AuthenticateFingerprintView.as_view(), name='authenticate_fingerprint'),
+    path('attendance/', views.AttendanceView.as_view(), name='attendance'),
+]
+
+
+
+
+
+
