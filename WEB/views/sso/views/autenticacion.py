@@ -364,7 +364,7 @@ class SupervisorHomeView(LoginRequiredMixin, View):
         supervisores = Usuario.objects.filter(empresa=empresa, role='supervisor')
         trabajadores = Usuario.objects.filter(empresa=empresa, role='trabajador')
         
-        return render(request, 'supervisor_home.html', {
+        return render(request, 'home/supervisores/supervisor_home.html', {
             'empresa': empresa,
             'supervisores': supervisores,
             'trabajadores': trabajadores

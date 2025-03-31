@@ -5,8 +5,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from WEB.models import RegistroEmpresas
-from django.contrib.auth.models import User
-# models.py - Modificar modelo RegistroEntrada y agregar validaciones
+
+
+
 class RegistroEntrada(models.Model):
     METODOS_REGISTRO = [
         ('firma', 'Firma Digital'),

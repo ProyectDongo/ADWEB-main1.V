@@ -6,7 +6,7 @@ import base64
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
-from .models import UserFingerprint
+from .models import *
 from WEB.models import RegistroEntrada, Usuario
 import requests
 
@@ -54,7 +54,7 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
 
             if match_score >= 100:
                 template_bytes = base64.b64decode(template1)
-                UserFingerprint.objects.update_or_create(
+                huellas.objects.update_or_create(
                     user=target_user,
                     defaults={'template': template_bytes, 'quality': 70}
                 )
@@ -79,7 +79,7 @@ class AuthenticateFingerprintView(View):
 
             captured_bytes = base64.b64decode(captured_template)
 
-            for fp in UserFingerprint.objects.all():
+            for fp in huellas.objects.all():
                 stored_template = fp.template
                 match_response = requests.post('http://localhost:9000/match', json={
                     'template1': base64.b64encode(stored_template).decode(),

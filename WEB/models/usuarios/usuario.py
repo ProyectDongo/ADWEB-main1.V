@@ -25,14 +25,14 @@ class Usuario(AbstractUser):
         Group,
         verbose_name='groups',
         blank=True,
-        related_name='usuario_groups',
+        related_name='usuarios',
         help_text='Grupos a los que pertenece el usuario'
     )
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name='user permissions',
         blank=True,
-        related_name='usuario_permissions',
+        related_name='usuarios',
         help_text='Permisos específicos para este usuario'
     )
     is_locked = models.BooleanField(
@@ -51,9 +51,9 @@ class Usuario(AbstractUser):
     )
 
     @property
-    def has_fingerprint(self):
+    def has_huella(self):
         """Verifica si el usuario tiene una huella asociada."""
-        return hasattr(self, 'userfingerprint')
+        return hasattr(self, 'huellas')
 
     class Meta:
         verbose_name = "Usuario"

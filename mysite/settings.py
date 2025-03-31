@@ -45,6 +45,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Application definition
 
 INSTALLED_APPS = [
+    'biometrics.apps.BiometricsConfig',
     'WEB',
     "anymail",
     'corsheaders',
@@ -58,7 +59,7 @@ INSTALLED_APPS = [
     'django_recaptcha',
     'widget_tweaks',
     'crispy_bootstrap5',
-    'biometrics.apps.BiometricsConfig',
+   
     
 
 ]

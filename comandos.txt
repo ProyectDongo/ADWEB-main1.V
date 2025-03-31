@@ -20,3 +20,12 @@ python manage.py crearadmin
 reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v DevicePath /t REG_SZ /d "C:\Users\facil\Desktop\ADWEB-main\bin" /f
 reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLogEnable /t REG_DWORD /d 0 /f
 reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLevel /t REG_DWORD /d 0 /f
+
+
+
+# error django.db.utils.OperationalError: (1050, "Table 'django_admin_log' already exists")
+ in raise_mysql_exception
+
+ solucion :
+    python manage.py migrate admin 0001_initial --fake
+    python manage.py migrate

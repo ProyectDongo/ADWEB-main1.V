@@ -1,10 +1,11 @@
 {% extends "central.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-xl-10">
-            <div class="card">
+            <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
                     <h2 class="h5 mb-0">
                         <i class="bi bi-person-badge me-2"></i>
@@ -16,6 +17,7 @@
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
+                        <!-- Sección de Campos Básicos -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -37,6 +39,7 @@
                             </div>
                         </div>
 
+                        <!-- Sección de Datos Personales -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="form-floating">
@@ -58,32 +61,41 @@
                             </div>
                         </div>
 
+                        <!-- Sección de Contraseñas -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    {{ form.celular }}
-                                    <label>Celular</label>
-                                    <div class="invalid-feedback">
-                                        {{ form.celular.errors|first }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    {{ form.password1 }}
-                                    <label>Contraseña</label>
+                                <div class="form-floating position-relative">
+                                    <input type="password" 
+                                           name="{{ form.password1.name }}" 
+                                           id="{{ form.password1.id_for_label }}" 
+                                           class="form-control" 
+                                           placeholder="Contraseña"
+                                           {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %}>
+
+                                    <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+                                    <i class="fas fa-eye position-absolute end-0 top-50 translate-middle-y me-3 cursor-pointer" onclick="togglePassword('id_password1')"></i>
                                     <div class="invalid-feedback">
                                         {{ form.password1.errors|first }}
                                     </div>
+                                    <div class="password-strength mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        <small class="text-muted">Mínimo 8 caracteres con mayúsculas, números y símbolos</small>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    {{ form.password2 }}
-                                    <label>Confirmar Contraseña</label>
+                                <div class="form-floating position-relative">
+                                    <input type="password" 
+                                           name="{{ form.password2.name }}" 
+                                           id="{{ form.password2.id_for_label }}" 
+                                           class="form-control" 
+                                           placeholder="Confirmar Contraseña"
+                                           {% if form.password2.value %}value="{{ form.password2.value }}"{% endif %}>
+                                    
+                                    <label for="{{ form.password2.id_for_label }}">Confirmar Contraseña</label>
+                                    <i class="fas fa-eye position-absolute end-0 top-50 translate-middle-y me-3 cursor-pointer" onclick="togglePassword('id_password2')"></i>
                                     <div class="invalid-feedback">
                                         {{ form.password2.errors|first }}
                                     </div>
@@ -91,20 +103,63 @@
                             </div>
                         </div>
 
-                        <div class="mb-5">
-                            <label class="form-label fw-bold">Grupos</label>
-                            <div class="border rounded-3 p-3">
-                                {{ form.grupos }}
+                        <!-- Sección de Grupos Colapsable -->
+                        <div class="mb-4">
+                            <div class="accordion" id="gruposAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGrupos">
+                                            <i class="fas fa-users-cog me-2"></i>
+                                            Grupos de Usuario
+                                        </button>
+                                    </h2>
+                                    <div id="collapseGrupos" class="accordion-collapse collapse">
+                                        <div class="accordion-body">
+                                            <div class="row row-cols-1 row-cols-md-2 g-3">
+                                                {% for group in form.grupos %}
+                                                <div class="col">
+                                                    <div class="form-check square-check">
+                                                        <input type="checkbox" 
+                                                               name="{{ group.data.name }}" 
+                                                               value="{{ group.data.value }}" 
+                                                               id="{{ group.id_for_label }}" 
+                                                               class="form-check-input"
+                                                               {% if group.data.selected %}checked{% endif %}>
+                                                        <label class="form-check-label" for="{{ group.id_for_label }}">
+                                                            {{ group.choice_label }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-5">
-                            <label class="form-label fw-bold">Permisos Individuales</label>
-                            <div class="border rounded-3 p-3">
-                                {{ form.permisos }}
+                        <!-- Sección de Permisos Colapsable -->
+                        <div class="mb-4">
+                            <div class="accordion" id="permisosAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePermisos">
+                                            <i class="fas fa-user-shield me-2"></i>
+                                            Permisos Individuales
+                                        </button>
+                                    </h2>
+                                    <div id="collapsePermisos" class="accordion-collapse collapse" data-bs-parent="#permisosAccordion">
+                                        <div class="accordion-body">
+                                            <div class="dual-listbox">
+                                                {{ form.permisos }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Botones de Acción -->
                         <div class="d-flex justify-content-between border-top pt-4">
                             <a href="{% url 'configuracion_home' %}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
@@ -121,18 +176,36 @@
 </div>
 
 <style>
-    .dual-listbox {
-        display: flex;
-        flex-direction: column;
+    .square-check .form-check-input {
+        border-radius: 3px;
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.2em;
     }
+    
     .dual-listbox .dual-listbox__container {
-        flex-direction: row;
+        flex-direction: column;
         gap: 1rem;
     }
+    
     .dual-listbox__available,
     .dual-listbox__selected {
-        flex: 1;
-        min-width: 300px;
+        width: 100%;
+        min-height: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .password-strength .progress-bar {
+        transition: width 0.3s ease;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
     }
 </style>
 
@@ -151,6 +224,32 @@
             removeAllLabel: 'Quitar todos',
             selectorMinimalHeight: 300
         });
+
+        // Validación de contraseña en tiempo real
+        $('#id_password1').on('input', function() {
+            const password = $(this).val();
+            const progress = $('.progress-bar');
+            let strength = 0;
+            
+            if (password.length >= 8) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            progress.css('width', strength + '%')
+                   .removeClass('bg-danger bg-warning bg-success')
+                   .addClass(
+                       strength < 50 ? 'bg-danger' :
+                       strength < 75 ? 'bg-warning' : 'bg-success'
+                   );
+        });
     });
+
+    function togglePassword(fieldId) {
+        const field = $('#' + fieldId);
+        const type = field.attr('type') === 'password' ? 'text' : 'password';
+        field.attr('type', type);
+        $(field.siblings('i')).toggleClass('fa-eye fa-eye-slash');
+    }
 </script>
 {% endblock %}

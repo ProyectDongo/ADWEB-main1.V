@@ -94,7 +94,7 @@ class SupervisorForm(UserCreationForm):
     )
     grupos = forms.ModelMultipleChoiceField(
         queryset=Group.objects.none(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'id': 'id_grupos'}),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input', 'id': 'id_grupos'}),
         required=False,
         label="Grupos de Permisos"
     )
