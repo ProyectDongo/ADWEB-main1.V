@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render,get_object_or_404
+from django.http import JsonResponse,HttpResponse
 from django.views import View
 import json
 import base64
@@ -9,11 +9,16 @@ from django.utils import timezone
 from .models import *
 from WEB.models import RegistroEntrada, Usuario
 import requests
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
 
 class CaptureFingerprintView(View):
     def get(self, request):
         if request.user.role not in ['supervisor', 'admin']:
-            return render(request, 'access_denied.html')
+            return render(request, 'error/error.html')
         
         empresa = request.user.empresa
         usuarios = Usuario.objects.filter(empresa=empresa, role__in=['trabajador', 'supervisor'])
@@ -128,3 +133,72 @@ class AuthenticateFingerprintView(View):
 class AttendanceView(View):
     def get(self, request):
         return render(request, 'biometrics/attendance.html')
+    
+class AttendanceRecordView(LoginRequiredMixin, View):
+    def get(self, request, user_id):
+        # Verifica permisos
+        if request.user.role not in ['supervisor', 'admin']:
+            return render(request, 'error/error.html')
+        
+        # Obtiene el usuario y sus registros
+        user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
+        registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
+        
+        # Calcula las horas totales para cada registro
+        for registro in registros:
+            if registro.hora_salida:
+                diferencia = registro.hora_salida - registro.hora_entrada
+                horas_totales = diferencia.total_seconds() / 3600  # Convierte segundos a horas
+                registro.horas_totales = round(horas_totales, 2)  # Redondea a 2 decimales
+            else:
+                registro.horas_totales = None
+        
+        # Renderiza la plantilla con los datos
+        return render(request, 'biometrics/attendance_record.html', {
+            'user': user,
+            'registros': registros
+        })
+
+
+class GenerateReportView(LoginRequiredMixin, View):
+    def get(self, request, user_id):
+        if request.user.role not in ['supervisor', 'admin']:
+            return render(request, 'access_denied.html')
+        user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
+        registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Título
+        elements.append(Paragraph(f"Registro de Asistencia - {user.get_full_name()}", styles['Title']))
+
+        # Tabla
+        data = [['Fecha', 'Hora Entrada', 'Hora Salida', 'Horas Totales']]
+        for reg in registros:
+            fecha = reg.hora_entrada.strftime('%Y-%m-%d')
+            entrada = reg.hora_entrada.strftime('%H:%M:%S')
+            salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else 'N/A'
+            horas = (reg.hora_salida - reg.hora_entrada).total_seconds() / 3600 if reg.hora_salida else 0
+            data.append([fecha, entrada, salida, f"{horas:.2f}" if horas else 'N/A'])
+
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+
+        doc.build(elements)
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="registro_asistencia_{user.username}.pdf"'
+        return response

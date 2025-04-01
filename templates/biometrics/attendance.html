@@ -27,8 +27,8 @@
                 <h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>
             </div>
             <div class="text-center mt-4">
-                <a href="#" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Volver al Selector
+                <a href="{% url 'supervisor_home' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
                 </a>
             </div>
         </div>
@@ -36,6 +36,7 @@
 </div>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', () => {
     const status = document.getElementById('deviceStatus');
     const captureSection = document.getElementById('captureSection');
@@ -52,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 status.classList.remove('alert-info');
                 status.classList.add('alert-success');
                 captureSection.style.display = 'block';
-                startAutoCapture();
             } else {
                 status.innerHTML = '<i class="bi bi-x-circle me-2"></i>Dispositivo no conectado';
                 status.classList.remove('alert-info');
@@ -87,21 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             setTimeout(() => {
                 result.innerHTML = '<h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>';
-                if (captureSection.style.display === 'block') startAutoCapture();
             }, 3000);
         } catch (e) {
             result.innerHTML = `<h3 class="display-4 fw-bold text-danger">Error: ${e.message}</h3>`;
         } finally {
             progress.style.display = 'none';
         }
-    };
-
-    const startAutoCapture = () => {
-        setInterval(async () => {
-            if (progress.style.display === 'none') {
-                await handleCapture('entrada'); // Por defecto intenta entrada
-            }
-        }, 5000); // Cada 5 segundos
     };
 
     btnEntrada.addEventListener('click', () => handleCapture('entrada'));

@@ -9,7 +9,10 @@ from django.http import JsonResponse,HttpResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from django.forms.models import modelformset_factory
-
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 @login_required
 @permiso_requerido("WEB.crear_empresa")
 
@@ -48,13 +51,31 @@ def crear_empresa(request):
                 role='supervisor',
                 empresa=empresa,
                 rut=empresa.rut,       
-                nombre=empresa.nombre, 
+                
             )
             
-           
-            from django.contrib import messages
+            # --- Enviar correo al supervisor ---
+            subject = 'Bienvenido a Nuestra Plataforma'
+            html_message = render_to_string('email/email_nuevo_supervisor.html', {
+                'nombre_empresa': empresa.nombre,
+                'username': supervisor.username,
+                'password': password,
+            })
+            plain_message = strip_tags(html_message)  # Versión de texto plano
+            from_email = settings.DEFAULT_FROM_EMAIL
+            to = empresa.email
+            
+            send_mail(
+                subject,
+                plain_message,
+                from_email,
+                [to],
+                html_message=html_message,
+            )
+            
+            # Mensaje de éxito
             messages.success(request, 
-                f"Empresa creada correctamente. Se ha creado un usuario supervisor con username: {supervisor.username} y contraseña: {password}"
+                f"Empresa creada correctamente. Se ha enviado un correo a {empresa.email} con los datos del usuario supervisor (username: {supervisor.username})."
             )
             
             return redirect('listar_clientes')
