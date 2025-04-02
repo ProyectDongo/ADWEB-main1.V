@@ -26,7 +26,7 @@ class RegistroEntrada(models.Model):
     hora_salida = models.DateTimeField(null=True, blank=True)
     latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    firma_digital = models.ImageField(upload_to='firmas/', null=True, blank=True)
+    firma_digital = models.TextField(null=True, blank=True)
     huella_id = models.CharField(max_length=100, null=True, blank=True)
 
     huella_validada = models.BooleanField(default=False)
@@ -47,6 +47,9 @@ class RegistroEntrada(models.Model):
         return self.ubicacion.distance(empresa.ubicacion_central) * 100000 <= empresa.radio_permitido
     
     def clean(self):
+        if self.empresa is None:
+            raise ValidationError("Debe asociar una empresa al registro de entrada.")
+        
         if not self.empresa.vigencia_plan.plan.nombre.lower() == 'asistencia':
             raise ValidationError("La empresa no tiene un plan de asistencia activo")
         

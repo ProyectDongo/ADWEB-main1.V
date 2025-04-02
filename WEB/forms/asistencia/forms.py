@@ -4,7 +4,7 @@ from WEB.models import *
 class RegistroEntradaForm(forms.ModelForm):
     class Meta:
         model = RegistroEntrada
-        fields = ['metodo', 'firma_digital', 'huella_id']
+        fields = ['metodo', 'firma_digital']
         
     def clean(self):
         cleaned_data = super().clean()
@@ -21,6 +21,7 @@ class RegistroEntradaForm(forms.ModelForm):
             precision = float(self.data.get('precision', 100))
             if precision > 50:  # 50 metros máximo de error
                 raise forms.ValidationError("Precisión de ubicación insuficiente")
+            
 class RegistroSalidaForm(forms.ModelForm):
     class Meta:
         model = RegistroEntrada

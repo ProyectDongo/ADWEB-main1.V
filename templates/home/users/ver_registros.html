@@ -1,0 +1,56 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Registros de Asistencia</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <div class="form-group">
+                    <label for="fecha">Filtrar por fecha:</label>
+                    <input type="date" name="fecha" id="fecha" class="form-control w-25 d-inline">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </form>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora Entrada</th>
+                        <th>Hora Salida</th>
+                        <th>Horas Trabajadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                        <tr>
+                            <td>{{ registro.hora_entrada|date:"d/m/Y" }}</td>
+                            <td>{{ registro.hora_entrada|time:"H:i" }}</td>
+                            <td>{{ registro.hora_salida|time:"H:i" | default:"Pendiente" }}</td>
+                            <td>
+                                {% if registro.hora_salida %}
+                                    {{ registro.hora_salida|timesince:registro.hora_entrada }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mt-3">
+                <p><strong>Total horas día:</strong> {{ horas_dia | default:"0" }}</p>
+                <p><strong>Total horas semana:</strong> {{ horas_semana | default:"0" }}</p>
+                <p><strong>Total horas mes:</strong> {{ horas_mes | default:"0" }}</p>
+            </div>
+
+            <a href="{% url 'trabajador_home' %}" class="btn btn-secondary mt-3">Volver</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

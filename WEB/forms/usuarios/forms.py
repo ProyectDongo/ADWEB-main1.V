@@ -38,7 +38,7 @@ class AdminForm(UserCreationForm):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'rut', 'email', 'celular', 'password1', 'password2', 'grupos', 'permisos']
+        fields = ['username', 'rut', 'email', 'celular', 'password1', 'password2', 'grupos', 'permisos','first_name']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -80,6 +80,11 @@ class SupervisorForm(UserCreationForm):
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         required=True,
         label="RUT"
+    )
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=True,
+        label="Nombres"
     )
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control'}),

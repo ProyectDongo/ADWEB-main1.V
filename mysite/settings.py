@@ -194,14 +194,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_REDIRECT_URL = 'redirect_after_login'  # Asegura que siempre pase por la función de redirección
 LOGOUT_REDIRECT_URL = 'login_selector'  # Para que después del logout vuelva al login
- # Redirige a esta vista después del login
+
+
 AUTH_USER_MODEL = 'WEB.Usuario'
 
 #envios de correo
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server
-EMAIL_PORT = 587               # Port for TLS
+EMAIL_PORT = 587               # Port  TLS
 EMAIL_USE_TLS = True
+
 load_dotenv()  # Carga variables de .env
 
 EMAIL_HOST_USER = os.getenv("EMAIL_USER")
@@ -227,7 +229,7 @@ RECAPTCHA_PUBLIC_KEY = '321'
 RECAPTCHA_PRIVATE_KEY = '0101'
 RECAPTCHA_REQUIRED_SCORE = 0.85
 
-# Rate limiting
+
 RATELIMIT_ENABLE = True
 
 CSRF_COOKIE_SECURE = False  # Solo para desarrollo

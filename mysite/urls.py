@@ -38,6 +38,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     #super_user
     path('django-admin/', admin.site.urls),
+    #admin, supervisores y trabajadores 
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
     path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),
@@ -49,8 +50,10 @@ urlpatterns = [
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
     #supervisor:
     path('supervisor_home/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
+      
     #usuario:
     path('trabajador_home/', autenticacion.trabajador_home, name='trabajador_home'),
+          path('ver_registros/', autenticacion.ver_registros, name='ver_registros'),
     #configuracion:
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
@@ -151,6 +154,7 @@ urlpatterns = [
     path('editar_usuario/<int:usuario_id>/', autenticacion.editar_usuario, name='editar_usuario'),
     path('eliminar_usuario/<int:usuario_id>/',autenticacion.eliminar_usuario, name='eliminar_usuario'),
     path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
+    
     # Empresa
     path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
    

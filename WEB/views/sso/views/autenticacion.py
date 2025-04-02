@@ -161,59 +161,87 @@ def supervisor_home(request, empresa_id):
     }
     return render(request, 'home/supervisores/supervisor_home.html', context)
 
-@login_required
-def trabajador_home(request):
-    context = {
-        'form_entrada': RegistroEntradaForm(),
-        'form_salida': RegistroSalidaForm()
-    }
 
-    if request.method == 'POST':
-        if 'entrada' in request.POST:
-            return handle_entrada(request, context)
-        elif 'salida' in request.POST:
-            return handle_salida(request, context)
+#--------------------------------------------------------------
+#inicio de trabajador home 
+from django.db.models import Sum, F
+from datetime import timedelta
 
-    return render(request, 'home/trabajador_home.html', context)
-
+#maneja las entradas 
 def handle_entrada(request, context):
-    form = RegistroEntradaForm(request.POST, request.FILES)
-    
-    #if form.is_valid():
-        #entrada = form.save(commit=False)
-       # entrada.trabajador = request.user
-        
-        # Registrar geolocalización
-        #if form.cleaned_data['metodo'] == 'geo':
-           # entrada.ubicacion = Point(
-               # float(request.POST.get('longitud')),
-                #float(request.POST.get('latitud'))
-           # )
-           # entrada.precision = float(request.POST.get('precision', 0))
-            
-            #if not entrada.esta_dentro_rango(request.user.empresa):
-              #  raise forms.ValidationError("Está fuera del área permitida")
-        
-       # entrada.save()
-       # messages.success(request, 'Entrada registrada correctamente')
-       # return redirect('trabajador_home')
-
-def handle_salida(request, context):
-    form = RegistroSalidaForm(request.POST)
-    entrada_activa = get_entrada_activa(request.user)
-    
-    if not entrada_activa:
-        messages.warning(request, 'No hay entrada activa')
+  
+    if request.user.empresa is None:
+        messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('trabajador_home')
+    else:
+        print("Empresa del usuario:", request.user.empresa)
+    #validacion de entradas y salidas 3 por dia :D
+    hoy = timezone.now().date()
+    entradas_hoy = RegistroEntrada.objects.filter(
+        trabajador=request.user,
+        hora_entrada__date=hoy ).count()
+   
+    if entradas_hoy >= 3:
+        messages.error(request, 'Ya has registrado el máximo de 3 entradas por día.')
+        return redirect('trabajador_home')
+    entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
+    print("Empresa en instancia antes del formulario:", entrada.empresa)
+    form = RegistroEntradaForm(request.POST, request.FILES, instance=entrada)
+    if form.is_valid():
+        entrada = form.save()
+        entrada.trabajador = request.user
+        entrada.empresa = request.user.empresa  # Asignar la empresa del usuario
+        entrada.save()
+        messages.success(request, "Entrada registrada correctamente.") 
+
+        # Manejo de geolocalización
+        if form.cleaned_data['metodo'] == 'geo':
+            latitud = request.POST.get('latitud')
+            longitud = request.POST.get('longitud')
+            if latitud and longitud:
+                entrada.latitud = latitud
+                entrada.longitud = longitud
+            else:
+                messages.error(request, 'Debe proporcionar la geolocalización.')
+                context['form_entrada'] = form
+                return render(request, 'home/users/trabajador_home.html', context)
+
+        entrada.save()
+        messages.success(request, 'Entrada registrada correctamente.')
+        return redirect('trabajador_home')
+    else:
+        print(form.errors)
+        messages.error(request, 'Error al registrar la entrada. Verifica los datos.')
+        context['form_entrada'] = form
+        return render(request, 'home/users/trabajador_home.html', context)
+
+#maneja las salidas    
     
+def handle_salida(request, context):
+    hoy = timezone.now().date()
+    salidas_hoy = RegistroEntrada.objects.filter(
+        trabajador=request.user,
+        hora_salida__date=hoy
+    ).count()
+
+    if salidas_hoy >= 3:
+        messages.error(request, 'Ya has registrado el máximo de 3 salidas por día.')
+        return redirect('trabajador_home')
+
+    entrada_activa = get_entrada_activa(request.user)
+    if not entrada_activa:
+        messages.warning(request, 'No hay entrada activa para registrar salida.')
+        return redirect('trabajador_home')
+
+    form = RegistroSalidaForm(request.POST)
     if form.is_valid():
         entrada_activa.hora_salida = timezone.now()
         entrada_activa.save()
-        messages.success(request, 'Salida registrada correctamente')
+        messages.success(request, 'Salida registrada correctamente.')
         return redirect('trabajador_home')
-    
+
     context['form_salida'] = form
-    return render(request, 'home/trabajador_home.html', context)
+    return render(request, 'home/users/trabajador_home.html', context)
 
 # Funciones auxiliares
 def puede_registrar_entrada(user):
@@ -230,6 +258,60 @@ def get_entrada_activa(user):
         )
     except RegistroEntrada.DoesNotExist:
         return None
+    
+@login_required
+def trabajador_home(request):
+    context = {
+        'form_entrada': RegistroEntradaForm(),
+        'form_salida': RegistroSalidaForm()
+    }
+
+    if request.method == 'POST':
+        if 'entrada' in request.POST:
+            return handle_entrada(request, context)
+        elif 'salida' in request.POST:
+            return handle_salida(request, context)
+
+    return render(request, 'home/users/trabajador_home.html', context)
+
+
+# registros 
+@login_required
+def ver_registros(request):
+    registros = RegistroEntrada.objects.filter(trabajador=request.user).order_by('-hora_entrada')
+    fecha = request.GET.get('fecha')
+    if fecha:
+        registros = registros.filter(hora_entrada__date=fecha)
+
+    # Cálculo de horas trabajadas
+    hoy = timezone.now().date()
+    semana_inicio = hoy - timedelta(days=hoy.weekday())
+    mes_inicio = hoy.replace(day=1)
+
+    horas_dia = registros.filter(
+        hora_entrada__date=hoy,
+        hora_salida__isnull=False
+    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
+
+    horas_semana = registros.filter(
+        hora_entrada__date__gte=semana_inicio,
+        hora_salida__isnull=False
+    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
+
+    horas_mes = registros.filter(
+        hora_entrada__date__gte=mes_inicio,
+        hora_salida__isnull=False
+    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
+
+    context = {
+        'registros': registros,
+        'horas_dia': horas_dia,
+        'horas_semana': horas_semana,
+        'horas_mes': horas_mes,
+    }
+    return render(request, 'home/users/ver_registros.html', context)
+
+#fin de trabajador home
 #----------------------------------------------------------------------
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, UpdateView, DeleteView
@@ -327,6 +409,7 @@ def crear_usuario(request, empresa_id):
             return JsonResponse({'success': False, 'errors': errors})
     return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
+#  vista para editar Usuarios
 def editar_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, pk=usuario_id)
     if request.method == 'POST':
@@ -358,7 +441,7 @@ def eliminar_usuario(request, usuario_id):
 class SupervisorHomeView(LoginRequiredMixin, View):
     def get(self, request):
         if request.user.role != 'supervisor':
-            return render(request, 'access_denied.html')  # O redirigir a otra página
+            return render(request, 'error/error.html')  
         
         empresa = request.user.empresa
         supervisores = Usuario.objects.filter(empresa=empresa, role='supervisor')

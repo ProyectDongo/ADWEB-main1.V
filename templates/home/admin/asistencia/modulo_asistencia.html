@@ -6,7 +6,7 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Gestión de Asistencia</h6>
-            <!-- Eliminamos el botón superior que generaba el error -->
+           
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -37,7 +37,7 @@
                                 <a href="{% url 'detalle_empresa' empresa.id %}" class="btn btn-info btn-sm">
                                     <i class="fas fa-search"></i>
                                 </a>
-                                <!-- Añadimos el botón de edición con el pk -->
+                                
                                 <a href="{% url 'editar_limite_plan' empresa.plan_contratado.id %}" 
                                    class="btn btn-warning btn-sm"
                                    title="Editar límite">
