@@ -1,24 +1,26 @@
+<!-- template.html -->
 {% extends "central_user.html" %}
 {% load static %}
 
 {% block content %}
 <div class="container py-4">
-    {% if messages %}
-        <div class="alert alert-dismissible fade show" role="alert">
-            {% for message in messages %}
-                {% if message.tags == 'success' %}
-                    <div class="alert-success">{{ message }}</div>
-                {% elif message.tags == 'error' %}
-                    <div class="alert-danger">{{ message }}</div>
-                {% elif message.tags == 'warning' %}
-                    <div class="alert-warning">{{ message }}</div>
-                {% endif %}
-            {% endfor %}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+    <!-- Notificaciones mejoradas -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+        {% for message in messages %}
+        <div class="toast show bg-{{ message.tags }} text-white" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle{% endif %}
+                        {% if message.tags == 'error' %}fa-times-circle{% endif %}
+                        me-2"></i>
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
         </div>
-    {% endif %}
+        {% endfor %}
+    </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-primary text-white">
@@ -61,8 +63,18 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" name="entrada" class="btn btn-primary btn-block mt-3">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>Registrar Entrada
+                                <button 
+                                    type="submit" 
+                                    name="entrada" 
+                                    class="btn btn-primary btn-block mt-3"
+                                    {% if ultima_entrada_activa %}disabled{% endif %}
+                                >
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    {% if ultima_entrada_activa %}
+                                        Entrada ya registrada
+                                    {% else %}
+                                        Registrar Entrada
+                                    {% endif %}
                                 </button>
                             </form>
                         </div>
@@ -72,118 +84,147 @@
                 <!-- Sección de Salida -->
                 <div class="col-12 col-md-6">
                     <div class="card h-100 border-success">
-                        <div class="card-header bg-success text-white">Registrar Salida</div>
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <span>Registrar Salida</span>
+                            {% if ultima_entrada_activa %}
+                            <i class="fas fa-user-clock fa-lg"></i>
+                            {% endif %}
+                        </div>
                         <div class="card-body">
                             <form method="post" id="salidaForm">
                                 {% csrf_token %}
-                                <div class="alert alert-secondary">
-                                    <p>Última entrada:</p>
-                                    <h5>
-                                        {% if ultima_entrada %}
-                                            {{ ultima_entrada.hora_entrada|date:"d/m/Y H:i" }}
+                                <input type="hidden" name="salida" value="true">
+                                <div class="alert alert-{% if ultima_entrada_activa %}info{% else %}secondary{% endif %}">
+                                    <h4 class="mb-0">
+                                        {% if ultima_entrada_activa %}
+                                            <span class="text-success d-block mb-1">Jornada activa</span>
+                                            <small class="text-muted">{{ ultima_entrada_activa.hora_entrada|date:"d/m/Y H:i" }}</small>
                                         {% else %}
-                                            Sin registros
+                                            <span class="text-muted">Sin jornada activa</span>
                                         {% endif %}
-                                    </h5>
+                                    </h4>
                                 </div>
-                                <button type="submit" name="salida" class="btn btn-danger btn-block" {% if not ultima_entrada %}disabled{% endif %}>
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Registrar Salida
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-lg btn-{% if ultima_entrada_activa %}danger{% else %}secondary{% endif %} btn-block" 
+                                    {% if not ultima_entrada_activa %}disabled{% endif %}
+                                >
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    {% if ultima_entrada_activa %}
+                                        Registrar Salida
+                                    {% else %}
+                                        Sin entrada registrada
+                                    {% endif %}
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-            <a href="{% url 'ver_registros' %}" class="btn btn-info btn-block mt-3">Ver Registros</a>
+            <a href="{% url 'ver_registros' %}" class="btn btn-info btn-block mt-3">
+                <i class="fas fa-history me-2"></i>Ver Historial
+            </a>
         </div>
     </div>
 </div>
 
-
-
-<!-- Scripts -->
 <script>
-// Control de Métodos de Registro
-document.querySelectorAll('input[name="metodo"]').forEach(input => {
-    input.addEventListener('change', function() {
-        document.querySelectorAll('.metodo-section').forEach(section => {
-            section.classList.add('d-none');
-        });
-        document.getElementById(this.value + 'Section').classList.remove('d-none');
-    });
-});
-
-// Función para Obtener Geolocalización
-function obtenerGeolocalizacion(callback) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            document.getElementById('latitudInput').value = pos.coords.latitude;
-            document.getElementById('longitudInput').value = pos.coords.longitude;
-            callback();
-        }, error => {
-            alert('Error obteniendo ubicación: ' + error.message);
-        }, { timeout: 10000 });
-    } else {
-        alert('Geolocalización no soportada en este navegador');
+// Función para obtener el token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
+    return cookieValue;
 }
 
-// Manejo del Envío del Formulario de Entrada
-document.getElementById('entradaForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const metodo = document.querySelector('input[name="metodo"]:checked').value;
-    if (metodo === 'geo') {
-        obtenerGeolocalizacion(() => {
-            this.submit();
-        });
-    } else if (metodo === 'firma') {
-        document.getElementById('firmaInput').value = canvas.toDataURL('image/png');
-        this.submit();
-    }
-});
-
-// Firma Digital
+// Configuración inicial de la firma digital
 const canvas = document.getElementById('firmaCanvas');
 const ctx = canvas.getContext('2d');
 let dibujando = false;
 let lastX = 0;
 let lastY = 0;
 
+// Eventos de dibujo
+canvas.addEventListener('mousedown', iniciarDibujo);
+canvas.addEventListener('mousemove', dibujar);
+canvas.addEventListener('mouseup', terminarDibujo);
+canvas.addEventListener('mouseout', terminarDibujo);
+canvas.addEventListener('touchstart', iniciarDibujo);
+canvas.addEventListener('touchmove', dibujar);
+canvas.addEventListener('touchend', terminarDibujo);
+
+// Manejo de envío de formularios
+document.getElementById('salidaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button');
+    const originalHTML = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+    
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        },
+        body: new FormData(this)
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.json().then(data => {
+                if (data.error) throw new Error(data.error);
+                window.location.reload();
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        alert(error.message);
+    });
+});
+
+// Funciones de dibujo
 function getEventPosition(e) {
     const rect = canvas.getBoundingClientRect();
-    if (e.touches && e.touches.length > 0) {
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
-    } else {
-        return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
-    }
+    return e.touches ? {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+    } : {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
 }
 
 function iniciarDibujo(e) {
     dibujando = true;
     const pos = getEventPosition(e);
-    lastX = pos.x;
-    lastY = pos.y;
+    [lastX, lastY] = [pos.x, pos.y];
     ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
 }
 
 function dibujar(e) {
     if (!dibujando) return;
-    e.preventDefault(); // Evitar scroll en móviles
+    e.preventDefault();
     const pos = getEventPosition(e);
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#000';
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
-    lastX = pos.x;
-    lastY = pos.y;
+    [lastX, lastY] = [pos.x, pos.y];
     document.getElementById('firmaInput').value = canvas.toDataURL();
 }
 
@@ -191,33 +232,35 @@ function terminarDibujo() {
     dibujando = false;
 }
 
-// Eventos de Mouse
-canvas.addEventListener('mousedown', iniciarDibujo);
-canvas.addEventListener('mousemove', dibujar);
-canvas.addEventListener('mouseup', terminarDibujo);
-canvas.addEventListener('mouseout', terminarDibujo);
-
-// Eventos Táctiles para Móviles
-canvas.addEventListener('touchstart', iniciarDibujo);
-canvas.addEventListener('touchmove', dibujar);
-canvas.addEventListener('touchend', terminarDibujo);
-
 function limpiarFirma() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('firmaInput').value = '';
 }
 </script>
 
-<!-- Estilos CSS -->
 <style>
 #firmaCanvas {
-    width: 100%;
-    max-width: 300px;
-    height: auto;
     background: #f8f9fa;
     touch-action: none;
+    border-radius: 8px;
 }
-.metodo-section { min-height: 200px; }
 
+.toast {
+    min-width: 300px;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important;
+    border: none;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .toast {
+        width: 90%;
+        margin: 0 auto;
+    }
+}
 </style>
 {% endblock %}

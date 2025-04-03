@@ -1,0 +1,18 @@
+{% extends "central.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="alert alert-danger text-center mt-5">
+        <h2 class="alert-heading">¡Cuenta Bloqueada!</h2>
+        <p>Su cuenta está bloqueada por las siguientes razones:</p>
+        <ul class="list-unstyled">
+            <li>● Estado actual de la empresa: {{ user.empresa.get_estado_display }}</li>
+            <li>● Deuda pendiente o suspensión del servicio</li>
+        </ul>
+        <hr>
+        <p class="mb-0">Por favor contacte al administrador: 
+            <a href="mailto:soporte@empresa.com">soporte@empresa.com</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

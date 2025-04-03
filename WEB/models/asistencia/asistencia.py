@@ -47,15 +47,23 @@ class RegistroEntrada(models.Model):
         return self.ubicacion.distance(empresa.ubicacion_central) * 100000 <= empresa.radio_permitido
     
     def clean(self):
-        if self.empresa is None:
-            raise ValidationError("Debe asociar una empresa al registro de entrada.")
-        
-        if not self.empresa.vigencia_plan.plan.nombre.lower() == 'asistencia':
-            raise ValidationError("La empresa no tiene un plan de asistencia activo")
-        
-        if self.empresa.usuarios.count() >= self.empresa.limite_usuarios:
-            raise ValidationError("Límite de usuarios excedido para este plan")
-
+        # Solo validar para nuevas entradas (creación)
+        if not self.pk:  
+            if self.empresa is None:
+                raise ValidationError("Debe asociar una empresa al registro de entrada.")
+            
+            # Validación del plan solo aplica a nuevas entradas
+            tiene_plan_asistencia = self.empresa.vigencias.filter(
+                plan__nombre__iexact='asistencia',
+                estado='indefinido'
+            ).exists()
+            
+            if not tiene_plan_asistencia:
+                raise ValidationError("La empresa no tiene un plan de asistencia activo")
+            
+            if self.empresa.usuarios.count() >= self.empresa.limite_usuarios:
+                raise ValidationError("Límite de usuarios excedido para este plan")
+            
     def save(self, *args, **kwargs):
         self.empresa = self.trabajador.empresa
         super().save(*args, **kwargs)

@@ -127,12 +127,18 @@
                                     title="Edicion / Detalles de la empresa">
                                         <i class="bi bi-gear"></i>
                                     </a>
+                                    <a href="{% url 'empresa_detail' empresa.id %}" 
+                                        class="btn btn-sm btn-light" 
+                                        title="Ver Detalles Completo">
+                                            <i class="bi bi-files"></i>
+                                        </a>
 
                                     <a href="{% url 'servicios' empresa.id %}?q={{ request.GET.q|urlencode }}" 
                                       title="Listado Servicios"
                                       class="btn btn-sm btn-light">
                                       <i class="bi bi-clipboard2-pulse"></i>
                                     </a>
+                                    
                                     
                                     <a href="{% url 'vigencia_planes' empresa.id %}" 
                                     class="btn btn-sm btn-light" 

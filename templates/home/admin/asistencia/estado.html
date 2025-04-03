@@ -1,0 +1,27 @@
+<div class="card">
+    <div class="card-header">
+        <h6>Cambiar Estado de la Empresa</h6>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'toggle_empresa_status' empresa.pk %}">
+            {% csrf_token %}
+            <div class="btn-group" role="group">
+                <button type="submit" name="nuevo_estado" value="aldia" 
+                        class="btn btn-success {% if empresa.estado == 'aldia' %}active{% endif %}">
+                    Al Día
+                </button>
+                <button type="submit" name="nuevo_estado" value="atrasado" 
+                        class="btn btn-warning {% if empresa.estado == 'atrasado' %}active{% endif %}">
+                    Atrasado
+                </button>
+                <button type="submit" name="nuevo_estado" value="suspendido" 
+                        class="btn btn-danger {% if empresa.estado == 'suspendido' %}active{% endif %}">
+                    Suspender
+                </button>
+            </div>
+        </form>
+        <p class="mt-3 text-muted">
+            Al suspender la empresa, todos los usuarios perderán acceso hasta regularizar la situación.
+        </p>
+    </div>
+</div>

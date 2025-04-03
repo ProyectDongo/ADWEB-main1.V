@@ -7,15 +7,17 @@ from django_ratelimit.decorators import ratelimit
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
 from django_recaptcha.fields import ReCaptchaField  
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.http import HttpResponseRedirect
 #from django.contrib.gis.geos import Point
 from WEB.models import *
 from WEB.forms import *
 from django.views import View
+from django.views.generic import DetailView
 
 
 class RoleBasedLoginMixin:
@@ -165,36 +167,47 @@ def supervisor_home(request, empresa_id):
 #--------------------------------------------------------------
 #inicio de trabajador home 
 from django.db.models import Sum, F
-from datetime import timedelta
+from datetime import timedelta, datetime
+import time
 
 #maneja las entradas 
-def handle_entrada(request, context):
-  
+def handle_entrada(request):
+    context = {
+        'form_entrada': RegistroEntradaForm(),
+        'ultima_entrada_activa': RegistroEntrada.objects.filter(
+            trabajador=request.user,
+            hora_salida__isnull=True
+        ).order_by('-hora_entrada').first(),
+        'ultima_entrada': RegistroEntrada.objects.filter(trabajador=request.user).last()
+    }
+    
     if request.user.empresa is None:
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('trabajador_home')
-    else:
-        print("Empresa del usuario:", request.user.empresa)
-    #validacion de entradas y salidas 3 por dia :D
+    
+    # Validación de entrada activa existente
+    if RegistroEntrada.objects.filter(trabajador=request.user, hora_salida__isnull=True).exists():
+        messages.error(request, 'Debes registrar la salida de tu entrada anterior antes de una nueva entrada')
+        return redirect('trabajador_home')
+    
     hoy = timezone.now().date()
     entradas_hoy = RegistroEntrada.objects.filter(
         trabajador=request.user,
-        hora_entrada__date=hoy ).count()
+        hora_entrada__date=hoy
+    ).count()
    
     if entradas_hoy >= 3:
-        messages.error(request, 'Ya has registrado el máximo de 3 entradas por día.')
+        messages.error(request, 'Máximo 3 entradas diarias alcanzado')
         return redirect('trabajador_home')
+    
     entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
-    print("Empresa en instancia antes del formulario:", entrada.empresa)
     form = RegistroEntradaForm(request.POST, request.FILES, instance=entrada)
+    
     if form.is_valid():
-        entrada = form.save()
+        entrada = form.save(commit=False)
         entrada.trabajador = request.user
-        entrada.empresa = request.user.empresa  # Asignar la empresa del usuario
-        entrada.save()
-        messages.success(request, "Entrada registrada correctamente.") 
-
-        # Manejo de geolocalización
+        entrada.empresa = request.user.empresa
+        
         if form.cleaned_data['metodo'] == 'geo':
             latitud = request.POST.get('latitud')
             longitud = request.POST.get('longitud')
@@ -202,45 +215,55 @@ def handle_entrada(request, context):
                 entrada.latitud = latitud
                 entrada.longitud = longitud
             else:
-                messages.error(request, 'Debe proporcionar la geolocalización.')
+                messages.error(request, 'Geolocalización requerida')
                 context['form_entrada'] = form
                 return render(request, 'home/users/trabajador_home.html', context)
-
+        
         entrada.save()
-        messages.success(request, 'Entrada registrada correctamente.')
+        messages.success(request, 'Entrada registrada correctamente')
         return redirect('trabajador_home')
-    else:
-        print(form.errors)
-        messages.error(request, 'Error al registrar la entrada. Verifica los datos.')
-        context['form_entrada'] = form
-        return render(request, 'home/users/trabajador_home.html', context)
+    
+    messages.error(request, 'Error en el formulario')
+    context['form_entrada'] = form
+    return render(request, 'home/users/trabajador_home.html', context)
 
 #maneja las salidas    
-    
-def handle_salida(request, context):
-    hoy = timezone.now().date()
-    salidas_hoy = RegistroEntrada.objects.filter(
+def handle_salida(request):
+    entrada_activa = RegistroEntrada.objects.filter(
         trabajador=request.user,
-        hora_salida__date=hoy
-    ).count()
-
-    if salidas_hoy >= 3:
-        messages.error(request, 'Ya has registrado el máximo de 3 salidas por día.')
-        return redirect('trabajador_home')
-
-    entrada_activa = get_entrada_activa(request.user)
+        hora_salida__isnull=True
+    ).order_by('-hora_entrada').first()
+    
     if not entrada_activa:
-        messages.warning(request, 'No hay entrada activa para registrar salida.')
+        messages.error(request, 'No hay entrada activa')
         return redirect('trabajador_home')
-
-    form = RegistroSalidaForm(request.POST)
-    if form.is_valid():
+    
+    try:
         entrada_activa.hora_salida = timezone.now()
         entrada_activa.save()
-        messages.success(request, 'Salida registrada correctamente.')
-        return redirect('trabajador_home')
+        messages.success(request, f'Salida registrada a las {entrada_activa.hora_salida.strftime("%H:%M")}')
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+    
+    return HttpResponseRedirect(reverse('trabajador_home'))
 
-    context['form_salida'] = form
+@login_required
+def trabajador_home(request):
+    context = {
+        'form_entrada': RegistroEntradaForm(),
+        'ultima_entrada_activa': RegistroEntrada.objects.filter(
+            trabajador=request.user,
+            hora_salida__isnull=True
+        ).order_by('-hora_entrada').first(),
+        'ultima_entrada': RegistroEntrada.objects.filter(trabajador=request.user).last()
+    }
+    
+    if request.method == 'POST':
+        if 'entrada' in request.POST:
+            return handle_entrada(request)
+        if 'salida' in request.POST:
+            return handle_salida(request)
+    
     return render(request, 'home/users/trabajador_home.html', context)
 
 # Funciones auxiliares
@@ -249,117 +272,181 @@ def puede_registrar_entrada(user):
         trabajador=user,
         hora_salida__isnull=True
     ).exists()
-
 def get_entrada_activa(user):
-    try:
-        return RegistroEntrada.objects.get(
-            trabajador=user,
-            hora_salida__isnull=True
-        )
-    except RegistroEntrada.DoesNotExist:
-        return None
+    return RegistroEntrada.objects.filter(
+        trabajador=user,
+        hora_salida__isnull=True
+    ).order_by('-hora_entrada').first()
     
-@login_required
-def trabajador_home(request):
-    context = {
-        'form_entrada': RegistroEntradaForm(),
-        'form_salida': RegistroSalidaForm()
-    }
-
-    if request.method == 'POST':
-        if 'entrada' in request.POST:
-            return handle_entrada(request, context)
-        elif 'salida' in request.POST:
-            return handle_salida(request, context)
-
-    return render(request, 'home/users/trabajador_home.html', context)
-
-
 # registros 
 @login_required
+@login_required
 def ver_registros(request):
-    registros = RegistroEntrada.objects.filter(trabajador=request.user).order_by('-hora_entrada')
-    fecha = request.GET.get('fecha')
-    if fecha:
-        registros = registros.filter(hora_entrada__date=fecha)
+    def formatear_duracion(td):
+        if td is None:
+            return "00:00:00"
+        total_segundos = td.total_seconds()
+        horas = int(total_segundos // 3600)
+        minutos = int((total_segundos % 3600) // 60)
+        segundos = int(total_segundos % 60)
+        return f"{horas:02d}:{minutos:02d}:{segundos:02d}"
 
-    # Cálculo de horas trabajadas
+    registros = RegistroEntrada.objects.filter(
+        trabajador=request.user
+    ).order_by('-hora_entrada')
+    
     hoy = timezone.now().date()
-    semana_inicio = hoy - timedelta(days=hoy.weekday())
-    mes_inicio = hoy.replace(day=1)
+    
+    # Manejo de fecha seleccionada
+    fecha_seleccionada = hoy
+    if 'fecha' in request.GET:
+        try:
+            fecha_seleccionada = datetime.strptime(
+                request.GET['fecha'], '%Y-%m-%d'
+            ).date()
+        except ValueError:
+            pass
 
-    horas_dia = registros.filter(
+    # Registros filtrados
+    registros_filtrados = registros.filter(
+        hora_entrada__date=fecha_seleccionada
+    )
+    
+    # Calcular duraciones para cada registro
+    for registro in registros_filtrados:
+        if registro.hora_salida:
+            delta = registro.hora_salida - registro.hora_entrada
+            registro.duracion = formatear_duracion(delta)
+        else:
+            registro.duracion = '-'
+
+    # Funciones agregadas
+    def calcular_totales(queryset):
+        resultado = queryset.aggregate(
+            total=Sum(F('hora_salida') - F('hora_entrada'))
+        )['total']
+        return formatear_duracion(resultado)
+
+    # Totales
+    total_diario = calcular_totales(registros.filter(
         hora_entrada__date=hoy,
         hora_salida__isnull=False
-    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
-
-    horas_semana = registros.filter(
-        hora_entrada__date__gte=semana_inicio,
+    ))
+    
+    inicio_semana = hoy - timedelta(days=hoy.weekday())
+    total_semanal = calcular_totales(registros.filter(
+        hora_entrada__date__gte=inicio_semana,
         hora_salida__isnull=False
-    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
-
-    horas_mes = registros.filter(
-        hora_entrada__date__gte=mes_inicio,
+    ))
+    
+    inicio_mes = hoy.replace(day=1)
+    total_mensual = calcular_totales(registros.filter(
+        hora_entrada__date__gte=inicio_mes,
         hora_salida__isnull=False
-    ).aggregate(total=Sum(F('hora_salida') - F('hora_entrada')))['total']
+    ))
 
     context = {
-        'registros': registros,
-        'horas_dia': horas_dia,
-        'horas_semana': horas_semana,
-        'horas_mes': horas_mes,
+        'registros': registros_filtrados,
+        'total_diario': total_diario,
+        'total_semanal': total_semanal,
+        'total_mensual': total_mensual,
+        'fecha_seleccionada': fecha_seleccionada,
+        'hoy': hoy,
     }
     return render(request, 'home/users/ver_registros.html', context)
 
 #fin de trabajador home
 #----------------------------------------------------------------------
+# inicio de admin home
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+#bloqueado de accesos:
+#------------------------------
+class EmpresaStatusMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        if request.user.is_authenticated and hasattr(request.user, 'empresa'):
+            if request.user.empresa.estado != 'aldia' and not request.path == reverse('cuenta_bloqueada'):
+                return redirect('cuenta_bloqueada')
+        
+        return response
+#--------------------------------------
 class AdminUserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.role == 'admin'
     
-class AdminAsistenciaView(LoginRequiredMixin, TemplateView):
-    template_name = 'home/admin/asistencia/modulo_asistencia.html'
-    
+# Vista para gestión completa de empresas con pestañas
+class EmpresaDetailView(AdminUserMixin, DetailView):
+    model = RegistroEmpresas
+    template_name = 'home/admin/empresa_detalles.html'
+    context_object_name = 'empresa'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['empresas'] = RegistroEmpresas.objects.filter(
-            plan_contratado__nombre__icontains='asistencia'
-        )
+        context['planes'] = Plan.objects.all()
+        context['usuarios'] = self.object.usuarios.all()
         return context
 
-class GestionUsuariosView(AdminUserMixin, ListView):
-    model = Usuario
-    template_name = 'admin/gestion_usuarios.html'
-    context_object_name = 'usuarios'
-    
-    def get_queryset(self):
-        return Usuario.objects.all()
-
-class EditarLimitePlanView(AdminUserMixin, UpdateView):
+# Vista para editar planes (límites y precios)
+class PlanUpdateView(AdminUserMixin, UpdateView):
     model = Plan
-    fields = ['max_usuarios']
-    template_name = 'admin/editar_limite_plan.html'
+    template_name = 'home/admin/asistencia/plan.html'
+    fields = ['max_usuarios', 'valor', 'activo']
     success_url = reverse_lazy('gestion_planes')
 
-class EliminarUsuarioView(AdminUserMixin, DeleteView):
+    def form_valid(self, form):
+        messages.success(self.request, 'Plan actualizado correctamente')
+        return super().form_valid(form)
+
+# Vista para cambiar estado de la empresa
+class EmpresaStatusToggleView(AdminUserMixin, View):
+    def post(self, request, *args, **kwargs):
+        empresa = get_object_or_404(RegistroEmpresas, pk=kwargs['pk'])
+        nuevo_estado = request.POST.get('nuevo_estado')
+        
+        if nuevo_estado in dict(RegistroEmpresas.ESTADO_CHOICES).keys():
+            empresa.estado = nuevo_estado
+            empresa.save()
+            
+            # Bloquear/desbloquear usuarios
+            empresa.usuarios.update(is_locked=(nuevo_estado != 'aldia'))
+            
+            messages.success(request, f'Estado actualizado a {empresa.get_estado_display()}')
+        return redirect('empresa_detail', pk=empresa.pk)
+
+# Vista para gestión de usuarios
+class UsuarioUpdateView(AdminUserMixin, UpdateView):
     model = Usuario
-    template_name = 'admin/confirmar_eliminacion.html'
+    template_name = 'home/admin/asistencia/usuario_edit.html'
+    fields = ['username', 'rut', 'email', 'celular', 'groups', 'is_locked']
     success_url = reverse_lazy('gestion_usuarios')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tipo_usuario'] = self.object.get_role_display()
+        context['all_groups'] = Group.objects.all()
         return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Usuario actualizado correctamente')
+        return super().form_valid(form)
+
+# Vista para template de cuenta bloqueada
+class CuentaBloqueadaView(TemplateView):
+    template_name = 'error/cuenta_bloqueada.html'
+# fin de admin home
 #----------------------------------------------------------------------
+# inicio de supervisor home
 
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView
 from django.urls import reverse
 from django.http import JsonResponse
 
+# vista para crear usuario
 class CrearUsuarioMixin:
     form_class = UsuarioForm
     template_name = 'admin/crear_usuario.html'
@@ -452,3 +539,5 @@ class SupervisorHomeView(LoginRequiredMixin, View):
             'supervisores': supervisores,
             'trabajadores': trabajadores
         })
+#fin de supervisor home
+#----------------------------------------------------------------------
