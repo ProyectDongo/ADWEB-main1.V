@@ -1,0 +1,37 @@
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between">
+        <h6>Planes Activos</h6>
+        <a href="{% url 'plan_edit' vigencias.first.plan.pk %}" class="btn btn-sm btn-primary">
+            <i class="fas fa-edit"></i> Editar Plan
+        </a>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for vigencia in vigencias %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ vigencia.plan.nombre }}</strong> - 
+                        Límite: {{ vigencia.plan.max_usuarios }} - 
+                        Valor: ${{ vigencia.monto_final|floatformat:0 }}
+                    </div>
+                    <form method="post" action="{% url 'toggle_vigencia_status' vigencia.pk %}">
+                        {% csrf_token %}
+                        <div class="btn-group" role="group">
+                            <button type="submit" name="nuevo_estado" value="indefinido" 
+                                    class="btn btn-sm btn-success {% if vigencia.estado == 'indefinido' %}active{% endif %}">
+                                Activo
+                            </button>
+                            <button type="submit" name="nuevo_estado" value="suspendido" 
+                                    class="btn btn-sm btn-danger {% if vigencia.estado == 'suspendido' %}active{% endif %}">
+                                Suspender
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-secondary mt-3">Volver a Empresa</a>

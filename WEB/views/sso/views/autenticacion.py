@@ -30,25 +30,28 @@ class RoleBasedLoginMixin:
         
         # Verificación de rol y estado de cuenta
         if not self.validate_role(user):
-            return self.handle_invalid_role()
+            messages.error(self.request, 'Acceso no autorizado para este tipo de usuario')
+            return self.form_invalid(form)
             
         if not self.check_account_status(user):
-            return self.handle_locked_account()
+            messages.error(self.request, 'Cuenta bloqueada. Contacte al administrador')
+            return self.form_invalid(form)
             
         self.handle_successful_login(user)
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        username = form.cleaned_data.get('username')
-        user = self.get_user_safe(username)
-        
-        # Actualizar intentos fallidos
-        self.update_failed_attempts(user)
-        self.update_session_attempts()
-        
-        # Aplicar medidas de seguridad
-        self.add_captcha_if_needed(form)
-        self.check_and_lock_account(user)
+        if form is not None:  # Verificamos que form no sea None
+            username = form.cleaned_data.get('username')
+            user = self.get_user_safe(username)
+            
+            # Actualizar intentos fallidos
+            self.update_failed_attempts(user)
+            self.update_session_attempts()
+            
+            # Aplicar medidas de seguridad
+            self.add_captcha_if_needed(form)
+            self.check_and_lock_account(user)
         
         return super().form_invalid(form)
 
@@ -56,16 +59,8 @@ class RoleBasedLoginMixin:
     def validate_role(self, user):
         return hasattr(user, 'role') and user.role == self.role
 
-    def handle_invalid_role(self):
-        messages.error(self.request, 'Acceso no autorizado para este tipo de usuario')
-        return self.form_invalid(None)
-
     def check_account_status(self, user):
         return not user.is_locked
-
-    def handle_locked_account(self):
-        messages.error(self.request, 'Cuenta bloqueada. Contacte al administrador')
-        return self.form_invalid(None)
 
     def handle_successful_login(self, user):
         user.failed_login_attempts = 0
@@ -103,7 +98,8 @@ class RoleBasedLoginMixin:
             user.is_locked = True
             user.save()
             messages.error(self.request, 'Cuenta bloqueada por seguridad')
-#----------------------------------------------------------------------
+
+# Vistas de login específicas para cada rol
 class AdminLoginView(RoleBasedLoginMixin, LoginView):
     role = 'admin'
     template_name = 'login/admin/admin_login.html'
@@ -119,6 +115,7 @@ class TrabajadorLoginView(RoleBasedLoginMixin, LoginView):
     template_name = 'login/user/user_login.html'
     success_url = reverse_lazy('trabajador_home')
 
+# Vista para seleccionar el tipo de login
 class LoginSelectorView(TemplateView):
     template_name = 'login/home/login_selector.html'
     
@@ -126,7 +123,8 @@ class LoginSelectorView(TemplateView):
         if request.user.is_authenticated:
             return redirect('redirect_after_login')
         return super().dispatch(request, *args, **kwargs)
-    
+
+# Funciones auxiliares para redirección y vistas de inicio
 @login_required
 def redirect_after_login(request):
     """
@@ -143,7 +141,7 @@ def redirect_after_login(request):
     elif role == 'trabajador':
         return redirect('trabajador_home')
     return redirect('login_selector')
-    
+
 @login_required
 def admin_home(request):
     return render(request, 'home/admin/admin_home.html')
@@ -162,6 +160,8 @@ def supervisor_home(request, empresa_id):
         'trabajadores': trabajadores,
     }
     return render(request, 'home/supervisores/supervisor_home.html', context)
+
+#------------ FIN ------------
 
 
 #--------------------------------------------------------------
@@ -361,81 +361,189 @@ def ver_registros(request):
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView
 #bloqueado de accesos:
 #------------------------------
-class EmpresaStatusMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
 
-    def __call__(self, request):
-        response = self.get_response(request)
-        
-        if request.user.is_authenticated and hasattr(request.user, 'empresa'):
-            if request.user.empresa.estado != 'aldia' and not request.path == reverse('cuenta_bloqueada'):
-                return redirect('cuenta_bloqueada')
-        
-        return response
-#--------------------------------------
+# Mixin for admin-only access
 class AdminUserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.role == 'admin'
-    
-# Vista para gestión completa de empresas con pestañas
-class EmpresaDetailView(AdminUserMixin, DetailView):
+
+# Empresa Detail View
+class EmpresaDetailView(DetailView):
     model = RegistroEmpresas
     template_name = 'home/admin/empresa_detalles.html'
-    context_object_name = 'empresa'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['planes'] = Plan.objects.all()
-        context['usuarios'] = self.object.usuarios.all()
+        vigencias = self.object.vigencias.all()
+        planes_data = []
+        for vigencia in vigencias:
+            supervisores = vigencia.usuarios.filter(role='supervisor')
+            trabajadores = vigencia.usuarios.filter(role='trabajador')
+            planes_data.append({
+                'vigencia': vigencia,
+                'supervisores': supervisores,
+                'trabajadores': trabajadores
+            })
+        context['planes_data'] = planes_data
         return context
 
-# Vista para editar planes (límites y precios)
-class PlanUpdateView(AdminUserMixin, UpdateView):
-    model = Plan
-    template_name = 'home/admin/asistencia/plan.html'
-    fields = ['max_usuarios', 'valor', 'activo']
-    success_url = reverse_lazy('gestion_planes')
+# Create Supervisor
+class SupervisorCreateView(AdminUserMixin, CreateView):
+    model = Usuario
+    template_name = 'home/admin/asistencia/supervisor_create.html'
+    fields = ['username', 'rut', 'email', 'celular', 'password']
+
+    def get_success_url(self):
+        """Redirige a la página de detalle de la empresa tras crear el supervisor."""
+        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
 
     def form_valid(self, form):
-        messages.success(self.request, 'Plan actualizado correctamente')
-        return super().form_valid(form)
-
-# Vista para cambiar estado de la empresa
-class EmpresaStatusToggleView(AdminUserMixin, View):
-    def post(self, request, *args, **kwargs):
-        empresa = get_object_or_404(RegistroEmpresas, pk=kwargs['pk'])
-        nuevo_estado = request.POST.get('nuevo_estado')
+        """Asigna la empresa y la vigencia_plan específica al supervisor antes de guardarlo."""
+        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
+        vigencia = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'], empresa=empresa)
         
-        if nuevo_estado in dict(RegistroEmpresas.ESTADO_CHOICES).keys():
-            empresa.estado = nuevo_estado
-            empresa.save()
-            
-            # Bloquear/desbloquear usuarios
-            empresa.usuarios.update(is_locked=(nuevo_estado != 'aldia'))
-            
-            messages.success(request, f'Estado actualizado a {empresa.get_estado_display()}')
-        return redirect('empresa_detail', pk=empresa.pk)
+        # Crear el usuario sin guardar aún
+        user = form.save(commit=False)
+        user.role = 'supervisor'
+        user.empresa = empresa
+        user.vigencia_plan = vigencia  # Asignar la vigencia específica del plan seleccionado
+        user.set_password(form.cleaned_data['password'])
+        user.save()
 
-# Vista para gestión de usuarios
+        messages.success(self.request, 'Supervisor creado correctamente para este plan.')
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        """Añade la empresa y la vigencia al contexto para usarla en el template si es necesario."""
+        context = super().get_context_data(**kwargs)
+        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
+        context['vigencia'] = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'])
+        return context
+
+# User Create View (General)
+class UsuarioCreateView(AdminUserMixin, CreateView):
+    model = Usuario
+    template_name = 'home/admin/asistencia/usuario_create.html'
+    fields = ['username', 'rut', 'email', 'celular', 'role', 'password']
+
+    def get_success_url(self):
+        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
+
+    def form_valid(self, form):
+        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
+        user = form.save(commit=False)
+        user.empresa = empresa
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+        messages.success(self.request, 'Usuario creado correctamente')
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        empresa_pk = self.kwargs['empresa_pk']
+        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
+        return context
+
+# User Create View (Specific to Vigencia)
+class UsuarioCreateVigenciaView(AdminUserMixin, CreateView):
+    model = Usuario
+    template_name = 'home/admin/asistencia/usuario_create.html'
+    fields = ['username', 'rut', 'email', 'celular', 'role', 'password']
+
+    def get_success_url(self):
+        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
+
+    def form_valid(self, form):
+        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
+        vigencia = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'])
+        user = form.save(commit=False)
+        user.empresa = empresa
+        user.vigencia_plan = vigencia  # Relaciona el usuario con la vigencia
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+        messages.success(self.request, 'Usuario creado correctamente para este plan')
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        empresa_pk = self.kwargs['empresa_pk']
+        vigencia_pk = self.kwargs['vigencia_pk']
+        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
+        context['vigencia'] = get_object_or_404(VigenciaPlan, pk=vigencia_pk)
+        return context
+
+# User Update View
 class UsuarioUpdateView(AdminUserMixin, UpdateView):
     model = Usuario
     template_name = 'home/admin/asistencia/usuario_edit.html'
-    fields = ['username', 'rut', 'email', 'celular', 'groups', 'is_locked']
+    fields = ['username', 'rut', 'email', 'celular', 'role', 'groups', 'user_permissions', 'is_locked']
     success_url = reverse_lazy('gestion_usuarios')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['all_groups'] = Group.objects.all()
+        context['all_permissions'] = Permission.objects.all()
+        context['empresa'] = self.object.empresa
         return context
 
     def form_valid(self, form):
         messages.success(self.request, 'Usuario actualizado correctamente')
         return super().form_valid(form)
 
-# Vista para template de cuenta bloqueada
+# User Delete View
+class UsuarioDeleteView(AdminUserMixin, DeleteView):
+    model = Usuario
+    template_name = 'home/admin/asistencia/usuario_confirm_delete.html'
+    success_url = reverse_lazy('gestion_usuarios')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Usuario eliminado correctamente')
+        return super().delete(request, *args, **kwargs)
+
+# Plan Update View
+class PlanUpdateView(AdminUserMixin, UpdateView):
+    model = Plan
+    template_name = 'home/admin/asistencia/plan_edit.html'
+    fields = ['max_usuarios', 'valor', 'activo']
+
+    def get_success_url(self):
+        empresa_pk = self.request.GET.get('empresa_pk')
+        if empresa_pk:
+            return reverse('empresa_detail', kwargs={'pk': empresa_pk})
+        return reverse_lazy('gestion_planes')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        empresa_pk = self.request.GET.get('empresa_pk')
+        if empresa_pk:
+            context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
+        else:
+            context['empresa'] = None
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Plan actualizado correctamente')
+        return super().form_valid(form)
+
+# Vigencia Plan Status Toggle View
+class VigenciaPlanStatusToggleView(AdminUserMixin, View):
+    def post(self, request, *args, **kwargs):
+        vigencia = get_object_or_404(VigenciaPlan, pk=kwargs['pk'])
+        nuevo_estado = request.POST.get('nuevo_estado')
+        if nuevo_estado in dict(VigenciaPlan.TIPO_DURACION).keys():
+            vigencia.estado = nuevo_estado
+            vigencia.save()
+            if nuevo_estado == 'suspendido':
+                vigencia.empresa.usuarios.update(is_locked=True)
+            elif nuevo_estado == 'indefinido':
+                vigencia.empresa.usuarios.update(is_locked=False)
+            messages.success(request, f'Estado del plan actualizado a {vigencia.get_estado_display()}')
+        return redirect('empresa_detail', pk=vigencia.empresa.pk)
+
+# Cuenta Bloqueada View
 class CuentaBloqueadaView(TemplateView):
     template_name = 'error/cuenta_bloqueada.html'
 # fin de admin home

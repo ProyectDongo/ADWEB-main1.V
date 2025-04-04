@@ -100,6 +100,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'WEB.middleware.EmpresaStatusMiddleware',
     
     ]
 SESSION_EXPIRE_SECONDS =  1000000000000000 # 20 minutos

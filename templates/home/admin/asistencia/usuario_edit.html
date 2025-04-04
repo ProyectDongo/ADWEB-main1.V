@@ -11,7 +11,6 @@
             <form method="post">
                 {% csrf_token %}
                 {{ form|crispy }}
-                
                 <div class="form-group">
                     <label>Grupos</label>
                     {% for group in all_groups %}
@@ -25,9 +24,21 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+                <div class="form-group">
+                    <label>Permisos Específicos</label>
+                    {% for permission in all_permissions %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="user_permissions" 
+                               value="{{ permission.id }}" id="perm{{ permission.id }}"
+                               {% if permission in object.user_permissions.all %}checked{% endif %}>
+                        <label class="form-check-label" for="perm{{ permission.id }}">
+                            {{ permission.name }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="#" class="btn btn-secondary">Cancelar</a>
+                <a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-secondary">Volver a Empresa</a>
             </form>
         </div>
     </div>

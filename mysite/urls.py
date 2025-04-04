@@ -19,6 +19,7 @@ from site import venv
 from django.contrib.auth import views as auth_views
 from django.urls import path,include
 from django.contrib import admin
+from django.shortcuts import redirect
 
 
 
@@ -145,10 +146,16 @@ urlpatterns = [
     #modulo asistencia:
    
     path('empresa/<int:pk>/', autenticacion.EmpresaDetailView.as_view(), name='empresa_detail'),
-    path('plan/editar/<int:pk>/', autenticacion.PlanUpdateView.as_view(), name='plan_edit'),
-    path('empresa/<int:pk>/cambiar-estado/', autenticacion.EmpresaStatusToggleView.as_view(), name='toggle_empresa_status'),
+    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/supervisor/crear/', autenticacion.SupervisorCreateView.as_view(), name='supervisor_create'),
+    path('empresa/<int:empresa_pk>/usuario/crear/', autenticacion.UsuarioCreateView.as_view(), name='usuario_create'),
+    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/usuario/crear/', autenticacion.UsuarioCreateVigenciaView.as_view(), name='usuario_create_vigencia'),
     path('usuario/editar/<int:pk>/', autenticacion.UsuarioUpdateView.as_view(), name='usuario_edit'),
+    path('usuario/eliminar/<int:pk>/', autenticacion.UsuarioDeleteView.as_view(), name='usuario_delete'),
+    path('plan/editar/<int:pk>/', autenticacion.PlanUpdateView.as_view(), name='plan_edit'),
+    path('vigencia/<int:pk>/cambiar-estado/', autenticacion.VigenciaPlanStatusToggleView.as_view(), name='toggle_vigencia_status'),
     path('cuenta-bloqueada/', autenticacion.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
+    path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),  # Placeholder redirect
+    path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
 
    #supervisor_home: accciomnes 
     path('supervisor/home/', autenticacion.SupervisorHomeView.as_view(), name='supervisor_home'),

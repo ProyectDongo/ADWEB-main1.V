@@ -2,45 +2,229 @@
 {% load static %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">{{ empresa.nombre }}</h6>
-            <span class="badge bg-{% if empresa.estado == 'aldia' %}success{% else %}danger{% endif %}">
-                {{ empresa.get_estado_display }}
-            </span>
-        </div>
-        
-        <div class="card-body">
-            <ul class="nav nav-tabs" id="empresaTabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="plan-tab" data-bs-toggle="tab" href="#plan">Plan</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="usuarios-tab" data-bs-toggle="tab" href="#usuarios">Usuarios</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="estado-tab" data-bs-toggle="tab" href="#estado">Estado</a>
-                </li>
-            </ul>
-            
-            <div class="tab-content mt-3">
-                <!-- Pestaña Plan -->
-                <div class="tab-pane fade show active" id="plan">
-                    {% include 'home/admin/asistencia/plan.html' %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary bg-gradient text-white py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h3 mb-0">
+                                <i class="bi bi-building-gear me-2"></i>
+                                {{ object.nombre }}
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Detalles completos de la empresa y sus planes
+                            </p>
+                        </div>
+                        <a href="{% url 'gestion_usuarios' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Volver
+                        </a>
+                    </div>
                 </div>
-                
-                <!-- Pestaña Usuarios -->
-                <div class="tab-pane fade" id="usuarios">
-                    {% include 'home/admin/asistencia/usuarios.html' %}
-                </div>
-                
-                <!-- Pestaña Estado -->
-                <div class="tab-pane fade" id="estado">
-                    {% include 'home/admin/asistencia/estado.html' %}
+
+                <div class="card-body p-4">
+                    <!-- Sección de Planes -->
+                    <h3 class="h5 mb-4 text-primary">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Planes Contratados
+                    </h3>
+                    
+                    <div class="accordion accordion-flush" id="planesAccordion">
+                        {% for plan_data in planes_data %}
+                        <div class="accordion-item shadow-sm mb-3">
+                            <div class="accordion-header">
+                                <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#plan-{{ plan_data.vigencia.pk }}" 
+                                    aria-expanded="false" 
+                                    aria-controls="plan-{{ plan_data.vigencia.pk }}">
+                                    <div class="d-flex w-100 align-items-center justify-content-between">
+                                        <div class="me-3">
+                                            <span class="fw-bold me-2">{{ plan_data.vigencia.plan.nombre }}</span>
+                                            <span class="badge bg-{% if plan_data.vigencia.estado == 'indefinido' %}success{% else %}danger{% endif %}">
+                                                {{ plan_data.vigencia.estado|title }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">Código: {{ plan_data.vigencia.codigo_plan }}</small>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <div id="plan-{{ plan_data.vigencia.pk }}" class="accordion-collapse collapse" 
+                                data-bs-parent="#planesAccordion">
+                                <div class="accordion-body pt-3">
+                                    <!-- Encabezado del Plan -->
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div>
+                                            <h5 class="h6 mb-1">Detalles del Plan</h5>
+                                            <p class="mb-0 small text-muted">
+                                                Límite de usuarios: {{ plan_data.vigencia.plan.max_usuarios }} | 
+                                                Valor: ${{ plan_data.vigencia.monto_final }}
+                                            </p>
+                                        </div>
+                                        <div class="btn-group">
+                                            <a href="{% url 'plan_edit' plan_data.vigencia.plan.pk %}?empresa_pk={{ object.pk }}" 
+                                                class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-pencil-square me-1"></i>Editar
+                                            </a>
+                                            <form method="post" action="{% url 'toggle_vigencia_status' plan_data.vigencia.pk %}">
+                                                {% csrf_token %}
+                                                <button type="submit" name="nuevo_estado" 
+                                                    value="{% if plan_data.vigencia.estado == 'indefinido' %}suspendido{% else %}indefinido{% endif %}" 
+                                                    class="btn btn-sm {% if plan_data.vigencia.estado == 'indefinido' %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                                    {% if plan_data.vigencia.estado == 'indefinido' %}
+                                                    <i class="bi bi-pause me-1"></i>Suspender
+                                                    {% else %}
+                                                    <i class="bi bi-play me-1"></i>Activar
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pestañas de Usuarios -->
+                                    <ul class="nav nav-tabs mb-4" id="userTabs{{ plan_data.vigencia.pk }}" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="supervisores-tab-{{ plan_data.vigencia.pk }}" 
+                                                data-bs-toggle="tab" 
+                                                data-bs-target="#supervisores-{{ plan_data.vigencia.pk }}" 
+                                                type="button" role="tab" 
+                                                aria-controls="supervisores-{{ plan_data.vigencia.pk }}" 
+                                                aria-selected="true">
+                                                <i class="bi bi-person-badge me-1"></i>
+                                                Supervisores
+                                                <span class="badge bg-primary ms-1">{{ plan_data.supervisores|length }}</span>
+                                            </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="trabajadores-tab-{{ plan_data.vigencia.pk }}" 
+                                                data-bs-toggle="tab" 
+                                                data-bs-target="#trabajadores-{{ plan_data.vigencia.pk }}" 
+                                                type="button" role="tab" 
+                                                aria-controls="trabajadores-{{ plan_data.vigencia.pk }}" 
+                                                aria-selected="false">
+                                                <i class="bi bi-people me-1"></i>
+                                                Trabajadores
+                                                <span class="badge bg-primary ms-1">{{ plan_data.trabajadores|length }}</span>
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <div class="tab-content" id="userTabsContent{{ plan_data.vigencia.pk }}">
+                                        <!-- Pestaña Supervisores -->
+                                        <div class="tab-pane fade show active" id="supervisores-{{ plan_data.vigencia.pk }}" 
+                                            role="tabpanel" 
+                                            aria-labelledby="supervisores-tab-{{ plan_data.vigencia.pk }}">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0">Administradores del Plan</h6>
+                                                <a href="{% url 'supervisor_create' empresa_pk=object.pk vigencia_pk=plan_data.vigencia.pk %}" 
+                                                    class="btn btn-success btn-sm">
+                                                    <i class="bi bi-person-plus me-1"></i>Nuevo Supervisor
+                                                </a>
+                                            </div>
+                                            
+                                            {% if plan_data.supervisores %}
+                                            <div class="list-group">
+                                                {% for supervisor in plan_data.supervisores %}
+                                                <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                                    <div>
+                                                        <i class="bi bi-person-circle me-2 text-muted"></i>
+                                                        {{ supervisor.username }}
+                                                    </div>
+                                                    <div>
+                                                        <a href="{% url 'usuario_edit' supervisor.pk %}" 
+                                                            class="btn btn-link btn-sm text-primary">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <a href="{% url 'usuario_delete' supervisor.pk %}" 
+                                                            class="btn btn-link btn-sm text-danger"
+                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');">
+                                                            <i class="bi bi-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning mb-0 py-2">
+                                                <i class="bi bi-exclamation-circle me-2"></i>
+                                                No hay supervisores registrados
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Pestaña Trabajadores -->
+                                        <div class="tab-pane fade" id="trabajadores-{{ plan_data.vigencia.pk }}" 
+                                            role="tabpanel" 
+                                            aria-labelledby="trabajadores-tab-{{ plan_data.vigencia.pk }}">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0">Personal del Plan</h6>
+                                                <a href="{% url 'usuario_create_vigencia' empresa_pk=object.pk vigencia_pk=plan_data.vigencia.pk %}" 
+                                                    class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-person-plus me-1"></i>Nuevo Trabajador
+                                                </a>
+                                            </div>
+                                            
+                                            {% if plan_data.trabajadores %}
+                                            <div class="list-group">
+                                                {% for trabajador in plan_data.trabajadores %}
+                                                <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                                    <div>
+                                                        <i class="bi bi-person-workspace me-2 text-muted"></i>
+                                                        {{ trabajador.username }}
+                                                    </div>
+                                                    <div>
+                                                        <a href="{% url 'usuario_edit' trabajador.pk %}" 
+                                                            class="btn btn-link btn-sm text-primary">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <a href="{% url 'usuario_delete' trabajador.pk %}" 
+                                                            class="btn btn-link btn-sm text-danger"
+                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');">
+                                                            <i class="bi bi-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-warning mb-0 py-2">
+                                                <i class="bi bi-exclamation-circle me-2"></i>
+                                                No hay trabajadores registrados
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No se encontraron planes asociados
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+    }
+    .nav-tabs .nav-link {
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+    .btn-outline-primary:hover {
+        background-color: rgba(13,110,253,0.1);
+    }
+</style>
 {% endblock %}

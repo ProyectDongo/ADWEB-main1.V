@@ -1,0 +1,43 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <h6>Gestión de Usuarios</h6>
+        <a href="{% url 'usuario_create' empresa.pk %}" class="btn btn-sm btn-success">
+            <i class="fas fa-plus"></i> Nuevo Usuario
+        </a>
+    </div>
+    <div class="card-body">
+        <h5>Supervisores</h5>
+        <ul class="list-group mb-3">
+            {% for usuario in supervisores %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ usuario.username }} ({{ usuario.get_role_display }})
+                <div>
+                    <a href="{% url 'usuario_edit' usuario.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'usuario_delete' usuario.pk %}" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <h5>Trabajadores</h5>
+        <ul class="list-group">
+            {% for usuario in trabajadores %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ usuario.username }} ({{ usuario.get_role_display }})
+                <div>
+                    <a href="{% url 'usuario_edit' usuario.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'usuario_delete' usuario.pk %}" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-secondary mt-3">Volver a Empresa</a>

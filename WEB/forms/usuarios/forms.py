@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group, Permission
 from WEB.models import Usuario, RegistroEmpresas
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.contrib.auth.hashers import make_password
+
 class AdminForm(UserCreationForm):
     rut = forms.CharField(
         max_length=12,

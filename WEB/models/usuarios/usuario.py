@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from WEB.models.empresa.empresa import RegistroEmpresas
 from WEB.views.scripts import validar_rut
+from WEB.models import *
 
 class Usuario(AbstractUser):
     ROLES = (
@@ -20,6 +21,7 @@ class Usuario(AbstractUser):
     rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
+    vigencia_plan = models.ForeignKey(VigenciaPlan, on_delete=models.CASCADE, related_name='usuarios')
     
     groups = models.ManyToManyField(
         Group,
