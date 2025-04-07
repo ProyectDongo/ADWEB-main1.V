@@ -18,7 +18,7 @@
                                 Detalles completos de la empresa y sus planes
                             </p>
                         </div>
-                        <a href="{% url 'gestion_usuarios' %}" class="btn btn-light btn-sm">
+                        <a href="{% url 'listar_clientes' %}" class="btn btn-light btn-sm">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                     </div>
@@ -59,14 +59,14 @@
                                         <div>
                                             <h5 class="h6 mb-1">Detalles del Plan</h5>
                                             <p class="mb-0 small text-muted">
-                                                Límite de usuarios: {{ plan_data.vigencia.plan.max_usuarios }} | 
+                                                Límite de usuarios: {{ plan_data.vigencia.get_max_usuarios }} | 
                                                 Valor: ${{ plan_data.vigencia.monto_final }}
                                             </p>
                                         </div>
                                         <div class="btn-group">
-                                            <a href="{% url 'plan_edit' plan_data.vigencia.plan.pk %}?empresa_pk={{ object.pk }}" 
+                                            <a href="{% url 'vigencia_plan_edit' plan_data.vigencia.pk %}" 
                                                 class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-pencil-square me-1"></i>Editar
+                                                <i class="bi bi-pencil-square me-1"></i>Editar Vigencia
                                             </a>
                                             <form method="post" action="{% url 'toggle_vigencia_status' plan_data.vigencia.pk %}">
                                                 {% csrf_token %}
@@ -119,9 +119,9 @@
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <h6 class="mb-0">Administradores del Plan</h6>
                                                 <a href="{% url 'supervisor_create' empresa_pk=object.pk vigencia_pk=plan_data.vigencia.pk %}" 
-                                                    class="btn btn-success btn-sm">
-                                                    <i class="bi bi-person-plus me-1"></i>Nuevo Supervisor
-                                                </a>
+                                                class="btn btn-success btn-sm">
+                                                <i class="bi bi-person-plus me-1"></i>Nuevo Supervisor
+                                             </a>
                                             </div>
                                             
                                             {% if plan_data.supervisores %}

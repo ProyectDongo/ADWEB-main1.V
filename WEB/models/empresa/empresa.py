@@ -234,7 +234,7 @@ class VigenciaPlan(models.Model):
 
     Atributos:
         empresa (ForeignKey): Relación con el modelo RegistroEmpresas que contrata el plan.
-                                Se elimina en cascada.
+                              Se elimina en cascada.
         plan (ForeignKey): Relación con el modelo Plan contratado. Se utiliza PROTECT para evitar borrados accidentales.
         fecha_inicio (DateField): Fecha de inicio de la vigencia del plan. Por defecto, la fecha actual.
         fecha_fin (DateField): Fecha de término de la vigencia, opcional.
@@ -246,6 +246,7 @@ class VigenciaPlan(models.Model):
             - 'indefinido' para una vigencia sin fecha definida.
             - 'mensual' para una vigencia mensual.
             - 'suspendido' para una vigencia suspendida.
+        max_usuarios_override (PositiveIntegerField): Número máximo de usuarios personalizado para esta vigencia, opcional.
 
     Meta:
         verbose_name: "Vigencia de Plan"
@@ -257,6 +258,7 @@ class VigenciaPlan(models.Model):
         calcular_monto: Calcula y actualiza el 'monto_final' del plan aplicando el descuento.
                         Si el plan no tiene un valor definido, lanza un ValueError.
         save: Sobrescribe el método save para calcular el monto final antes de guardar la instancia.
+        get_max_usuarios: Devuelve el número máximo de usuarios efectivo (personalizado o del plan base).
     """
     TIPO_DURACION = [
         ('indefinido', 'Indefinido'),
@@ -264,7 +266,7 @@ class VigenciaPlan(models.Model):
         ('suspendido', 'Suspendido'),
     ]
     empresa = models.ForeignKey(
-        RegistroEmpresas,
+        'RegistroEmpresas',  
         on_delete=models.CASCADE,
         related_name='vigencias'
     )
@@ -276,10 +278,8 @@ class VigenciaPlan(models.Model):
     monto_final = models.DecimalField(max_digits=10, decimal_places=2)
     codigo_plan = models.CharField(max_length=50, unique=True)
     estado = models.CharField(max_length=20, choices=TIPO_DURACION, default='indefinido')
-    
-    
+    max_usuarios_override = models.PositiveIntegerField(null=True, blank=True)  # Campo nuevo
 
-    
     class Meta:
         verbose_name = "Vigencia de Plan"
         verbose_name_plural = "Vigencias de Planes"
@@ -326,3 +326,11 @@ class VigenciaPlan(models.Model):
         """
         self.calcular_monto()
         super().save(*args, **kwargs)
+
+    def get_max_usuarios(self):
+        """
+        Devuelve el número máximo de usuarios efectivo para esta vigencia.
+
+        :return: max_usuarios_override si está definido; de lo contrario, max_usuarios del plan base.
+        """
+        return self.max_usuarios_override if self.max_usuarios_override is not None else self.plan.max_usuarios

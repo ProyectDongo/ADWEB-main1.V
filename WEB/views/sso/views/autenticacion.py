@@ -12,9 +12,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 #from django.contrib.gis.geos import Point
-from WEB.models import *
+from WEB.models import  Usuario, RegistroEmpresas, RegistroEntrada, VigenciaPlan
 from WEB.forms import *
 from django.views import View
 from django.views.generic import DetailView
@@ -362,15 +362,15 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView
-#bloqueado de accesos:
+
 #------------------------------
 
-# Mixin for admin-only access
+# Bloqueo de acceso para usuarios no autorizados
 class AdminUserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.role == 'admin'
 
-# Empresa Detail View
+# Vista para gestionar empresas
 class EmpresaDetailView(DetailView):
     model = RegistroEmpresas
     template_name = 'home/admin/empresa_detalles.html'
@@ -389,111 +389,104 @@ class EmpresaDetailView(DetailView):
             })
         context['planes_data'] = planes_data
         return context
+# crear supervisor
+def validate_rut(request):
+    rut = request.GET.get('rut', None)
+    data = {'exists': Usuario.objects.filter(rut=rut).exists()}
+    return JsonResponse(data)
 
-# Create Supervisor
+class UsuarioCreateVigenciaView(AdminUserMixin, CreateView):
+    model = Usuario
+    template_name = 'home/admin/asistencia/usuario_create.html'
+    fields = ['username', 'rut', 'email', 'celular', 'password']
+
+    def form_valid(self, form):
+        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
+        vigencia = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'], empresa=empresa)
+        
+        user = form.save(commit=False)
+        user.role = 'trabajador'  # Rol fijo
+        user.empresa = empresa
+        user.vigencia_plan = vigencia
+        user.set_password(form.cleaned_data['password'])
+        user.save()
+        
+        messages.success(self.request, 'Trabajador creado exitosamente')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs.get('empresa_pk'))
+            context['empresa'] = empresa
+            context['vigencia'] = get_object_or_404(VigenciaPlan, pk=self.kwargs.get('vigencia_pk'), empresa=empresa)
+        except Http404:
+            raise Http404("Recurso no encontrado")
+        return context
+    
+    def get_success_url(self):
+        return reverse('empresa_detail', kwargs={'pk': self.kwargs.get('empresa_pk')})
+
 class SupervisorCreateView(AdminUserMixin, CreateView):
     model = Usuario
     template_name = 'home/admin/asistencia/supervisor_create.html'
     fields = ['username', 'rut', 'email', 'celular', 'password']
 
-    def get_success_url(self):
-        """Redirige a la página de detalle de la empresa tras crear el supervisor."""
-        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
-
     def form_valid(self, form):
-        """Asigna la empresa y la vigencia_plan específica al supervisor antes de guardarlo."""
         empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
         vigencia = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'], empresa=empresa)
         
-        # Crear el usuario sin guardar aún
         user = form.save(commit=False)
-        user.role = 'supervisor'
+        user.role = 'supervisor'  # Rol fijo
         user.empresa = empresa
-        user.vigencia_plan = vigencia  # Asignar la vigencia específica del plan seleccionado
+        user.vigencia_plan = vigencia
         user.set_password(form.cleaned_data['password'])
         user.save()
-
-        messages.success(self.request, 'Supervisor creado correctamente para este plan.')
-        return HttpResponseRedirect(self.get_success_url())
-
+        
+        messages.success(self.request, 'Supervisor creado exitosamente')
+        return super().form_valid(form)
+    
     def get_context_data(self, **kwargs):
-        """Añade la empresa y la vigencia al contexto para usarla en el template si es necesario."""
         context = super().get_context_data(**kwargs)
-        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
-        context['vigencia'] = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'])
+        try:
+            empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs.get('empresa_pk'))
+            context['empresa'] = empresa
+            context['vigencia'] = get_object_or_404(VigenciaPlan, pk=self.kwargs.get('vigencia_pk'), empresa=empresa)
+        except Http404:
+            raise Http404("Recurso no encontrado")
         return context
-
-# User Create View (General)
-class UsuarioCreateView(AdminUserMixin, CreateView):
-    model = Usuario
-    template_name = 'home/admin/asistencia/usuario_create.html'
-    fields = ['username', 'rut', 'email', 'celular', 'role', 'password']
-
+    
     def get_success_url(self):
-        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
+        return reverse('empresa_detail', kwargs={'pk': self.kwargs.get('empresa_pk')})
+# Usuario editado
 
-    def form_valid(self, form):
-        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
-        user = form.save(commit=False)
-        user.empresa = empresa
-        user.set_password(form.cleaned_data['password'])
-        user.save()
-        messages.success(self.request, 'Usuario creado correctamente')
-        return HttpResponseRedirect(self.get_success_url())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        empresa_pk = self.kwargs['empresa_pk']
-        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
-        return context
-
-# User Create View (Specific to Vigencia)
-class UsuarioCreateVigenciaView(AdminUserMixin, CreateView):
-    model = Usuario
-    template_name = 'home/admin/asistencia/usuario_create.html'
-    fields = ['username', 'rut', 'email', 'celular', 'role', 'password']
-
-    def get_success_url(self):
-        return reverse('empresa_detail', kwargs={'pk': self.kwargs['empresa_pk']})
-
-    def form_valid(self, form):
-        empresa = get_object_or_404(RegistroEmpresas, pk=self.kwargs['empresa_pk'])
-        vigencia = get_object_or_404(VigenciaPlan, pk=self.kwargs['vigencia_pk'])
-        user = form.save(commit=False)
-        user.empresa = empresa
-        user.vigencia_plan = vigencia  # Relaciona el usuario con la vigencia
-        user.set_password(form.cleaned_data['password'])
-        user.save()
-        messages.success(self.request, 'Usuario creado correctamente para este plan')
-        return HttpResponseRedirect(self.get_success_url())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        empresa_pk = self.kwargs['empresa_pk']
-        vigencia_pk = self.kwargs['vigencia_pk']
-        context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
-        context['vigencia'] = get_object_or_404(VigenciaPlan, pk=vigencia_pk)
-        return context
-
-# User Update View
 class UsuarioUpdateView(AdminUserMixin, UpdateView):
     model = Usuario
     template_name = 'home/admin/asistencia/usuario_edit.html'
-    fields = ['username', 'rut', 'email', 'celular', 'role', 'groups', 'user_permissions', 'is_locked']
-    success_url = reverse_lazy('gestion_usuarios')
+    fields = ['username', 'rut', 'email', 'celular', 'role', 'is_locked']
+
+    def get_success_url(self):
+        return reverse('empresa_detail', kwargs={'pk': self.object.empresa.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['empresa'] = self.object.empresa
         context['all_groups'] = Group.objects.all()
         context['all_permissions'] = Permission.objects.all()
-        context['empresa'] = self.object.empresa
         return context
 
     def form_valid(self, form):
+        # Procesar grupos y permisos
+        selected_groups = self.request.POST.getlist('groups', [])
+        selected_permissions = self.request.POST.getlist('user_permissions', [])
+        
+        self.object = form.save()
+        self.object.groups.set(selected_groups)
+        self.object.user_permissions.set(selected_permissions)
+        
         messages.success(self.request, 'Usuario actualizado correctamente')
         return super().form_valid(form)
-
-# User Delete View
+# Usuario eliminado
 class UsuarioDeleteView(AdminUserMixin, DeleteView):
     model = Usuario
     template_name = 'home/admin/asistencia/usuario_confirm_delete.html'
@@ -503,44 +496,40 @@ class UsuarioDeleteView(AdminUserMixin, DeleteView):
         messages.success(self.request, 'Usuario eliminado correctamente')
         return super().delete(request, *args, **kwargs)
 
-# Plan Update View
-class PlanUpdateView(AdminUserMixin, UpdateView):
-    model = Plan
-    template_name = 'home/admin/asistencia/plan_edit.html'
-    fields = ['max_usuarios', 'valor', 'activo']
+
+# Nueva vista para editar VigenciaPlan
+class VigenciaPlanUpdateView(AdminUserMixin, UpdateView):
+    model = VigenciaPlan
+    template_name = 'home/admin/asistencia/vigencia_plan_edit.html'
+    fields = ['descuento', 'max_usuarios_override', 'estado']
 
     def get_success_url(self):
-        empresa_pk = self.request.GET.get('empresa_pk')
-        if empresa_pk:
-            return reverse('empresa_detail', kwargs={'pk': empresa_pk})
-        return reverse_lazy('gestion_planes')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        empresa_pk = self.request.GET.get('empresa_pk')
-        if empresa_pk:
-            context['empresa'] = get_object_or_404(RegistroEmpresas, pk=empresa_pk)
-        else:
-            context['empresa'] = None
-        return context
+        return reverse('empresa_detail', kwargs={'pk': self.object.empresa.pk})
 
     def form_valid(self, form):
-        messages.success(self.request, 'Plan actualizado correctamente')
+        messages.success(self.request, 'Vigencia del plan actualizada correctamente')
         return super().form_valid(form)
 
-# Vigencia Plan Status Toggle View
+# Vigencia plan estado
 class VigenciaPlanStatusToggleView(AdminUserMixin, View):
     def post(self, request, *args, **kwargs):
         vigencia = get_object_or_404(VigenciaPlan, pk=kwargs['pk'])
         nuevo_estado = request.POST.get('nuevo_estado')
+        
         if nuevo_estado in dict(VigenciaPlan.TIPO_DURACION).keys():
             vigencia.estado = nuevo_estado
             vigencia.save()
+            
+            # Modificado: Bloquear solo usuarios del plan específico
+            usuarios_plan = Usuario.objects.filter(vigencia_plan=vigencia)
+            
             if nuevo_estado == 'suspendido':
-                vigencia.empresa.usuarios.update(is_locked=True)
+                usuarios_plan.update(is_locked=True)
             elif nuevo_estado == 'indefinido':
-                vigencia.empresa.usuarios.update(is_locked=False)
+                usuarios_plan.update(is_locked=False)
+            
             messages.success(request, f'Estado del plan actualizado a {vigencia.get_estado_display()}')
+        
         return redirect('empresa_detail', pk=vigencia.empresa.pk)
 
 # Cuenta Bloqueada View

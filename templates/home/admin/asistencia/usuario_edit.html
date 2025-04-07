@@ -1,46 +1,187 @@
 {% extends "central.html" %}
-{% load crispy_forms_tags %}
+{% load static crispy_forms_tags %}
 
 {% block content %}
+<br> <br>
 <div class="container-fluid">
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Editar Usuario: {{ object.username }}</h6>
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    Editar Usuario: {{ object.username }}
+                </h2>
+                <a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver
+                </a>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
+        
+        <div class="card-body p-4">
+            <form method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
-                {{ form|crispy }}
-                <div class="form-group">
-                    <label>Grupos</label>
-                    {% for group in all_groups %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="groups" 
-                               value="{{ group.id }}" id="group{{ group.id }}"
-                               {% if group in object.groups.all %}checked{% endif %}>
-                        <label class="form-check-label" for="group{{ group.id }}">
-                            {{ group.name }}
-                        </label>
+                
+                <!-- Sección Información Básica -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h3 class="h6 mb-0"><i class="fas fa-id-card mr-2"></i>Información Básica</h3>
                     </div>
-                    {% endfor %}
-                </div>
-                <div class="form-group">
-                    <label>Permisos Específicos</label>
-                    {% for permission in all_permissions %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="user_permissions" 
-                               value="{{ permission.id }}" id="perm{{ permission.id }}"
-                               {% if permission in object.user_permissions.all %}checked{% endif %}>
-                        <label class="form-check-label" for="perm{{ permission.id }}">
-                            {{ permission.name }}
-                        </label>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.username|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.rut|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.celular|as_crispy_field }}
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-secondary">Volver a Empresa</a>
+
+                <!-- Sección Rol -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h3 class="h6 mb-0"><i class="fas fa-user-tag mr-2"></i>Rol del Usuario</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.role|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Grupos Colapsable -->
+                <div class="card mb-4">
+                    <div class="accordion" id="gruposAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGrupos">
+                                    <i class="fas fa-users-cog me-2"></i>
+                                    Grupos de Usuario
+                                </button>
+                            </h2>
+                            <div id="collapseGrupos" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                                        {% for group in all_groups %}
+                                        <div class="col">
+                                            <div class="form-check square-check">
+                                                <input type="checkbox" 
+                                                       name="groups" 
+                                                       value="{{ group.id }}" 
+                                                       id="group{{ group.id }}"
+                                                       class="form-check-input"
+                                                       {% if group in object.groups.all %}checked{% endif %}>
+                                                <label class="form-check-label" for="group{{ group.id }}">
+                                                    {{ group.name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Permisos Colapsable -->
+                <div class="card mb-4">
+                    <div class="accordion" id="permisosAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePermisos">
+                                    <i class="fas fa-user-shield me-2"></i>
+                                    Permisos Individuales
+                                </button>
+                            </h2>
+                            <div id="collapsePermisos" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="dual-listbox">
+                                        <select multiple class="form-control" name="user_permissions" id="id_permisos">
+                                            {% for permission in all_permissions %}
+                                            <option value="{{ permission.id }}" 
+                                                {% if permission in object.user_permissions.all %}selected{% endif %}>
+                                                {{ permission.name|cut:"Can " }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-flex justify-content-between border-top pt-4">
+                    <a href="{% url 'empresa_detail' empresa.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+.square-check .form-check-input {
+    border-radius: 3px;
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.2em;
+}
+
+.dual-listbox {
+    width: 100%;
+    min-height: 300px;
+}
+
+.dual-listbox select {
+    width: 100%;
+    height: 300px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .dual-listbox select {
+        height: 200px;
+    }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Inicializar dual listbox para permisos
+    $('#id_permisos').bootstrapDualListbox({
+        nonSelectedListLabel: 'Permisos Disponibles',
+        selectedListLabel: 'Permisos Asignados',
+        preserveSelectionOnMove: 'moved',
+        moveOnSelect: false,
+        infoText: 'Mostrando {0} elementos',
+        filterPlaceHolder: 'Buscar...',
+        moveAllLabel: 'Mover todos',
+        removeAllLabel: 'Quitar todos',
+        selectorMinimalHeight: 300
+    });
+});
+</script>
 {% endblock %}
