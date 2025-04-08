@@ -53,7 +53,7 @@ def format_rut(rut):
     numeros_formateado = ""
     # Agrupa de derecha a izquierda en bloques de tres dígitos
     while len(numeros) > 3:
-        numeros_formateado = "." + numeros[-3:] + numeros_formateado
+        numeros_formateado = "" + numeros[-3:] + numeros_formateado
         numeros = numeros[:-3]
     numeros_formateado = numeros + numeros_formateado
     return f"{numeros_formateado}-{dv}"

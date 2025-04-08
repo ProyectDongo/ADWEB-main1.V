@@ -11,7 +11,7 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form method="post" class="needs-validation" novalidate>
+                    <form method="post" class="needs-validation" novalidate id="vigenciaForm">
                         {% csrf_token %}
                         <div class="row g-3 mb-4">
                             <!-- Selección de Empresa -->
@@ -44,13 +44,21 @@
                             </div>
                         </div>
 
-                        <!-- Campo Código Plan (se genera automáticamente) -->
+                        <!-- Campo Código Plan con validación en tiempo real -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="text" id="codigo_plan" name="codigo_plan" class="form-control" placeholder="Código Plan" readonly required>
+                                <div class="form-floating position-relative">
+                                    <input type="text" id="codigo_plan" name="codigo_plan" 
+                                           class="form-control {% if form.codigo_plan.errors %}is-invalid{% endif %}" 
+                                           placeholder="Código Plan" 
+                                           value="{{ form.codigo_plan.value|default_if_none:'' }}"
+                                           required>
                                     <label for="codigo_plan">Código Plan</label>
+                                    <div class="invalid-feedback">{{ form.codigo_plan.errors }}</div>
+                                    <div id="codigoFeedback" class="position-absolute end-0 top-50 translate-middle-y me-3"></div>
+                                    <input type="hidden" id="codigoValido" value="false">
                                 </div>
+                                <div class="form-text">Ejemplo: EMPRESA_PLAN_BASICO</div>
                             </div>
                         </div>
 
@@ -94,7 +102,7 @@
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" id="precio_final" name="precio_final" class="form-control" placeholder="Precio con Descuento" readonly required>
-                                    <label>Precio inal</label>
+                                    <label>Precio Final</label>
                                 </div>
                             </div>
                         </div>
@@ -118,6 +126,53 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const codigoPlanInput = document.getElementById("codigo_plan");
+    const codigoFeedback = document.getElementById("codigoFeedback");
+    const codigoValidoInput = document.getElementById("codigoValido");
+    let checkTimeout;
+
+    // Función para verificar disponibilidad del código
+    function verificarCodigoPlan(codigo) {
+        fetch(`/check-codigo-plan/?codigo=${encodeURIComponent(codigo)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    codigoFeedback.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Código ya existe';
+                    codigoPlanInput.classList.add('is-invalid');
+                    codigoValidoInput.value = "false";
+                } else {
+                    codigoFeedback.innerHTML = '<i class="fas fa-check-circle text-success"></i> Código disponible';
+                    codigoPlanInput.classList.remove('is-invalid');
+                    codigoValidoInput.value = "true";
+                }
+            });
+    }
+
+    // Event listener para el input del código
+    codigoPlanInput.addEventListener('input', function(e) {
+        clearTimeout(checkTimeout);
+        const codigo = e.target.value.trim();
+        
+        if (codigo.length < 3) {
+            codigoFeedback.innerHTML = '';
+            codigoValidoInput.value = "false";
+            return;
+        }
+
+        checkTimeout = setTimeout(() => verificarCodigoPlan(codigo), 500);
+    });
+
+    // Validar antes de enviar el formulario
+    document.getElementById('vigenciaForm').addEventListener('submit', function(e) {
+        if (codigoValidoInput.value === "false") {
+            e.preventDefault();
+            codigoFeedback.innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Código inválido o ya existe';
+            codigoPlanInput.classList.add('is-invalid');
+            codigoPlanInput.focus();
+        }
+    });
+
+    // Resto del código existente...
     const descuentoInput = document.getElementById("descuento");
     const precioOriginalInput = document.getElementById("precio_original");
     const precioFinalInput = document.getElementById("precio_final");
@@ -125,7 +180,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const fechaInicioInput = document.getElementById("fecha_inicio");
     const fechaFinInput = document.getElementById("fecha_fin");
 
-    // Establecer la fecha de inicio con la fecha actual si no tiene valor
     if (!fechaInicioInput.value) {
         let today = new Date().toISOString().split('T')[0];
         fechaInicioInput.value = today;
@@ -138,67 +192,19 @@ document.addEventListener("DOMContentLoaded", function() {
         precioFinalInput.value = precioFinal.toFixed(2);
     }
 
-    function validarFormulario(event) {
-        if (precioOriginalInput.value === "" || isNaN(precioOriginalInput.value) || 
-            descuentoInput.value === "" || isNaN(descuentoInput.value)) {
-            event.preventDefault();
-            alert("Por favor, ingrese valores válidos para el precio y el descuento.");
-        }
-    }
-
-    // Actualizar precio original al seleccionar un plan
     const planSelect = document.getElementById("{{ form.plan.id_for_label }}");
     if (planSelect) {
         planSelect.addEventListener("change", function() {
             const selectedOption = planSelect.options[planSelect.selectedIndex];
             let planValor = selectedOption.getAttribute("data-valor") || "";
-            // Reemplazar la coma decimal por punto
             planValor = planValor.replace(',', '.');
             precioOriginalInput.value = planValor;
             calcularPrecioFinal();
-            actualizarCodigoPlan();
         });
     }
 
     descuentoInput.addEventListener("input", calcularPrecioFinal);
     precioOriginalInput.addEventListener("input", calcularPrecioFinal);
-    guardarBtn.addEventListener("click", validarFormulario);
-
-    // --- Lógica para actualizar el Código Plan ---
-    const empresaSelect = document.getElementById("{{ form.empresa.id_for_label }}");
-    // Reutilizamos el planSelect previamente declarado
-    const codigoPlanInput = document.getElementById("codigo_plan");
-
-    function actualizarCodigoPlan() {
-        // Se obtiene el nombre de la empresa y se eliminan espacios innecesarios
-        const empresaNombre = empresaSelect.options[empresaSelect.selectedIndex]?.text.trim() || "";
-        // Se obtiene el nombre del plan
-        const planNombre = planSelect.options[planSelect.selectedIndex]?.text.trim() || "";
-        // Se concatena y se asigna al input
-        codigoPlanInput.value = empresaNombre + "_" + planNombre;
-    }
-
-    // Actualizar el código cuando cambie la empresa o el plan
-    if (empresaSelect) {
-        empresaSelect.addEventListener("change", actualizarCodigoPlan);
-    }
-    if (planSelect) {
-        planSelect.addEventListener("change", actualizarCodigoPlan);
-    }
-
-    // Actualizar al cargar la página
-    actualizarCodigoPlan();
 });
-  // Función para actualizar el Código Vigencia (generado pero no mostrado)
-  function actualizarCodigoVigencia() {
-    const razonSocialInput = document.getElementById('id_nombre');
-    const codigoVigenciaInput = document.getElementById('{{ vigencia_form.codigo_plan.id_for_label }}');
-    if (razonSocialInput && planSelect && codigoVigenciaInput) {
-      const razonSocial = razonSocialInput.value.trim();
-      const planName = planSelect.options[planSelect.selectedIndex].text.trim();
-      codigoVigenciaInput.value = razonSocial + " " + planName;
-    }
-  }
-
 </script>
 {% endblock %}

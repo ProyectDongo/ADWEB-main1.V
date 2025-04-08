@@ -10,7 +10,7 @@ def crear_admin(request):
         form = AdminForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('home')
+            return redirect('configuracion_home')
         else:
             print(form.errors)  # Depuración de errores
     else:

@@ -31,7 +31,7 @@ class CaptureFingerprintView(View):
             except Usuario.DoesNotExist:
                 selected_user = None
         
-        return render(request, 'biometrics/register_fingerprint.html', {
+        return render(request, 'modules/biometrics/register_fingerprint.html', {
             'usuarios': usuarios,
             'selected_user': selected_user
         })
@@ -132,7 +132,7 @@ class AuthenticateFingerprintView(View):
 
 class AttendanceView(View):
     def get(self, request):
-        return render(request, 'biometrics/attendance.html')
+        return render(request, 'modules/biometrics/attendance.html')
     
 class AttendanceRecordView(LoginRequiredMixin, View):
     def get(self, request, user_id):
@@ -154,7 +154,7 @@ class AttendanceRecordView(LoginRequiredMixin, View):
                 registro.horas_totales = None
         
         # Renderiza la plantilla con los datos
-        return render(request, 'biometrics/attendance_record.html', {
+        return render(request, 'modules/biometrics/attendance_record.html', {
             'user': user,
             'registros': registros
         })

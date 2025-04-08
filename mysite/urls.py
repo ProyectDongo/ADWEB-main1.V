@@ -26,7 +26,7 @@ from django.shortcuts import redirect
 
 from WEB.views.config.views import sofware
 from WEB.views.estadisticas.views import estadisticas
-from WEB.views.sso.views import autenticacion, permisos
+from WEB.views.sso.views import autenticacion, modulo_asistencia, permisos,supervisor,trabajadores
 from WEB.views.tools.views import utilidades
 
 from WEB.views.clientes.pagos.views import pagos
@@ -53,8 +53,8 @@ urlpatterns = [
     path('supervisor_home/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
       
     #usuario:
-    path('trabajador_home/', autenticacion.trabajador_home, name='trabajador_home'),
-          path('ver_registros/', autenticacion.ver_registros, name='ver_registros'),
+    path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),
+          path('ver_registros/', trabajadores.ver_registros, name='ver_registros'),
     #configuracion:
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
@@ -80,6 +80,7 @@ urlpatterns = [
         path('servicios/<int:empresa_id>/', empresas.servicios, name='servicios'),
             #botn para asociar nuevo servicio:
             path('vigencia_planes/<int:pk>/', empresas.vigencia_planes, name='vigencia_planes'),
+                 path('check-codigo-plan/', empresas.check_codigo_plan, name='check_codigo_plan'),
                 #botones dentro del despliegue:
                     #generar boleta:
                         path('generar_boleta/<int:empresa_id>/', empresas.generar_boleta, name='generar_boleta'),
@@ -144,15 +145,15 @@ urlpatterns = [
     
 
     #modulo asistencia:
-    path('validate-rut/', autenticacion.validate_rut, name='validate_rut'),
-    path('empresa/<int:pk>/', autenticacion.EmpresaDetailView.as_view(), name='empresa_detail'),
-    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/supervisor/crear/', autenticacion.SupervisorCreateView.as_view(), name='supervisor_create'),
-    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/usuario/crear/', autenticacion.UsuarioCreateVigenciaView.as_view(), name='usuario_create_vigencia'),
-    path('usuario/editar/<int:pk>/', autenticacion.UsuarioUpdateView.as_view(), name='usuario_edit'),
-    path('usuario/eliminar/<int:pk>/', autenticacion.UsuarioDeleteView.as_view(), name='usuario_delete'),
-    path('vigencia-plan/<int:pk>/edit/', autenticacion.VigenciaPlanUpdateView.as_view(), name='vigencia_plan_edit'),
-    path('vigencia/<int:pk>/cambiar-estado/', autenticacion.VigenciaPlanStatusToggleView.as_view(), name='toggle_vigencia_status'),
-    path('cuenta-bloqueada/', autenticacion.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
+    path('validate-rut/', modulo_asistencia.validate_rut, name='validate_rut'),
+    path('empresa/<int:pk>/', modulo_asistencia.EmpresaDetailView.as_view(), name='empresa_detail'),
+    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/supervisor/crear/', modulo_asistencia.SupervisorCreateView.as_view(), name='supervisor_create'),
+    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/usuario/crear/',  modulo_asistencia.UsuarioCreateVigenciaView.as_view(), name='usuario_create_vigencia'),
+    path('usuario/editar/<int:pk>/',  modulo_asistencia.UsuarioUpdateView.as_view(), name='usuario_edit'),
+    path('usuario/eliminar/<int:pk>/',  modulo_asistencia.UsuarioDeleteView.as_view(), name='usuario_delete'),
+    path('vigencia-plan/<int:pk>/edit/',  modulo_asistencia.VigenciaPlanUpdateView.as_view(), name='vigencia_plan_edit'),
+    path('vigencia/<int:pk>/cambiar-estado/',  modulo_asistencia.VigenciaPlanStatusToggleView.as_view(), name='toggle_vigencia_status'),
+    path('cuenta-bloqueada/',  modulo_asistencia.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
     path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),  
     path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
 
@@ -161,18 +162,18 @@ urlpatterns = [
    
 
    #supervisor_home: accciomnes 
-    path('supervisor/home/', autenticacion.SupervisorHomeView.as_view(), name='supervisor_home'),
-    path('crear_usuario/<int:empresa_id>/', autenticacion.crear_usuario, name='crear_usuario'),
-    path('editar_usuario/<int:usuario_id>/', autenticacion.editar_usuario, name='editar_usuario'),
-    path('eliminar_usuario/<int:usuario_id>/',autenticacion.eliminar_usuario, name='eliminar_usuario'),
-    path('editar_empresa/<int:pk>/', autenticacion.EditarEmpresaView.as_view(), name='editar_empresa'),
+    path('supervisor/home/', supervisor.SupervisorHomeView.as_view(), name='supervisor_home'),
+    path('crear_usuario/<int:empresa_id>/', supervisor.crear_usuario, name='crear_usuario'),
+    path('editar_usuario/<int:usuario_id>/', supervisor.editar_usuario, name='editar_usuario'),
+    path('eliminar_usuario/<int:usuario_id>/',supervisor.eliminar_usuario, name='eliminar_usuario'),
+    path('editar_empresa/<int:pk>/', supervisor.EditarEmpresaView.as_view(), name='editar_empresa'),
+
     # Empresa
     
    
+
+   #---------------------------------------------------------------------------------------------------------------------------------------------------#
     # biomtrica 
-
-
-   
     path('biometrics/', include('biometrics.urls')),
     
 

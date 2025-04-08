@@ -1,0 +1,234 @@
+{% extends "central.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card animate__animated animate__fadeInUp shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">
+                                <i class="fas fa-file-contract me-2"></i>
+                                Gestión de Vigencia de Plan: {{ object.codigo_plan }}
+                            </h3>
+                            <small class="text-white-50">Última actualización: {{ object.updated_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <a href="{% url 'empresa_detail' object.empresa.pk %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Volver
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" id="vigenciaForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Sección Información Principal -->
+                        <div class="mb-4 border-bottom pb-3">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-building me-2"></i>Información Corporativa
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control-plaintext bg-light rounded" 
+                                               value="{{ object.empresa.nombre }}" readonly>
+                                        <label class="text-muted">Empresa Asociada</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.codigo_plan }}
+                                        <label>Código del Plan</label>
+                                        <small class="text-muted">Identificador único del contrato</small>
+                                        <div class="invalid-feedback">{{ form.codigo_plan.errors|first }}</div>
+                                        <div id="codigoFeedback" class="position-absolute end-0 top-50 translate-middle-y me-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Configuración Económica -->
+                        <div class="mb-4 border-bottom pb-3">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-chart-line me-2"></i>Parámetros Económicos
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            {{ form.monto_plan }}
+                                        </div>
+                                        <small class="text-muted">Valor base del plan contratado</small>
+                                        <div class="invalid-feedback">{{ form.monto_plan.errors|first }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <div class="input-group">
+                                            <span class="input-group-text">%</span>
+                                            {{ form.descuento }}
+                                           
+                                        </div>
+                                        
+                                        <small class="text-muted">0-100% de descuento</small>
+                                        <div class="invalid-feedback">{{ form.descuento.errors|first }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                       
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="text" class="form-control fw-bold text-success" 
+                                                   value="{{ object.monto_final|floatformat:2 }}" 
+                                                   id="montoFinal" readonly>
+                                            
+                                        </div>
+                                        
+                                        <small class="text-muted">Calculado automáticamente</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Configuración Operativa -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-users-gear me-2"></i>Configuración Operativa
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control-plaintext bg-light rounded" 
+                                               value="{{ object.plan.max_usuarios }}" readonly>
+                                        <label class="text-muted">Límite Base del Plan</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.max_usuarios_override }}
+                                        <label>Límite Personalizado</label>
+                                        <small class="text-muted">Máximo usuarios permitidos</small>
+                                        <div class="invalid-feedback">{{ form.max_usuarios_override.errors|first }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-flex justify-content-between border-top pt-4">
+                            <a href="{% url 'empresa_detail' object.empresa.pk %}" 
+                               class="btn btn-lg btn-outline-secondary">
+                                <i class="fas fa-times-circle me-2"></i>Descartar Cambios
+                            </a>
+                            <button type="submit" class="btn btn-lg btn-primary" id="submitBtn">
+                                <i class="fas fa-save me-2"></i>Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    {% for message in messages %}
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-auto">Operación Exitosa</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validación en tiempo real del código de plan
+    function verificarCodigoPlan() {
+        const codigo = $('#id_codigo_plan').val();
+        if (codigo.length < 3) return;
+        
+        $.get(`/check-codigo-plan/?codigo=${encodeURIComponent(codigo)}`, function(data) {
+            const feedback = $('#codigoFeedback');
+            if (data.exists && codigo !== '{{ object.codigo_plan }}') {
+                feedback.html('<i class="fas fa-times-circle text-danger"></i> Código en uso');
+                $('#id_codigo_plan').addClass('is-invalid');
+            } else {
+                feedback.html('<i class="fas fa-check-circle text-success"></i> Disponible');
+                $('#id_codigo_plan').removeClass('is-invalid');
+            }
+        });
+    }
+
+    // Cálculo en tiempo real del monto final
+    function calcularMontoFinal() {
+        const montoBase = parseFloat($('#id_monto_plan').val()) || 0;
+        const descuento = parseFloat($('#id_descuento').val()) || 0;
+        const montoFinal = montoBase * (1 - (descuento / 100));
+        $('#montoFinal').val(montoFinal.toFixed(2));
+    }
+
+    // Event listeners
+    $('#id_codigo_plan').on('input', _.debounce(verificarCodigoPlan, 300));
+    $('#id_monto_plan, #id_descuento').on('input', calcularMontoFinal);
+    
+    $('#vigenciaForm').on('submit', function() {
+        $('#submitBtn').html('<div class="spinner-border spinner-border-sm" role="status"></div> Guardando...')
+                       .prop('disabled', true);
+    });
+});
+</script>
+
+<style>
+.card {
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.form-floating label {
+    transition: all 0.2s ease;
+}
+
+.input-group-text {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.form-control-plaintext {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: #f8f9fa;
+}
+</style>
+{% endblock %}

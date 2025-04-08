@@ -211,18 +211,13 @@ def recuperar_empresa(request, id):
 @login_required
 def vigencia_planes(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, id=pk)
-    
-    # Si existe un plan_id en la query string, lo obtenemos y lo asignamos al formulario
     plan_id = request.GET.get('plan_id')
-    plan = None
-    if plan_id:
-        plan = get_object_or_404(Plan, id=plan_id)
-    
+    plan = get_object_or_404(Plan, id=plan_id) if plan_id else None
+
     if request.method == 'POST':
         form = PlanVigenciaForm(request.POST)
         if form.is_valid():
             vigencia_plan = form.save(commit=False)
-            # Asigna la empresa capturada de la URL
             vigencia_plan.empresa = empresa
             if plan:
                 vigencia_plan.plan = plan
@@ -233,15 +228,26 @@ def vigencia_planes(request, pk):
             except ValueError as e:
                 form.add_error(None, str(e))
     else:
-        form = PlanVigenciaForm(initial={'empresa': empresa, 'plan': plan})
-        
+        initial = {'empresa': empresa.id, 'plan': plan.id if plan else None}
+        if plan:
+            initial.update({
+                'precio_original': plan.valor,
+                'codigo_plan': f"{empresa.nombre}_{plan.nombre}".replace(' ', '_').upper()
+            })
+        form = PlanVigenciaForm(initial=initial)
         form.fields['empresa'].disabled = True
-    
+
     return render(request, 'admin/clientes/lista_clientes/nuevo_plan/vigencia_planes.html', {
         'form': form,
         'plan': plan,
         'empresa': empresa
     })
+
+@login_required
+def check_codigo_plan(request):
+    codigo = request.GET.get('codigo', '')
+    exists = VigenciaPlan.objects.filter(codigo_plan__iexact=codigo).exists()
+    return JsonResponse({'exists': exists})
 
 
 @login_required

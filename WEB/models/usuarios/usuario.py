@@ -21,7 +21,7 @@ class Usuario(AbstractUser):
     rut = models.CharField(max_length=12, unique=True, validators=[validar_rut], blank=True)
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
-    vigencia_plan = models.ForeignKey(VigenciaPlan, on_delete=models.CASCADE, related_name='usuarios')
+    vigencia_plan = models.ForeignKey(VigenciaPlan, on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
     
     groups = models.ManyToManyField(
         Group,
