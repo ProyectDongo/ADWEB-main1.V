@@ -7,277 +7,277 @@
 <div class="container-fluid px-4">
     <!-- Encabezado -->
     <div class="d-flex align-items-center justify-content-between mb-4 mt-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-building me-2"></i>{{ empresa.nombre|truncatechars:30 }}
-        </h1>
-        <div>
-            <a href="#" class="btn btn-primary btn-icon-split" data-bs-toggle="modal" data-bs-target="#editarEmpresaModal" title="Datos de empresa">
-                <span class="icon text-white-50"><i class="fas fa-cog"></i></span>
-                <span class="text">Configuración</span>
-            </a>
-            <a href="{% url 'attendance' %}" class="btn btn-info btn-icon-split ms-2" title="Asistencia">
-                <span class="icon text-white-50"><i class="bi bi-clock"></i></span>
-                <span class="text">Asistencia</span>
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                <i class="fas fa-building fa-2x"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-0 text-gray-800">{{ empresa.nombre|truncatechars:30 }}</h1>
+                <small class="text-muted">Vigencia Plan: {{ vigencia_plan.codigo_plan }}</small>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance' %}" class="btn btn-primary" title="Asistencia">
+                <i class="fas fa-clock me-2"></i>Control Asistencia
             </a>
         </div>
     </div>
 
     <!-- Tarjeta Información Empresa -->
-    <div class="card border-left-primary shadow py-2 mb-4 animate__animated animate__fadeIn">
+    <div class="card border-0 shadow-lg mb-4 animate__animated animate__fadeIn">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Información Corporativa</h5>
+        </div>
         <div class="card-body">
-            <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                        Detalles de la Empresa
-                    </div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                        <ul class="list-unstyled mb-0">
-                            <li><i class="fas fa-id-card me-2"></i>RUT: {{ empresa.rut }}</li>
-                            <li><i class="fas fa-map-marker-alt me-2"></i>{{ empresa.direccion }}</li>
-                            <li><i class="fas fa-phone me-2"></i>{{ empresa.telefono }}</li>
-                        </ul>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-id-card fa-lg text-muted me-3"></i>
+                        <div>
+                            <small class="text-muted">RUT Empresa</small>
+                            <div class="h6 mb-0">{{ empresa.rut }}</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-auto">
-                    <i class="fas fa-building fa-3x text-gray-300"></i>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-map-marker-alt fa-lg text-muted me-3"></i>
+                        <div>
+                            <small class="text-muted">Dirección</small>
+                            <div class="h6 mb-0">{{ empresa.direccion }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-phone fa-lg text-muted me-3"></i>
+                        <div>
+                            <small class="text-muted">Teléfono</small>
+                            <div class="h6 mb-0">{{ empresa.telefono }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Pestañas -->
-    <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button" role="tab" aria-controls="supervisores" aria-selected="true">
-                <i class="fas fa-user-shield me-2"></i>Supervisores ({{ supervisores.count }})
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button" role="tab" aria-controls="trabajadores" aria-selected="false">
-                <i class="fas fa-users me-2"></i>Trabajadores ({{ trabajadores.count }})
-            </button>
-        </li>
-    </ul>
-
-    <!-- Contenido Pestañas -->
-    <div class="tab-content" id="mainTabsContent">
-        <!-- Pestaña Supervisores -->
-        <div class="tab-pane fade show active" id="supervisores" role="tabpanel">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administrar Supervisores</h4>
-                <a class="btn btn-success btn-icon-split" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="supervisor" title="Añadir nuevo supervisor">
-                    <span class="icon text-white-50"><i class="bi bi-person-plus-fill"></i></span>
-                    <span class="text">Nuevo</span>
-                </a>
-            </div>
-            <div class="table-responsive shadow-sm rounded">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th><i class="fas fa-user me-2"></i>Nombre</th>
-                            <th><i class="fas fa-at me-2"></i>Usuario</th>
-                            <th class="text-end"><i class="fas fa-cogs me-2"></i>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for supervisor in supervisores %}
-                        <tr>
-                            <td>{{ supervisor.get_full_name }}</td>
-                            <td>@{{ supervisor.username }}</td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="#" class="btn btn-sm btn-outline-primary editar-usuario" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'register' %}?user_id={{ supervisor.id }}" class="btn btn-sm btn-outline-success" title="Registrar Huella">
-                                        <i class="fas fa-fingerprint"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger eliminar-usuario" data-id="{{ supervisor.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    <a href="{% url 'attendance_record' supervisor.id %}" class="btn btn-sm btn-outline-info" title="Ver Registro">
-                                        <i class="fas fa-list"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-4">
-                                <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
-                                <p class="text-muted">No se han encontrado supervisores</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white border-0 pt-3">
+            <ul class="nav nav-pills nav-underline gap-2" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button">
+                        <i class="fas fa-user-shield me-2"></i>Supervisores
+                        <span class="badge bg-primary ms-2">{{ supervisores.count }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button">
+                        <i class="fas fa-users-gear me-2"></i>Trabajadores
+                        <span class="badge bg-primary ms-2">{{ trabajadores.count }}</span>
+                    </button>
+                </li>
+            </ul>
         </div>
 
-        <!-- Pestaña Trabajadores -->
-        <div class="tab-pane fade" id="trabajadores" role="tabpanel">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Administrar Trabajadores</h4>
-                <a class="btn btn-success btn-icon-split" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" data-tipo="trabajador" title="Añadir nuevo trabajador">
-                    <span class="icon text-white-50"><i class="bi bi-person-plus-fill"></i></span>
-                    <span class="text">Nuevo</span>
-                </a>
-            </div>
-            <div class="table-responsive shadow-sm rounded">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th><i class="fas fa-user me-2"></i>Nombre</th>
-                            <th><i class="fas fa-at me-2"></i>Usuario</th>
-                            <th class="text-end"><i class="fas fa-cogs me-2"></i>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for trabajador in trabajadores %}
-                        <tr>
-                            <td>{{ trabajador.get_full_name }}</td>
-                            <td>@{{ trabajador.username }}</td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="#" class="btn btn-sm btn-outline-primary editar-usuario" data-id="{{ trabajador.id }}" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'register' %}?user_id={{ trabajador.id }}" class="btn btn-sm btn-outline-success" title="Registrar Huella">
-                                        <i class="fas fa-fingerprint"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger eliminar-usuario" data-id="{{ trabajador.id }}" data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal" title="Eliminar">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    <a href="{% url 'attendance_record' trabajador.id %}" class="btn btn-sm btn-outline-info" title="Ver Registro">
-                                        <i class="fas fa-list"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-4">
-                                <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
-                                <p class="text-muted">No se han encontrado trabajadores</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card-body p-0">
+            <div class="tab-content" id="mainTabsContent">
+                <!-- Pestaña Supervisores -->
+                <div class="tab-pane fade show active" id="supervisores">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administración de Supervisores</h5>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="supervisor">
+                                <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive rounded">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>RUT</th>
+                                        <th>Correo</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for supervisor in supervisores %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                                    {{ supervisor.first_name|first|upper }}
+                                                </div>
+                                                {{ supervisor.get_full_name }}
+                                            </div>
+                                        </td>
+                                        <td>{{ supervisor.rut }}</td>
+                                        <td>{{ supervisor.email }}</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-primary editar-usuario" 
+                                                        data-id="{{ supervisor.id }}" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#usuarioModal">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-fingerprint"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
+                                                        data-id="{{ supervisor.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                                <p>No hay supervisores registrados</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña Trabajadores -->
+                <div class="tab-pane fade" id="trabajadores">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0"><i class="fas fa-users-gear me-2"></i>Administración de Trabajadores</h5>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="trabajador">
+                                <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive rounded">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>RUT</th>
+                                        <th>Correo</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trabajador in trabajadores %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                                    {{ trabajador.first_name|first|upper }}
+                                                </div>
+                                                {{ trabajador.get_full_name }}
+                                            </div>
+                                        </td>
+                                        <td>{{ trabajador.rut }}</td>
+                                        <td>{{ trabajador.email }}</td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-primary editar-usuario" 
+                                                        data-id="{{ trabajador.id }}" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#usuarioModal">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-fingerprint"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
+                                                        data-id="{{ trabajador.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                                <p>No hay trabajadores registrados</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Crear/Editar Usuario -->
-<div class="modal fade" id="crearUsuarioModal" tabindex="-1" aria-labelledby="crearUsuarioModalLabel" aria-hidden="true">
+<!-- Modal Usuario -->
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="crearUsuarioModalLabel">
-                    <i class="fas fa-user-plus me-2"></i><span id="modalTitulo">Nuevo Usuario</span>
-                </h5>
+                <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i><span id="modalTitle">Nuevo Usuario</span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="usuarioForm" method="post">
                 {% csrf_token %}
                 <div class="modal-body">
+                    <input type="hidden" name="vigencia_plan_id" value="{{ vigencia_plan.id }}">
                     <input type="hidden" name="tipo_usuario" id="tipoUsuario">
+                    
                     <div class="mb-3">
                         <label class="form-label">RUT</label>
-                        <input type="text" class="form-control" name="rut" required>
-                        <div class="invalid-feedback" id="rut-error">RUT INVÁLIDO</div>
+                        <input type="text" class="form-control" name="rut" required
+                               placeholder="Ej: 12345678-9" 
+                               data-rut-validation
+                               data-validation-url="{% url 'validate_rut' %}">
+                        <div class="invalid-feedback" id="rutError"></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nombre de Usuario</label>
-                        <input type="text" class="form-control" name="username" required>
-                        <div class="invalid-feedback" id="username-error">ERROR YA EXISTE</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nombres</label>
-                        <input type="text" class="form-control" name="first_name" required>
-                        <div class="invalid-feedback" id="first_name-error"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Apellidos</label>
-                        <input type="text" class="form-control" name="last_name" required>
-                        <div class="invalid-feedback" id="last_name-error"></div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" name="email" required>
-                        <div class="invalid-feedback" id="email-error">ERROR YA EXISTE</div>
-                    </div>
-                    <div class="mb-3" id="passwordField">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" name="password" required>
-                        <div class="invalid-feedback" id="password-error"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Eliminar Usuario -->
-<div class="modal fade" id="eliminarUsuarioModal" tabindex="-1" aria-labelledby="eliminarUsuarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="eliminarUsuarioModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" id="eliminarForm" action="">
-                {% csrf_token %}
-                <div class="modal-body">
-                    ¿Estás seguro de eliminar este usuario?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Editar Empresa -->
-<div class="modal fade" id="editarEmpresaModal" tabindex="-1" aria-labelledby="editarEmpresaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="editarEmpresaModalLabel">
-                    <i class="fas fa-edit me-2"></i>Editar Empresa
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="{% url 'editar_empresa' empresa.id %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre</label>
-                        <input type="text" class="form-control" name="nombre" value="{{ empresa.nombre }}" required>
-                    </div>
+                    
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">RUT</label>
-                            <input type="text" class="form-control" name="rut" value="{{ empresa.rut }}" required>
+                            <label class="form-label">Nombres</label>
+                            <input type="text" class="form-control" name="first_name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" name="telefono" value="{{ empresa.telefono }}" required>
+                            <label class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" name="last_name" required>
                         </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Correo Electrónico</label>
+                            <input type="email" 
+                            class="form-control" 
+                            name="email"
+                            data-validation-url="{% url 'validate_email' %}" 
+                            required>
+                            <div class="invalid-feedback" id="emailError"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" id="passwordField" required>
+                        <div class="invalid-feedback" id="passwordError"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="submit-text">Guardar</span>
+                        <div class="spinner-border spinner-border-sm d-none" role="status"></div>
+                    </button>
                 </div>
             </form>
         </div>
@@ -286,104 +286,159 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    $('#crearUsuarioModal').on('show.bs.modal', function(event) {
-        const button = $(event.relatedTarget);
-        const tipo = button.data('tipo');
-        const isEdit = button.hasClass('editar-usuario');
-        const modal = $(this);
+    const usuarioModal = new bootstrap.Modal('#usuarioModal');
+    let currentUser = null;
+
+    // Configurar modal
+    $('#usuarioModal').on('show.bs.modal', function(e) {
+        const isEdit = $(e.relatedTarget).hasClass('editar-usuario');
+        const tipo = $(e.relatedTarget).data('tipo') || 'trabajador';
+        currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
         
-        if (isEdit) {
-            const usuarioId = button.data('id');
-            fetch(`/editar_usuario/${usuarioId}/`)
-                .then(response => response.json())
+        if(isEdit) {
+            $('#modalTitle').text('Editar Usuario');
+            $('#passwordField').hide().removeAttr('required');
+            fetch(`/usuarios/${currentUser}/`)
+                .then(r => r.json())
                 .then(data => {
-                    modal.find('#modalTitulo').text('Editar Usuario');
-                    modal.find('#tipoUsuario').val(tipo);
-                    modal.find('input[name="rut"]').val(data.rut);
-                    modal.find('input[name="username"]').val(data.username);
-                    modal.find('input[name="first_name"]').val(data.first_name);
-                    modal.find('input[name="last_name"]').val(data.last_name);
-                    modal.find('input[name="email"]').val(data.email);
-                    modal.find('input[name="password"]').val('').removeAttr('required');
-                    modal.find('#usuarioForm').attr('data-action', `/editar_usuario/${usuarioId}/`);
-                })
-                .catch(error => console.error('Error al cargar datos del usuario:', error));
+                    $('input[name="rut"]').val(data.rut);
+                    $('input[name="first_name"]').val(data.first_name);
+                    $('input[name="last_name"]').val(data.last_name);
+                    $('input[name="email"]').val(data.email);
+                });
         } else {
-            modal.find('#modalTitulo').text('Nuevo ' + (tipo === 'supervisor' ? 'Supervisor' : 'Trabajador'));
-            modal.find('#tipoUsuario').val(tipo);
-            modal.find('#usuarioForm')[0].reset();
-            modal.find('input[name="password"]').attr('required', 'required');
-            modal.find('#usuarioForm').attr('data-action', `/crear_usuario/{{ empresa.id }}/`);
+            $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            $('#passwordField').show().attr('required', true);
+            $('#usuarioForm')[0].reset();
         }
         
-        modal.find('.invalid-feedback').text('');
-        modal.find('.form-control').removeClass('is-invalid');
+        $('#tipoUsuario').val(tipo);
+        $('#usuarioForm').attr('action', isEdit ? `/usuarios/${currentUser}/editar/` : '/usuarios/crear/');
     });
 
-    $('#usuarioForm').on('submit', function(event) {
-        event.preventDefault();
-        const form = $(this);
-        const action = form.attr('data-action');
-        const formData = form.serialize();
+    // Validación RUT en tiempo real
+    $('[data-rut-validation]').on('input', _.debounce(function() {
+        const rut = $(this).val();
+        if(!validarFormatoRUT(rut)) {
+            showValidationError(this, 'Formato RUT inválido');
+            return;
+        }
         
+        fetch($(this).data('validation-url') + `?rut=${rut}`)
+            .then(r => r.json())
+            .then(data => {
+                if(data.exists) showValidationError(this, 'RUT ya registrado');
+                else clearValidationError(this);
+            });
+    }, 300));
+
+    // Validación Email en tiempo real
+    $('[data-email-validation]').on('input', _.debounce(function() {
+        const email = $(this).val();
+        if(!isValidEmail(email)) {
+            showValidationError(this, 'Formato email inválido');
+            return;
+        }
+        
+        fetch($(this).data('validation-url') + `?email=${email}`)
+            .then(r => r.json())
+            .then(data => {
+                if(data.exists) showValidationError(this, 'Email ya registrado');
+                else clearValidationError(this);
+            });
+    }, 300));
+
+    // Envío del formulario
+    $('#usuarioForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const btn = form.find('button[type="submit"]');
+        
+        btn.prop('disabled', true);
+        btn.find('.submit-text').hide();
+        btn.find('.spinner-border').removeClass('d-none');
+
         $.ajax({
-            type: 'POST',
-            url: action,
-            data: formData,
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
             success: function(response) {
-                if (response.success) {
-                    $('#crearUsuarioModal').modal('hide');
-                    location.reload();
-                } else {
-                    for (const field in response.errors) {
-                        const errorDiv = $(`#${field}-error`);
-                        errorDiv.text(response.errors[field][0]);
-                        form.find(`[name="${field}"]`).addClass('is-invalid');
-                    }
-                }
+                usuarioModal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Operación Exitosa',
+                    text: response.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => location.reload());
             },
             error: function(xhr) {
-                console.error('Error en la solicitud:', xhr);
+                const errors = xhr.responseJSON.errors;
+                Object.keys(errors).forEach(field => {
+                    $(`#${field}Error`).text(errors[field][0]).show();
+                    $(`[name="${field}"]`).addClass('is-invalid');
+                });
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+                btn.find('.submit-text').show();
+                btn.find('.spinner-border').addClass('d-none');
             }
         });
     });
 
-    $('.eliminar-usuario').on('click', function() {
-        const usuarioId = $(this).data('id');
-        $('#eliminarForm').attr('action', `/eliminar_usuario/${usuarioId}/`);
-    });
+    // Funciones de ayuda
+    function validarFormatoRUT(rut) {
+        return /^[0-9]{7,8}-[0-9kK]$/.test(rut);
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showValidationError(field, message) {
+        $(field).addClass('is-invalid');
+        $(field).next('.invalid-feedback').text(message).show();
+    }
+
+    function clearValidationError(field) {
+        $(field).removeClass('is-invalid');
+        $(field).next('.invalid-feedback').hide();
+    }
 });
 </script>
 
 <style>
-    .btn-icon-split .icon {
-        padding: 0.5rem;
-    }
-    .btn-icon-split .text {
-        padding: 0.5rem 1rem;
-    }
-    .table th {
-        font-weight: 600;
-        border-bottom: 2px solid #dee2e6;
-    }
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        transition: all 0.2s ease;
-    }
-    .btn-outline-primary:hover, .btn-outline-success:hover, .btn-outline-danger:hover, .btn-outline-info:hover {
-        color: white;
-    }
-    .card:hover {
-        transform: translateY(-3px);
-        transition: all 0.3s ease;
-    }
+.avatar-lg {
+    width: 60px;
+    height: 60px;
+}
+
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+}
+
+.table-hover tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+}
+
+.btn-outline-primary:hover, 
+.btn-outline-success:hover, 
+.btn-outline-danger:hover {
+    transform: translateY(-2px);
+}
 </style>
 {% endblock %}

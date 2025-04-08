@@ -26,7 +26,7 @@ from django.shortcuts import redirect
 
 from WEB.views.config.views import sofware
 from WEB.views.estadisticas.views import estadisticas
-from WEB.views.sso.views import autenticacion, modulo_asistencia, permisos,supervisor,trabajadores
+from WEB.views.sso.views import autenticacion, modulo_asistencia, permisos,trabajadores,supervisor
 from WEB.views.tools.views import utilidades
 
 from WEB.views.clientes.pagos.views import pagos
@@ -162,11 +162,15 @@ urlpatterns = [
    
 
    #supervisor_home: accciomnes 
-    path('supervisor/home/', supervisor.SupervisorHomeView.as_view(), name='supervisor_home'),
-    path('crear_usuario/<int:empresa_id>/', supervisor.crear_usuario, name='crear_usuario'),
-    path('editar_usuario/<int:usuario_id>/', supervisor.editar_usuario, name='editar_usuario'),
-    path('eliminar_usuario/<int:usuario_id>/',supervisor.eliminar_usuario, name='eliminar_usuario'),
-    path('editar_empresa/<int:pk>/', supervisor.EditarEmpresaView.as_view(), name='editar_empresa'),
+ 
+    path('gestion-usuarios/<int:vigencia_plan_id>/', supervisor.UserManagementView.as_view(), name='user_management'),
+    path('usuarios/<int:vigencia_plan_id>/crear/', supervisor.UserCreateUpdateView.as_view(), name='create_user'),
+    path('usuarios/<int:vigencia_plan_id>/editar/<int:user_id>/', supervisor.UserCreateUpdateView.as_view(), name='update_user'),
+    path('validar-campo/', supervisor.ValidationView.as_view(), name='validate_field'),
+    path('validar-rut/', supervisor.ValidationView.as_view(), name='validate_rut'),
+    path('validar-email/', supervisor.ValidationView.as_view(), name='validate_email'),
+     path('supervisor/home/', supervisor.SupervisorHomeView.as_view(), name='supervisor_home'),
+
 
     # Empresa
     
