@@ -180,5 +180,4 @@ urlpatterns = [
     # biomtrica 
     path('biometrics/', include('biometrics.urls')),
     
-
     ] 

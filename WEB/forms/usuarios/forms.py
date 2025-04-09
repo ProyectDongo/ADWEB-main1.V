@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
 from WEB.models import Usuario, RegistroEmpresas
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
+from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 
 class AdminForm(UserCreationForm):
@@ -308,12 +309,13 @@ class UsuarioForm(forms.ModelForm):
         return username
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
-        queryset = Usuario.objects.filter(email=email)
-        if self.instance.pk:
-            queryset = queryset.exclude(pk=self.instance.pk)
-        if queryset.exists():
-            raise forms.ValidationError("Este correo electrónico ya está registrado.")
+        email = self.cleaned_data.get('email').lower()  # Normalizar a minúsculas
+        if self.instance and self.instance.pk:
+            if Usuario.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+                raise ValidationError("Este correo electrónico ya está registrado.")
+        else:
+            if Usuario.objects.filter(email__iexact=email).exists():
+                raise ValidationError("Este correo electrónico ya está registrado.")
         return email
 
     def save(self, commit=True):

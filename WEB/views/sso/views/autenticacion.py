@@ -153,13 +153,27 @@ def configuracion_home(request):
 
 @login_required
 def supervisor_home(request, empresa_id):
+
+    vigencia_plan = request.user.vigencia_plan
+        
+        # Filtrar usuarios por la misma vigencia_plan
+    supervisores = Usuario.objects.filter(
+            vigencia_plan=vigencia_plan,
+            role='supervisor'
+        ).select_related('vigencia_plan')
+        
+    trabajadores = Usuario.objects.filter(
+            vigencia_plan=vigencia_plan,
+            role='trabajador'
+        ).select_related('vigencia_plan')
+            
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    supervisores = empresa.usuarios.filter(role='supervisor')
-    trabajadores = empresa.usuarios.filter(role='trabajador')
+
     context = {
-        'empresa': empresa,
-        'supervisores': supervisores,
-        'trabajadores': trabajadores,
+            'empresa': vigencia_plan.empresa,
+            'supervisores': supervisores,
+            'trabajadores': trabajadores,
+            'vigencia_plan': vigencia_plan
     }
     return render(request, 'home/supervisores/supervisor_home.html', context)
 

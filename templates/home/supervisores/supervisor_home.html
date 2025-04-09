@@ -120,15 +120,18 @@
                                                 <button class="btn btn-sm btn-outline-primary editar-usuario" 
                                                         data-id="{{ supervisor.id }}" 
                                                         data-bs-toggle="modal" 
-                                                        data-bs-target="#usuarioModal">
+                                                        data-bs-target="#usuarioModal"
+                                                        title="Editar Supervisor">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
-                                                   class="btn btn-sm btn-outline-success">
+                                                   class="btn btn-sm btn-outline-success"
+                                                   title="Registrar Huella">
                                                     <i class="fas fa-fingerprint"></i>
                                                 </a>
                                                 <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
-                                                        data-id="{{ supervisor.id }}">
+                                                        data-id="{{ supervisor.id }}"
+                                                        title="Eliminar Supervisor">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -188,15 +191,18 @@
                                                 <button class="btn btn-sm btn-outline-primary editar-usuario" 
                                                         data-id="{{ trabajador.id }}" 
                                                         data-bs-toggle="modal" 
-                                                        data-bs-target="#usuarioModal">
+                                                        data-bs-target="#usuarioModal"
+                                                        title="Editar Trabajador">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
-                                                   class="btn btn-sm btn-outline-success">
+                                                   class="btn btn-sm btn-outline-success"
+                                                   title="Registrar Huella">
                                                     <i class="fas fa-fingerprint"></i>
                                                 </a>
                                                 <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
-                                                        data-id="{{ trabajador.id }}">
+                                                        data-id="{{ trabajador.id }}"
+                                                        title="Eliminar Trabajador">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -235,6 +241,7 @@
                 <div class="modal-body">
                     <input type="hidden" name="vigencia_plan_id" value="{{ vigencia_plan.id }}">
                     <input type="hidden" name="tipo_usuario" id="tipoUsuario">
+                    <input type="hidden" name="username" id="usernameField"> <!-- Added hidden username field -->
                     
                     <div class="mb-3">
                         <label class="form-label">RUT</label>
@@ -258,17 +265,21 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Correo Electrónico</label>
-                            <input type="email" 
-                            class="form-control" 
-                            name="email"
-                            data-validation-url="{% url 'validate_email' %}" 
-                            required>
-                            <div class="invalid-feedback" id="emailError"></div>
+                        <input type="email" 
+                               class="form-control" 
+                               name="email"
+                               data-validation-url="{% url 'validate_email' %}" 
+                               required>
+                        <div class="invalid-feedback" id="emailError"></div>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" name="password" id="passwordField" required>
+                        <input type="password" 
+                               class="form-control" 
+                               name="password" 
+                               id="passwordField"
+                               placeholder="Dejar en blanco para no cambiar">
                         <div class="invalid-feedback" id="passwordError"></div>
                     </div>
                 </div>
@@ -286,43 +297,63 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const vigenciaPlanId = "{{ vigencia_plan.id }}";
     const usuarioModal = new bootstrap.Modal('#usuarioModal');
     let currentUser = null;
-
+    let originalEmail = null; // To store the original email during editing
+    $.ajaxSetup({
+    headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+    }       
+    });
     // Configurar modal
     $('#usuarioModal').on('show.bs.modal', function(e) {
         const isEdit = $(e.relatedTarget).hasClass('editar-usuario');
         const tipo = $(e.relatedTarget).data('tipo') || 'trabajador';
         currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
         
-        if(isEdit) {
+        if (isEdit) {
             $('#modalTitle').text('Editar Usuario');
-            $('#passwordField').hide().removeAttr('required');
-            fetch(`/usuarios/${currentUser}/`)
-                .then(r => r.json())
+            $('#passwordField').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+            fetch(`/usuarios/${vigenciaPlanId}/editar/${currentUser}/`)
+            .then(r => {
+                if (!r.ok) throw new Error('Error al cargar usuario');
+                return r.json();
+            })
                 .then(data => {
                     $('input[name="rut"]').val(data.rut);
                     $('input[name="first_name"]').val(data.first_name);
                     $('input[name="last_name"]').val(data.last_name);
                     $('input[name="email"]').val(data.email);
+                    $('input[name="username"]').val(data.username || data.rut.replace('-', '')); // Populate username
+                    originalEmail = data.email; // Store original email
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
                 });
         } else {
             $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-            $('#passwordField').show().attr('required', true);
+            $('#passwordField').attr({'required': true, 'placeholder': 'Contraseña'});
             $('#usuarioForm')[0].reset();
+            $('input[name="username"]').val(''); // Clear username for new user
+            originalEmail = null;
         }
         
         $('#tipoUsuario').val(tipo);
-        $('#usuarioForm').attr('action', isEdit ? `/usuarios/${currentUser}/editar/` : '/usuarios/crear/');
+        $('#usuarioForm').attr('action', isEdit ? 
+            `/usuarios/${vigenciaPlanId}/editar/${currentUser}/` : 
+            `/usuarios/${vigenciaPlanId}/crear/`);
     });
 
     // Validación RUT en tiempo real
     $('[data-rut-validation]').on('input', _.debounce(function() {
         const rut = $(this).val();
-        if(!validarFormatoRUT(rut)) {
+        if (!validarFormatoRUT(rut)) {
             showValidationError(this, 'Formato RUT inválido');
             return;
         }
@@ -330,30 +361,41 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch($(this).data('validation-url') + `?rut=${rut}`)
             .then(r => r.json())
             .then(data => {
-                if(data.exists) showValidationError(this, 'RUT ya registrado');
-                else clearValidationError(this);
+                if (data.exists && (!currentUser || $('input[name="rut"]').val() !== data.rut)) {
+                    showValidationError(this, 'RUT ya registrado');
+                } else {
+                    clearValidationError(this);
+                }
             });
     }, 300));
 
     // Validación Email en tiempo real
-    $('[data-email-validation]').on('input', _.debounce(function() {
+    $('[name="email"]').on('input', _.debounce(function() {
         const email = $(this).val();
-        if(!isValidEmail(email)) {
+        if (!isValidEmail(email)) {
             showValidationError(this, 'Formato email inválido');
+            return;
+        }
+        
+        if (originalEmail && email === originalEmail) {
+            clearValidationError(this);
             return;
         }
         
         fetch($(this).data('validation-url') + `?email=${email}`)
             .then(r => r.json())
             .then(data => {
-                if(data.exists) showValidationError(this, 'Email ya registrado');
-                else clearValidationError(this);
+                if (data.exists) {
+                    showValidationError(this, 'Email ya registrado');
+                } else {
+                    clearValidationError(this);
+                }
             });
     }, 300));
 
-    // Envío del formulario
+    // Envío del formulario con mejor manejo de errores
     $('#usuarioForm').on('submit', function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Prevenir envío tradicional
         const form = $(this);
         const btn = form.find('button[type="submit"]');
         
@@ -365,21 +407,28 @@ document.addEventListener('DOMContentLoaded', function() {
             url: form.attr('action'),
             method: 'POST',
             data: form.serialize(),
+            xhrFields: {
+                withCredentials: true  // Envía cookies
+            },
             success: function(response) {
                 usuarioModal.hide();
                 Swal.fire({
                     icon: 'success',
-                    title: 'Operación Exitosa',
+                    title: '¡Guardado!',
                     text: response.message,
                     showConfirmButton: false,
                     timer: 1500
-                }).then(() => location.reload());
+                }).then(() => {
+                    location.reload(); // Recargar la página
+                });
             },
             error: function(xhr) {
-                const errors = xhr.responseJSON.errors;
+                // Manejo de errores mejorado
+                const errors = xhr.responseJSON?.errors || {};
                 Object.keys(errors).forEach(field => {
+                    const input = $(`[name="${field}"]`);
+                    input.addClass('is-invalid');
                     $(`#${field}Error`).text(errors[field][0]).show();
-                    $(`[name="${field}"]`).addClass('is-invalid');
                 });
             },
             complete: function() {
@@ -389,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
 
     // Funciones de ayuda
     function validarFormatoRUT(rut) {
