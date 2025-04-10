@@ -50,7 +50,18 @@ urlpatterns = [
 
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
     #supervisor:
-    path('supervisor_home/<int:empresa_id>/', autenticacion.supervisor_home, name='supervisor_home'),
+    path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
+    path('supervisor/asistencia/<int:empresa_id>/<int:vigencia_plan_id>/', 
+         autenticacion.supervisor_home_asistencia, 
+         name='supervisor_home_asistencia'),
+    
+    path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', 
+         autenticacion.supervisor_home_contabilidad, 
+         name='supervisor_home_contabilidad'),
+    
+    path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', 
+         autenticacion.supervisor_home_almacen, 
+         name='supervisor_home_almacen'),
       
     #usuario:
     path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),
@@ -169,8 +180,7 @@ urlpatterns = [
     path('validar-campo/', supervisor.ValidationView.as_view(), name='validate_field'),
     path('validar-rut/', supervisor.ValidationView.as_view(), name='validate_rut'),
     path('validar-email/', supervisor.ValidationView.as_view(), name='validate_email'),
-     path('supervisor/home/', supervisor.SupervisorHomeView.as_view(), name='supervisor_home'),
-
+    
 
     # Empresa
     

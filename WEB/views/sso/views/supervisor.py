@@ -84,28 +84,3 @@ class ValidationView(View):
         return JsonResponse({'error': 'Campo inválido'}, status=400)
     
 
-class SupervisorHomeView(LoginRequiredMixin, View):
-    def get(self, request,vigencia_plan_id):
-        if request.user.role != 'supervisor':
-            return render(request, 'error/error.html')
-        
-        # Obtener vigencia_plan del usuario actual
-        vigencia_plan = request.user.vigencia_plan
-        vigencia_plan = get_object_or_404(VigenciaPlan, pk=vigencia_plan_id)
-        # Filtrar usuarios por la misma vigencia_plan
-        supervisores = Usuario.objects.filter(
-            vigencia_plan=vigencia_plan,
-            role='supervisor'
-        ).select_related('vigencia_plan')
-        
-        trabajadores = Usuario.objects.filter(
-            vigencia_plan=vigencia_plan,
-            role='trabajador'
-        ).select_related('vigencia_plan')
-        
-        return render(request, 'home/supervisores/supervisor_home.html', {
-            'empresa': vigencia_plan.empresa,
-            'supervisores': supervisores,
-            'trabajadores': trabajadores,
-            'vigencia_plan': vigencia_plan
-        })

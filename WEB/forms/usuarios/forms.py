@@ -173,6 +173,11 @@ class TrabajadorForm(UserCreationForm):
         required=True,
         label="RUT"
     )
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=True,
+        label="Nombres"
+    )
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control'}),
         required=True,

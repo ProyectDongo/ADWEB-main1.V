@@ -4,7 +4,9 @@
 {% block title %}{{ empresa.nombre }} | Panel{% endblock %}
 
 {% block content %}
+
 <div class="container-fluid px-4">
+   
     <!-- Encabezado -->
     <div class="d-flex align-items-center justify-content-between mb-4 mt-4">
         <div class="d-flex align-items-center gap-3">
@@ -19,6 +21,13 @@
         <div class="d-flex gap-2">
             <a href="{% url 'attendance' %}" class="btn btn-primary" title="Asistencia">
                 <i class="fas fa-clock me-2"></i>Control Asistencia
+            </a>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
+               class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Volver al Selector de Módulos
             </a>
         </div>
     </div>

@@ -31,11 +31,13 @@ class CaptureFingerprintView(View):
             except Usuario.DoesNotExist:
                 selected_user = None
         
+        # Añadir estos parámetros al contexto
         return render(request, 'modules/biometrics/register_fingerprint.html', {
             'usuarios': usuarios,
-            'selected_user': selected_user
+            'selected_user': selected_user,
+            'empresa_id': empresa.id,
+            'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
         })
-
 class FingerprintRegistrationView(LoginRequiredMixin, View):
     def post(self, request):
         try:
@@ -132,7 +134,13 @@ class AuthenticateFingerprintView(View):
 
 class AttendanceView(View):
     def get(self, request):
-        return render(request, 'modules/biometrics/attendance.html')
+        empresa = request.user.empresa
+        return render(request, 'modules/biometrics/attendance.html', {
+                'empresa_id': empresa.id,
+                'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
+            })
+  
+        
     
 class AttendanceRecordView(LoginRequiredMixin, View):
     def get(self, request, user_id):

@@ -32,6 +32,9 @@ reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v Liv
  solucion :
     python manage.py migrate admin 0001_initial --fake
     python manage.py migrate
+    
+comando para todos los servicios
+python manage.py runserver 0.0.0.0:8001
 
 
 
