@@ -1,12 +1,11 @@
 {% extends "central_user.html" %}
 {% load static %}
+{% load static crispy_forms_tags %}
 
 {% block title %}{{ empresa.nombre }} | Panel{% endblock %}
 
 {% block content %}
-
 <div class="container-fluid px-4">
-   
     <!-- Encabezado -->
     <div class="d-flex align-items-center justify-content-between mb-4 mt-4">
         <div class="d-flex align-items-center gap-3">
@@ -247,50 +246,8 @@
             </div>
             <form id="usuarioForm" method="post">
                 {% csrf_token %}
-                <div class="modal-body">
-                    <input type="hidden" name="vigencia_plan_id" value="{{ vigencia_plan.id }}">
-                    <input type="hidden" name="tipo_usuario" id="tipoUsuario">
-                    <input type="hidden" name="username" id="usernameField"> <!-- Added hidden username field -->
-                    
-                    <div class="mb-3">
-                        <label class="form-label">RUT</label>
-                        <input type="text" class="form-control" name="rut" required
-                               placeholder="Ej: 12345678-9" 
-                               data-rut-validation
-                               data-validation-url="{% url 'validate_rut' %}">
-                        <div class="invalid-feedback" id="rutError"></div>
-                    </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nombres</label>
-                            <input type="text" class="form-control" name="first_name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Apellidos</label>
-                            <input type="text" class="form-control" name="last_name" required>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Correo Electrónico</label>
-                        <input type="email" 
-                               class="form-control" 
-                               name="email"
-                               data-validation-url="{% url 'validate_email' %}" 
-                               required>
-                        <div class="invalid-feedback" id="emailError"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
-                        <input type="password" 
-                               class="form-control" 
-                               name="password" 
-                               id="passwordField"
-                               placeholder="Dejar en blanco para no cambiar">
-                        <div class="invalid-feedback" id="passwordError"></div>
-                    </div>
+                <div id="formContent">
+                    <!-- Aquí se cargará dinámicamente el formulario -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -313,46 +270,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const vigenciaPlanId = "{{ vigencia_plan.id }}";
     const usuarioModal = new bootstrap.Modal('#usuarioModal');
     let currentUser = null;
-    let originalEmail = null; // To store the original email during editing
+    let originalEmail = null;
+
     $.ajaxSetup({
-    headers: {
-        "X-CSRFToken": "{{ csrf_token }}"
-    }       
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        }
     });
+
     // Configurar modal
     $('#usuarioModal').on('show.bs.modal', function(e) {
         const isEdit = $(e.relatedTarget).hasClass('editar-usuario');
         const tipo = $(e.relatedTarget).data('tipo') || 'trabajador';
         currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
-        
-        if (isEdit) {
-            $('#modalTitle').text('Editar Usuario');
-            $('#passwordField').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+
+        // Cargar dinámicamente el formulario correcto
+        const formContent = $('#formContent');
+    if (isEdit) {
+        $('#modalTitle').text('Editar Usuario');
+        formContent.load("{% url 'get_form_template' 'edit' %}", function() {
             fetch(`/usuarios/${vigenciaPlanId}/editar/${currentUser}/`)
-            .then(r => {
-                if (!r.ok) throw new Error('Error al cargar usuario');
-                return r.json();
-            })
+                .then(r => {
+                    if (!r.ok) throw new Error('Error al cargar usuario');
+                    return r.json();
+                })
                 .then(data => {
+                    // Poblar los campos con los datos del usuario
                     $('input[name="rut"]').val(data.rut);
                     $('input[name="first_name"]').val(data.first_name);
                     $('input[name="last_name"]').val(data.last_name);
                     $('input[name="email"]').val(data.email);
-                    $('input[name="username"]').val(data.username || data.rut.replace('-', '')); // Populate username
-                    originalEmail = data.email; // Store original email
+                    $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
+                    $('input[name="celular"]').val(data.celular);
+                    $('select[name="role"]').val(data.role);
+                    $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+                    originalEmail = data.email;
+
+                    // Eliminar la opción "admin" del select de roles
+                    $('select[name="role"] option[value="admin"]').remove();
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
                 });
-        } else {
+        });
+    } else {
             $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-            $('#passwordField').attr({'required': true, 'placeholder': 'Contraseña'});
-            $('#usuarioForm')[0].reset();
-            $('input[name="username"]').val(''); // Clear username for new user
-            originalEmail = null;
+            formContent.load("{% url 'get_form_template' 'create' %}", function() {
+                $('#usuarioForm')[0].reset();
+                $('#id_password').attr({'required': true, 'placeholder': 'Contraseña'});
+                $('select[name="role"]').val(tipo);
+                originalEmail = null;
+            });
         }
-        
+
         $('#tipoUsuario').val(tipo);
         $('#usuarioForm').attr('action', isEdit ? 
             `/usuarios/${vigenciaPlanId}/editar/${currentUser}/` : 
@@ -360,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Validación RUT en tiempo real
-    $('[data-rut-validation]').on('input', _.debounce(function() {
+    $('body').on('input', '[data-rut-validation]', _.debounce(function() {
         const rut = $(this).val();
         if (!validarFormatoRUT(rut)) {
             showValidationError(this, 'Formato RUT inválido');
@@ -379,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 300));
 
     // Validación Email en tiempo real
-    $('[name="email"]').on('input', _.debounce(function() {
+    $('body').on('input', '[name="email"]', _.debounce(function() {
         const email = $(this).val();
         if (!isValidEmail(email)) {
             showValidationError(this, 'Formato email inválido');
@@ -402,9 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }, 300));
 
-    // Envío del formulario con mejor manejo de errores
+    // Envío del formulario
     $('#usuarioForm').on('submit', function(e) {
-        e.preventDefault(); // Prevenir envío tradicional
+        e.preventDefault();
         const form = $(this);
         const btn = form.find('button[type="submit"]');
         
@@ -417,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             data: form.serialize(),
             xhrFields: {
-                withCredentials: true  // Envía cookies
+                withCredentials: true
             },
             success: function(response) {
                 usuarioModal.hide();
@@ -428,17 +399,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => {
-                    location.reload(); // Recargar la página
+                    location.reload();
                 });
             },
             error: function(xhr) {
-                // Manejo de errores mejorado
                 const errors = xhr.responseJSON?.errors || {};
                 Object.keys(errors).forEach(field => {
                     const input = $(`[name="${field}"]`);
                     input.addClass('is-invalid');
-                    $(`#${field}Error`).text(errors[field][0]).show();
+                    const errorContainer = input.next('.invalid-feedback');
+                    if (errorContainer.length) {
+                        errorContainer.text(errors[field][0]).show();
+                    } else {
+                        $(`<div class="invalid-feedback">${errors[field][0]}</div>`)
+                            .insertAfter(input).show();
+                    }
                 });
+                
+                if (Object.keys(errors).length === 0) {
+                    Swal.fire('Error', 'Error desconocido al guardar', 'error');
+                }
             },
             complete: function() {
                 btn.prop('disabled', false);
@@ -447,7 +427,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
 
     // Funciones de ayuda
     function validarFormatoRUT(rut) {
@@ -475,25 +454,20 @@ document.addEventListener('DOMContentLoaded', function() {
     width: 60px;
     height: 60px;
 }
-
 .avatar-sm {
     width: 40px;
     height: 40px;
 }
-
 .table-hover tbody tr {
     transition: all 0.2s ease;
 }
-
 .table-hover tbody tr:hover {
     transform: translateX(5px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-
 .modal-header {
     border-bottom: 2px solid rgba(0,0,0,0.1);
 }
-
 .btn-outline-primary:hover, 
 .btn-outline-success:hover, 
 .btn-outline-danger:hover {

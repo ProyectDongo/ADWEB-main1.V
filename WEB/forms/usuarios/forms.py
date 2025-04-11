@@ -279,55 +279,166 @@ class TrabajadorEditForm(UserChangeForm):
 
 #-----------------------------------------------------------------------------------#
 # PARA EL supervisor:
+from crispy_forms.layout import Submit
+from crispy_forms.helper import FormHelper
+
 class UsuarioForm(forms.ModelForm):
     password = forms.CharField(
-        widget=forms.PasswordInput(),
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ingrese una contraseña segura'
+        }),
         required=False,
-        help_text="Dejar en blanco para no cambiar la contraseña."
+        help_text="Dejar en blanco para no cambiar la contraseña existente."
+    )
+    
+    role = forms.ChoiceField(
+        label="Rol",
+        choices=Usuario.ROLES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Seleccione el tipo de usuario"
+    )
+    
+    celular = forms.CharField(
+        label="Número de celular",
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '+56912345678'
+        }),
+        help_text="Número con código de país ej: +56912345678"
     )
 
     class Meta:
         model = Usuario
-        fields = ['rut', 'username', 'first_name', 'last_name', 'email', 'password']
+        fields = ['rut', 'username', 'first_name', 'last_name', 
+                 'email', 'celular', 'role', 'password']
+        
+        labels = {
+            'rut': 'RUT',
+            'username': 'Nombre de usuario',
+            'first_name': 'Nombres',
+            'last_name': 'Apellidos',
+            'email': 'Correo electrónico',
+        }
+        
+        help_texts = {
+            'username': 'Requerido. 150 carácteres o menos. Letras, dígitos y @/./+/-/_ solamente.',
+            'rut': 'Formato: 12345678-9',
+        }
+        
+        widgets = {
+            'rut': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '12345678-9'
+            }),
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'usuario123'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Juan Antonio'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Pérez González'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'correo@ejemplo.com'
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+       
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_id = 'userForm'
+        self.helper.form_class = 'needs-validation'
+        self.helper.attrs = {'novalidate': ''}
+        self.helper.add_input(Submit('submit', 'Guardar', css_class='btn btn-primary'))
+        self.fields['username'].help_text = "Requerido. Letras, números y @/./+/-/_"
         if self.instance.pk:
             self.fields['password'].required = False
+        else:
+            self.fields['password'].required = True
+            self.fields['password'].help_text = 'Contraseña requerida para nuevo usuario'
 
     def clean_rut(self):
         rut = self.cleaned_data.get('rut')
-        queryset = Usuario.objects.filter(rut=rut)
+        queryset = Usuario.objects.filter(rut__iexact=rut)
+        
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
+            
         if queryset.exists():
-            raise forms.ValidationError("Este RUT ya está registrado.")
-        return rut
+            raise forms.ValidationError("Este RUT ya está registrado en el sistema.")
+            
+        if not self.validate_rut(rut):
+            raise forms.ValidationError("Formato de RUT inválido. Use: 12345678-9")
+            
+        return rut.upper()
 
     def clean_username(self):
-        username = self.cleaned_data.get('username')
-        queryset = Usuario.objects.filter(username=username)
+        username = self.cleaned_data.get('username').lower()
+        queryset = Usuario.objects.filter(username__iexact=username)
+        
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
+            
         if queryset.exists():
             raise forms.ValidationError("Este nombre de usuario ya está en uso.")
+            
         return username
 
     def clean_email(self):
-        email = self.cleaned_data.get('email').lower()  # Normalizar a minúsculas
-        if self.instance and self.instance.pk:
-            if Usuario.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
-                raise ValidationError("Este correo electrónico ya está registrado.")
-        else:
-            if Usuario.objects.filter(email__iexact=email).exists():
-                raise ValidationError("Este correo electrónico ya está registrado.")
+        email = self.cleaned_data.get('email').lower()
+        queryset = Usuario.objects.filter(email__iexact=email)
+        
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+            
+        if queryset.exists():
+            raise ValidationError("Este correo electrónico ya está registrado.")
+            
         return email
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.instance.pk:  # Solo para nuevos usuarios
+            rut = cleaned_data.get('rut')
+            if rut:
+                proposed_username = rut.replace('-', '')
+                if Usuario.objects.filter(username__iexact=proposed_username).exists():
+                    raise forms.ValidationError({
+                        'rut': "Ya existe un usuario con este RUT (username duplicado)."
+                    })
+                cleaned_data['username'] = proposed_username
+        return cleaned_data
+    
+    def clean_celular(self):
+        celular = self.cleaned_data.get('celular')
+        if len(celular) < 9:
+            raise ValidationError("Número de celular demasiado corto")
+        if not celular.startswith('+'):
+            raise ValidationError("Debe incluir código de país ej: +56")
+        return celular
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        
         if self.cleaned_data['password']:
-            user.password = make_password(self.cleaned_data['password'])
+            user.set_password(self.cleaned_data['password'])
+            
         if commit:
             user.save()
+            
         return user
+
+    @staticmethod
+    def validate_rut(rut):
+        # Implementar validación real de RUT aquí
+        return len(rut) >= 9 and '-' in rut
 

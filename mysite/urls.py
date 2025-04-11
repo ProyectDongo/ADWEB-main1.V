@@ -175,8 +175,9 @@ urlpatterns = [
    #supervisor_home: accciomnes 
  
     path('gestion-usuarios/<int:vigencia_plan_id>/', supervisor.UserManagementView.as_view(), name='user_management'),
-    path('usuarios/<int:vigencia_plan_id>/crear/', supervisor.UserCreateUpdateView.as_view(), name='create_user'),
+    path('supervisor/asistencia/<int:vigencia_plan_id>/<int:empresa_id>/crear/', supervisor.UserCreateUpdateView.as_view(), name='create_user'),
     path('usuarios/<int:vigencia_plan_id>/editar/<int:user_id>/', supervisor.UserCreateUpdateView.as_view(), name='update_user'),
+    path('get_form_template/<str:action>/', supervisor.GetFormTemplateView.as_view(), name='get_form_template'),
     path('validar-campo/', supervisor.ValidationView.as_view(), name='validate_field'),
     path('validar-rut/', supervisor.ValidationView.as_view(), name='validate_rut'),
     path('validar-email/', supervisor.ValidationView.as_view(), name='validate_email'),

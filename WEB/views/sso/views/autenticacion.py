@@ -212,7 +212,8 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'empresa': empresa,
         'vigencia_plan': vigencia_plan,
         'supervisores': supervisores,
-        'trabajadores': trabajadores
+        'trabajadores': trabajadores,
+        'form': UsuarioForm()
     }
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
 

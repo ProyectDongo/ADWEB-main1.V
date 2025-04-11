@@ -1,7 +1,7 @@
 from django.views.generic import UpdateView
 from django.views import View
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan
@@ -37,7 +37,9 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'email': user.email,
-                'username': user.username  # Asegúrate de enviar el username
+                'username': user.username ,
+                'celular': user.celular, 
+                'role': user.role 
             }
             return JsonResponse(data)
         return JsonResponse({'error': 'ID de usuario no proporcionado'}, status=400)
@@ -53,13 +55,8 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
                 user = form.save(commit=False)
                 user.empresa = vigencia_plan.empresa
                 user.vigencia_plan = vigencia_plan
-
-                if not user_id:  # Solo generar username para nuevos
-                    user.username = user.rut.replace('-', '')
-                
                 if form.cleaned_data['password']:
                     user.set_password(form.cleaned_data['password'])
-                
                 user.save()
                 return JsonResponse({'message': 'Usuario guardado exitosamente'}, status=200)
             else:
@@ -83,4 +80,11 @@ class ValidationView(View):
             
         return JsonResponse({'error': 'Campo inválido'}, status=400)
     
-
+class GetFormTemplateView(View):
+    def get(self, request, action):
+        form = UsuarioForm()
+        if action == 'create':
+            return render(request, 'formularios/supervisor.asistencia.html', {'form': form})
+        elif action == 'edit':
+            return render(request, 'formularios/supervisor.edit.html', {'form': form})
+        return HttpResponse(status=404)
