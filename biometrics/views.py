@@ -31,18 +31,18 @@ class CaptureFingerprintView(View):
             except Usuario.DoesNotExist:
                 selected_user = None
         
-        # Añadir estos parámetros al contexto
         return render(request, 'modules/biometrics/register_fingerprint.html', {
             'usuarios': usuarios,
             'selected_user': selected_user,
             'empresa_id': empresa.id,
             'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
         })
+
 class FingerprintRegistrationView(LoginRequiredMixin, View):
     def post(self, request):
         try:
             data = json.loads(request.body)
-            user_id = data.get('user_id')
+            user_id = data.get('user_id') or str(request.user.id) 
             template1 = data.get('template1')
             template2 = data.get('template2')
             match_score = data.get('match_score')
@@ -61,6 +61,39 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
 
             if match_score >= 100:
                 template_bytes = base64.b64decode(template1)
+                empresa = request.user.empresa
+
+                # Validación de huella duplicada
+                existing_huellas = huellas.objects.filter(
+                    user__empresa=empresa
+                ).exclude(user=target_user)
+                
+                # Comparar con todas las huellas existentes
+                for existing_huella in existing_huellas:
+                    existing_template = base64.b64encode(existing_huella.template).decode('utf-8')
+                    
+                    try:
+                        response = requests.post(
+                            'http://localhost:9000/match',
+                            json={
+                                'template1': template1,
+                                'template2': existing_template
+                            },
+                            timeout=2  # Timeout para no bloquear el proceso
+                        )
+                        
+                        if response.status_code == 200:
+                            match_data = response.json()
+                            if match_data.get('score', 0) >= 100:
+                                return JsonResponse({
+                                    "error": "Esta huella ya está registrada para otro usuario"
+                                }, status=400)
+                                
+                    except requests.exceptions.RequestException as e:
+                        # Loggear error pero continuar con el proceso
+                        print(f"Error al verificar huella: {str(e)}")
+
+                # Si no hay coincidencias, guardar
                 huellas.objects.update_or_create(
                     user=target_user,
                     defaults={'template': template_bytes, 'quality': 70}
@@ -72,6 +105,37 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
             return JsonResponse({"error": "JSON inválido"}, status=400)
         except PermissionDenied as e:
             return JsonResponse({"error": str(e)}, status=403)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+class CheckFingerprintView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            template = data.get('template')
+            
+            if not template:
+                return JsonResponse({"error": "Template faltante"}, status=400)
+            
+            empresa = request.user.empresa
+            template_bytes = base64.b64decode(template)
+            
+            for huella in huellas.objects.filter(user__empresa=empresa):
+                existing_template = base64.b64encode(huella.template).decode('utf-8')
+                response = requests.post(
+                    'http://localhost:9000/match',
+                    json={'template1': template, 'template2': existing_template},
+                    timeout=1
+                )
+                
+                if response.status_code == 200 and response.json().get('score', 0) >= 100:
+                    return JsonResponse({
+                        "exists": True,
+                        "user": huella.user.username
+                    })
+            
+            return JsonResponse({"exists": False})
+            
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
@@ -131,6 +195,7 @@ class AuthenticateFingerprintView(View):
             return JsonResponse({'status': 'no_match', 'message': 'No se encontró coincidencia'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
+
 
 class AttendanceView(View):
     def get(self, request):

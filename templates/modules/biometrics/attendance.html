@@ -2,45 +2,281 @@
 {% block title %}Registro de Asistencia{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white text-center py-3">
-            <h2 class="mb-0"><i class="bi bi-clock me-2"></i>Registro de Asistencia</h2>
+<!-- Loader inicial -->
+<div class="page-loader">
+    <div class="loader-content text-center">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <div class="dots-container mt-3">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
         </div>
-        <div class="card-body p-4">
-            <div id="deviceStatus" class="alert alert-info text-center mb-4">
-                <i class="bi bi-usb-symbol me-2"></i>Conectando al lector...
+        <h3 class="mt-4 text-primary fw-bold">Inicializando sistema biométrico</h3>
+    </div>
+</div>
+
+<div class="container min-vh-100 d-flex align-items-center">
+    <div class="card glassmorphism-card mx-auto w-100" style="max-width: 800px;">
+        <div class="card-header bg-gradient-primary text-white py-4 position-relative overflow-hidden">
+            <div class="header-blobs">
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
             </div>
-            <div id="captureSection" class="text-center mb-4" style="display: none;">
-                <button id="btnCaptureEntrada" class="btn btn-primary btn-lg mx-2">
-                    <i class="bi bi-arrow-right-circle me-2"></i>Registrar Entrada
-                </button>
-                <button id="btnCaptureSalida" class="btn btn-secondary btn-lg mx-2">
-                    <i class="bi bi-arrow-left-circle me-2"></i>Registrar Salida
-                </button>
+            <h2 class="text-center mb-0 fw-bold display-5">
+                <i class="bi bi-fingerprint me-2"></i>Control Biométrico
+            </h2>
+            <p class="text-center mt-2 mb-0 opacity-75">Sistema de registro inteligente</p>
+        </div>
+        
+        <div class="card-body p-4 p-lg-5">
+            <!-- Estado del dispositivo -->
+            <div id="deviceStatus" class="status-card connecting">
+                <div class="status-icon">
+                    <i class="bi bi-usb-drive"></i>
+                </div>
+                <div class="status-text">Conectando con el lector biométrico...</div>
+                <div class="status-loader"></div>
             </div>
-            <div id="progress" class="text-center mb-4" style="display: none;">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 fw-bold">Coloque su dedo en el sensor...</p>
+
+            <!-- Controles principales -->
+            <div id="captureSection" class="text-center mt-5" style="display: none;">
+                <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
+                    <button id="btnCaptureEntrada" class="btn btn-primary btn-hover-scale">
+                        <i class="bi bi-arrow-bar-right me-2"></i>Registrar Entrada
+                        <div class="btn-hover-effect"></div>
+                    </button>
+                    <button id="btnCaptureSalida" class="btn btn-danger btn-hover-scale">
+                        <i class="bi bi-arrow-bar-left me-2"></i>Registrar Salida
+                        <div class="btn-hover-effect"></div>
+                    </button>
+                </div>
+                
+                <div class="biometric-guide">
+                    <div class="fingerprint-container animate__animated animate__pulse animate__slower animate__infinite">
+                        <i class="bi bi-fingerprint"></i>
+                        <div class="pulse-effect"></div>
+                        <div class="scanlines"></div>
+                    </div>
+                    <p class="text-muted mt-3">Coloque su dedo en el sensor</p>
+                </div>
             </div>
-            <div id="result" class="text-center">
-                <h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>
+
+            <!-- Progreso de captura -->
+            <div id="progress" class="capture-progress" style="display: none;">
+                <div class="scanning-animation">
+                    <div class="laser"></div>
+                    <div class="dots-grid"></div>
+                </div>
+                <p class="text-primary mt-4 fw-bold">Validando identidad...</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar"></div>
+                </div>
             </div>
-            <div class="text-center mt-4">
-                <a href="{% url 'supervisor_home_asistencia' empresa_id vigencia_plan_id %}"
-                class="btn btn-outline-secondary mb-4">
-                 <i class="fas fa-arrow-left me-2"></i>
-                 Volver a Asistencia
-             </a>
+
+            <!-- Resultados -->
+            <div id="result" class="result-card text-center mt-4">
+                <div class="default-message">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Esperando autenticación biométrica</span>
+                </div>
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="text-center mt-5">
+                <a href="{% url 'supervisor_home_asistencia' empresa_id vigencia_plan_id %}" 
+                   class="btn btn-outline-primary btn-back">
+                    <i class="bi bi-arrow-left me-2"></i>Volver al panel
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<script>
+<style>
+/* Animaciones personalizadas */
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
 
+@keyframes scanning {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+@keyframes blob-animation {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes dots-wave {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0); }
+}
+
+/* Estilos principales */
+.glassmorphism-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+}
+
+/* Componentes específicos */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s;
+}
+
+.dots-container {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    background: #3b82f6;
+    border-radius: 50%;
+    animation: dots-wave 1.2s infinite;
+}
+
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+.status-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: rgba(241, 243, 245, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.status-card.connecting .status-icon {
+    animation: rotate 1.5s linear infinite;
+}
+
+.fingerprint-container {
+    font-size: 4rem;
+    color: #3b82f6;
+    position: relative;
+    margin: 2rem 0;
+    padding: 20px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.scanlines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(transparent 50%, rgba(0,0,0,0.05) 50%);
+    background-size: 100% 4px;
+}
+
+.btn-hover-scale {
+    position: relative;
+    transition: transform 0.3s ease;
+    min-width: 220px;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+    border: none;
+}
+
+.btn-hover-effect {
+    position: absolute;
+    background: rgba(255,255,255,0.2);
+    width: 50px;
+    height: 100%;
+    left: -50%;
+    top: 0;
+    transform: skewX(-30deg);
+    transition: left 0.5s;
+}
+
+.btn-hover-scale:hover .btn-hover-effect {
+    left: 150%;
+}
+
+.capture-progress {
+    position: relative;
+    height: 200px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.scanning-animation {
+    position: relative;
+    height: 100%;
+}
+
+.laser {
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: #ff4757;
+    animation: scanning 1.5s infinite;
+    box-shadow: 0 0 10px rgba(255,71,87,0.3);
+}
+
+.header-blobs .blob {
+    position: absolute;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    animation: blob-animation 20s infinite;
+}
+
+.blob-1 { width: 200px; height: 200px; top: -50px; left: -50px; }
+.blob-2 { width: 150px; height: 150px; bottom: -30px; right: -30px; }
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .card {
+        margin: 1rem;
+    }
+    
+    .btn-hover-scale {
+        width: 100%;
+    }
+    
+    .fingerprint-container {
+        font-size: 3rem;
+    }
+}
+</style>
+
+<script>
 document.addEventListener('DOMContentLoaded', () => {
-    const status = document.getElementById('deviceStatus');
+    const pageLoader = document.querySelector('.page-loader');
+    const deviceStatus = document.getElementById('deviceStatus');
     const captureSection = document.getElementById('captureSection');
     const progress = document.getElementById('progress');
     const result = document.getElementById('result');
@@ -48,29 +284,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalida = document.getElementById('btnCaptureSalida');
 
     // Inicializar dispositivo
-    fetch('http://localhost:9000/init', { method: 'POST' })
-        .then(res => {
-            if (res.ok) {
-                status.innerHTML = '<i class="bi bi-check-circle me-2"></i>Dispositivo listo';
-                status.classList.remove('alert-info');
-                status.classList.add('alert-success');
+    const initDevice = async () => {
+        try {
+            const response = await fetch('http://localhost:9000/init', { method: 'POST' });
+            if (!response.ok) throw new Error('Error de conexión');
+            
+            // Actualizar estado
+            deviceStatus.classList.remove('connecting');
+            deviceStatus.innerHTML = `
+                <div class="status-icon text-success">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="status-text">Dispositivo conectado</div>
+            `;
+            
+            // Mostrar controles con animación
+            setTimeout(() => {
+                pageLoader.style.opacity = '0';
+                setTimeout(() => pageLoader.remove(), 500);
                 captureSection.style.display = 'block';
-            } else {
-                status.innerHTML = '<i class="bi bi-x-circle me-2"></i>Dispositivo no conectado';
-                status.classList.remove('alert-info');
-                status.classList.add('alert-danger');
-            }
-        });
+            }, 1000);
+            
+        } catch (error) {
+            pageLoader.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-x-circle-fill text-danger h1"></i>
+                    <p class="mt-3">Error al conectar el dispositivo</p>
+                    <button onclick="location.reload()" class="btn btn-outline-danger mt-3">
+                        Reintentar conexión
+                    </button>
+                </div>
+            `;
+        }
+    };
+
+    initDevice();
 
     const captureFingerprint = async () => {
         const res = await fetch('http://localhost:9000/capture', { method: 'POST' });
-        const data = await res.json();
-        return data.template;
+        if (!res.ok) throw new Error('Error al capturar la huella');
+        return res.json().then(data => data.template);
     };
 
     const handleCapture = async (action) => {
+        captureSection.style.display = 'none';
         progress.style.display = 'block';
         result.innerHTML = '';
+        
         try {
             const template = await captureFingerprint();
             const authRes = await fetch('/biometrics/authenticate/', {
@@ -81,19 +341,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ template, action })
             });
+            
             const resultData = await authRes.json();
-            if (resultData.status === 'success') {
-                result.innerHTML = `<h3 class="display-4 fw-bold text-success">${resultData.message}</h3>`;
-            } else {
-                result.innerHTML = `<h3 class="display-4 fw-bold text-danger">${resultData.error || resultData.message}</h3>`;
-            }
+            const resultHTML = resultData.status === 'success' ? `
+                <div class="success-message animate__animated animate__fadeIn">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h3 class="mt-3">${resultData.message}</h3>
+                </div>
+            ` : `
+                <div class="error-message animate__animated animate__shakeX">
+                    <i class="bi bi-x-circle-fill"></i>
+                    <h3 class="mt-3">${resultData.error || resultData.message}</h3>
+                </div>
+            `;
+            
+            result.innerHTML = resultHTML;
+            
             setTimeout(() => {
-                result.innerHTML = '<h3 class="display-5 fw-bold text-muted">Esperando huella...</h3>';
+                result.innerHTML = `
+                    <div class="default-message">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Esperando autenticación biométrica</span>
+                    </div>
+                `;
+                progress.style.display = 'none';
+                captureSection.style.display = 'block';
             }, 3000);
+            
         } catch (e) {
-            result.innerHTML = `<h3 class="display-4 fw-bold text-danger">Error: ${e.message}</h3>`;
-        } finally {
+            result.innerHTML = `
+                <div class="error-message animate__animated animate__shakeX">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <h3 class="mt-3">Error: ${e.message}</h3>
+                </div>
+            `;
             progress.style.display = 'none';
+            captureSection.style.display = 'block';
         }
     };
 
@@ -101,14 +384,4 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSalida.addEventListener('click', () => handleCapture('salida'));
 });
 </script>
-
-<style>
-    .card-header {
-        border-radius: 10px 10px 0 0;
-    }
-    .btn-lg {
-        padding: 10px 20px;
-        font-size: 1.2rem;
-    }
-</style>
 {% endblock %}

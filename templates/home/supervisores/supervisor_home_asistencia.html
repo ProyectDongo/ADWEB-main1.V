@@ -5,254 +5,286 @@
 {% block title %}{{ empresa.nombre }} | Panel{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4">
-    <!-- Encabezado -->
-    <div class="d-flex align-items-center justify-content-between mb-4 mt-4">
-        <div class="d-flex align-items-center gap-3">
-            <div class="avatar-lg bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fas fa-building fa-2x"></i>
+<div class="wrapper">
+    <!-- Sidebar Corporativo -->
+    <aside class="corporate-sidebar">
+        <div class="sidebar-header">
+            <div class="company-brand">
+                <i class="fas fa-building fa-2x text-white"></i>
+                <h2>{{ empresa.nombre|truncatechars:30 }}</h2>
             </div>
-            <div>
-                <h1 class="h3 mb-0 text-gray-800">{{ empresa.nombre|truncatechars:30 }}</h1>
-                <small class="text-muted">Vigencia Plan: {{ vigencia_plan.codigo_plan }}</small>
-            </div>
+            <button class="sidebar-toggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'attendance' %}" class="btn btn-primary" title="Asistencia">
-                <i class="fas fa-clock me-2"></i>Control Asistencia
-            </a>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
-               class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>
-                Volver al Selector de Módulos
-            </a>
-        </div>
-    </div>
-
-    <!-- Tarjeta Información Empresa -->
-    <div class="card border-0 shadow-lg mb-4 animate__animated animate__fadeIn">
-        <div class="card-header bg-white border-0">
-            <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Información Corporativa</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-id-card fa-lg text-muted me-3"></i>
+        
+        <div class="sidebar-body">
+            <div class="corporate-info">
+                <ul class="info-list">
+                    <li>
+                        <i class="fas fa-id-card icon"></i>
                         <div>
-                            <small class="text-muted">RUT Empresa</small>
-                            <div class="h6 mb-0">{{ empresa.rut }}</div>
+                            <small>RUT Empresa</small>
+                            <span>{{ empresa.rut }}</span>
                         </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-map-marker-alt icon"></i>
+                        <div>
+                            <small>Dirección</small>
+                            <span>{{ empresa.direccion }}</span>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-phone icon"></i>
+                        <div>
+                            <small>Teléfono</small>
+                            <span>{{ empresa.telefono }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="plan-status">
+                <div class="badge">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    {{ vigencia_plan.codigo_plan }}
+                </div>
+            </div>
+        </div>
+    </aside>
+
+<!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="d-flex justify-content-between w-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="sidebar-toggle-mobile btn btn-icon">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="h4 mb-0">Panel de Control</h1>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
+                        class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </a>
+                        <a href="{% url 'attendance' %}" class="btn btn-primary">
+                            <i class="fas fa-clock me-2"></i>Control Asistencia
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-map-marker-alt fa-lg text-muted me-3"></i>
-                        <div>
-                            <small class="text-muted">Dirección</small>
-                            <div class="h6 mb-0">{{ empresa.direccion }}</div>
-                        </div>
+            </header>
+
+            <!-- Contenido Dinámico -->
+            <div class="content-container">
+                <!-- Pestañas -->
+                <div class="card operational-card">
+                    <div class="card-header">
+                        <ul class="nav nav-pills" id="mainTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button">
+                                    <i class="fas fa-user-shield me-2"></i>Supervisores
+                                    <span class="badge">{{ supervisores.count }}</span>
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button">
+                                    <i class="fas fa-users-gear me-2"></i>Trabajadores
+                                    <span class="badge">{{ trabajadores.count }}</span>
+                                </button>
+                            </li>
+                        </ul>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-phone fa-lg text-muted me-3"></i>
-                        <div>
-                            <small class="text-muted">Teléfono</small>
-                            <div class="h6 mb-0">{{ empresa.telefono }}</div>
+
+                    <div class="card-body">
+                        <div class="tab-content" id="mainTabsContent">
+                            <!-- Pestaña Supervisores -->
+                            <div class="tab-pane fade show active" id="supervisores">
+                                <div class="table-section">
+                                    <div class="section-header">
+                                        <h3>Administración de Supervisores</h3>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="supervisor">
+                                            <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombre</th>
+                                                    <th>RUT</th>
+                                                    <th>Contacto</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for supervisor in supervisores %}
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-info">
+                                                            <div class="avatar">{{ supervisor.first_name|first|upper }}</div>
+                                                            <div>
+                                                                <div class="name">{{ supervisor.get_full_name }}</div>
+                                                                <small>{{ supervisor.email }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ supervisor.rut }}</td>
+                                                    <td>
+                                                        {% if supervisor.celular %}
+                                                        <a href="tel:{{ supervisor.celular }}" class="contact-link">
+                                                            <i class="fas fa-phone"></i>{{ supervisor.celular }}
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="text-muted">Sin teléfono</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="actions">
+                                                            <button class="btn-action edit-user" 
+                                                                    data-id="{{ supervisor.id }}" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#usuarioModal">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
+                                                            class="btn-action fingerprint">
+                                                                <i class="fas fa-fingerprint"></i>
+                                                            </a>
+                                                            <button class="btn-action delete-user" 
+                                                                    data-id="{{ supervisor.id }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="empty-state">
+                                                        <i class="fas fa-user-slash"></i>
+                                                        <p>No hay supervisores registrados</p>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pestaña Trabajadores -->
+                            <div class="tab-pane fade" id="trabajadores">
+                                <div class="table-section">
+                                    <div class="section-header">
+                                        <h3>Administración de Trabajadores</h3>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="trabajador">
+                                            <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombre</th>
+                                                    <th>RUT</th>
+                                                    <th>Contacto</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for trabajador in trabajadores %}
+                                                <tr>
+                                                    <td>
+                                                        <div class="user-info">
+                                                            <div class="avatar">{{ trabajador.first_name|first|upper }}</div>
+                                                            <div>
+                                                                <div class="name">{{ trabajador.get_full_name }}</div>
+                                                                <small>{{ trabajador.email }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ trabajador.rut }}</td>
+                                                    <td>
+                                                        {% if trabajador.celular %}
+                                                        <a href="tel:{{ trabajador.celular }}" class="contact-link">
+                                                            <i class="fas fa-phone"></i>{{ trabajador.celular }}
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="text-muted">Sin teléfono</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="actions">
+                                                            <button class="btn-action edit-user" 
+                                                                    data-id="{{ trabajador.id }}" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#usuarioModal">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
+                                                            class="btn-action fingerprint">
+                                                                <i class="fas fa-fingerprint"></i>
+                                                            </a>
+                                                            <button class="btn-action delete-user" 
+                                                                    data-id="{{ trabajador.id }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="4" class="empty-state">
+                                                        <i class="fas fa-user-slash"></i>
+                                                        <p>No hay trabajadores registrados</p>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Pestañas -->
-    <div class="card border-0 shadow-lg">
-        <div class="card-header bg-white border-0 pt-3">
-            <ul class="nav nav-pills nav-underline gap-2" id="mainTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button">
-                        <i class="fas fa-user-shield me-2"></i>Supervisores
-                        <span class="badge bg-primary ms-2">{{ supervisores.count }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button">
-                        <i class="fas fa-users-gear me-2"></i>Trabajadores
-                        <span class="badge bg-primary ms-2">{{ trabajadores.count }}</span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-
-        <div class="card-body p-0">
-            <div class="tab-content" id="mainTabsContent">
-                <!-- Pestaña Supervisores -->
-                <div class="tab-pane fade show active" id="supervisores">
-                    <div class="p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Administración de Supervisores</h5>
-                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="supervisor">
-                                <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
-                            </button>
-                        </div>
-                        
-                        <div class="table-responsive rounded">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>RUT</th>
-                                        <th>Correo</th>
-                                        <th class="text-end">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for supervisor in supervisores %}
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                                                    {{ supervisor.first_name|first|upper }}
-                                                </div>
-                                                {{ supervisor.get_full_name }}
-                                            </div>
-                                        </td>
-                                        <td>{{ supervisor.rut }}</td>
-                                        <td>{{ supervisor.email }}</td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex gap-2">
-                                                <button class="btn btn-sm btn-outline-primary editar-usuario" 
-                                                        data-id="{{ supervisor.id }}" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#usuarioModal"
-                                                        title="Editar Supervisor">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
-                                                   class="btn btn-sm btn-outline-success"
-                                                   title="Registrar Huella">
-                                                    <i class="fas fa-fingerprint"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
-                                                        data-id="{{ supervisor.id }}"
-                                                        title="Eliminar Supervisor">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4">
-                                            <div class="text-muted">
-                                                <i class="fas fa-user-slash fa-3x mb-3"></i>
-                                                <p>No hay supervisores registrados</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pestaña Trabajadores -->
-                <div class="tab-pane fade" id="trabajadores">
-                    <div class="p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="mb-0"><i class="fas fa-users-gear me-2"></i>Administración de Trabajadores</h5>
-                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="trabajador">
-                                <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
-                            </button>
-                        </div>
-                        
-                        <div class="table-responsive rounded">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>RUT</th>
-                                        <th>Correo</th>
-                                        <th class="text-end">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for trabajador in trabajadores %}
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
-                                                    {{ trabajador.first_name|first|upper }}
-                                                </div>
-                                                {{ trabajador.get_full_name }}
-                                            </div>
-                                        </td>
-                                        <td>{{ trabajador.rut }}</td>
-                                        <td>{{ trabajador.email }}</td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex gap-2">
-                                                <button class="btn btn-sm btn-outline-primary editar-usuario" 
-                                                        data-id="{{ trabajador.id }}" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#usuarioModal"
-                                                        title="Editar Trabajador">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
-                                                   class="btn btn-sm btn-outline-success"
-                                                   title="Registrar Huella">
-                                                    <i class="fas fa-fingerprint"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-outline-danger eliminar-usuario" 
-                                                        data-id="{{ trabajador.id }}"
-                                                        title="Eliminar Trabajador">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4">
-                                            <div class="text-muted">
-                                                <i class="fas fa-user-slash fa-3x mb-3"></i>
-                                                <p>No hay trabajadores registrados</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </main>
 </div>
-
 <!-- Modal Usuario -->
 <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i><span id="modalTitle">Nuevo Usuario</span></h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glassmorphism-card">
+            <div class="modal-header bg-gradient-primary text-white border-0">
+                <h3 class="modal-title"><i class="fas fa-user-edit me-2"></i><span id="modalTitle">Nuevo Usuario</span></h3>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="usuarioForm" method="post">
                 {% csrf_token %}
-                <div id="formContent">
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Errores:</strong>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div id="formContent" class="modal-body">
                     <!-- Aquí se cargará dinámicamente el formulario -->
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
-                        <span class="submit-text">Guardar</span>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <span class="submit-text">Guardar Cambios</span>
                         <div class="spinner-border spinner-border-sm d-none" role="status"></div>
                     </button>
                 </div>
@@ -260,15 +292,57 @@
         </div>
     </div>
 </div>
+<div id="urls" 
+     data-create="{% url 'create_user' vigencia_plan.id %}"
+     data-update="{% url 'update_user' vigencia_plan.id 0 %}"
+     data-validate="{% url 'validation' %}"
+    
+style="display: none;"></div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<Script>
+// Script para el sidebar
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.querySelector('.corporate-sidebar');
+    const toggleButtons = document.querySelectorAll('.sidebar-toggle, .sidebar-toggle-mobile');
+    
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+            
+            // Rotar ícono del botón
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.style.transform = sidebar.classList.contains('collapsed') 
+                    ? 'rotate(180deg)' 
+                    : 'rotate(0deg)';
+            }
+        });
+    });
+    
+    // Cerrar sidebar en móvil al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!sidebar.contains(e.target)) {
+                sidebar.classList.add('collapsed');
+                document.querySelector('.main-content').classList.add('expanded');
+            }
+        }
+    });
+});
+
+</Script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const vigenciaPlanId = "{{ vigencia_plan.id }}";
     const usuarioModal = new bootstrap.Modal('#usuarioModal');
+    const urlData = document.getElementById('urls').dataset;
     let currentUser = null;
     let originalEmail = null;
 
@@ -278,43 +352,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Configurar modal
+    // Configurar modal - Sección modificada
     $('#usuarioModal').on('show.bs.modal', function(e) {
         const isEdit = $(e.relatedTarget).hasClass('editar-usuario');
         const tipo = $(e.relatedTarget).data('tipo') || 'trabajador';
         currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
 
-        // Cargar dinámicamente el formulario correcto
         const formContent = $('#formContent');
-    if (isEdit) {
-        $('#modalTitle').text('Editar Usuario');
-        formContent.load("{% url 'get_form_template' 'edit' %}", function() {
-            fetch(`/usuarios/${vigenciaPlanId}/editar/${currentUser}/`)
-                .then(r => {
-                    if (!r.ok) throw new Error('Error al cargar usuario');
-                    return r.json();
-                })
-                .then(data => {
-                    // Poblar los campos con los datos del usuario
-                    $('input[name="rut"]').val(data.rut);
-                    $('input[name="first_name"]').val(data.first_name);
-                    $('input[name="last_name"]').val(data.last_name);
-                    $('input[name="email"]').val(data.email);
-                    $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
-                    $('input[name="celular"]').val(data.celular);
-                    $('select[name="role"]').val(data.role);
-                    $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
-                    originalEmail = data.email;
-
-                    // Eliminar la opción "admin" del select de roles
-                    $('select[name="role"] option[value="admin"]').remove();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
-                });
-        });
-    } else {
+        if (isEdit) {
+            $('#modalTitle').text('Editar Usuario');
+            formContent.load("{% url 'get_form_template' 'edit' %}", function() {
+                fetch(urlData.update.replace('0', currentUser))
+                    .then(r => {
+                        if (!r.ok) throw new Error('Error al cargar usuario');
+                        return r.json();
+                    })
+                    .then(data => {
+                        $('input[name="rut"]').val(data.rut);
+                        $('input[name="first_name"]').val(data.first_name);
+                        $('input[name="last_name"]').val(data.last_name);
+                        $('input[name="email"]').val(data.email);
+                        $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
+                        $('input[name="celular"]').val(data.celular);
+                        $('select[name="role"]').val(data.role);
+                        $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+                        originalEmail = data.email;
+                        $('select[name="role"] option[value="admin"]').remove();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
+                    });
+            });
+        } else {
             $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
             formContent.load("{% url 'get_form_template' 'create' %}", function() {
                 $('#usuarioForm')[0].reset();
@@ -324,21 +394,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        $('#tipoUsuario').val(tipo);
         $('#usuarioForm').attr('action', isEdit ? 
-            `/usuarios/${vigenciaPlanId}/editar/${currentUser}/` : 
-            `/usuarios/${vigenciaPlanId}/crear/`);
+            urlData.update.replace('0', currentUser) : 
+            urlData.create);
     });
 
-    // Validación RUT en tiempo real
-    $('body').on('input', '[data-rut-validation]', _.debounce(function() {
+    // Validación RUT en tiempo real - Sección modificada
+    $('body').on('input', '[name="rut"]', _.debounce(function() {
         const rut = $(this).val();
         if (!validarFormatoRUT(rut)) {
             showValidationError(this, 'Formato RUT inválido');
             return;
         }
         
-        fetch($(this).data('validation-url') + `?rut=${rut}`)
+        fetch(`${urlData.validate}?rut=${rut}`)
             .then(r => r.json())
             .then(data => {
                 if (data.exists && (!currentUser || $('input[name="rut"]').val() !== data.rut)) {
@@ -348,8 +417,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
     }, 300));
+    $('body').on('input', '[name="celular"]', _.debounce(function() {
+        const celular = $(this).val();
+        if (celular && (!celular.startsWith('+') || celular.length < 9)) {
+            showValidationError(this, 'Formato inválido. Ej: +56 9 1234 5678');
+        } else {
+            clearValidationError(this);
+        }
+    }, 300));
 
-    // Validación Email en tiempo real
+    // Validación Email en tiempo real - Sección modificada
     $('body').on('input', '[name="email"]', _.debounce(function() {
         const email = $(this).val();
         if (!isValidEmail(email)) {
@@ -362,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch($(this).data('validation-url') + `?email=${email}`)
+        fetch(`${urlData.validate}?email=${email}`)
             .then(r => r.json())
             .then(data => {
                 if (data.exists) {
@@ -402,24 +479,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.reload();
                 });
             },
-            error: function(xhr) {
-                const errors = xhr.responseJSON?.errors || {};
-                Object.keys(errors).forEach(field => {
-                    const input = $(`[name="${field}"]`);
-                    input.addClass('is-invalid');
-                    const errorContainer = input.next('.invalid-feedback');
-                    if (errorContainer.length) {
-                        errorContainer.text(errors[field][0]).show();
-                    } else {
-                        $(`<div class="invalid-feedback">${errors[field][0]}</div>`)
-                            .insertAfter(input).show();
-                    }
-                });
+        error: function(xhr) {
+            const errors = xhr.responseJSON?.errors || {};
+            // Limpiar errores previos
+            $('.is-invalid').removeClass('is-invalid');
+            $('.invalid-feedback').remove();
+            
+            // Manejar errores de campos
+            Object.keys(errors).forEach(field => {
+                const input = $(`[name="${field}"]`);
+                const container = input.closest('.form-group');
                 
-                if (Object.keys(errors).length === 0) {
-                    Swal.fire('Error', 'Error desconocido al guardar', 'error');
+                input.addClass('is-invalid');
+                if (container.length) {
+                    container.append(
+                        `<div class="invalid-feedback d-block">${errors[field].join(' ')}</div>`
+                    );
+                } else {
+                    input.after(
+                        `<div class="invalid-feedback d-block">${errors[field].join(' ')}</div>`
+                    );
                 }
-            },
+            });
+            
+            // Manejar errores generales
+            if (Object.keys(errors).length === 0) {
+                Swal.fire('Error', xhr.responseJSON?.error || 'Error desconocido', 'error');
+            }
+        },
             complete: function() {
                 btn.prop('disabled', false);
                 btn.find('.submit-text').show();
@@ -450,28 +537,192 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.avatar-lg {
-    width: 60px;
-    height: 60px;
+    :root {
+    --sidebar-width: 280px;
+    --sidebar-bg: #2c3e50;
+    --header-height: 60px;
+    --primary-color: #3498db;
+    --transition-speed: 0.3s;
 }
-.avatar-sm {
+    
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.corporate-sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: white;
+    transition: all var(--transition-speed) ease;
+    position: absolute;
+    height: 100vh;
+    z-index: 1000;
+    left: 0;
+}
+    
+    .sidebar-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        position: relative;
+    }
+    
+    .company-brand {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .company-brand i {
+        background: rgba(255,255,255,0.1);
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .sidebar-toggle {
+    position: absolute;
+    right: -40px;
+    top: 20px;
+    background: white;
+    border: none;
     width: 40px;
     height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed) ease;
 }
-.table-hover tbody tr {
-    transition: all 0.2s ease;
+    
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0;
+    }
+    
+    .info-list li {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 8px;
+        transition: background 0.3s ease;
+    }
+    
+    .info-list li:hover {
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .info-list .icon {
+        font-size: 1.2rem;
+        opacity: 0.7;
+    }
+    
+    .plan-status {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .plan-status .badge {
+        background: rgba(255,255,255,0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+    .corporate-sidebar.collapsed {
+    left: calc(-1 * var(--sidebar-width));
 }
-.table-hover tbody tr:hover {
-    transform: translateX(5px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    transition: margin var(--transition-speed) ease;
+    width: calc(100% - var(--sidebar-width));
 }
-.modal-header {
-    border-bottom: 2px solid rgba(0,0,0,0.1);
+.main-content.expanded {
+    margin-left: 0;
+    width: 100%;
 }
-.btn-outline-primary:hover, 
-.btn-outline-success:hover, 
-.btn-outline-danger:hover {
-    transform: translateY(-2px);
+    .main-header {
+        height: var(--header-height);
+        background: white;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    
+    .operational-card {
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border-radius: 12px;
+        margin: 2rem;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        background: none;
+        color: #666;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action:hover {
+        background: #f8f9fa;
+        color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+    .corporate-sidebar {
+        left: calc(-1 * var(--sidebar-width));
+    }
+    
+    .corporate-sidebar.collapsed {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .sidebar-toggle-mobile {
+        display: block !important;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
 }
-</style>
+    </style>
 {% endblock %}

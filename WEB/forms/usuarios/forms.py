@@ -361,6 +361,8 @@ class UsuarioForm(forms.ModelForm):
         self.helper.attrs = {'novalidate': ''}
         self.helper.add_input(Submit('submit', 'Guardar', css_class='btn btn-primary'))
         self.fields['username'].help_text = "Requerido. Letras, números y @/./+/-/_"
+        self.fields['rut'].widget.attrs['data-validation-url'] = '/usuarios/validate/'
+        self.fields['email'].widget.attrs['data-validation-url'] = '/usuarios/validate/'
         if self.instance.pk:
             self.fields['password'].required = False
         else:
@@ -408,22 +410,26 @@ class UsuarioForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if not self.instance.pk:  # Solo para nuevos usuarios
-            rut = cleaned_data.get('rut')
-            if rut:
-                proposed_username = rut.replace('-', '')
-                if Usuario.objects.filter(username__iexact=proposed_username).exists():
-                    raise forms.ValidationError({
-                        'rut': "Ya existe un usuario con este RUT (username duplicado)."
-                    })
-                cleaned_data['username'] = proposed_username
+            if 'rut' in cleaned_data:
+                try:
+                    cleaned_data['username'] = cleaned_data['rut'].replace('-', '')
+                    if Usuario.objects.filter(username=cleaned_data['username']).exists():
+                        self.add_error('rut', 'Este RUT ya está registrado')
+                except KeyError:
+                    self.add_error('rut', 'RUT es requerido')
         return cleaned_data
     
     def clean_celular(self):
         celular = self.cleaned_data.get('celular')
+        if not celular:
+            return celular
+            
         if len(celular) < 9:
-            raise ValidationError("Número de celular demasiado corto")
+            raise ValidationError("El número debe tener al menos 9 dígitos")
+            
         if not celular.startswith('+'):
-            raise ValidationError("Debe incluir código de país ej: +56")
+            raise ValidationError("Debe incluir código de país. Ej: +56 9 1234 5678")
+            
         return celular
 
     def save(self, commit=True):

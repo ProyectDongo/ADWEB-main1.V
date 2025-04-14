@@ -60,7 +60,9 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
                 user.save()
                 return JsonResponse({'message': 'Usuario guardado exitosamente'}, status=200)
             else:
-                return JsonResponse({'errors': form.errors}, status=400)
+                # Convertir errores de formulario a formato serializable
+                errors = {f: [str(e) for e in e_list] for f, e_list in form.errors.items()}
+                return JsonResponse({'errors': errors}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
