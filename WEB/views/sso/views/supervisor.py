@@ -43,6 +43,13 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
             }
             return JsonResponse(data)
         return JsonResponse({'error': 'ID de usuario no proporcionado'}, status=400)
+    def delete(self, request, vigencia_plan_id, user_id):
+        user = get_object_or_404(Usuario, pk=user_id)
+        try:
+            user.delete()
+            return JsonResponse({'message': 'Usuario eliminado exitosamente'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
     
 
     def post(self, request, vigencia_plan_id, user_id=None):
@@ -88,5 +95,6 @@ class GetFormTemplateView(View):
         if action == 'create':
             return render(request, 'formularios/supervisor.asistencia.html', {'form': form})
         elif action == 'edit':
+            form.fields['password'].required = False  # Hacer opcional el campo password
             return render(request, 'formularios/supervisor.edit.html', {'form': form})
         return HttpResponse(status=404)

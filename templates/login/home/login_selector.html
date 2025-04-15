@@ -1,84 +1,94 @@
-
 {% extends "login/home/login_base.html" %}
+{% load static %}
 {% block content %}
-<div class="animate-slide-in">
+<div class="animate-fade-in">
     <div class="row justify-content-center">
         <div class="col-12 text-center mb-5">
-            <h1 class="display-5 fw-bold text-white mb-3">Bienvenido al Sistema</h1>
-            <p class="lead text-white-50">Seleccione su tipo de acceso</p>
+            <img src="{% static 'png/logo.png' %}" alt="Logo" class="mb-4" style="height: 150px;">
+            <h1 class="h3 fw-bold text-white mb-3">Sistema de Acceso Seguro</h1>
+            <p class="text-white-50">Seleccione su rol para continuar</p>
         </div>
         
-        <div class="col-md-10 col-lg-8">
-            <div class="row g-4">
-                <!-- Admin Card -->
-                <div class="col-md-4">
-                    <div class="glass-card access-card p-4 text-center">
-                        <div class="icon-wrapper mb-3">
-                            <i class="fas fa-shield-alt fa-3x text-danger"></i>
+        <div class="col-xl-5 col-lg-6 col-md-8">
+            <div class="auth-card p-4 p-md-5 mb-4">
+                <div class="row g-4">
+                    <!-- Admin -->
+                    <div class="col-12">
+                        <div class="role-card p-4 rounded-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3">
+                                    <i class="fas fa-shield-alt fa-2x text-danger"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h3 class="h6 fw-bold mb-1">Administrador</h3>
+                                    <p class="text-muted small mb-0">Acceso completo al sistema</p>
+                                </div>
+                                <a href="{% url 'admin_login' %}" class="btn btn-danger btn-role ms-auto">
+                                    Acceder <i class="fas fa-arrow-right ms-2"></i>
+                                </a>
+                            </div>
                         </div>
-                        <h3 class="h5 mb-3">Administrador</h3>
-                        <p class="text-muted small mb-4">Acceso completo al sistema</p>
-                        <a href="{% url 'admin_login' %}" class="btn btn-danger btn-sm w-100">
-                            Ingresar <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
+                    </div>
+
+                    <!-- Supervisor -->
+                    <div class="col-12">
+                        <div class="role-card p-4 rounded-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                                    <i class="fas fa-user-tie fa-2x text-warning"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h3 class="h6 fw-bold mb-1">Supervisor</h3>
+                                    <p class="text-muted small mb-0">Gestión y monitoreo</p>
+                                </div>
+                                <a href="{% url 'supervisor_login' %}" class="btn btn-warning btn-role ms-auto">
+                                    Acceder <i class="fas fa-arrow-right ms-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trabajador -->
+                    <div class="col-12">
+                        <div class="role-card p-4 rounded-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                                    <i class="fas fa-user-check fa-2x text-primary"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h3 class="h6 fw-bold mb-1">Trabajador</h3>
+                                    <p class="text-muted small mb-0">Acceso operativo básico</p>
+                                </div>
+                                <a href="{% url 'trabajador_login' %}" class="btn btn-primary btn-role ms-auto">
+                                    Acceder <i class="fas fa-arrow-right ms-2"></i>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Supervisor Card -->
-                <div class="col-md-4">
-                    <div class="glass-card access-card p-4 text-center">
-                        <div class="icon-wrapper mb-3">
-                            <i class="fas fa-user-tie fa-3x text-warning"></i>
+
+                <div class="text-center mt-4 pt-3">
+                    <div class="security-badge">
+                        <div class="row g-3">
+                            <div class="col">
+                                <i class="fas fa-lock fa-lg text-success mb-2"></i>
+                                <p class="small fw-medium mb-0">2FA Activado</p>
+                            </div>
+                            <div class="col">
+                                <i class="fas fa-shield-check fa-lg text-info mb-2"></i>
+                                <p class="small fw-medium mb-0">SSL/TLS</p>
+                            </div>
+                            <div class="col">
+                                <i class="fas fa-clock-rotate-left fa-lg text-purple mb-2"></i>
+                                <p class="small fw-medium mb-0">Auditoría</p>
+                            </div>
                         </div>
-                        <h3 class="h5 mb-3">Supervisor</h3>
-                        <p class="text-muted small mb-4">Acceso de gestión y monitoreo</p>
-                        <a href="{% url 'supervisor_login' %}" class="btn btn-warning btn-sm w-100">
-                            Ingresar <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Trabajador Card -->
-                <div class="col-md-4">
-                    <div class="glass-card access-card p-4 text-center">
-                        <div class="icon-wrapper mb-3">
-                            <i class="fas fa-user-check fa-3x text-primary"></i>
-                        </div>
-                        <h3 class="h5 mb-3">Trabajador</h3>
-                        <p class="text-muted small mb-4">Acceso operativo básico</p>
-                        <a href="{% url 'trabajador_login' %}" class="btn btn-primary btn-sm w-100">
-                            Ingresar <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
                     </div>
                 </div>
             </div>
             
-            <!-- Security Section -->
-            <div class="glass-card mt-4 p-4">
-                <div class="row g-3 text-center">
-                    <div class="col-md-4">
-                        <div class="security-badge">
-                            <i class="fas fa-lock fa-2x text-success mb-3"></i>
-                            <h4 class="h6 mb-2">Autenticación 2FA</h4>
-                            <p class="text-muted small mb-0">Protección de dos factores</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="security-badge">
-                            <i class="fas fa-shield-check fa-2x text-info mb-3"></i>
-                            <h4 class="h6 mb-2">SSL/TLS</h4>
-                            <p class="text-muted small mb-0">Conexión encriptada</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="security-badge">
-                            <i class="fas fa-history fa-2x text-purple mb-3"></i>
-                            <h4 class="h6 mb-2">Monitorización</h4>
-                            <p class="text-muted small mb-0">Actividad en tiempo real</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
+            
         </div>
     </div>
 </div>

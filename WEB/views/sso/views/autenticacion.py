@@ -218,9 +218,9 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
 
 @login_required
-def supervisor_home_contabilidad(request, empresa_id):
+def supervisor_home_contabilidad(request, empresa_id, vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_plan = request.user.vigencia_plan
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
     
     context = {
         'empresa': empresa,
@@ -229,9 +229,9 @@ def supervisor_home_contabilidad(request, empresa_id):
     return render(request, 'home/supervisores/supervisor_home_contabilidad.html', context)
 
 @login_required
-def supervisor_home_almacen(request, empresa_id):
+def supervisor_home_almacen(request, empresa_id, vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_plan = request.user.vigencia_plan
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
     
     context = {
         'empresa': empresa,

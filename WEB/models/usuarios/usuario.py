@@ -52,6 +52,7 @@ class Usuario(AbstractUser):
         verbose_name="Último intento fallido"
     )
 
+
     @property
     def has_huella(self):
         """Verifica si el usuario tiene una huella asociada."""

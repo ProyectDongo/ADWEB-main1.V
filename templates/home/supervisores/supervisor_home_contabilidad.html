@@ -1,7 +1,166 @@
-<div class="d-flex gap-2">
-    <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
-       class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-2"></i>
-        Volver al Selector de Módulos
-    </a>
-</div>
+{% extends "central_user.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ empresa.nombre }} | Contabilidad{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <header class="main-header">
+        <div class="d-flex justify-content-between w-100">
+            <div class="d-flex align-items-center gap-3">
+                <button class="sidebar-toggle-mobile btn btn-icon">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="h4 mb-0">Gestión Contable</h1>
+            </div>
+            
+            <div class="header-actions">
+                <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
+                class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTransaccionModal">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Nueva Transacción
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Dinámico -->
+    <div class="content-container">
+        <div class="card operational-card">
+            <div class="card-header">
+                <ul class="nav nav-pills" id="contabilidadTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="transacciones-tab" data-bs-toggle="tab" data-bs-target="#transacciones" type="button">
+                            <i class="fas fa-exchange-alt me-2"></i>Transacciones
+                            <span class="badge">45</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="informes-tab" data-bs-toggle="tab" data-bs-target="#informes" type="button">
+                            <i class="fas fa-chart-line me-2"></i>Informes
+                            <span class="badge">3</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content" id="contabilidadTabsContent">
+                    <!-- Pestaña Transacciones -->
+                    <div class="tab-pane fade show active" id="transacciones">
+                        <div class="table-section">
+                            <div class="section-header">
+                                <h3>Registro de Transacciones</h3>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTransaccionModal">
+                                    <i class="fas fa-plus-circle me-2"></i>Nueva Transacción
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Descripción</th>
+                                            <th>Tipo</th>
+                                            <th>Monto</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Ejemplo de fila -->
+                                        <tr>
+                                            <td>15/03/2024</td>
+                                            <td>Compra materiales construcción</td>
+                                            <td><span class="badge bg-danger">Egreso</span></td>
+                                            <td>$1,250,000</td>
+                                            <td>
+                                                <div class="actions">
+                                                    <button class="btn-action">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn-action">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña Informes -->
+                    <div class="tab-pane fade" id="informes">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Balance General</h5>
+                                        <p class="display-6">$15.2M</p>
+                                        <a href="#" class="btn btn-outline-primary">
+                                            Ver Detalle <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Flujo de Caja</h5>
+                                        <canvas id="flujoCajaChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Transacción -->
+    <div class="modal fade" id="nuevaTransaccionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Nueva Transacción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post">
+                    <div class="modal-body">
+                        {% crispy form_transaccion %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Registrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Ejemplo de gráfico para flujo de caja
+    const ctx = document.getElementById('flujoCajaChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Flujo de Caja',
+                data: [12, 19, 3, 5, 2, 3],
+                borderColor: '#3498db',
+                tension: 0.4
+            }]
+        }
+    });
+</script>
+{% endblock %}

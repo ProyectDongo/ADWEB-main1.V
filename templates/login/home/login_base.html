@@ -1,5 +1,3 @@
-<!-- login_base.html -->
-<!DOCTYPE html>
 <html lang="es">
 <head>
     {% load static %}
@@ -15,78 +13,88 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #273dd1 100%);
-            --card-bg: rgba(255, 255, 255, 0.95);
+            --primary-color: #6366f1;
+            --secondary-color: #4f46e5;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --gradient-bg: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
         }
-        
+
         body {
-            background: var(--primary-gradient);
+            background: var(--gradient-bg);
             min-height: 100vh;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
-        
-        .glass-card {
-            background: var(--card-bg);
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 1.5rem;
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(12px);
-            border-radius: 1rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
         }
-        
-        .btn-return {
-            transition: all 0.3s ease;
-            color: #4b5563;
-            text-decoration: none;
+
+        .auth-card:hover {
+            transform: translateY(-2px);
         }
-        
-        .btn-return:hover {
-            transform: translateX(-4px);
-            color: #1f2937;
+
+        .security-badge {
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            border: 1px solid rgba(99, 102, 241, 0.15);
         }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .animate-slide-in {
-            animation: slideIn 0.6s ease-out;
-        }
-        
-        .access-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
+
+        .role-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid transparent;
         }
-        
-        .access-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(99, 102, 241, 0.3);
+
+        .role-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 16px -4px rgba(99, 102, 241, 0.15);
         }
-        
-        .security-badge {
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            transition: all 0.3s ease;
+
+        .btn-role {
+            letter-spacing: 0.025em;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .alert-position {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 90%;
+            max-width: 600px;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 
 <body class="d-flex align-items-center">
-    <div class="container py-5">
+    <div class="container">
         {% if messages %}
         <div class="alert-position">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <div>{{ message }}</div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
@@ -94,9 +102,17 @@
         {% endif %}
 
         {% block content %}{% endblock %}
+
+        {% block foter%}
+    
+        <p class="text-center text-white-50 small mt-4">
+            © 2025 Gestión facil. Todos los derechos reservados.
+        </p>
+        {% endblock %}
     </div>
 
     <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
+   
 </html>
