@@ -115,6 +115,11 @@
                                                                     title="Eliminar">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
+                                                            <a href="{% url 'attendance_record' supervisor.id %}"
+                                                                 class="btn btn-sm btn-outline-info" 
+                                                                 title="Ver Registro">
+                                                                    <i class="fas fa-list"></i>
+                                                                </a>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -193,6 +198,13 @@
                                                                     title="Eliminar">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
+                                                           
+                                                                <a href="{% url 'attendance_record' trabajador.id %}"
+                                                                 class="btn btn-sm btn-outline-info" 
+                                                                 title="Ver Registro">
+                                                                    <i class="fas fa-list"></i>
+                                                                </a>
+                                                            
                                                         </div>
                                                     </td>
                                                 </tr>

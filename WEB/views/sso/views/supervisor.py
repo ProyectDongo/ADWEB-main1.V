@@ -29,7 +29,7 @@ class UserManagementView(LoginRequiredMixin, View):
         return render(request, 'admin/user_management.html', context)
 
 class UserCreateUpdateView(LoginRequiredMixin, View):
-    def get(self, request, vigencia_plan_id, user_id=None):  # Añade parámetros
+    def get(self, request, vigencia_plan_id, user_id=None):  
         if user_id:
             user = get_object_or_404(Usuario, pk=user_id)
             data = {

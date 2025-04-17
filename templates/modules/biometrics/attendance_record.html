@@ -44,9 +44,10 @@
                 </table>
             </div>
             <div class="text-center mt-4">
-                <a href="#" class="btn btn-outline-secondary btn-lg mx-2">
-                    <i class="fas fa-arrow-left me-2"></i>Volver al Panel
-                </a>
+                <a href="{% url 'supervisor_home_asistencia' empresa_id vigencia_plan_id %}" 
+                class="btn btn-outline-primary btn-back">
+                 <i class="bi bi-arrow-left me-2"></i>Volver al panel
+             </a>
                 <a href="{% url 'generate_report' user.id %}" class="btn btn-primary btn-lg mx-2">
                     <i class="fas fa-file-pdf me-2"></i>Generar Informe PDF
                 </a>
