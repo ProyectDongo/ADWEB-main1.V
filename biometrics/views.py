@@ -32,6 +32,7 @@ class CaptureFingerprintView(View):
                 selected_user = None
         
         return render(request, 'modules/biometrics/register_fingerprint.html', {
+            'empresa': empresa,
             'usuarios': usuarios,
             'selected_user': selected_user,
             'empresa_id': empresa.id,
@@ -201,6 +202,7 @@ class AttendanceView(View):
     def get(self, request):
         empresa = request.user.empresa
         return render(request, 'modules/biometrics/attendance.html', {
+               'empresa': empresa,
                 'empresa_id': empresa.id,
                 'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
             })
@@ -216,7 +218,7 @@ class AttendanceRecordView(LoginRequiredMixin, View):
         # Obtiene el usuario y sus registros
         user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
         registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
-        
+        empresa = request.user.empresa
         # Calcula las horas totales para cada registro
         for registro in registros:
             if registro.hora_salida:
@@ -228,8 +230,11 @@ class AttendanceRecordView(LoginRequiredMixin, View):
         
         # Renderiza la plantilla con los datos
         return render(request, 'modules/biometrics/attendance_record.html', {
+            'empresa': empresa,
+            'empresa_id': empresa.id,
             'user': user,
-            'registros': registros
+            'registros': registros,
+            'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
         })
 
 
