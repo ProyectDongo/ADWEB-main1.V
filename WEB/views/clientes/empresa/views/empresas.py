@@ -13,81 +13,61 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+
+
+
 @login_required
 @permiso_requerido("WEB.crear_empresa")
-
 def crear_empresa(request):
     """
-    Vista para crear una nueva empresa junto con la vigencia de su plan y crear un usuario supervisor.
+    Vista para crear una nueva empresa y su vigencia de plan.
+    Ya NO crea el usuario supervisor ni envía ningún correo.
     """
     if request.method == 'POST':
         empresa_form = EmpresaForm(request.POST)
         vigencia_form = PlanVigenciaForm(request.POST)
-        
-        # Eliminar el campo 'empresa' del formulario de vigencia
+
+        # Quitamos el campo 'empresa' del form de vigencia (lo asignamos manual)
         vigencia_form.fields.pop('empresa', None)
-        
+
         if empresa_form.is_valid() and vigencia_form.is_valid():
             # Guardamos la empresa
             empresa = empresa_form.save(commit=False)
-            # Asignar el plan desde el formulario de vigencia
             empresa.plan_contratado = vigencia_form.cleaned_data['plan']
             empresa.save()
-            
-            # Guardamos la vigencia asignándole la empresa creada
-            vigencia_plan = vigencia_form.save(commit=False)
-            vigencia_plan.empresa = empresa
-            vigencia_plan.save()
-            
-            # --- Crear el usuario supervisor ---
-            # Generamos una contraseña aleatoria de 8 caracteres
-            password = get_random_string(8)
-            
-            # Creamos el usuario supervisor
-            supervisor = Usuario.objects.create_user(
-                username=empresa.codigo_cliente,  # Asegúrate que sea único
-                email=empresa.email,
-                password=password,
-                role='supervisor',
-                empresa=empresa,
-                rut=empresa.rut,       
-                
-            )
-            
-            # --- Enviar correo al supervisor ---
-            subject = 'Bienvenido a Nuestra Plataforma'
-            html_message = render_to_string('email/email_nuevo_supervisor.html', {
-                'nombre_empresa': empresa.nombre,
-                'username': supervisor.username,
-                'password': password,
-            })
-            plain_message = strip_tags(html_message)  # Versión de texto plano
-            from_email = settings.DEFAULT_FROM_EMAIL
-            to = empresa.email
-            
-            send_mail(
-                subject,
-                plain_message,
-                from_email,
-                [to],
-                html_message=html_message,
-            )
-            
+
+            # Guardamos la vigencia de plan enlazando la empresa
+            vigencia = vigencia_form.save(commit=False)
+            vigencia.empresa = empresa
+            vigencia.save()
+
             # Mensaje de éxito
-            messages.success(request, 
-                f"Empresa creada correctamente. Se ha enviado un correo a {empresa.email} con los datos del usuario supervisor (username: {supervisor.username})."
+            messages.success(request,
+                "Empresa y vigencia de plan creadas correctamente."
             )
-            
             return redirect('listar_clientes')
+
+        # Si hay errores, se volverá a renderizar el formulario con los mensajes automáticos
     else:
         empresa_form = EmpresaForm()
         vigencia_form = PlanVigenciaForm()
-        vigencia_form.fields.pop('empresa', None)  
+        vigencia_form.fields.pop('empresa', None)
 
-    return render(request, 'admin/clientes/lista_clientes/crear_empresa/crear_empresa.html', {
-        'empresa_form': empresa_form,
-        'vigencia_form': vigencia_form
-    })
+    return render(request,
+                  'admin/clientes/lista_clientes/crear_empresa/crear_empresa.html',
+                  {
+                      'empresa_form': empresa_form,
+                      'vigencia_form': vigencia_form
+                  }
+    )
+
+
+
+
+
+
+
+
 
 
 @login_required
@@ -155,6 +135,13 @@ def detalle_empresa(request, pk):
         'historial': historial
     })
 
+
+
+
+
+
+
+
 @login_required
 @permiso_requerido("WEB.vista_empresas")
 
@@ -188,6 +175,8 @@ def listar_clientes(request):
                 vigencia.pago_pendiente = has_pending
     
     return render(request, 'admin/clientes/lista_clientes/home/listar_clientes.html', {'empresas': empresas})
+
+
 @login_required
 def eliminar_empresa(request, pk):
     empresa = get_object_or_404(RegistroEmpresas, id=pk)
@@ -206,6 +195,13 @@ def recuperar_empresa(request, id):
     empresa.save()
     messages.success(request, 'Empresa recuperada exitosamente')
     return redirect('listar_empresas_eliminadas')
+
+
+
+
+
+
+
 
 
 @login_required
@@ -243,11 +239,19 @@ def vigencia_planes(request, pk):
         'empresa': empresa
     })
 
+
+
+
+
 @login_required
 def check_codigo_plan(request):
     codigo = request.GET.get('codigo', '')
     exists = VigenciaPlan.objects.filter(codigo_plan__iexact=codigo).exists()
     return JsonResponse({'exists': exists})
+
+
+
+
 
 
 @login_required
@@ -268,6 +272,10 @@ def generar_boleta(request, empresa_id):
     }
     # Implementación futura de generación de PDF
     return HttpResponse("Generación de PDF actualmente deshabilitada")
+
+
+
+
 
 @login_required
 @require_POST
@@ -308,6 +316,12 @@ def toggle_estado(request, pk):
         'new_estado': vigencia.estado,
         'new_estado_display': vigencia.get_estado_display()
     })
+
+
+
+
+
+
 
 @login_required
 @permiso_requerido("WEB.vista_servicios")

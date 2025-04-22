@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario, RegistroEmpresas
+from WEB.models import Usuario, RegistroEmpresas, Horario, Turno,RegistroEntrada
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
+
 
 class AdminForm(UserCreationForm):
     rut = forms.CharField(
@@ -69,6 +70,23 @@ class AdminForm(UserCreationForm):
             user.groups.set(self.cleaned_data['grupos'])
             user.user_permissions.set(self.cleaned_data['permisos'])
         return user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class SupervisorForm(UserCreationForm):
     empresa = forms.ModelChoiceField(
@@ -160,6 +178,26 @@ class SupervisorForm(UserCreationForm):
             usuario.user_permissions.set(self.cleaned_data['permisos'])
         return usuario
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class TrabajadorForm(UserCreationForm):
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
@@ -250,6 +288,20 @@ class TrabajadorForm(UserCreationForm):
             usuario.user_permissions.set(self.cleaned_data['permisos'])
         return usuario
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 class TrabajadorEditForm(UserChangeForm):
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
@@ -277,10 +329,23 @@ class TrabajadorEditForm(UserChangeForm):
                 self.fields['grupos'].queryset = user.groups.all()
             self.fields['grupos'].initial = self.instance.groups.all()
 
+
+
+
+
+
+
+
+
+
+
 #-----------------------------------------------------------------------------------#
 # PARA EL supervisor:
 from crispy_forms.layout import Submit
 from crispy_forms.helper import FormHelper
+
+
+
 
 class UsuarioForm(forms.ModelForm):
     password = forms.CharField(
@@ -310,33 +375,58 @@ class UsuarioForm(forms.ModelForm):
         help_text="Número con código de país ej: +56912345678"
     )
 
+    horario = forms.ModelChoiceField(
+        queryset=Horario.objects.all(),
+        label="Horario",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Seleccione el horario asignado al usuario"
+    )
+
+    turno = forms.ModelChoiceField(
+        queryset=Turno.objects.all(),
+        label="Turno",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Seleccione el turno asignado al usuario"
+    )
+
+    metodo_registro_permitido = forms.ChoiceField(
+        label="Método de Registro Permitido",
+        choices=Usuario.METODOS_REGISTRO,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text="Seleccione el método de registro permitido para este usuario"
+    )
+
     class Meta:
         model = Usuario
+        # Eliminamos 'password' de fields para que no se asigne directamente al modelo
         fields = ['rut', 'username', 'first_name', 'last_name', 
-                 'email', 'celular', 'role', 'password']
+                  'email', 'celular', 'role', 'horario', 'turno', 'metodo_registro_permitido']
         
         labels = {
-            'rut': 'RUT',
             'username': 'Nombre de usuario',
+            'rut': 'RUT',
             'first_name': 'Nombres',
             'last_name': 'Apellidos',
             'email': 'Correo electrónico',
         }
         
         help_texts = {
-            'username': 'Requerido. 150 carácteres o menos. Letras, dígitos y @/./+/-/_ solamente.',
+            'username': 'Requerido. 150 caracteres o menos. Letras, dígitos y @/./+/-/_ solamente.',
             'rut': 'Formato: 12345678-9',
         }
         
         widgets = {
+             'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'usuario123'
+            }),
             'rut': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '12345678-9'
             }),
-            'username': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'usuario123'
-            }),
+           
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: Juan Antonio'
@@ -353,7 +443,6 @@ class UsuarioForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-       
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_id = 'userForm'
@@ -407,17 +496,8 @@ class UsuarioForm(forms.ModelForm):
             raise ValidationError("Este correo electrónico ya está registrado.")
             
         return email
-    def clean(self):
-        cleaned_data = super().clean()
-        if not self.instance.pk:  # Solo para nuevos usuarios
-            if 'rut' in cleaned_data:
-                try:
-                    cleaned_data['username'] = cleaned_data['rut'].replace('-', '')
-                    if Usuario.objects.filter(username=cleaned_data['username']).exists():
-                        self.add_error('rut', 'Este RUT ya está registrado')
-                except KeyError:
-                    self.add_error('rut', 'RUT es requerido')
-        return cleaned_data
+
+   
     
     def clean_celular(self):
         celular = self.cleaned_data.get('celular')
@@ -434,17 +514,116 @@ class UsuarioForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        
-        if self.cleaned_data['password']:
-            user.set_password(self.cleaned_data['password'])
-            
         if commit:
             user.save()
-            
         return user
 
     @staticmethod
     def validate_rut(rut):
-        # Implementar validación real de RUT aquí
         return len(rut) >= 9 and '-' in rut
 
+
+
+
+
+
+
+
+
+#formulariio para crear un horario
+class HorarioForm(forms.ModelForm):
+    class Meta:
+        model = Horario
+        fields = ['nombre', 'hora_entrada', 'hora_salida', 'tolerancia_retraso', 'tolerancia_horas_extra','tipo_horario']
+        widgets = {
+            
+            
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Horario Diurno'
+            }),
+            'tolerancia_retraso': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 20',
+                'min': 0,
+                'max': 60
+            }),
+            'tolerancia_horas_extra': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 20',
+                'min': 0,
+                'max': 60
+            }),
+            'hora_entrada': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time'
+            }),
+            'hora_salida': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time'
+            }),
+            'tipo_horario': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            
+        }
+         
+        
+
+
+
+
+
+#formulario para crear un turno
+
+class TurnoForm(forms.ModelForm):
+    class Meta:
+        model = Turno
+        fields = ['nombre', 'dias_trabajo', 'dias_descanso', 'inicio_turno']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Turno 1'
+            }),
+            'dias_trabajo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 5',
+                'min': 1,
+                'max': 30
+            }),
+            'dias_descanso': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 2',
+                'min': 1,
+                'max': 30
+            }),
+            'inicio_turno': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+
+        }
+
+
+
+
+
+
+
+class RegistroEntradaForm(forms.ModelForm):
+    class Meta:
+        model = RegistroEntrada
+        fields = ['hora_entrada', 'hora_salida', 'metodo', 'latitud', 'longitud', 'precision', 'es_retraso', 'minutos_retraso', 'es_horas_extra', 'minutos_horas_extra']
+        widgets = {
+            'hora_entrada': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'metodo': forms.Select(attrs={'class': 'form-select'}),
+            'latitud': forms.NumberInput(attrs={'step': 'any'}),
+            'longitud': forms.NumberInput(attrs={'step': 'any'}),
+            'precision': forms.NumberInput(attrs={'step': 'any'}),
+            'es_retraso': forms.CheckboxInput(),
+            'minutos_retraso': forms.NumberInput(attrs={'min': 0}),
+            'es_horas_extra': forms.CheckboxInput(),
+            'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
+        }
+        exclude = ['hora_entrada','minutos_horas_extra','es_horas_extra','minutos_retraso']

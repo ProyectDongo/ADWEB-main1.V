@@ -184,7 +184,18 @@ urlpatterns = [
     path('validar-email/', supervisor.ValidationView.as_view(), name='validate_email'),
     path('delete_user/<int:vigencia_plan_id>/<int:user_id>/', supervisor.UserCreateUpdateView.as_view(), name='delete_user'),
     
+     # New URLs
+    path('horarios/', supervisor.HorarioListView.as_view(), name='horarios_list'),
+    path('horarios/nuevo/', supervisor.HorarioCreateView.as_view(), name='horario_create'),
+    path('horarios/<int:pk>/editar/',  supervisor.HorarioUpdateView.as_view(), name='horario_update'),
+    path('horarios/<int:pk>/eliminar/',  supervisor.HorarioDeleteView.as_view(), name='horario_delete'),
+    path('turnos/',  supervisor.TurnoListView.as_view(), name='turnos_list'),
+    path('turnos/nuevo/',  supervisor.TurnoCreateView.as_view(), name='turno_create'),
+    path('turnos/<int:pk>/editar/',  supervisor.TurnoUpdateView.as_view(), name='turno_update'),
+    path('turnos/<int:pk>/eliminar/',  supervisor.TurnoDeleteView.as_view(), name='turno_delete'),
 
+  
+   
     # Empresa
     
    

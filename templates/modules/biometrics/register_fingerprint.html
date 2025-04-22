@@ -32,12 +32,9 @@
                 <label class="form-label">Seleccionar Usuario</label>
                 <div class="custom-select">
                     <select id="userSelect" class="form-select">
-                        <option value="">Seleccione un usuario</option>
-                        {% for usuario in usuarios %}
-                            <option value="{{ usuario.id }}" {% if selected_user and selected_user.id == usuario.id %}selected{% endif %}>
-                                {{ usuario.username }} ({{ usuario.get_role_display }})
-                            </option>
-                        {% endfor %}
+                        <option value="{{ selected_user.id }}" selected>
+                            {{ selected_user.username }} ({{ selected_user.get_role_display }})
+                        </option>
                     </select>
                     <div class="select-icon">
                         <i class="bi bi-chevron-down"></i>
@@ -91,17 +88,31 @@
 
             <!-- Resultados -->
             <div id="result" class="result-card mt-4"></div>
-
+           
+              
             <!-- Botón de regreso -->
             <div class="text-center mt-5">
                 <a href="{% url 'supervisor_home_asistencia' empresa_id vigencia_plan_id %}" 
                    class="btn btn-outline-primary btn-back">
                     <i class="bi bi-arrow-left me-2"></i>Volver al panel
                 </a>
+                
             </div>
+            <button id="btnReconnect" class="btn btn-warning mb-3">
+                <i class="bi bi-arrow-clockwise me-2"></i>Reiniciar dispositivo
+            </button>
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+
+
 
 
 <script>
@@ -116,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn2: document.getElementById('btnCapture2'),
         userSelect: document.getElementById('userSelect')
     };
+
     // Animación de partículas en el header
     const createParticles = () => {
         const container = document.querySelector('.header-particles');
@@ -136,16 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     createParticles();
 
-    // Inicialización del dispositivo
-    
+    // Verificación del estado del dispositivo
     const initDevice = async () => {
         try {
-            const response = await fetch('http://localhost:9000/init', { method: 'POST' });
-            
-            document.querySelector('.page-loader').style.opacity = '0';
-            setTimeout(() => document.querySelector('.page-loader').remove(), 500);
-            
-            if (response.ok) {
+            const response = await fetch('http://localhost:9000/status', { method: 'GET' });
+            if (!response.ok) throw new Error('Error al verificar el estado del dispositivo');
+            const data = await response.json();
+
+            if (data.status === 'connected') {
                 elements.status.innerHTML = `
                     <div class="status-icon text-success">
                         <i class="bi bi-check-circle"></i>
@@ -154,24 +164,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 elements.captureSection.style.display = 'block';
             } else {
-                throw new Error('Error de conexión');
+                throw new Error('Dispositivo no conectado');
             }
         } catch (error) {
             elements.status.innerHTML = `
                 <div class="status-icon text-danger">
                     <i class="bi bi-x-circle"></i>
                 </div>
-                <div class="status-text">Error de conexión</div>
+                <div class="status-text">Error: ${error.message}</div>
             `;
+        } finally {
+            document.querySelector('.page-loader').style.opacity = '0';
+            setTimeout(() => document.querySelector('.page-loader').remove(), 500);
         }
     };
 
+    // Captura de huella digital
     const captureFingerprint = async () => {
         const res = await fetch('http://localhost:9000/capture', { method: 'POST' });
         if (!res.ok) throw new Error('Error al capturar la huella');
         return res.json().then(data => data.template);
     };
 
+    // Comparación de plantillas de huellas
     const matchTemplates = async (template1, template2) => {
         const res = await fetch('http://localhost:9000/match', {
             method: 'POST',
@@ -182,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.json().then(data => data.score);
     };
 
+    // Manejo de captura de huellas
     const handleCapture = async (attempt) => {
         if (attempt === 2 && !state.template1) {
             elements.result.innerHTML = '<div class="alert alert-warning animate__animated animate__shakeX">¡Captura la primera huella primero!</div>';
@@ -269,12 +285,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Asignación de eventos a los botones
     elements.btn1.addEventListener('click', () => handleCapture(1));
     elements.btn2.addEventListener('click', () => handleCapture(2));
 
+    // Iniciar verificación del dispositivo
     initDevice();
 });
+
+const btnReconnect = document.getElementById('btnReconnect');
+btnReconnect.addEventListener('click', async () => {
+  // Mostrar feedback
+  btnReconnect.disabled = true;
+  btnReconnect.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Reiniciando…';
+  try {
+    const res = await fetch('http://localhost:9000/reconnect', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok && data.status === 'connected') {
+      elements.status.innerHTML = `
+        <div class="status-icon text-success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="status-text">Dispositivo reconectado</div>`;
+      elements.captureSection.style.display = 'block';
+    } else {
+      throw new Error(data.error || 'Fallo al reconectar');
+    }
+  } catch (e) {
+    elements.status.innerHTML = `
+      <div class="status-icon text-danger">
+        <i class="bi bi-x-circle"></i>
+      </div>
+      <div class="status-text">Error: ${e.message}</div>`;
+  } finally {
+    btnReconnect.disabled = false;
+    btnReconnect.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Reiniciar dispositivo';
+  }
+});
+
+
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
 
 <style>
     .card-header {

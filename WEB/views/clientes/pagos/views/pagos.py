@@ -22,6 +22,17 @@ from django.views.decorators.http import require_POST
 from django.conf import settings
 import re
 
+
+
+
+
+
+
+
+
+# HAY QUE AGREGRAR UN METODO PARA QUE EN LA PANTALLA PRINCIPAL DE LOS CLIEMNTES, QUE EMPRESAS TIENEN COBROS PENDIENTES HACE UN MES O MAS
+#----------------------------------------------------------------------------------------------------
+
 logger = logging.getLogger(__name__)
 @login_required
 def registrar_cobro(request, empresa_id):
@@ -87,6 +98,19 @@ def registrar_cobro(request, empresa_id):
             'total_vigencias': total_vigencias,
         }
         return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
+    
+
+
+
+
+
+
+
+
+
+
+#ESTA VISTA ES PARA ACTUALIZAR UN COBRO, DONDE SE REGISTRA UN ABONO A UN COBRO PENDIENTE
+
 #----------------------------------------------------------------------------------------------------
 @login_required
 def actualizar_cobro(request, empresa_id, cobro_id):
@@ -135,6 +159,26 @@ def actualizar_cobro(request, empresa_id, cobro_id):
     
     messages.error(request, "Método no permitido.")
     return redirect('gestion_pagos', empresa_id=empresa.id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ESTA VISTA ES PARA LA GESTION DE PAGOS, DONDE SE MUESTRAN LOS PAGOS REALIZADOS Y LOS COBROS PENDIENTES
+
 #----------------------------------------------------------------------------------------------------
 @login_required
 @permiso_requerido("WEB.Registrar_pago")
@@ -166,6 +210,27 @@ def gestion_pagos(request, empresa_id):
     }
     return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# DE AQUI EN ADELEANTE ES TODO LO QUE TIENE QUE VER CON EL ENVIO DE CORREOS Y LA RECEPCION DE LOS MISMOS
 #----------------------------------------------------------------------------------------------------
 @login_required
 def send_manual_payment_email(empresa, next_due):
@@ -209,6 +274,14 @@ def send_manual_payment_email(empresa, next_due):
     except Exception as e:
         logger.error("Error enviando correo: %s", str(e), exc_info=True)
         return False
+    
+
+
+
+
+
+
+
 #----------------------------------------------------------------------------------------------------
 
 def get_comprobantes():
@@ -294,6 +367,17 @@ def get_comprobantes():
         logger.error(f"Error general: {e}", exc_info=True)
         raise
     return comprobantes
+
+
+
+
+
+
+
+
+
+
+
 #----------------------------------------------------------------------------------------------------
 def notificaciones_json(request):
     """Endpoint para obtener notificaciones en formato JSON."""

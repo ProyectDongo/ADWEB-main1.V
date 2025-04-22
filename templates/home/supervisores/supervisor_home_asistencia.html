@@ -20,13 +20,19 @@
                     </div>
                     
                     <div class="header-actions">
-                        <a href="{% url 'supervisor_selector_modulo' empresa.id %}" 
-                        class="btn btn-outline-secondary">
+                        <a href="{% url 'supervisor_selector_modulo' empresa.id %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Volver
+                        </a>
+                        <a href="{% url 'horarios_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-clock me-2"></i>Gestionar Horarios
+                        </a>
+                        <a href="{% url 'turnos_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar me-2"></i>Gestionar Turnos
                         </a>
                         <a href="{% url 'attendance' %}" class="btn btn-primary">
                             <i class="fas fa-clock me-2"></i>Control Asistencia
                         </a>
+                       
                     </div>
                 </div>
             </header>
@@ -120,6 +126,7 @@
                                                                  title="Ver Registro">
                                                                     <i class="fas fa-list"></i>
                                                                 </a>
+                                                                
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -290,37 +297,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Configurar modal - Sección modificada
+    // Configurar modal
     $('#usuarioModal').on('show.bs.modal', function(e) {
-    const isEdit = $(e.relatedTarget).hasClass('edit-user'); // Clase corregida
-    const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
-    currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
+        const isEdit = $(e.relatedTarget).hasClass('edit-user');
+        const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
+        currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
 
         const formContent = $('#formContent');
         if (isEdit) {
             $('#modalTitle').text('Editar Usuario');
-            formContent.load("{% url 'get_form_template' 'edit' %}", function() {
-                fetch(urlData.update.replace('0', currentUser))
-                    .then(r => {
-                        if (!r.ok) throw new Error('Error al cargar usuario');
-                        return r.json();
-                    })
-                    .then(data => {
-                        $('input[name="rut"]').val(data.rut);
-                        $('input[name="first_name"]').val(data.first_name);
-                        $('input[name="last_name"]').val(data.last_name);
-                        $('input[name="email"]').val(data.email);
-                        $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
-                        $('input[name="celular"]').val(data.celular);
-                        $('select[name="role"]').val(data.role);
-                        $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
-                        originalEmail = data.email;
-                        $('select[name="role"] option[value="admin"]').remove();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
-                    });
+            formContent.load("{% url 'get_form_template' 'edit' %}", function(response, status, xhr) {
+                if (status === "success") {
+                    // Obtener datos del usuario después de cargar el formulario
+                    fetch(urlData.update.replace('0', currentUser))
+                        .then(r => {
+                            if (!r.ok) throw new Error('Error al cargar usuario');
+                            return r.json();
+                        })
+                        .then(data => {
+                            console.log('Datos recibidos:', data); // Depuración
+                            $('input[name="rut"]').val(data.rut);
+                            $('input[name="first_name"]').val(data.first_name);
+                            $('input[name="last_name"]').val(data.last_name);
+                            $('input[name="email"]').val(data.email);
+                            $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
+                            $('input[name="celular"]').val(data.celular);
+                            $('select[name="role"]').val(data.role);
+                            // Asegurarse de que los valores se establecen en los select
+                            $('select[name="horario"]').val(data.horario || '');
+                            $('select[name="turno"]').val(data.turno || '');
+                            $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
+                            $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+                            originalEmail = data.email;
+                            $('select[name="role"] option[value="admin"]').remove();
+                            // Verificar si los valores se establecieron correctamente
+                            console.log('Horario seleccionado:', $('select[name="horario"]').val());
+                            console.log('Turno seleccionado:', $('select[name="turno"]').val());
+                            console.log('Método seleccionado:', $('select[name="metodo_registro_permitido"]').val());
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
+                        });
+                } else {
+                    console.error('Error al cargar el formulario:', xhr.statusText);
+                    Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                }
             });
         } else {
             $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);

@@ -25,7 +25,10 @@ def handle_entrada(request):
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('trabajador_home')
     
-    # Validación de entrada activa existente
+    if not request.user.debe_trabajar(timezone.now().date()):
+        messages.error(request, "No estás programado para trabajar hoy según tu turno.")
+        return redirect('trabajador_home')
+    
     if RegistroEntrada.objects.filter(trabajador=request.user, hora_salida__isnull=True).exists():
         messages.error(request, 'Debes registrar la salida de tu entrada anterior antes de una nueva entrada')
         return redirect('trabajador_home')
@@ -44,6 +47,12 @@ def handle_entrada(request):
     form = RegistroEntradaForm(request.POST, request.FILES, instance=entrada)
     
     if form.is_valid():
+        metodo_seleccionado = form.cleaned_data['metodo']
+        if metodo_seleccionado != request.user.metodo_registro_permitido:
+            messages.error(request, 'No tienes habilitado este método de registro.')
+            context['form_entrada'] = form
+            return render(request, 'home/users/trabajador_home.html', context)
+        
         entrada = form.save(commit=False)
         entrada.trabajador = request.user
         entrada.empresa = request.user.empresa
@@ -60,16 +69,32 @@ def handle_entrada(request):
                 return render(request, 'home/users/trabajador_home.html', context)
         
         entrada.save()
+        if request.user.horario:
+            calcular_retraso(entrada, request.user.horario)
+            entrada.save()
         messages.success(request, 'Entrada registrada correctamente')
         return redirect('trabajador_home')
-    
-    messages.error(request, 'Error en el formulario')
-    context['form_entrada'] = form
-    return render(request, 'home/users/trabajador_home.html', context)
+    else:
+        print("Errores del formulario:", form.errors)  # Imprime los errores en la consola
+        messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
+        context['form_entrada'] = form
+        return render(request, 'home/users/trabajador_home.html', context)
 
-#----------------------------------------------------------------------- #FIN DE MANEJO DE ENTRADAS
 
-# Manejo de salidas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def handle_salida(request):
     entrada_activa = RegistroEntrada.objects.filter(
         trabajador=request.user,
@@ -82,12 +107,15 @@ def handle_salida(request):
     
     try:
         entrada_activa.hora_salida = timezone.now()
+        if request.user.horario:
+            calcular_horas_extra(entrada_activa, request.user.horario)
         entrada_activa.save()
         messages.success(request, f'Salida registrada a las {entrada_activa.hora_salida.strftime("%H:%M")}')
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
     
     return HttpResponseRedirect(reverse('trabajador_home'))
+
 
 #----------------------------------------------------------------------- #FIN DE MANEJO DE SALIDAS
 # Vista principal del trabajador
@@ -123,7 +151,6 @@ def get_entrada_activa(user):
         trabajador=user,
         hora_salida__isnull=True
     ).order_by('-hora_entrada').first()
-
 
 
 # Vista para ver registros de entrada y salida
@@ -203,4 +230,35 @@ def ver_registros(request):
     return render(request, 'home/users/ver_registros.html', context)
 
 #------------------------------------------------------------------------------- #FIN DE MANEJO DE REGISTROS
+
+# DE AQUI EN ADELENTE ESTA TODO LO NUEVO 
+
+
+
+def calcular_retraso(entrada, horario):
+    from datetime import datetime
+    hora_entrada_real = entrada.hora_entrada.time()
+    hora_entrada_esperada = horario.hora_entrada
+    if hora_entrada_real > hora_entrada_esperada:
+        diferencia = (datetime.combine(datetime.min, hora_entrada_real) - 
+                      datetime.combine(datetime.min, hora_entrada_esperada)).total_seconds() / 60
+        if diferencia > horario.tolerancia_retraso:
+            entrada.es_retraso = True
+            entrada.minutos_retraso = int(diferencia - horario.tolerancia_retraso)
+
+
+def calcular_horas_extra(salida, horario):
+    from datetime import datetime
+    hora_salida_real = salida.hora_salida.time()
+    hora_salida_esperada = horario.hora_salida
+    if hora_salida_real > hora_salida_esperada:
+        diferencia = (datetime.combine(datetime.min, hora_salida_real) - 
+                      datetime.combine(datetime.min, hora_salida_esperada)).total_seconds() / 60
+        if diferencia > horario.tolerancia_horas_extra:
+            salida.es_horas_extra = True
+            salida.minutos_horas_extra = int(diferencia - horario.tolerancia_horas_extra)
+
+
+
+
 

@@ -1,20 +1,32 @@
-from django.shortcuts import render,get_object_or_404
-from django.http import JsonResponse,HttpResponse
-from django.views import View
-import json
-import base64
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import PermissionDenied
-from django.utils import timezone
+
 from .models import *
 from WEB.models import RegistroEntrada, Usuario
+from WEB.forms import RegistroEntradaForm
+from django.urls import reverse_lazy
 import requests
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
+from django.shortcuts import render,get_object_or_404
+from django.http import JsonResponse,HttpResponse
+from django.views import View
+from django.views.generic import ListView
+from django.views.generic.edit import UpdateView
+import json
+import base64
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 
+
+
+
+
+# captura de huella
+
+ 
 class CaptureFingerprintView(View):
     def get(self, request):
         if request.user.role not in ['supervisor', 'admin']:
@@ -38,6 +50,21 @@ class CaptureFingerprintView(View):
             'empresa_id': empresa.id,
             'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
         })
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Huella Registration
 
 class FingerprintRegistrationView(LoginRequiredMixin, View):
     def post(self, request):
@@ -108,6 +135,23 @@ class FingerprintRegistrationView(LoginRequiredMixin, View):
             return JsonResponse({"error": str(e)}, status=403)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Huella Authentication
 
 class CheckFingerprintView(LoginRequiredMixin, View):
     def post(self, request):
@@ -139,6 +183,9 @@ class CheckFingerprintView(LoginRequiredMixin, View):
             
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+
+# Huella Authentication with Action
 
 class AuthenticateFingerprintView(View):
     def post(self, request):
@@ -198,6 +245,10 @@ class AuthenticateFingerprintView(View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
+
+
+# autenficacion de huella
+
 class AttendanceView(View):
     def get(self, request):
         empresa = request.user.empresa
@@ -209,34 +260,66 @@ class AttendanceView(View):
   
         
     
-class AttendanceRecordView(LoginRequiredMixin, View):
-    def get(self, request, user_id):
-        # Verifica permisos
-        if request.user.role not in ['supervisor', 'admin']:
-            return render(request, 'error/error.html')
-        
-        # Obtiene el usuario y sus registros
-        user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
-        registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
-        empresa = request.user.empresa
-        # Calcula las horas totales para cada registro
-        for registro in registros:
+
+
+
+# Registro de asistencia por usuario
+
+class AttendanceRecordView(LoginRequiredMixin, ListView):
+    model = RegistroEntrada
+    template_name = 'modules/biometrics/attendance_record.html'
+    context_object_name = 'registros'
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        trabajador = get_object_or_404(Usuario, id=user_id, empresa=self.request.user.empresa)
+        return RegistroEntrada.objects.filter(trabajador=trabajador).order_by('-hora_entrada')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        trabajador = Usuario.objects.get(id=self.kwargs['user_id'])
+        context['trabajador'] = trabajador
+        context['empresa_id'] = self.request.user.empresa.id
+        context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
+
+        # Calcular horas totales para cada registro
+        for registro in context['registros']:
             if registro.hora_salida:
                 diferencia = registro.hora_salida - registro.hora_entrada
-                horas_totales = diferencia.total_seconds() / 3600  # Convierte segundos a horas
-                registro.horas_totales = round(horas_totales, 2)  # Redondea a 2 decimales
+                horas_totales = diferencia.total_seconds() / 3600
+                registro.horas_totales = round(horas_totales, 2)
             else:
                 registro.horas_totales = None
-        
-        # Renderiza la plantilla con los datos
-        return render(request, 'modules/biometrics/attendance_record.html', {
-            'empresa': empresa,
-            'empresa_id': empresa.id,
-            'user': user,
-            'registros': registros,
-            'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
-        })
 
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['supervisor', 'admin']:
+            return render(request, 'error/error.html')
+        return super().dispatch(request, *args, **kwargs)
+
+
+
+class EditAttendanceView(LoginRequiredMixin, UpdateView):
+    model = RegistroEntrada
+    form_class = RegistroEntradaForm
+    template_name = 'home/supervisores/edit_attendance.html'
+    pk_url_kwarg = 'registro_id'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        print(f"Objeto recuperado: {obj}, Trabajador ID: {obj.trabajador.id}")
+        return obj
+
+
+
+
+
+
+
+
+
+# Generación de reporte PDF
 
 class GenerateReportView(LoginRequiredMixin, View):
     def get(self, request, user_id):

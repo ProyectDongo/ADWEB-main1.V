@@ -56,6 +56,15 @@ class Plan(models.Model):
         """
         return f"{self.nombre} (U: {self.max_usuarios})"
     
+
+
+
+
+
+
+
+
+
 #---------------------------------------------------------------------------------------------------------
 
 class RegistroEmpresas(models.Model):
@@ -213,6 +222,20 @@ class RegistroEmpresas(models.Model):
         :param args: Argumentos posicionales.
         :param kwargs: Argumentos con nombre.
         """
+        # 1) Formatear RUT Empresa a "12345678-9"
+        if self.rut:
+            cleaned = re.sub(r'[\.\-\s]', '', self.rut).upper()
+            if len(cleaned) >= 2:
+                num, dv = cleaned[:-1], cleaned[-1]
+                self.rut = f"{num}-{dv}"
+
+        # 2) Formatear RUT Representante también
+        if self.rut_representante:
+            cleaned_rep = re.sub(r'[\.\-\s]', '', self.rut_representante).upper()
+            if len(cleaned_rep) >= 2:
+                num_rep, dv_rep = cleaned_rep[:-1], cleaned_rep[-1]
+                self.rut_representante = f"{num_rep}-{dv_rep}"
+
         if not self.codigo_cliente:
             with transaction.atomic():
 
@@ -221,6 +244,19 @@ class RegistroEmpresas(models.Model):
                 self.codigo_cliente = f"CLI-{ultimo_id + 1:06d}"
                 
         super().save(*args, **kwargs)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #---------------------------------------------------------------------------------------------------------

@@ -27,12 +27,12 @@
                 {% endfor %}
                 {% if empresa_form.rut.errors %}
                   {% for error in empresa_form.rut.errors %}
-                    <p><strong>RUT:</strong> {{ error }}</p>
+                    <p><strong>RUT:</strong> {{ error }}  Formato válido: 212344472-3</p>
                   {% endfor %}
                 {% endif %}
                 {% if empresa_form.rut_representante.errors %}
                   {% for error in empresa_form.rut_representante.errors %}
-                    <p><strong>RUT Representante:</strong> {{ error }}</p>
+                    <p><strong>RUT Representante:</strong> {{ error }}. Formato válido: 212344472-3.</p>
                   {% endfor %}
                 {% endif %}
                 {% if empresa_form.telefono.errors %}
@@ -77,6 +77,11 @@
               </li>
             </ul>
 
+
+
+
+
+
             <!-- Contenido de las Pestañas -->
             <div class="tab-content" id="empresaTabContent">
               <!-- Información Principal -->
@@ -96,6 +101,7 @@
                       <div class="form-floating">
                         {{ empresa_form.rut }}
                         <label for="{{ empresa_form.rut.id_for_label }}">RUT Empresa</label>
+                        <span>  Formato válido: 212344472-3 </span>
                         <div class="invalid-feedback">
                           {{ empresa_form.rut.errors }}
                         </div>
@@ -171,6 +177,9 @@
                 </div>
               </div>
 
+
+
+
               <!-- Contacto -->
               <div class="tab-pane fade" id="contacto" role="tabpanel" aria-labelledby="contacto-tab">
                 <div class="mb-4 border border-dark rounded p-3">
@@ -209,6 +218,9 @@
                 </div>
               </div>
 
+
+
+
               <!-- Representante Legal -->
               <div class="tab-pane fade" id="representantelegal" role="tabpanel" aria-labelledby="representantelegal-tab">
                 <div class="mb-4 border border-dark rounded p-3">
@@ -217,6 +229,7 @@
                       <div class="form-floating">
                         {{ empresa_form.rut_representante }}
                         <label for="{{ empresa_form.rut_representante.id_for_label }}">RUT Representante</label>
+                        <span>  Formato válido: 212344472-3 </span>
                       </div>
                     </div>
                     <div class="col-md-6">
@@ -237,6 +250,11 @@
                   </div>
                 </div>
               </div>
+
+
+
+
+
 
               <!-- Plan y Estado -->
               <div class="tab-pane fade" id="planestado" role="tabpanel" aria-labelledby="planestado-tab">
@@ -278,6 +296,11 @@
                   </div>
                 </div>
               </div>
+
+
+
+
+
 
               <!-- Vigencia de Planes -->
               <div class="tab-pane fade" id="vigencia" role="tabpanel" aria-labelledby="vigencia-tab">
@@ -355,6 +378,10 @@
             </div>
             <!-- Fin del contenido de las pestañas -->
 
+
+
+
+
             <!-- Botones de acción -->
             <div class="mt-5 border-top pt-4">
               <div class="d-flex justify-content-between">
@@ -372,6 +399,13 @@
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
 
 <!-- Script Unificado -->
 <script>

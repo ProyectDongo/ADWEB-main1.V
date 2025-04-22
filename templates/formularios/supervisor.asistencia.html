@@ -1,6 +1,5 @@
 {% load static crispy_forms_tags %}
 
-{% load crispy_forms_tags %}
 <div class="mb-4">
     <div class="card mb-3">
         <div class="card-body">
@@ -11,7 +10,10 @@
                 <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
                 <div class="col-md-12">{{ form.email|as_crispy_field }}</div>
                 <div class="col-md-12">{{ form.celular|as_crispy_field }}</div>
-                <div class="d-none">{{ form.role|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.role|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.horario|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.turno|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.metodo_registro_permitido|as_crispy_field }}</div>
             </div>
         </div>
     </div>

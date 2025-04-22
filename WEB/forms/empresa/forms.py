@@ -5,6 +5,13 @@ from WEB.views.scripts import *
 from WEB.models import *
 
 
+
+
+
+
+
+
+
 class EmpresaForm(forms.ModelForm):
     """
     Formulario completo para el registro y modificación de empresas.
@@ -23,7 +30,7 @@ class EmpresaForm(forms.ModelForm):
         ]
         widgets = {
             'codigo_cliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Código Cliente'}),
-            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Empresa'}),
+            'rut': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'RUT Empresa formato: 12345678-9'}),
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Razón Social'}),
             'giro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Giro Comercial'}),
             'telefono':
@@ -51,7 +58,7 @@ class EmpresaForm(forms.ModelForm):
             'estado': forms.Select(attrs={'class': 'form-control'}),
             'vigente': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'plan_contratado': forms.Select(attrs={'class': 'form-control'}),
-            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut = 12.344.461-2'}),
+            'rut_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ingrese rut = 12344461-2'}),
             'nombre_representante': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Representante'}),
         }
 
@@ -177,6 +184,12 @@ class EmpresaForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['comuna'].queryset = self.instance.provincia.comuna_set.all()
 
+
+
+
+
+
+
 class PlanVigenciaForm(forms.ModelForm):
     """
     Formulario avanzado para gestión de vigencias de planes.
@@ -288,6 +301,26 @@ class PlanVigenciaForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class PlanForm(forms.ModelForm):
     """

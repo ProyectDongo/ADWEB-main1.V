@@ -7,37 +7,26 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-12">
-                    {{ form.username|as_crispy_field }}
-                </div>
-                <div class="col-md-12">
-                    {{ form.rut|as_crispy_field }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.first_name|as_crispy_field }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.last_name|as_crispy_field }}
-                </div>
-                <div class="col-md-12">
-                    {{ form.email|as_crispy_field }}
-                </div>
-                <div class="col-md-12">
-                    {{ form.celular|as_crispy_field }}
-                </div>
+                <div class="col-md-12">{{ form.username|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.rut|as_crispy_field }}</div>
+                <div class="col-md-6">{{ form.first_name|as_crispy_field }}</div>
+                <div class="col-md-6">{{ form.last_name|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.email|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.celular|as_crispy_field }}</div>
             </div>
         </div>
     </div>
 
     <div class="card mb-3">
         <div class="card-header bg-light">
-            <h3 class="h6 mb-0"><i class="fas fa-user-tag mr-2"></i>Permisos</h3>
+            <h3 class="h6 mb-0"><i class="fas fa-user-tag mr-2"></i>Permisos y Configuración</h3>
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-12">
-                    {{ form.role|as_crispy_field }}
-                </div>
+                <div class="col-md-12">{{ form.role|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.horario|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.turno|as_crispy_field }}</div>
+                <div class="col-md-12">{{ form.metodo_registro_permitido|as_crispy_field }}</div>
             </div>
         </div>
     </div>

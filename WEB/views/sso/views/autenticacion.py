@@ -189,6 +189,17 @@ MODULE_ICONS = {
     'almacen': 'fas fa-warehouse'
 }
 
+
+
+
+
+
+
+
+
+
+# VISTAS DE MODULOS SEPARADAS POR ROL LUEGO EN CARPTETAS PARA MAS ORDEN
+#------------ INICIO ------------
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     # Validar permisos

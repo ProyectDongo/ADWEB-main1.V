@@ -63,7 +63,7 @@
                                                 <select class="form-select" name="selector" id="planSelector" required>
                                                     {% for vigencia in vigencias %}
                                                         <option value="{{ vigencia.id }}" data-monto="{{ vigencia.monto_final }}">
-                                                            {{ vigencia.plan.nombre }} - {{ vigencia.fecha_inicio|date:"d/m/Y" }} 
+                                                            {{ vigencia.codigo_plan }}  - {{ vigencia.fecha_inicio|date:"d/m/Y" }} 
                                                             <span class="text-muted">{% if vigencia.fecha_fin %}- {{ vigencia.fecha_fin|date:"d/m/Y" }}{% else %}(Indefinido){% endif %}</span>
                                                         </option>
                                                     {% empty %}
@@ -111,7 +111,8 @@
                                         </span>
                                         <div>
                                             <span class="fw-bold">${{ cobro.monto_total|floatformat:2 }}</span>
-                                            <span class="text-muted ms-2">{{ cobro.vigencia_plan.plan.nombre|default:"Todos los planes" }}</span>
+                                            <span class="text-muted ms-2">{{ cobro.vigencia_plan.codigo_plan|default:"Todos los planes" }}</span>
+                                          
                                         </div>
                                     </div>
                                 </button>
