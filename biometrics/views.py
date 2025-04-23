@@ -19,6 +19,7 @@ import base64
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
+from datetime import datetime, time
 
 
 
@@ -186,7 +187,6 @@ class CheckFingerprintView(LoginRequiredMixin, View):
         
 
 # Huella Authentication with Action
-
 class AuthenticateFingerprintView(View):
     def post(self, request):
         try:
@@ -207,14 +207,17 @@ class AuthenticateFingerprintView(View):
                 if match_response.ok and match_response.json()['score'] >= 100:
                     user = fp.user
                     today = timezone.now().date()
+                    start_of_day = timezone.make_aware(datetime.combine(today, time.min))
+                    end_of_day = timezone.make_aware(datetime.combine(today, time.max))
+
                     entries_today = RegistroEntrada.objects.filter(
                         trabajador=user,
-                        hora_entrada__date=today
+                        hora_entrada__range=(start_of_day, end_of_day)
                     ).order_by('hora_entrada')
 
                     if action == 'entrada':
                         if entries_today.filter(hora_salida__isnull=True).exists():
-                            return JsonResponse({"error": "Usted ya está ingresado hoy, debe registrar una salida primero"}, status=400)
+                            return JsonResponse({"error": "Ya está ingresado, registre una salida primero"}, status=400)
                         if entries_today.count() >= 3:
                             return JsonResponse({"error": "Máximo de 3 entradas por día alcanzado"}, status=400)
                         RegistroEntrada.objects.create(
@@ -263,7 +266,7 @@ class AttendanceView(View):
 
 
 
-# Registro de asistencia por usuario
+
 
 class AttendanceRecordView(LoginRequiredMixin, ListView):
     model = RegistroEntrada
@@ -286,7 +289,7 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
         for registro in context['registros']:
             if registro.hora_salida:
                 diferencia = registro.hora_salida - registro.hora_entrada
-                horas_totales = diferencia.total_seconds() / 3600
+                horas_totales = diferencia.total_seconds() // 3600
                 registro.horas_totales = round(horas_totales, 2)
             else:
                 registro.horas_totales = None
@@ -313,12 +316,6 @@ class EditAttendanceView(LoginRequiredMixin, UpdateView):
 
 
 
-
-
-
-
-
-
 # Generación de reporte PDF
 
 class GenerateReportView(LoginRequiredMixin, View):
@@ -342,7 +339,7 @@ class GenerateReportView(LoginRequiredMixin, View):
             fecha = reg.hora_entrada.strftime('%Y-%m-%d')
             entrada = reg.hora_entrada.strftime('%H:%M:%S')
             salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else 'N/A'
-            horas = (reg.hora_salida - reg.hora_entrada).total_seconds() / 3600 if reg.hora_salida else 0
+            horas = (reg.hora_salida - reg.hora_entrada).total_seconds() // 3600 if reg.hora_salida else 0
             data.append([fecha, entrada, salida, f"{horas:.2f}" if horas else 'N/A'])
 
         table = Table(data)

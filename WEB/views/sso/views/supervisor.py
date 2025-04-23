@@ -30,13 +30,6 @@ class UserManagementView(LoginRequiredMixin, View):
         }
         return render(request, 'admin/user_management.html', context)
 
-
-
-
-    
-
-
-
     def post(self, request, vigencia_plan_id, user_id=None):
         vigencia_plan = get_object_or_404(VigenciaPlan, pk=vigencia_plan_id)
         user = get_object_or_404(Usuario, pk=user_id) if user_id else None
@@ -123,6 +116,7 @@ class HorarioListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
+    
 
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario

@@ -622,7 +622,7 @@ class RegistroEntradaForm(forms.ModelForm):
             'longitud': forms.NumberInput(attrs={'step': 'any'}),
             'precision': forms.NumberInput(attrs={'step': 'any'}),
             'es_retraso': forms.CheckboxInput(),
-            'minutos_retraso': forms.NumberInput(attrs={'min': 0}),
+            'minutos_retraso': forms.NumberInput(attrs={'seg': 0}),
             'es_horas_extra': forms.CheckboxInput(),
             'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
         }

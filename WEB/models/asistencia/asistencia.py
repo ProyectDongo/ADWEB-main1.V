@@ -5,7 +5,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from WEB.models import RegistroEmpresas
-
+from django.db import models
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.conf import settings
 
 class RegistroEntrada(models.Model):
     METODOS_REGISTRO = [
@@ -40,7 +43,6 @@ class RegistroEntrada(models.Model):
         ]
 
     def esta_dentro_rango(self, empresa):
-       
         return False  
 
     def clean(self):

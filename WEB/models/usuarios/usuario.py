@@ -19,7 +19,7 @@ class Horario(models.Model):
     hora_salida = models.TimeField()
     tolerancia_retraso = models.IntegerField(default=20, validators=[MinValueValidator(0), MaxValueValidator(60)])  # in minutes
     tolerancia_horas_extra = models.IntegerField(default=20, validators=[MinValueValidator(0), MaxValueValidator(60)])
-    tipo_horario = models.CharField(max_length=20, choices=TIPO_HORARIO, default='diurno') # in minutes
+    tipo_horario = models.CharField(max_length=20, choices=TIPO_HORARIO, default='diurno') 
     empresa = models.ForeignKey('RegistroEmpresas', on_delete=models.CASCADE, related_name='horarios')
 
     def __str__(self):
@@ -29,7 +29,7 @@ class Turno(models.Model):
     nombre = models.CharField(max_length=100)
     dias_trabajo = models.IntegerField()
     dias_descanso = models.IntegerField()
-    inicio_turno = models.DateField(null=True, blank=True)  # Optional start date for the shift cycle
+    inicio_turno = models.DateField(null=True, blank=True) 
     empresa = models.ForeignKey('RegistroEmpresas', on_delete=models.CASCADE, related_name='turnos')
 
     def __str__(self):
@@ -104,7 +104,7 @@ class Usuario(AbstractUser):
 
     def debe_trabajar(self, fecha):
         if not self.turno or not self.turno.inicio_turno:
-            return True  # If no shift or no start date, assume they work every day
+            return True 
         ciclo_total = self.turno.dias_trabajo + self.turno.dias_descanso
         dias_desde_inicio = (fecha - self.turno.inicio_turno).days % ciclo_total
         return dias_desde_inicio < self.turno.dias_trabajo
