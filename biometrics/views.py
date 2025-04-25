@@ -1,7 +1,7 @@
 
 from .models import *
 from WEB.models import RegistroEntrada, Usuario
-from WEB.forms import RegistroEntradaForm
+from WEB.forms import RegistroEntradaForm, RegistroForm
 from django.urls import reverse_lazy
 import requests
 from reportlab.lib.pagesizes import letter
@@ -44,7 +44,7 @@ class CaptureFingerprintView(View):
             except Usuario.DoesNotExist:
                 selected_user = None
         
-        return render(request, 'modules/biometrics/register_fingerprint.html', {
+        return render(request, 'home/supervisores/biometrics/register_fingerprint.html', {
             'empresa': empresa,
             'usuarios': usuarios,
             'selected_user': selected_user,
@@ -186,6 +186,13 @@ class CheckFingerprintView(LoginRequiredMixin, View):
             return JsonResponse({"error": str(e)}, status=500)
         
 
+
+
+
+
+
+
+
 # Huella Authentication with Action
 class AuthenticateFingerprintView(View):
     def post(self, request):
@@ -255,7 +262,7 @@ class AuthenticateFingerprintView(View):
 class AttendanceView(View):
     def get(self, request):
         empresa = request.user.empresa
-        return render(request, 'modules/biometrics/attendance.html', {
+        return render(request, 'home/supervisores/biometrics/attendance.html', {
                'empresa': empresa,
                 'empresa_id': empresa.id,
                 'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
@@ -266,11 +273,11 @@ class AttendanceView(View):
 
 
 
-
+# Registro de asistencia
 
 class AttendanceRecordView(LoginRequiredMixin, ListView):
     model = RegistroEntrada
-    template_name = 'modules/biometrics/attendance_record.html'
+    template_name = 'home/supervisores/registro/attendance_record.html'
     context_object_name = 'registros'
 
     def get_queryset(self):
@@ -305,8 +312,8 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
 
 class EditAttendanceView(LoginRequiredMixin, UpdateView):
     model = RegistroEntrada
-    form_class = RegistroEntradaForm
-    template_name = 'home/supervisores/edit_attendance.html'
+    form_class = RegistroForm
+    template_name = 'home/supervisores/registro/edit_attendance.html'
     pk_url_kwarg = 'registro_id'
 
     def get_object(self, queryset=None):

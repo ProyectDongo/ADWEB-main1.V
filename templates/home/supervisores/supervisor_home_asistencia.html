@@ -6,248 +6,254 @@
 
 {% block content %}
 <div class="wrapper">
-    
-<!-- Contenido Principal -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="main-header">
-                <div class="d-flex justify-content-between w-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <button class="sidebar-toggle-mobile btn btn-icon">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                        <h1 class="h4 mb-0">Panel de Control</h1>
-                    </div>
-                    
-                    <div class="header-actions">
-                        <a href="{% url 'supervisor_selector_modulo' empresa.id %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Volver
-                        </a>
-                        <a href="{% url 'horarios_list' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-clock me-2"></i>Gestionar Horarios
-                        </a>
-                        <a href="{% url 'turnos_list' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-calendar me-2"></i>Gestionar Turnos
-                        </a>
-                        <a href="{% url 'attendance' %}" class="btn btn-primary">
-                            <i class="fas fa-clock me-2"></i>Control Asistencia
-                        </a>
-                       
-                    </div>
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header bg-white shadow-sm">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center w-100 py-3 px-4">
+                <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
+                    <button class="sidebar-toggle-mobile btn btn-icon btn-light">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="h4 mb-0 text-primary"><i class="fas fa-tachometer-alt me-2"></i>Panel de Control</h1>
                 </div>
-            </header>
+                
+                <div class="header-actions d-flex flex-wrap gap-2">
+                    <a href="{% url 'supervisor_selector_modulo' empresa.id %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                    <a href="{% url 'horarios_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-clock me-2"></i>Horarios
+                    </a>
+                    <a href="{% url 'turnos_list' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-calendar me-2"></i>Turnos
+                    </a>
+                    <a href="{% url 'attendance' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-clock me-2"></i>Asistencia
+                    </a>
+                </div>
+            </div>
+        </header>
 
-            <!-- Contenido Dinámico -->
-            <div class="content-container">
-                <!-- Pestañas -->
-                <div class="card operational-card">
-                    <div class="card-header">
-                        <ul class="nav nav-pills" id="mainTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button">
-                                    <i class="fas fa-user-shield me-2"></i>Supervisores
-                                    <span class="badge">{{ supervisores.count }}</span>
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button">
-                                    <i class="fas fa-users-gear me-2"></i>Trabajadores
-                                    <span class="badge">{{ trabajadores.count }}</span>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+        <!-- Contenido Dinámico -->
+        <div class="content-container p-4">
+            <!-- Pestañas -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white border-0 pt-4">
+                    <ul class="nav nav-pills nav-fill gap-2" id="mainTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active d-flex align-items-center gap-2" id="supervisores-tab" data-bs-toggle="tab" data-bs-target="#supervisores" type="button">
+                                <i class="fas fa-user-shield"></i>
+                                Supervisores
+                                <span class="badge bg-primary rounded-pill">{{ supervisores.count }}</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link d-flex align-items-center gap-2" id="trabajadores-tab" data-bs-toggle="tab" data-bs-target="#trabajadores" type="button">
+                                <i class="fas fa-users-gear"></i>
+                                Trabajadores
+                                <span class="badge bg-primary rounded-pill">{{ trabajadores.count }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
 
-                    <div class="card-body">
-                        <div class="tab-content" id="mainTabsContent">
-                            <!-- Pestaña Supervisores -->
-                            <div class="tab-pane fade show active" id="supervisores">
-                                <div class="table-section">
-                                    <div class="section-header">
-                                        <h3>Administración de Supervisores</h3>
-                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="supervisor">
-                                            <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nombre</th>
-                                                    <th>RUT</th>
-                                                    <th>Contacto</th>
-                                                    <th>Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for supervisor in supervisores %}
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-info">
-                                                            <div class="avatar">{{ supervisor.first_name|first|upper }}</div>
-                                                            <div>
-                                                                <div class="name">{{ supervisor.get_full_name }}</div>
-                                                                <small>{{ supervisor.email }}</small>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>{{ supervisor.rut }}</td>
-                                                    <td>
-                                                        {% if supervisor.celular %}
-                                                        <a href="tel:{{ supervisor.celular }}" class="contact-link">
-                                                            <i class="fas fa-phone"></i>{{ supervisor.celular }}
-                                                        </a>
-                                                        {% else %}
-                                                        <span class="text-muted">Sin teléfono</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <div class="actions">
-                                                            <button class="btn-action edit-user" 
-                                                                    data-id="{{ supervisor.id }}" 
-                                                                    data-bs-toggle="modal" 
-                                                                    data-bs-target="#usuarioModal"
-                                                                    title="Editar">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
-                                                                class="btn-action fingerprint"
-                                                                title="Huella Digital">
-                                                                <i class="fas fa-fingerprint"></i>
-                                                            </a>
-                                                            <button class="btn-action delete-user" 
-                                                                    data-id="{{ supervisor.id }}"
-                                                                    title="Eliminar">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                            <a href="{% url 'attendance_record' supervisor.id %}"
-                                                                 class="btn btn-sm btn-outline-info" 
-                                                                 title="Ver Registro">
-                                                                    <i class="fas fa-list"></i>
-                                                                </a>
-                                                                
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {% empty %}
-                                                <tr>
-                                                    <td colspan="4" class="empty-state">
-                                                        <i class="fas fa-user-slash"></i>
-                                                        <p>No hay supervisores registrados</p>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content" id="mainTabsContent">
+                        <!-- Pestaña Supervisores -->
+                        <div class="tab-pane fade show active" id="supervisores">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                                <h3 class="h5 mb-3 mb-md-0"><i class="fas fa-user-shield me-2 text-muted"></i>Administración de Supervisores</h3>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="supervisor">
+                                    <i class="fas fa-plus-circle me-2"></i>Nuevo Supervisor
+                                </button>
                             </div>
+                            
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Nombre</th>
+                                            <th>RUT</th>
+                                            <th>Contacto</th>
+                                            <th class="pe-4 text-end">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for supervisor in supervisores %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3 ps-3">
+                                                    <div class="avatar bg-primary text-white">{{ supervisor.first_name|first|upper }}</div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ supervisor.get_full_name }}</div>
+                                                        <small class="text-muted">{{ supervisor.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">{{ supervisor.rut }}</td>
+                                            <td class="align-middle">
+                                                {% if supervisor.celular %}
+                                                <a href="tel:{{ supervisor.celular }}" class="text-decoration-none">
+                                                    <i class="fas fa-phone me-2 text-muted"></i>{{ supervisor.celular }}
+                                                </a>
+                                                {% else %}
+                                                <span class="text-muted">Sin teléfono</span>
+                                                {% endif %}
+                                            </td>
 
-                            <!-- Pestaña Trabajadores -->
-                            <div class="tab-pane fade" id="trabajadores">
-                                <div class="table-section">
-                                    <div class="section-header">
-                                        <h3>Administración de Trabajadores</h3>
-                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="trabajador">
-                                            <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nombre</th>
-                                                    <th>RUT</th>
-                                                    <th>Contacto</th>
-                                                    <th>Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for trabajador in trabajadores %}
-                                                <tr>
-                                                    <td>
-                                                        <div class="user-info">
-                                                            <div class="avatar">{{ trabajador.first_name|first|upper }}</div>
-                                                            <div>
-                                                                <div class="name">{{ trabajador.get_full_name }}</div>
-                                                                <small>{{ trabajador.email }}</small>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>{{ trabajador.rut }}</td>
-                                                    <td>
-                                                        {% if trabajador.celular %}
-                                                        <a href="tel:{{ trabajador.celular }}" class="contact-link">
-                                                            <i class="fas fa-phone"></i>{{ trabajador.celular }}
-                                                        </a>
-                                                        {% else %}
-                                                        <span class="text-muted">Sin teléfono</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <div class="actions">
-                                                            <button class="btn-action edit-user" 
-                                                                    data-id="{{ trabajador.id }}" 
-                                                                    data-bs-toggle="modal" 
-                                                                    data-bs-target="#usuarioModal"
-                                                                    title="Editar">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
-                                                            class="btn-action fingerprint">
-                                                                <i class="fas fa-fingerprint"
-                                                                title="Registrar Huella"></i>
-                                                            </a>
-                                                            <button class="btn-action delete-user" 
-                                                                    data-id="{{ trabajador.id }}"
-                                                                    title="Eliminar">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                           
-                                                                <a href="{% url 'attendance_record' trabajador.id %}"
-                                                                 class="btn btn-sm btn-outline-info" 
-                                                                 title="Ver Registro">
-                                                                    <i class="fas fa-list"></i>
-                                                                </a>
-                                                            
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {% empty %}
-                                                <tr>
-                                                    <td colspan="4" class="empty-state">
-                                                        <i class="fas fa-user-slash"></i>
-                                                        <p>No hay trabajadores registrados</p>
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                                             <!-- BOTONES DE ACCIONES  PARA LOS SUPERVISORES  -->
+                                            <td class="align-middle pe-4 text-end">
+                                                <div class="d-flex gap-2 justify-content-end">
+                                                    <button class="btn btn-sm btn-outline-secondary edit-user" 
+                                                            data-id="{{ supervisor.id }}" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#usuarioModal"
+                                                            title="Editar Supervisor">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        title="Registrar Huella">
+                                                        <i class="fas fa-fingerprint"></i>
+                                                    </a>
+                                                    <a href="{% url 'attendance_record' supervisor.id %}"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        title="Registro de Asistencia">
+                                                        <i class="fas fa-list"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-danger delete-user" 
+                                                            data-id="{{ supervisor.id }}"
+                                                            title="Eliminar Supervisor">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+
+
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
+                                                    <p class="text-muted mb-0">No hay supervisores registrados</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Pestaña Trabajadores -->
+                        <div class="tab-pane fade" id="trabajadores">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                                <h3 class="h5 mb-3 mb-md-0"><i class="fas fa-users-gear me-2 text-muted"></i>Administración de Trabajadores</h3>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#usuarioModal" data-tipo="trabajador">
+                                    <i class="fas fa-plus-circle me-2"></i>Nuevo Trabajador
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Nombre</th>
+                                            <th>RUT</th>
+                                            <th>Contacto</th>
+                                            <th class="pe-4 text-end">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for trabajador in trabajadores %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3 ps-3">
+                                                    <div class="avatar bg-success text-white">{{ trabajador.first_name|first|upper }}</div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ trabajador.get_full_name }}</div>
+                                                        <small class="text-muted">{{ trabajador.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">{{ trabajador.rut }}</td>
+                                            <td class="align-middle">
+                                                {% if trabajador.celular %}
+                                                <a href="tel:{{ trabajador.celular }}" class="text-decoration-none">
+                                                    <i class="fas fa-phone me-2 text-muted"></i>{{ trabajador.celular }}
+                                                </a>
+                                                {% else %}
+                                                <span class="text-muted">Sin teléfono</span>
+                                                {% endif %}
+                                            </td>
+
+                                             <!-- BOTONES DE ACCIONES  PARA LOS TRABAJADORES  -->
+                                            <td class="align-middle pe-4 text-end">
+                                                <div class="d-flex gap-2 justify-content-end">
+                                                    <button class="btn btn-sm btn-outline-secondary edit-user" 
+                                                            data-id="{{ trabajador.id }}" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#usuarioModal"
+                                                            title="Editar Trabajador">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        Title="Registrar Huella">
+                                                        <i class="fas fa-fingerprint"></i>
+                                                    </a>
+                                                    <a href="{% url 'attendance_record' trabajador.id %}"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        title="Registro de Asistencia">
+                                                        <i class="fas fa-list"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-danger delete-user" 
+                                                            data-id="{{ trabajador.id }}"
+                                                            title="Eliminar Trabajador">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+
+
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
+                                                    <p class="text-muted mb-0">No hay trabajadores registrados</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
 </div>
+
 <!-- Modal Usuario -->
 <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content glassmorphism-card">
-            <div class="modal-header bg-gradient-primary text-white border-0">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-primary text-white border-0 rounded-top-3">
                 <h3 class="modal-title"><i class="fas fa-user-edit me-2"></i><span id="modalTitle">Nuevo Usuario</span></h3>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="usuarioForm" method="post">
                 {% csrf_token %}
                 {% if form.errors %}
-                <div class="alert alert-danger">
+                <div class="alert alert-danger mx-4 mt-3">
                     <strong>Errores:</strong>
-                    <ul>
+                    <ul class="mb-0">
                         {% for field, errors in form.errors.items %}
                             {% for error in errors %}
                                 <li>{{ error }}</li>
@@ -256,12 +262,12 @@
                     </ul>
                 </div>
                 {% endif %}
-                <div id="formContent" class="modal-body">
+                <div id="formContent" class="modal-body px-4 pt-4">
                     <!-- Aquí se cargará dinámicamente el formulario -->
                 </div>
-                <div class="modal-footer border-0">
+                <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary">
                         <span class="submit-text">Guardar Cambios</span>
                         <div class="spinner-border spinner-border-sm d-none" role="status"></div>
                     </button>
@@ -277,7 +283,120 @@
      data-validate="{% url 'validation' %}"
     
 style="display: none;"></div>
+
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+{% block extra_styles %}
+<style>
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.nav-pills .nav-link {
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    padding: 0.75rem 1.5rem;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .table-responsive {
+        border: 0;
+    }
+    
+    .table thead {
+        display: none;
+    }
+    
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+    }
+    
+    .table td {
+        display: block;
+        text-align: right;
+        padding: 0.75rem;
+    }
+    
+    .table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .table td:first-child {
+        text-align: left;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+}
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
 
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>

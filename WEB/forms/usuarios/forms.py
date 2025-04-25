@@ -627,3 +627,18 @@ class RegistroEntradaForm(forms.ModelForm):
             'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
         }
         exclude = ['hora_entrada','minutos_horas_extra','es_horas_extra','minutos_retraso']
+
+
+
+
+class RegistroForm(forms.ModelForm):
+    class Meta:
+        model = RegistroEntrada
+        fields = ['hora_salida', 'es_retraso', 'minutos_retraso', 'es_horas_extra', 'minutos_horas_extra']
+        widgets = {
+            'hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'es_retraso': forms.CheckboxInput(),
+            'minutos_retraso': forms.NumberInput(attrs={'min': 0}),
+            'es_horas_extra': forms.CheckboxInput(),
+            'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
+        }

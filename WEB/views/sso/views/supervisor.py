@@ -1,6 +1,6 @@
-from django.views.generic import UpdateView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView,View
 from django.views import View
-from django.urls import reverse
+from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -9,47 +9,6 @@ from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 
-
-
-class UserManagementView(LoginRequiredMixin, View):
-    def get(self, request, vigencia_plan_id):
-        vigencia_plan = get_object_or_404(VigenciaPlan, pk=vigencia_plan_id)
-        context = {
-            'empresa': vigencia_plan.empresa,
-            'vigencia_plan': vigencia_plan,
-            'supervisores': Usuario.objects.filter(
-                vigencia_plan=vigencia_plan,
-                role='supervisor',
-                empresa=vigencia_plan.empresa
-            ),
-            'trabajadores': Usuario.objects.filter(
-                vigencia_plan=vigencia_plan,
-                role='trabajador',
-                empresa=vigencia_plan.empresa
-            )
-        }
-        return render(request, 'admin/user_management.html', context)
-
-    def post(self, request, vigencia_plan_id, user_id=None):
-        vigencia_plan = get_object_or_404(VigenciaPlan, pk=vigencia_plan_id)
-        user = get_object_or_404(Usuario, pk=user_id) if user_id else None
-        
-        try:
-            form = UsuarioForm(request.POST, instance=user)
-            if form.is_valid():
-                user = form.save(commit=False)
-                user.empresa = vigencia_plan.empresa
-                user.vigencia_plan = vigencia_plan
-                if form.cleaned_data['password']:
-                    user.set_password(form.cleaned_data['password'])
-                user.save()
-                return JsonResponse({'message': 'Usuario guardado exitosamente'}, status=200)
-            else:
-                # Convertir errores de formulario a formato serializable
-                errors = {f: [str(e) for e in e_list] for f, e_list in form.errors.items()}
-                return JsonResponse({'errors': errors}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
 
 
 
@@ -76,23 +35,20 @@ class GetFormTemplateView(View):
     def get(self, request, action):
         form = UsuarioForm()
         if action == 'create':
-            return render(request, 'formularios/supervisor.asistencia.html', {'form': form})
+            return render(request, 'formularios/supervisor/supervisor.asistencia.html', {'form': form})
         elif action == 'edit':
             form.fields['password'].required = False  # Hacer opcional el campo password
-            return render(request, 'formularios/supervisor.edit.html', {'form': form})
+            return render(request, 'formularios/supervisor/supervisor.edit.html', {'form': form})
         return HttpResponse(status=404)
     
 
 
 
-# AQUI EN ADELANTE ESTA TODO LO NUEVO LA IMPLEMETNACION DE GESTION DE HORAIOS Y TURNOS Y BLOQUEOS ACCESO 
 
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views import View
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, get_object_or_404
+
+
+
+# AQUI EN ADELANTE ESTA TODO LO NUEVO LA IMPLEMETNACION DE GESTION DE HORAIOS Y TURNOS Y BLOQUEOS ACCESO 
 
 
 
@@ -102,7 +58,7 @@ from django.shortcuts import render, get_object_or_404
 
 class HorarioListView(LoginRequiredMixin, ListView):
     model = Horario
-    template_name = 'home/supervisores/horarios_list.html'
+    template_name = 'home/supervisores/horario/horarios_list.html'
     context_object_name = 'horarios'
 
     def get_queryset(self):
@@ -117,31 +73,26 @@ class HorarioListView(LoginRequiredMixin, ListView):
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
     
-
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'home/supervisores/horario_form.html'
+    template_name = 'home/supervisores/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
     def form_valid(self, form):
         form.instance.empresa = self.request.user.empresa
         return super().form_valid(form)
     
-
 class HorarioUpdateView(LoginRequiredMixin, UpdateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'home/supervisores/horario_form.html'
+    template_name = 'home/supervisores/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
 class HorarioDeleteView(LoginRequiredMixin, DeleteView):
     model = Horario
-    template_name = 'home/supervisores/horario_confirm_delete.html'
+    template_name = 'home/supervisores/horario/horario_confirm_delete.html'
     success_url = reverse_lazy('horarios_list')
-
-
-
 
 
 
@@ -153,7 +104,7 @@ class HorarioDeleteView(LoginRequiredMixin, DeleteView):
 
 class TurnoListView(LoginRequiredMixin, ListView):
     model = Turno
-    template_name = 'home/supervisores/turnos_list.html'
+    template_name = 'home/supervisores/turno/turnos_list.html'
     context_object_name = 'turnos'
 
     def get_queryset(self):
@@ -171,13 +122,10 @@ class TurnoListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
-
-
-
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'home/supervisores/turno_form.html'
+    template_name = 'home/supervisores/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
     def form_valid(self, form):
@@ -187,12 +135,12 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
 class TurnoUpdateView(LoginRequiredMixin, UpdateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'home/supervisores/turno_form.html'
+    template_name = 'home/supervisores/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
 class TurnoDeleteView(LoginRequiredMixin, DeleteView):
     model = Turno
-    template_name = 'home/supervisores/turno_confirm_delete.html'
+    template_name = 'home/supervisores/turno/turno_confirm_delete.html'
     success_url = reverse_lazy('turnos_list')
 
 
@@ -202,12 +150,6 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
 
 
     
-
-
-
-
-
-
 
 # Updated UserCreateUpdateView
 class UserCreateUpdateView(LoginRequiredMixin, View):
