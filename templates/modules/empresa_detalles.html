@@ -19,7 +19,7 @@
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb breadcrumb-dark mb-0">
                                     <li class="breadcrumb-item"><a href="{% url 'listar_clientes' %}">Empresas</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page " style="color: white;">Gestión de Planes</li>
+                                    <li class="breadcrumb-item active" aria-current="page" style="color: white;">Gestión de Planes</li>
                                 </ol>
                             </nav>
                         </div>
@@ -181,12 +181,14 @@
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
                                                                         <a href="{% url 'usuario_edit' supervisor.pk %}" 
-                                                                            class="btn btn-link btn-sm text-dark">
+                                                                            class="btn btn-link btn-sm text-dark"
+                                                                            title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
                                                                         <a href="{% url 'usuario_delete' supervisor.pk %}" 
                                                                             class="btn btn-link btn-sm text-danger"
-                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');">
+                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');"
+                                                                            title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
@@ -251,12 +253,14 @@
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
                                                                         <a href="{% url 'usuario_edit' trabajador.pk %}" 
-                                                                            class="btn btn-link btn-sm text-dark">
+                                                                            class="btn btn-link btn-sm text-dark"
+                                                                            title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
                                                                         <a href="{% url 'usuario_delete' trabajador.pk %}" 
                                                                             class="btn btn-link btn-sm text-danger"
-                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');">
+                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');"
+                                                                            title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
@@ -299,6 +303,10 @@
         </div>
     </div>
 </div>
+
+
+
+
 
 
 
@@ -386,16 +394,6 @@
         color: #1a237e;
         font-weight: 500;
     }
-
-    .table-hover tbody tr {
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .table-hover tbody tr:hover {
-        background: #f8f9fa;
-        transform: translateX(4px);
-    }
 </style>
 
 
@@ -406,8 +404,41 @@
 
 
 
+
+
+
+
 <script>
-    // hace que el acordeón se expanda o colapse al hacer clic en el botón de "Expandir/Colapsar"
+    // Función para guardar el estado del acordeón en localStorage
+    function saveAccordionState() {
+        const openPanel = document.querySelector('.accordion-collapse.show');
+        if (openPanel) {
+            localStorage.setItem('openPanelId', openPanel.id);
+        } else {
+            localStorage.removeItem('openPanelId');
+        }
+    }
+
+    // Función para restaurar el estado del acordeón desde localStorage
+    function restoreAccordionState() {
+        const openPanelId = localStorage.getItem('openPanelId');
+        if (openPanelId) {
+            const panel = document.getElementById(openPanelId);
+            if (panel) {
+                bootstrap.Collapse.getOrCreateInstance(panel).show();
+            }
+        }
+    }
+
+    // Escuchar eventos de expandir/colapsar del acordeón
+    document.querySelectorAll('.accordion-button').forEach(button => {
+        button.addEventListener('click', saveAccordionState);
+    });
+
+    // Restaurar el estado al cargar la página
+    document.addEventListener('DOMContentLoaded', restoreAccordionState);
+
+    // Toggle all accordion items
     document.querySelector('.toggle-all').addEventListener('click', function() {
         const accordionItems = document.querySelectorAll('#planesAccordion .accordion-collapse');
         const allExpanded = Array.from(accordionItems).every(item => item.classList.contains('show'));
@@ -418,11 +449,11 @@
                 bootstrap.Collapse.getOrCreateInstance(item).show();
             }
         });
+        // Guardar el estado después de expandir/colapsar todo
+        setTimeout(saveAccordionState, 500); // Esperar a que la animación termine
     });
 
-
-
-    // Cuenta dinamicamente los usuarios supervisores y trabajadores
+    // Cuenta dinámicamente los usuarios supervisores y trabajadores
     document.querySelectorAll('.user-counter').forEach(counter => {
         const supervisores = parseInt(counter.dataset.supervisores);
         const trabajadores = parseInt(counter.dataset.trabajadores);
