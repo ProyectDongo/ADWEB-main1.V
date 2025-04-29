@@ -308,8 +308,6 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
             return render(request, 'error/error.html')
         return super().dispatch(request, *args, **kwargs)
 
-
-
 class EditAttendanceView(LoginRequiredMixin, UpdateView):
     model = RegistroEntrada
     form_class = RegistroForm
@@ -320,6 +318,11 @@ class EditAttendanceView(LoginRequiredMixin, UpdateView):
         obj = super().get_object(queryset)
         print(f"Objeto recuperado: {obj}, Trabajador ID: {obj.trabajador.id}")
         return obj
+
+
+
+
+
 
 
 

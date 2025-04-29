@@ -12,7 +12,7 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000  
     volumes:
       - .:/app
     ports:
@@ -21,6 +21,8 @@ services:
       - db
     environment:
       DATABASE_URL: postgres://myuser:mypassword@db:5432/mydatabase
+
+
 
 volumes:
   postgres_data:
