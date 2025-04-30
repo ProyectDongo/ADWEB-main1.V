@@ -205,6 +205,7 @@ EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server
 EMAIL_PORT = 587               # Port  TLS
 EMAIL_USE_TLS = True
 
+#crear un .env
 load_dotenv()  # Carga variables de .env
 
 EMAIL_HOST_USER = os.getenv("EMAIL_USER")

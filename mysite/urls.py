@@ -1,19 +1,4 @@
-"""
-URL configuration for mysite project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 
 from site import venv
 from django.contrib.auth import views as auth_views
@@ -167,7 +152,7 @@ urlpatterns = [
     path('cuenta-bloqueada/',  modulo_asistencia.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
     path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),  
     path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
-
+    path('eliminar_huella/<int:user_id>/', modulo_asistencia.eliminar_huella, name='eliminar_huella'),
     
     
    

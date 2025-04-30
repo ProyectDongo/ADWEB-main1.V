@@ -181,17 +181,34 @@
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
                                                                         <a href="{% url 'usuario_edit' supervisor.pk %}" 
-                                                                            class="btn btn-link btn-sm text-dark"
-                                                                            title="Editar">
+                                                                           class="btn btn-link btn-sm text-dark"
+                                                                           title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
                                                                         <a href="{% url 'usuario_delete' supervisor.pk %}" 
-                                                                            class="btn btn-link btn-sm text-danger"
-                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');"
-                                                                            title="Eliminar">
+                                                                           class="btn btn-link btn-sm text-danger"
+                                                                           onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');"
+                                                                           title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
+                                                                    <span class="ms-2">
+                                                                        {% if supervisor.has_huella %}
+                                                                            <i class="bi bi-fingerprint text-success" title="Huella registrada"></i>
+                                                                        {% else %}
+                                                                            <i class="bi bi-fingerprint text-muted" title="Sin huella"></i>
+                                                                        {% endif %}
+                                                                    </span>
+                                                                    {% if supervisor.has_huella %}
+                                                                        <form method="post" action="{% url 'eliminar_huella' supervisor.id %}">
+                                                                            {% csrf_token %}
+                                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                                    onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');"
+                                                                                    title="Eliminar Huella">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    {% endif %}
                                                                 </td>
                                                             </tr>
                                                             {% endfor %}
@@ -209,7 +226,7 @@
                                                 {% endif %}
                                             </div>
 
-                                            <!-- Workers Tab -->
+                                            <!-- Trabajador Tab -->
                                             <div class="tab-pane fade" id="trabajadores-{{ plan_data.vigencia.pk }}" role="tabpanel">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                                     <h5 class="h6 mb-0">Personal del Plan</h5>
@@ -253,17 +270,34 @@
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
                                                                         <a href="{% url 'usuario_edit' trabajador.pk %}" 
-                                                                            class="btn btn-link btn-sm text-dark"
-                                                                            title="Editar">
+                                                                           class="btn btn-link btn-sm text-dark"
+                                                                           title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
                                                                         <a href="{% url 'usuario_delete' trabajador.pk %}" 
-                                                                            class="btn btn-link btn-sm text-danger"
-                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');"
-                                                                            title="Eliminar">
+                                                                           class="btn btn-link btn-sm text-danger"
+                                                                           onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');"
+                                                                           title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
+                                                                    <span class="ms-2">
+                                                                        {% if trabajador.has_huella %}
+                                                                            <i class="bi bi-fingerprint text-success" title="Huella registrada"></i>
+                                                                        {% else %}
+                                                                            <i class="bi bi-fingerprint text-muted" title="Sin huella"></i>
+                                                                        {% endif %}
+                                                                    </span>
+                                                                    {% if trabajador.has_huella %}
+                                                                        <form method="post" action="{% url 'eliminar_huella' trabajador.id %}">
+                                                                            {% csrf_token %}
+                                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                                    onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');"
+                                                                                    title="Eliminar Huella">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    {% endif %}
                                                                 </td>
                                                             </tr>
                                                             {% endfor %}
@@ -303,19 +337,6 @@
         </div>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -395,12 +416,6 @@
         font-weight: 500;
     }
 </style>
-
-
-
-
-
-
 
 
 

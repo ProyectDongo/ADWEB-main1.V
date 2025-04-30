@@ -12,6 +12,10 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan
 from django.utils.safestring import mark_safe
+from biometrics.models import *
+
+
+
 
 
 
@@ -19,6 +23,9 @@ from django.utils.safestring import mark_safe
 class AdminUserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.role == 'admin'
+
+
+
 
 # Vista para gestionar empresas
 class EmpresaDetailView(DetailView):
@@ -45,6 +52,11 @@ def validate_rut(request):
     rut = request.GET.get('rut', None)
     data = {'exists': Usuario.objects.filter(rut=rut).exists()}
     return JsonResponse(data)
+
+
+
+
+
 
 
 # crear Usuario
@@ -80,6 +92,10 @@ class UsuarioCreateVigenciaView(AdminUserMixin, CreateView):
     def get_success_url(self):
         return reverse('empresa_detail', kwargs={'pk': self.kwargs.get('empresa_pk')})
 
+
+
+
+
 #crear supervisor
 class SupervisorCreateView(AdminUserMixin, CreateView):
     model = Usuario
@@ -114,6 +130,12 @@ class SupervisorCreateView(AdminUserMixin, CreateView):
         return reverse('empresa_detail', kwargs={'pk': self.kwargs.get('empresa_pk')})
 
 
+
+
+
+
+
+
 # Usuario editado
 class UsuarioUpdateView(AdminUserMixin, UpdateView):
     model = Usuario
@@ -143,6 +165,11 @@ class UsuarioUpdateView(AdminUserMixin, UpdateView):
         return super().form_valid(form)
 
 
+
+
+
+
+
 # Usuario eliminado
 class UsuarioDeleteView(AdminUserMixin, DeleteView):
     model = Usuario
@@ -152,6 +179,10 @@ class UsuarioDeleteView(AdminUserMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Usuario eliminado correctamente')
         return super().delete(request, *args, **kwargs)
+
+
+
+
 
 
 
@@ -209,6 +240,11 @@ class VigenciaPlanUpdateView(AdminUserMixin, UpdateView):
         context['object'] = self.get_object()
         return context
 
+
+
+
+
+
 # Vigencia plan estado
 class VigenciaPlanStatusToggleView(AdminUserMixin, View):
     def post(self, request, *args, **kwargs):
@@ -234,4 +270,24 @@ class VigenciaPlanStatusToggleView(AdminUserMixin, View):
 # Cuenta Bloqueada View
 class CuentaBloqueadaView(TemplateView):
     template_name = 'error/cuenta_bloqueada.html'
+
+
+
+
+
+
+@login_required
+def eliminar_huella(request, user_id):
+    usuario = get_object_or_404(Usuario, id=user_id)
+    if request.method == 'POST':
+        if usuario.has_huella:
+            huella = huellas.objects.get(user=usuario)
+            huella.delete()
+        return redirect('empresa_detail', pk=usuario.empresa.pk)  
+    return redirect('empresa_detail', pk=usuario.empresa.pk)
+
+
+
 # fin de admin home
+
+

@@ -112,11 +112,17 @@
                                                             title="Editar Supervisor">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                    {% if supervisor.has_huella %}
+                                                    <span class="btn btn-sm btn-success" title="Huella registrada">
+                                                        <i class="fas fa-fingerprint"></i>
+                                                    </span>
+                                                {% else %}
                                                     <a href="{% url 'register' %}?user_id={{ supervisor.id }}" 
-                                                        class="btn btn-sm btn-outline-secondary"
-                                                        title="Registrar Huella">
+                                                    class="btn btn-sm btn-outline-secondary" 
+                                                    title="Registrar Huella">
                                                         <i class="fas fa-fingerprint"></i>
                                                     </a>
+                                                {% endif %}
                                                     <a href="{% url 'attendance_record' supervisor.id %}"
                                                         class="btn btn-sm btn-outline-info"
                                                         title="Registro de Asistencia">
@@ -199,11 +205,17 @@
                                                             title="Editar Trabajador">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                    {% if trabajador.has_huella %}
+                                                    <span class="btn btn-sm btn-success" title="Huella registrada">
+                                                        <i class="fas fa-fingerprint"></i>
+                                                    </span>
+                                                     {% else %}
                                                     <a href="{% url 'register' %}?user_id={{ trabajador.id }}" 
-                                                        class="btn btn-sm btn-outline-secondary"
-                                                        Title="Registrar Huella">
+                                                       class="btn btn-sm btn-outline-secondary" 
+                                                       title="Registrar Huella">
                                                         <i class="fas fa-fingerprint"></i>
                                                     </a>
+                                                {% endif %}
                                                     <a href="{% url 'attendance_record' trabajador.id %}"
                                                         class="btn btn-sm btn-outline-info"
                                                         title="Registro de Asistencia">
