@@ -8,6 +8,8 @@ class Command(BaseCommand):
         # Permisos para Admin (todos los listados)
         admin_permissions = [
             'crear_plan',
+            'lista_permisos',
+            'crear_permiso',
             'vista_planes',
             'crear_empresa',
             'eliminar_empresa',
@@ -21,9 +23,11 @@ class Command(BaseCommand):
             'eliminar_trabajador',
             'eliminar_supervisor',
             'eliminar_admin',
+
             'crear_admin',
             'crear_supervisor',
             'crear_trabajador',
+            
             'editar_supervisor',
             'editar_trabajador',
         ]

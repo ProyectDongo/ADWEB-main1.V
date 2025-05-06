@@ -17,6 +17,8 @@ def crear_admin(request):
         form = AdminForm()
     return render(request, 'admin/Sofware/admin/crear_admin.html', {'form': form})
 
+
+
 @login_required
 @permiso_requerido("WEB.crear_supervisor")
 def crear_supervisor(request):
@@ -30,6 +32,8 @@ def crear_supervisor(request):
     else:
         form = SupervisorForm(user=request.user)
     return render(request, 'admin/Sofware/supervisor/crear_supervisor.html', {'form': form})
+
+
 
 @login_required
 @permiso_requerido("WEB.crear_trabajador")

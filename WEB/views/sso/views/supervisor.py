@@ -72,7 +72,10 @@ class HorarioListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
-    
+
+
+
+
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario
     form_class = HorarioForm

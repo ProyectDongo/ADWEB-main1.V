@@ -23,6 +23,7 @@ def crear_permiso(request):
         form = PermisoForm()
     return render(request, 'admin/permisos/crear/crear_permiso.html', {'form': form})
 
+
 @login_required
 @permiso_requerido("WEB.lista_permisos")
 def lista_permisos(request):

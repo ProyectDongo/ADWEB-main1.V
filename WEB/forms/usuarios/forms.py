@@ -165,6 +165,7 @@ class SupervisorForm(UserCreationForm):
             raise forms.ValidationError("El celular es obligatorio.")
         return celular
 
+
     def save(self, commit=True):
         usuario = super().save(commit=False)
         usuario.role = 'supervisor'
