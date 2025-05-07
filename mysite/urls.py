@@ -24,6 +24,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     #super_user
     path('django-admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     #admin, supervisores y trabajadores 
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),

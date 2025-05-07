@@ -125,6 +125,8 @@ class TurnoListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
+    
+
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
@@ -167,8 +169,8 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
                 'email': user.email,
                 'celular': user.celular, 
                 'role': user.role,
-                'horario': user.horario_id,  # ID del horario
-                'turno': user.turno_id,      # ID del turno
+                'horario': user.horario_id,
+                'turno': user.turno_id,
                 'metodo_registro_permitido': user.metodo_registro_permitido
             }
             return JsonResponse(data)
@@ -186,21 +188,23 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
         vigencia_plan = get_object_or_404(VigenciaPlan, pk=vigencia_plan_id)
         user = get_object_or_404(Usuario, pk=user_id) if user_id else None
         
-        try:
-            form = UsuarioForm(request.POST, instance=user)
-            if form.is_valid():
-                user = form.save(commit=False)
-                user.empresa = vigencia_plan.empresa
-                user.vigencia_plan = vigencia_plan
-                # Solo establecer la contraseña si se proporciona una no vacía
-                password = form.cleaned_data.get('password')
-                if password:
-                    user.set_password(password)
-                user.save()
-                return JsonResponse({'message': 'Usuario guardado exitosamente'}, status=200)
-            else:
-                errors = {f: [str(e) for e in e_list] for f, e_list in form.errors.items()}
-                return JsonResponse({'errors': errors}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
+        form = UsuarioForm(request.POST, instance=user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.empresa = vigencia_plan.empresa
+            user.vigencia_plan = vigencia_plan
+            password = form.cleaned_data.get('password')
+            if password:
+                user.set_password(password)
+            user.save()
+            print(f"Usuario autenticado tras guardar: {request.user.is_authenticated}")  # Depuración
+            return JsonResponse({
+                'message': 'Usuario guardado exitosamente',
+                'redirect_url': reverse('supervisor_home_asistencia', kwargs={
+                    'empresa_id': vigencia_plan.empresa.id,
+                    'vigencia_plan_id': vigencia_plan.id
+                })
+            }, status=200)
+        else:
+            errors = {f: [str(e) for e in e_list] for f, e_list in form.errors.items()}
+            return JsonResponse({'errors': errors}, status=400)

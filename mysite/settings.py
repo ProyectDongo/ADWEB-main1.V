@@ -96,10 +96,10 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django_session_timeout.middleware.SessionTimeoutMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'WEB.middleware.EmpresaStatusMiddleware',
@@ -226,7 +226,8 @@ AUTHENTICATION_BACKENDS = [
     'biometrics.backends.FingerprintBackend',
 ]
 
-ESSION_COOKIE_SECURE = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -236,6 +237,8 @@ RECAPTCHA_PUBLIC_KEY = '321'
 RECAPTCHA_PRIVATE_KEY = '0101'
 RECAPTCHA_REQUIRED_SCORE = 0.85
 
+SESSION_COOKIE_SAMESITE = 'Lax'  # Permite enviar cookies en redirecciones
+SESSION_COOKIE_SECURE = False     # Usa True si estás en HTTPS, False en desarrollo local
 
 RATELIMIT_ENABLE = True
 
@@ -245,3 +248,4 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 
+LOGIN_URL = '/login-selector/'  # Apunta a tu vista de selección de login

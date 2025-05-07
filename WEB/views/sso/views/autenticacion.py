@@ -20,6 +20,8 @@ from WEB.models import  Usuario, RegistroEmpresas, RegistroEntrada, VigenciaPlan
 from WEB.forms import *
 from django.views import View
 from django.views.generic import DetailView
+import logging
+
 
 
 class RoleBasedLoginMixin:
@@ -196,12 +198,17 @@ MODULE_ICONS = {
 
 
 
-
+logger = logging.getLogger(__name__)
 
 # VISTAS DE MODULOS SEPARADAS POR ROL LUEGO EN CARPTETAS PARA MAS ORDEN
 #------------ INICIO ------------
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
+    logger.info(f"Usuario autenticado: {request.user.is_authenticated}")
+    # Verificar si el usuario está autenticado explícitamente
+    if not request.user.is_authenticated:
+        return render(request, 'error/error.html', {'message': 'Debes iniciar sesión para acceder a esta página'})
+
     # Validar permisos
     if request.user.role != 'supervisor':
         return render(request, 'error/error.html', {'message': 'Acceso no autorizado'})
@@ -227,6 +234,8 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'form': UsuarioForm()
     }
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
+
+
 
 @login_required
 def supervisor_home_contabilidad(request, empresa_id, vigencia_plan_id):
