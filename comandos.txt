@@ -36,5 +36,18 @@ reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v Liv
 comando para todos los servicios
 python manage.py runserver 0.0.0.0:8001
 
+docker
+
+
+docker-compose logs -f web db logs
+ 
+
+docker-compose build  construir 
+
+docker-compose up --build      levantar y construir
+
+docker-compose exec web python manage.py crear_grupos  (para ejecutar comandos ) 
+
+
 
 
