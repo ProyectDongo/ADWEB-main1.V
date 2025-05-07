@@ -1,28 +1,38 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+    restart: always
+    env_file: .env
     environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000  
-    volumes:
-      - .:/app
+    restart: always
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgres://myuser:mypassword@db:5432/mydatabase
-
-
+    volumes:
+      - .:/app
+      - ./staticfiles:/app/staticfiles
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Necesario en Linux para mapear host.docker.internal
 
 volumes:
   postgres_data:

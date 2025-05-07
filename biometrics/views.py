@@ -169,7 +169,7 @@ class CheckFingerprintView(LoginRequiredMixin, View):
             for huella in huellas.objects.filter(user__empresa=empresa):
                 existing_template = base64.b64encode(huella.template).decode('utf-8')
                 response = requests.post(
-                    'http://localhost:9000/match',
+                    'http://host.docker.internal:9000/match',
                     json={'template1': template, 'template2': existing_template},
                     timeout=1
                 )
@@ -184,16 +184,7 @@ class CheckFingerprintView(LoginRequiredMixin, View):
             
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-        
 
-
-
-
-
-
-
-
-# Huella Authentication with Action
 class AuthenticateFingerprintView(View):
     def post(self, request):
         try:
@@ -207,7 +198,7 @@ class AuthenticateFingerprintView(View):
 
             for fp in huellas.objects.all():
                 stored_template = fp.template
-                match_response = requests.post('http://localhost:9000/match', json={
+                match_response = requests.post('http://host.docker.internal:9000/match', json={
                     'template1': base64.b64encode(stored_template).decode(),
                     'template2': captured_template
                 })
@@ -307,6 +298,9 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
         if request.user.role not in ['supervisor', 'admin']:
             return render(request, 'error/error.html')
         return super().dispatch(request, *args, **kwargs)
+
+
+
 
 
 
