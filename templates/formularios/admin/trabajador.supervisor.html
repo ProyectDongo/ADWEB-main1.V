@@ -4,7 +4,7 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
                     <h2 class="h5 mb-0">
-                        <i class="bi bi-person-badge me-2" > </i> 
+                        <i class="bi bi-person-badge me-2"></i> {{ titulo }}
                     </h2>
                 </div>
 
@@ -32,8 +32,17 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.vigencia_plan }}
+                                    <label>Vigencia del Plan</label>
+                                    <div class="invalid-feedback">
+                                        {{ form.vigencia_plan.errors|first }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
+                        
                         <!-- Sección de Datos Personales -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
@@ -285,4 +294,28 @@
                    );
         });
     });
+    document.addEventListener('DOMContentLoaded', function() {
+    const empresaSelect = document.getElementById('id_empresa');
+    const vigenciaPlanSelect = document.getElementById('id_vigencia_plan');
+
+    empresaSelect.addEventListener('change', function() {
+        const empresaId = this.value;
+        if (empresaId) {
+            fetch(`/api/vigencias/?empresa=${empresaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una vigencia</option>';
+                    data.forEach(vigencia => {
+                        const option = document.createElement('option');
+                        option.value = vigencia.id;
+                        option.textContent = `${vigencia.codigo_plan} - ${vigencia.fecha_inicio} - ${vigencia.estado}`;
+                        vigenciaPlanSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        } else {
+            vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una empresa primero</option>';
+        }
+    });
+});
 </script>

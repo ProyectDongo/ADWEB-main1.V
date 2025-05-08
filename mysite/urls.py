@@ -63,6 +63,9 @@ urlpatterns = [
     path('crear_supervisor/', sofware.crear_supervisor, name='crear_supervisor'),
     #crear trabajador:  
     path('crear_trabajador/', sofware.crear_trabajador, name='crear_trabajador'),
+
+    #lista de vigencias
+    path('api/vigencias/', sofware.get_vigencias, name='get_vigencias'),
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 # Clientes  URLS:
     #lista de clientes:

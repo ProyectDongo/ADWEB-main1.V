@@ -1,8 +1,7 @@
 {% extends "central.html" %}
 {% load static %}
 {% block title %}Crear Supervisor{% endblock %}
+
 {% block content %}
-
-{% include "formularios/admin/trabajador.supervisor.html" %}
-
+    {% include "formularios/admin/trabajador.supervisor.html" with titulo="Crear Supervisor" %}
 {% endblock %}

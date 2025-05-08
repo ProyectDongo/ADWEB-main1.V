@@ -17,7 +17,7 @@ def permiso_requerido(permiso):                                             #
             if request.user.has_perm(permiso):                              #
                 return view_func(request, *args, **kwargs)                  #
             else:                                                           #                                  
-                return render(request, 'error\error.html', status=403)      #
+                return render(request, 'error/error.html', status=403)      #
         return _wrapped_view                                                #
     return decorator                                                        #
                                                                             #           

@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from WEB.views.scripts import *
 from WEB.forms import AdminForm, SupervisorForm, TrabajadorForm
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno, RegistroEntrada
 
 @login_required
 @permiso_requerido("WEB.crear_admin")
@@ -55,3 +57,11 @@ def crear_trabajador(request):
     else:
         form = TrabajadorForm(user=request.user)
     return render(request, 'admin/Sofware/user/crear_trabajador.html', {'form': form})
+
+
+def get_vigencias(request):
+    empresa_id = request.GET.get('empresa')
+    if empresa_id:
+        vigencias = VigenciaPlan.objects.filter(empresa_id=empresa_id).values('codigo_plan','id', 'fecha_inicio', 'fecha_fin', 'estado')
+        return JsonResponse(list(vigencias), safe=False)
+    return JsonResponse([], safe=False)

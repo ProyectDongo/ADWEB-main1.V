@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario, RegistroEmpresas, Horario, Turno,RegistroEntrada
+from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
@@ -87,12 +87,17 @@ class AdminForm(UserCreationForm):
 
 
 
-
 class SupervisorForm(UserCreationForm):
     empresa = forms.ModelChoiceField(
         queryset=RegistroEmpresas.objects.all(),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    vigencia_plan = forms.ModelChoiceField(
+        queryset=VigenciaPlan.objects.none(),  # Inicialmente vacío
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Vigencia del Plan"
     )
     rut = forms.CharField(
         max_length=12,
@@ -132,7 +137,7 @@ class SupervisorForm(UserCreationForm):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'rut', 'email', 'celular', 'password1', 'password2', 'empresa', 'grupos', 'permisos']
+        fields = ['username', 'rut', 'email', 'celular', 'password1', 'password2', 'empresa', 'vigencia_plan', 'grupos', 'permisos']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control'}),
@@ -146,11 +151,13 @@ class SupervisorForm(UserCreationForm):
             if user.role != 'admin':
                 self.fields['empresa'].queryset = RegistroEmpresas.objects.filter(id=user.empresa.id)
                 self.fields['empresa'].initial = user.empresa
+                self.fields['vigencia_plan'].queryset = VigenciaPlan.objects.filter(empresa=user.empresa)
                 self.fields['grupos'].queryset = user.groups.all()
                 self.fields['permisos'].queryset = Permission.objects.filter(
                     id__in=user.user_permissions.values_list('id', flat=True)
                 )
             else:
+                self.fields['vigencia_plan'].queryset = VigenciaPlan.objects.all()
                 self.fields['grupos'].queryset = Group.objects.all()
                 self.fields['permisos'].queryset = Permission.objects.all()
 
@@ -165,7 +172,6 @@ class SupervisorForm(UserCreationForm):
             raise forms.ValidationError("El celular es obligatorio.")
         return celular
 
-
     def save(self, commit=True):
         usuario = super().save(commit=False)
         usuario.role = 'supervisor'
@@ -173,6 +179,7 @@ class SupervisorForm(UserCreationForm):
         usuario.email = self.cleaned_data['email']
         usuario.celular = self.cleaned_data['celular']
         usuario.empresa = self.cleaned_data['empresa']
+        usuario.vigencia_plan = self.cleaned_data['vigencia_plan']
         if commit:
             usuario.save()
             usuario.groups.set(self.cleaned_data['grupos'])
@@ -204,6 +211,13 @@ class TrabajadorForm(UserCreationForm):
         queryset=RegistroEmpresas.objects.all(),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    vigencia_plan = forms.ModelChoiceField(
+        queryset=VigenciaPlan.objects.none(),  # Inicialmente vacío
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Vigencia del Plan"
     )
     rut = forms.CharField(
         max_length=12,
@@ -283,6 +297,7 @@ class TrabajadorForm(UserCreationForm):
         usuario.email = self.cleaned_data['email']
         usuario.celular = self.cleaned_data['celular']
         usuario.empresa = self.cleaned_data['empresa']
+        usuario.vigencia_plan = self.cleaned_data['vigencia_plan']
         if commit:
             usuario.save()
             usuario.groups.set(self.cleaned_data['grupos'])

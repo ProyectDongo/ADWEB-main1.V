@@ -188,7 +188,7 @@
                                                                         <a href="{% url 'usuario_delete' supervisor.pk %}" 
                                                                            class="btn btn-link btn-sm text-danger"
                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');"
-                                                                           title="Eliminar">
+                                                                           title="Eliminar Supervisor">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>
@@ -202,10 +202,10 @@
                                                                     {% if supervisor.has_huella %}
                                                                         <form method="post" action="{% url 'eliminar_huella' supervisor.id %}">
                                                                             {% csrf_token %}
-                                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                            <button type="submit"   class="btn btn-link btn-sm text-danger"
                                                                                     onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');"
                                                                                     title="Eliminar Huella">
-                                                                                <i class="fas fa-trash"></i>
+                                                                                    <i class="fas fa-trash"></i>
                                                                             </button>
                                                                         </form>
                                                                     {% endif %}
@@ -277,7 +277,7 @@
                                                                         <a href="{% url 'usuario_delete' trabajador.pk %}" 
                                                                            class="btn btn-link btn-sm text-danger"
                                                                            onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');"
-                                                                           title="Eliminar">
+                                                                           title="Eliminar trabajador">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
                                                                     </div>

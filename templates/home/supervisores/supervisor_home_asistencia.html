@@ -416,163 +416,170 @@ style="display: none;"></div>
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const vigenciaPlanId = "{{ vigencia_plan.id }}";
-        const empresaId = "{{ empresa.id }}";
-        const usuarioModal = new bootstrap.Modal('#usuarioModal');
-        const urlData = document.getElementById('urls').dataset;
-        let currentUser = null;
-        let originalEmail = null;
-    
-        $.ajaxSetup({
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}"
-            }
-        });
-    
-        // Configurar modal
-        $('#usuarioModal').on('show.bs.modal', function(e) {
-            const isEdit = $(e.relatedTarget).hasClass('edit-user');
-            const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
-            currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
-    
-            const formContent = $('#formContent');
-            if (isEdit) {
-                $('#modalTitle').text('Editar Usuario');
-                formContent.load("{% url 'get_form_template' 'edit' %}", function(response, status, xhr) {
-                    if (status === "success") {
-                        fetch(urlData.update.replace('0', currentUser))
-                            .then(r => {
-                                if (!r.ok) throw new Error('Error al cargar usuario');
-                                return r.json();
-                            })
-                            .then(data => {
-                                console.log('Datos recibidos:', data);
-                                $('input[name="rut"]').val(data.rut);
-                                $('input[name="first_name"]').val(data.first_name);
-                                $('input[name="last_name"]').val(data.last_name);
-                                $('input[name="email"]').val(data.email);
-                                $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
-                                $('input[name="celular"]').val(data.celular);
-                                $('select[name="role"]').val(data.role);
-                                $('select[name="horario"]').val(data.horario || '');
-                                $('select[name="turno"]').val(data.turno || '');
-                                $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
-                                $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
-                                originalEmail = data.email;
-                                $('select[name="role"] option[value="admin"]').remove();
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
-                            });
+document.addEventListener('DOMContentLoaded', function() {
+    const vigenciaPlanId = "{{ vigencia_plan.id }}";
+    const empresaId = "{{ empresa.id }}";
+    const usuarioModal = new bootstrap.Modal('#usuarioModal');
+    const urlData = document.getElementById('urls').dataset;
+    let currentUser = null;
+    let originalEmail = null;
+
+    $.ajaxSetup({
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+        }
+    });
+
+    // Configurar modal
+    $('#usuarioModal').on('show.bs.modal', function(e) {
+        const isEdit = $(e.relatedTarget).hasClass('edit-user');
+        const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
+        currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
+
+        const formContent = $('#formContent');
+        if (isEdit) {
+            $('#modalTitle').text('Editar Usuario');
+            formContent.load("{% url 'get_form_template' 'edit' %}", function(response, status, xhr) {
+                if (status === "success") {
+                    fetch(urlData.update.replace('0', currentUser))
+                        .then(r => {
+                            if (!r.ok) throw new Error('Error al cargar usuario');
+                            return r.json();
+                        })
+                        .then(data => {
+                            $('input[name="rut"]').val(data.rut);
+                            $('input[name="first_name"]').val(data.first_name);
+                            $('input[name="last_name"]').val(data.last_name);
+                            $('input[name="email"]').val(data.email);
+                            $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
+                            $('input[name="celular"]').val(data.celular);
+                            $('select[name="role"]').val(data.role);
+                            $('select[name="horario"]').val(data.horario || '');
+                            $('select[name="turno"]').val(data.turno || '');
+                            $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
+                            $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+                            originalEmail = data.email;
+                            $('select[name="role"] option[value="admin"]').remove();
+                        })
+                        .catch(error => {
+                            Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
+                        });
+                } else {
+                    Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                }
+            });
+        } else {
+            $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            formContent.load("{% url 'get_form_template' 'create' %}", function() {
+                $('#usuarioForm')[0].reset();
+                $('#id_password').attr({'required': true, 'placeholder': 'Contraseña'});
+                $('select[name="role"]').val(tipo);
+                originalEmail = null;
+                // Eliminar opción "admin" al crear nuevo usuario
+                $('select[name="role"] option[value="admin"]').remove();
+            });
+        }
+
+        $('#usuarioForm').attr('action', isEdit ? 
+            urlData.update.replace('0', currentUser) : 
+            urlData.create);
+    });
+
+    // Validación RUT en tiempo real
+    $('body').on('input', '[name="rut"]', _.debounce(function() {
+        const rut = $(this).val();
+        if (!validarFormatoRUT(rut)) {
+            showValidationError(this, 'Formato RUT inválido');
+            return;
+        }
+        
+        fetch(`${urlData.validate}?rut=${rut}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.exists && (!currentUser || $('input[name="rut"]').val() !== data.rut)) {
+                    showValidationError(this, 'RUT ya registrado');
+                } else {
+                    clearValidationError(this);
+                }
+            });
+    }, 300));
+
+    // Validación Celular en tiempo real
+    $('body').on('input', '[name="celular"]', _.debounce(function() {
+        const celular = $(this).val();
+        if (celular && (!celular.startsWith('+') || celular.length < 9)) {
+            showValidationError(this, 'Formato inválido. Ej: +56 9 1234 5678');
+        } else {
+            clearValidationError(this);
+        }
+    }, 300));
+
+    // Validación Email en tiempo real
+    $('body').on('input', '[name="email"]', _.debounce(function() {
+        const email = $(this).val();
+        if (!isValidEmail(email)) {
+            showValidationError(this, 'Formato email inválido');
+            return;
+        }
+        
+        if (originalEmail && email === originalEmail) {
+            clearValidationError(this);
+            return;
+        }
+        
+        fetch(`${urlData.validate}?email=${email}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.exists) {
+                    showValidationError(this, 'Email ya registrado');
+                } else {
+                    clearValidationError(this);
+                }
+            });
+    }, 300));
+
+    // Envío del formulario
+    $('#usuarioForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const btn = form.find('button[type="submit"]');
+        
+        btn.prop('disabled', true);
+        btn.find('.submit-text').hide();
+        btn.find('.spinner-border').removeClass('d-none');
+
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(response) {
+                usuarioModal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Guardado!',
+                    text: response.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    if (response.redirect_url) {
+                        window.location.replace(response.redirect_url);
                     } else {
-                        console.error('Error al cargar el formulario:', xhr.statusText);
-                        Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+                        window.location.replace(`/supervisor/${empresaId}/${vigenciaPlanId}/`);
                     }
                 });
-            } else {
-                $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-                formContent.load("{% url 'get_form_template' 'create' %}", function() {
-                    $('#usuarioForm')[0].reset();
-                    $('#id_password').attr({'required': true, 'placeholder': 'Contraseña'});
-                    $('select[name="role"]').val(tipo);
-                    originalEmail = null;
-                });
-            }
-    
-            $('#usuarioForm').attr('action', isEdit ? 
-                urlData.update.replace('0', currentUser) : 
-                urlData.create);
-        });
-    
-        // Validación RUT en tiempo real
-        $('body').on('input', '[name="rut"]', _.debounce(function() {
-            const rut = $(this).val();
-            if (!validarFormatoRUT(rut)) {
-                showValidationError(this, 'Formato RUT inválido');
-                return;
-            }
-            
-            fetch(`${urlData.validate}?rut=${rut}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.exists && (!currentUser || $('input[name="rut"]').val() !== data.rut)) {
-                        showValidationError(this, 'RUT ya registrado');
-                    } else {
-                        clearValidationError(this);
-                    }
-                });
-        }, 300));
-    
-        // Validación Celular en tiempo real
-        $('body').on('input', '[name="celular"]', _.debounce(function() {
-            const celular = $(this).val();
-            if (celular && (!celular.startsWith('+') || celular.length < 9)) {
-                showValidationError(this, 'Formato inválido. Ej: +56 9 1234 5678');
-            } else {
-                clearValidationError(this);
-            }
-        }, 300));
-    
-        // Validación Email en tiempo real
-        $('body').on('input', '[name="email"]', _.debounce(function() {
-            const email = $(this).val();
-            if (!isValidEmail(email)) {
-                showValidationError(this, 'Formato email inválido');
-                return;
-            }
-            
-            if (originalEmail && email === originalEmail) {
-                clearValidationError(this);
-                return;
-            }
-            
-            fetch(`${urlData.validate}?email=${email}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.exists) {
-                        showValidationError(this, 'Email ya registrado');
-                    } else {
-                        clearValidationError(this);
-                    }
-                });
-        }, 300));
-    
-        // Envío del formulario
-        $('#usuarioForm').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            const btn = form.find('button[type="submit"]');
-            
-            btn.prop('disabled', true);
-            btn.find('.submit-text').hide();
-            btn.find('.spinner-border').removeClass('d-none');
-    
-            $.ajax({
-                url: form.attr('action'),
-                method: 'POST',
-                data: form.serialize(),
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function(response) {
-                    usuarioModal.hide();
+            },
+            error: function(xhr) {
+                if (xhr.status === 403) {
                     Swal.fire({
-                        icon: 'success',
-                        title: '¡Guardado!',
-                        text: response.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        if (response.redirect_url) {
-                            window.location.replace(response.redirect_url); // Cambiado de href a replace
-                        } else {
-                            window.location.replace(`/supervisor/${empresaId}/${vigenciaPlanId}/`); // Cambiado de href a replace
-                        }
+                        icon: 'warning',
+                        title: 'Advertencia',
+                        text: 'No puedes cambiar tu propio rol.',
+                        confirmButtonText: 'Entendido'
                     });
-                },
-                error: function(xhr) {
+                } else {
                     const errors = xhr.responseJSON?.errors || {};
                     $('.is-invalid').removeClass('is-invalid');
                     $('.invalid-feedback').remove();
@@ -596,70 +603,71 @@ style="display: none;"></div>
                     if (Object.keys(errors).length === 0) {
                         Swal.fire('Error', xhr.responseJSON?.error || 'Error desconocido', 'error');
                     }
-                },
-                complete: function() {
-                    btn.prop('disabled', false);
-                    btn.find('.submit-text').show();
-                    btn.find('.spinner-border').addClass('d-none');
                 }
-            });
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+                btn.find('.submit-text').show();
+                btn.find('.spinner-border').addClass('d-none');
+            }
         });
-    
-        // Eliminar usuario
-        $('body').on('click', '.delete-user', function() {
-            const userId = $(this).data('id');
-            
-            Swal.fire({
-                title: '¿Eliminar usuario?',
-                text: 'Esta acción no se puede deshacer',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `${urlData.delete.replace('0', userId)}`,
-                        method: 'DELETE',
-                        success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Eliminado!',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                location.reload();
-                            });
-                        },
-                        error: function(xhr) {
-                            Swal.fire('Error', xhr.responseJSON?.error || 'Error al eliminar', 'error');
-                        }
-                    });
-                }
-            });
-        });
-    
-        // Funciones de ayuda
-        function validarFormatoRUT(rut) {
-            return /^[0-9]{7,8}-[0-9kK]$/.test(rut);
-        }
-    
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-    
-        function showValidationError(field, message) {
-            $(field).addClass('is-invalid');
-            $(field).next('.invalid-feedback').text(message).show();
-        }
-    
-        function clearValidationError(field) {
-            $(field).removeClass('is-invalid');
-            $(field).next('.invalid-feedback').hide();
-        }
     });
+
+    // Eliminar usuario
+    $('body').on('click', '.delete-user', function() {
+        const userId = $(this).data('id');
+        
+        Swal.fire({
+            title: '¿Eliminar usuario?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `${urlData.delete.replace('0', userId)}`,
+                    method: 'DELETE',
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Eliminado!',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', xhr.responseJSON?.error || 'Error al eliminar', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    // Funciones de ayuda
+    function validarFormatoRUT(rut) {
+        return /^[0-9]{7,8}-[0-9kK]$/.test(rut);
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function showValidationError(field, message) {
+        $(field).addClass('is-invalid');
+        $(field).next('.invalid-feedback').text(message).show();
+    }
+
+    function clearValidationError(field) {
+        $(field).removeClass('is-invalid');
+        $(field).next('.invalid-feedback').hide();
+    }
+});
     </script>
 {% endblock %}
