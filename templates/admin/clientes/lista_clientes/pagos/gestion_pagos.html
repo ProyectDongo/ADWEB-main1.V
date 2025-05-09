@@ -1,10 +1,9 @@
 {% extends "central.html" %}
 {% load crispy_forms_tags %}
+{% load filtros %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Encabezado  -->
-   
     <div class="d-flex justify-content-between align-items-center mb-4 bg-primary bg-gradient p-4 rounded-3 shadow">
         <div>
             <h1 class="text-white mb-0"><i class="bi bi-credit-card-2-front"></i> Gestión de Pagos</h1>
@@ -15,7 +14,6 @@
         </a>
     </div>
 
-    <!-- Pestañas -->
     <div class="card shadow-lg">
         <div class="card-header px-4 py-3 border-bottom">
             <ul class="nav nav-pills nav-fill gap-3 mb-0" id="myTab" role="tablist">
@@ -39,7 +37,7 @@
 
         <div class="card-body p-4">
             <div class="tab-content" id="myTabContent">
-                <!-- Pestaña Pagos  -->
+                <!-- Pestaña Pagos Activos -->
                 <div class="tab-pane fade show active" id="pagos" role="tabpanel">
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -48,7 +46,6 @@
                                 <i class="bi bi-plus-circle me-2"></i> Nuevo Pago
                             </button>
                         </div>
-                        
                         <div class="collapse" id="miniFormCobro">
                             <div class="card border-primary mb-4">
                                 <div class="card-header bg-primary text-white">
@@ -63,7 +60,7 @@
                                                 <select class="form-select" name="selector" id="planSelector" required>
                                                     {% for vigencia in vigencias %}
                                                         <option value="{{ vigencia.id }}" data-monto="{{ vigencia.monto_final }}">
-                                                            {{ vigencia.codigo_plan }}  - {{ vigencia.fecha_inicio|date:"d/m/Y" }} 
+                                                            {{ vigencia.codigo_plan }} - {{ vigencia.fecha_inicio|date:"d/m/Y" }}
                                                             <span class="text-muted">{% if vigencia.fecha_fin %}- {{ vigencia.fecha_fin|date:"d/m/Y" }}{% else %}(Indefinido){% endif %}</span>
                                                         </option>
                                                     {% empty %}
@@ -100,63 +97,74 @@
                     </div>
 
                     <h4 class="text-primary mb-3"><i class="bi bi-list-check"></i> Detalles de Transacciones</h4>
-                    <div class="accordion" id="cobrosAccordion">
-                        {% for cobro in cobros %}
-                        <div class="accordion-item shadow-sm mb-3">
-                            <div class="accordion-header">
-                                <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#detalle{{ cobro.id }}">
-                                    <div class="d-flex gap-3 align-items-center">
-                                        <span class="badge bg-{{ cobro.estado|yesno:'success,secondary' }} fs-6">
-                                            {{ cobro.get_estado_display }}
-                                        </span>
-                                        <div>
-                                            <span class="fw-bold">${{ cobro.monto_total|floatformat:2 }}</span>
-                                            <span class="text-muted ms-2">{{ cobro.vigencia_plan.codigo_plan|default:"Todos los planes" }}</span>
-                                          
+                    {% if cobros %}
+                        <div class="accordion" id="cobrosAccordion">
+                            {% for cobro in cobros %}
+                            <div class="accordion-item shadow-sm mb-3">
+                                <div class="accordion-header">
+                                    <button class="accordion-button collapsed d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#detalle{{ cobro.id }}">
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <span class="badge bg-{{ cobro.estado|yesno:'success,secondary' }} fs-6">
+                                                {{ cobro.get_estado_display }}
+                                            </span>
+                                            <div>
+                                                <span class="fw-bold">${{ cobro.monto_total|floatformat:2 }}</span>
+                                                <span class="text-muted ms-2">{{ cobro.vigencia_plan.codigo_plan|default:"Todos los planes" }}</span>
+                                            </div>
                                         </div>
+                                    </button>
+                                </div>
+                                <div id="detalle{{ cobro.id }}" class="accordion-collapse collapse">
+                                    <div class="accordion-body">
+                                        <form method="post" action="{% url 'actualizar_cobro' empresa.id cobro.id %}">
+                                            {% csrf_token %}
+                                            <div class="row g-3 mb-4">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Total facturado</label>
+                                                    <input type="text" class="form-control bg-light" value="${{ cobro.monto_total|floatformat:2 }}" readonly>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Saldo pendiente</label>
+                                                    <input type="text" class="form-control bg-light" value="${{ cobro.monto_restante|floatformat:2 }}" readonly>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Monto a abonar</label>
+                                                    <input type="number" name="abono" class="form-control" required min="0.01" step="0.01" max="{{ cobro.monto_restante }}">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Descripción del abono</label>
+                                                    <textarea name="descripcion" class="form-control" rows="2" required></textarea>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button type="submit" class="btn btn-primary w-100">
+                                                        <i class="bi bi-save2 me-2"></i> Registrar Abono
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
                                     </div>
-                                </button>
-                            </div>
-                            <div id="detalle{{ cobro.id }}" class="accordion-collapse collapse">
-                                <div class="accordion-body">
-                                    <form method="post" action="{% url 'actualizar_cobro' empresa.id cobro.id %}">
-                                        {% csrf_token %}
-                                        <div class="row g-3 mb-4">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Total facturado</label>
-                                                <input type="text" class="form-control bg-light" value="${{ cobro.monto_total|floatformat:2 }}" readonly>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Saldo pendiente</label>
-                                                <input type="text" class="form-control bg-light" value="${{ cobro.monto_restante|floatformat:2 }}" readonly>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Monto a abonar</label>
-                                                <input type="number" name="abono" class="form-control" required min="0.01" step="0.01" max="{{ cobro.monto_restante }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="form-label">Descripción del abono</label>
-                                                <textarea name="descripcion" class="form-control" rows="2" required></textarea>
-                                            </div>
-                                            <div class="col-12">
-                                                <button type="submit" class="btn btn-primary w-100">
-                                                    <i class="bi bi-save2 me-2"></i> Registrar Abono
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% empty %}
+                        {% else %}
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i> No se encontraron transacciones registradas
+                            <i class="bi bi-info-circle me-2"></i>
+                            {% if vigencias_con_pagos_mes_actual %}
+                                Ya se realizaron pagos en el mes de {{ mes_actual }} para los siguientes planes:
+                                <ul>
+                                    {% for vigencia in vigencias_con_pagos_mes_actual %}
+                                        <li>{{ vigencia.codigo_plan }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                No se encontraron transacciones registradas.
+                            {% endif %}
                         </div>
-                        {% endfor %}
-                    </div>
+                    {% endif %}
                 </div>
 
-                <!-- Pestaña Historial  -->
+                <!-- Pestaña Historial -->
                 <div class="tab-pane fade" id="historial" role="tabpanel">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-primary text-white">
@@ -199,76 +207,78 @@
                     </div>
                 </div>
 
-                <!-- Pestaña Notificaciones  -->
-        <div class="tab-pane fade" id="notificar" role="tabpanel">
-            <div class="card border-primary shadow-lg">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-send-check"></i> Notificaciones de Transferencia</h5>
-                    <div>
-                        <button type="button" class="btn btn-light btn-sm" onclick="location.reload()">
-                            <i class="bi bi-arrow-clockwise"></i> Actualizar
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="card-body p-4">
-                    <!-- Sección de envío -->
-                    <div class="alert alert-info mb-4">
-                        <i class="bi bi-info-circle me-2"></i> 
-                        Enviar datos de transferencia bancaria al correo registrado de la empresa
-                    </div>
-
-                    <div class="border p-3 rounded-3 mb-4">
-                        <form method="post" action="{% url 'enviar_notificacion' empresa.id %}">
-                            {% csrf_token %}
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-envelope-paper"></i> 
-                                        Notificación de Pago
-                                    </h5>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <button type="submit" class="btn btn-success w-100" id="submitBtn">
-                                        <i class="bi bi-send-check me-2"></i> Enviar Ahora
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Historial de notificaciones -->
-                    <h5 class="mt-4 mb-3"><i class="bi bi-clock-history me-2"></i> Registro de Envíos</h5>
-                    <div class="list-group">
-                        {% for notificacion in historial_notificaciones %}
-                        <div class="list-group-item list-group-item-action">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <span class="fw-bold">Enviado el:</span> 
-                                    {{ notificacion.fecha_envio|date:"d/m/Y H:i" }}
-                                </div>
-                                <span class="badge bg-{{ notificacion.estado|yesno:'success,danger' }}">
-                                    {{ notificacion.estado|yesno:"Enviado,Fallo" }}
-                                </span>
-                            </div>
-                            <div class="text-muted small mt-1">
-                                Destinatario: {{ empresa.email }}
+                <!-- Pestaña Notificaciones -->
+                <div class="tab-pane fade" id="notificar" role="tabpanel">
+                    <div class="card border-primary shadow-lg">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-send-check"></i> Notificaciones de Transferencia</h5>
+                            <div>
+                                <button type="button" class="btn btn-light btn-sm" onclick="location.reload()">
+                                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                                </button>
                             </div>
                         </div>
-                        {% empty %}
-                        <div class="alert alert-warning mb-0">
-                            <i class="bi bi-exclamation-triangle me-2"></i> 
-                            No hay registros de notificaciones enviadas
+                        <div class="card-body p-4">
+                            <div class="alert alert-info mb-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Enviar datos de transferencia bancaria al correo registrado de la empresa
+                            </div>
+                            <div class="border p-3 rounded-3 mb-4">
+                                <form method="post" action="{% url 'enviar_notificacion' empresa.id %}">
+                                    {% csrf_token %}
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h5 class="mb-0">
+                                                <i class="bi bi-envelope-paper"></i>
+                                                Notificación de Pago
+                                            </h5>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button type="submit" class="btn btn-success w-100" id="submitBtn">
+                                                <i class="bi bi-send-check me-2"></i> Enviar Ahora
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <h5 class="mt-4 mb-3"><i class="bi bi-clock-history me-2"></i> Registro de Envíos por Plan</h5>
+                            {% for vigencia in vigencias %}
+                                <div class="mb-4">
+                                    <h6 class="text-primary">{{ vigencia.plan.nombre }} ({{ vigencia.codigo_plan }})</h6>
+                                    <div class="list-group">
+                                        {% for notificacion in notificaciones_por_vigencia|get_item:vigencia.id %}
+                                        <div class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <span class="fw-bold">Enviado el:</span>
+                                                    {{ notificacion.fecha_envio|date:"d/m/Y H:i" }}
+                                                </div>
+                                                <span class="badge bg-{{ notificacion.estado|yesno:'success,danger' }}">
+                                                    {{ notificacion.estado|yesno:"Enviado,Fallo" }}
+                                                </span>
+                                            </div>
+                                            <div class="text-muted small mt-1">
+                                                Destinatario: {{ empresa.email }}
+                                            </div>
+                                        </div>
+                                        {% empty %}
+                                        <div class="alert alert-warning mb-0">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            No hay registros de notificaciones enviadas para este plan.
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-            </div>
-        </div>
             </div>
         </div>
     </div>
 </div>
+
+
 
 
 <script>
@@ -282,16 +292,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const valorInput = document.getElementById('valorInput');
     
     function calcularMonto() {
-    const selectedOption = planSelector.options[planSelector.selectedIndex];
-    if (selectedOption.value === 'todos') {
-        // Usar el valor numérico directamente del contexto
-        const total = parseFloat("{{ total_vigencias|default:0 }}") || 0;
-        valorInput.value = total.toFixed(2);
-    } else {
-        const monto = selectedOption.getAttribute('data-monto');
-        valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
+        const selectedOption = planSelector.options[planSelector.selectedIndex];
+        if (selectedOption.value === 'todos') {
+            const total = parseFloat("{{ total_vigencias|default:0 }}") || 0;
+            valorInput.value = total.toFixed(2);
+        } else {
+            const monto = selectedOption.getAttribute('data-monto');
+            valorInput.value = monto ? parseFloat(monto).toFixed(2) : '';
+        }
     }
-}
     
     planSelector.addEventListener('change', calcularMonto);
     calcularMonto();

@@ -261,7 +261,13 @@
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td>---</td>
+                                                                <td> 
+                                                                    {% if trabajador.vigencia_plan %}
+                                                                        {{ trabajador.vigencia_plan }}
+                                                                    {% else %}
+                                                                        Sin departamento
+                                                                    {% endif %}
+                                                                </td>
                                                                 <td>
                                                                     <span class="badge bg-success">
                                                                         <i class="bi bi-check-circle me-1"></i>Activo

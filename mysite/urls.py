@@ -1,194 +1,150 @@
-
-
 from site import venv
 from django.contrib.auth import views as auth_views
-from django.urls import path,include
+from django.urls import path, include
 from django.contrib import admin
 from django.shortcuts import redirect
-
-
-
-
-from WEB.views.config.views import sofware
-from WEB.views.estadisticas.views import estadisticas
-from WEB.views.sso.views import autenticacion, modulo_asistencia, permisos,trabajadores,supervisor
-from WEB.views.tools.views import utilidades
-
-from WEB.views.clientes.pagos.views import pagos
-from WEB.views.clientes.empresa.views import empresas,planes
 from django.contrib.auth.views import LogoutView
 from django_ratelimit.decorators import ratelimit
 from django.views.generic import RedirectView
 
+from WEB.views.config.views import sofware
+from WEB.views.estadisticas.views import estadisticas
+from WEB.views.sso.views import autenticacion, modulo_asistencia, permisos, trabajadores, supervisor
+from WEB.views.tools.views import utilidades
+from WEB.views.clientes.pagos.views import pagos
+from WEB.views.clientes.empresa.views import empresas, planes
 
 urlpatterns = [
-    #super_user
+    # ------------------------------------------------------------------------------------ #
+    # Superusuario y Administración
+    # ------------------------------------------------------------------------------------ #
     path('django-admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    #admin, supervisores y trabajadores 
+
+    # ------------------------------------------------------------------------------------ #
+    # Autenticación y Selección de Roles
+    # ------------------------------------------------------------------------------------ #
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
-    path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
+    path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
     path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),
     path('supervisor/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.SupervisorLoginView.as_view()), name='supervisor_login'),
     path('trabajador/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.TrabajadorLoginView.as_view()), name='trabajador_login'),
     path('logout/', LogoutView.as_view(next_page='login_selector'), name='logout'),
-    path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
+    path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
 
+    # ------------------------------------------------------------------------------------ #
+    # Homes según Rol
+    # ------------------------------------------------------------------------------------ #
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
-    #supervisor:
     path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
-    path('supervisor/asistencia/<int:empresa_id>/<int:vigencia_plan_id>/', 
-         autenticacion.supervisor_home_asistencia, 
-         name='supervisor_home_asistencia'),
-    
-    path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', 
-         autenticacion.supervisor_home_contabilidad, 
-         name='supervisor_home_contabilidad'),
-    
-    path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', 
-     autenticacion.supervisor_home_almacen, 
-     name='supervisor_home_almacen'),
-      
-    #usuario:
+    path('supervisor/asistencia/<int:empresa_id>/<int:vigencia_plan_id>/', autenticacion.supervisor_home_asistencia, name='supervisor_home_asistencia'),
+    path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', autenticacion.supervisor_home_contabilidad, name='supervisor_home_contabilidad'),
+    path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', autenticacion.supervisor_home_almacen, name='supervisor_home_almacen'),
     path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),
-          path('ver_registros/', trabajadores.ver_registros, name='ver_registros'),
-    #configuracion:
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-# Sofware URLS:
-    #crear admin:
+    # ------------------------------------------------------------------------------------ #
+    # Software (Creación de Usuarios y Vigencias)
+    # ------------------------------------------------------------------------------------ #
     path('crear_admin/', sofware.crear_admin, name='crear_admin'),
-    #crear supervisor:
     path('crear_supervisor/', sofware.crear_supervisor, name='crear_supervisor'),
-    #crear trabajador:  
     path('crear_trabajador/', sofware.crear_trabajador, name='crear_trabajador'),
-
-    #lista de vigencias
     path('api/vigencias/', sofware.get_vigencias, name='get_vigencias'),
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-# Clientes  URLS:
-    #lista de clientes:
+
+    # ------------------------------------------------------------------------------------ #
+    # Clientes y Empresas
+    # ------------------------------------------------------------------------------------ #
     path('listar_clientes/', empresas.listar_clientes, name='listar_clientes'),
-        #Crear Empresa:
-            path('crear_empresa/', empresas.crear_empresa, name='crear_empresa'),
-        #listar empresas eliminadas - recuperar - eliminar:
-            path('eliminar_empresa/<int:pk>/', empresas.eliminar_empresa, name='eliminar_empresa'),
-            path('empresas/eliminadas/', empresas.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
-            path('empresa/recuperar/<int:id>/', empresas.recuperar_empresa, name='recuperar_empresa'),
-        #home los planes (servicios:)
-        path('servicios/<int:empresa_id>/', empresas.servicios, name='servicios'),
-            #botn para asociar nuevo servicio:
-            path('vigencia_planes/<int:pk>/', empresas.vigencia_planes, name='vigencia_planes'),
-                 path('check-codigo-plan/', empresas.check_codigo_plan, name='check_codigo_plan'),
-                #botones dentro del despliegue:
-                    #generar boleta:
-                        path('generar_boleta/<int:empresa_id>/', empresas.generar_boleta, name='generar_boleta'),
-                    #boton editar :
-                        path('editar_vigencia_plan/<int:plan_id>/', utilidades.editar_vigencia_plan, name='editar_vigencia_plan'),
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-        # boton para redirigir a pagos  :
-        path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
-            #desactivar pagos - servicios :
-                #btn de actualziar pags de pendiente a aldia:
-                    path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
-       
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-
-    #notficaiones :
-    path('notificaciones/json/', pagos.notificaciones_json, name='notificaciones_json'),
-
-
-    #Detalles Empresas:
+    path('crear_empresa/', empresas.crear_empresa, name='crear_empresa'),
+    path('eliminar_empresa/<int:pk>/', empresas.eliminar_empresa, name='eliminar_empresa'),
+    path('empresas/eliminadas/', empresas.listar_empresas_eliminadas, name='listar_empresas_eliminadas'),
+    path('empresa/recuperar/<int:id>/', empresas.recuperar_empresa, name='recuperar_empresa'),
     path('detalle_empresa/<int:pk>/', empresas.detalle_empresa, name='detalle_empresa'),
+    path('servicios/<int:empresa_id>/', empresas.servicios, name='servicios'),
+    path('vigencia_planes/<int:pk>/', empresas.vigencia_planes, name='vigencia_planes'),
+    path('check-codigo-plan/', empresas.check_codigo_plan, name='check_codigo_plan'),
+    path('generar_boleta/<int:empresa_id>/', empresas.generar_boleta, name='generar_boleta'),
+    path('editar_vigencia_plan/<int:plan_id>/', utilidades.editar_vigencia_plan, name='editar_vigencia_plan'),
 
-  
-
-
-    #lista de planes:
-    path('listar_planes/', planes.listar_planes, name='listar_planes'),
-        #crear plan :
-        path('crear_plan/', planes.crear_plan, name='crear_plan'), 
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-#estadisticas URLS:
-    #home estadisticas:
-     path('home_estadisticas', estadisticas.home_estadisticas, name='home_estadisticas'),
-
-        #estadisticas de empresas:
-        path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
-        #estadisticas de pagos:
-        path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
-
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-#Permisos URLS:
-    #Creaar permisos:
-        path('crear_permiso/', permisos.crear_permiso, name='crear_permiso'),
-    #listar permisos:
-        path('lista_permisos/', permisos.lista_permisos, name='lista_permisos'),
-
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
-#---------------------------------------------------------------------------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------------ #
+    # Pagos
+    # ------------------------------------------------------------------------------------ #
     path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
-   
-
-    # Otras rutas necesarias…
+    path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
+    path('notificaciones/json/', pagos.notificaciones_json, name='notificaciones_json'),
     path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
     path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
-    path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
-    path('api/get_comunas/',utilidades.get_comunas, name='get_comunas'),
-   
-    path('gestion-pagos/<int:empresa_id>/', pagos.gestion_pagos, name='gestion_pagos'),
     path('enviar-notificacion/<int:empresa_id>/', pagos.enviar_notificacion, name='enviar_notificacion'),
-    
+    # Nota: 'gestion-pagos/<int:empresa_id>/' parece duplicado de 'empresa/<int:empresa_id>/pagos/'. Revisar si es intencional.
 
-    #modulo asistencia:
+    # ------------------------------------------------------------------------------------ #
+    # Planes
+    # ------------------------------------------------------------------------------------ #
+    path('listar_planes/', planes.listar_planes, name='listar_planes'),
+    path('crear_plan/', planes.crear_plan, name='crear_plan'),
+
+    # ------------------------------------------------------------------------------------ #
+    # Estadísticas
+    # ------------------------------------------------------------------------------------ #
+    path('home_estadisticas/', estadisticas.home_estadisticas, name='home_estadisticas'),  # Corregido: faltaba una barra al final
+    path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
+    path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
+
+    # ------------------------------------------------------------------------------------ #
+    # Permisos
+    # ------------------------------------------------------------------------------------ #
+    path('crear_permiso/', permisos.crear_permiso, name='crear_permiso'),
+    path('lista_permisos/', permisos.lista_permisos, name='lista_permisos'),
+
+    # ------------------------------------------------------------------------------------ #
+    # Módulo de Asistencia
+    # ------------------------------------------------------------------------------------ #
     path('validate-rut/', modulo_asistencia.validate_rut, name='validate_rut'),
     path('empresa/<int:pk>/', modulo_asistencia.EmpresaDetailView.as_view(), name='empresa_detail'),
     path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/supervisor/crear/', modulo_asistencia.SupervisorCreateView.as_view(), name='supervisor_create'),
-    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/usuario/crear/',  modulo_asistencia.UsuarioCreateVigenciaView.as_view(), name='usuario_create_vigencia'),
-    path('usuario/editar/<int:pk>/',  modulo_asistencia.UsuarioUpdateView.as_view(), name='usuario_edit'),
-    path('usuario/eliminar/<int:pk>/',  modulo_asistencia.UsuarioDeleteView.as_view(), name='usuario_delete'),
-    path('vigencia-plan/<int:pk>/edit/',  modulo_asistencia.VigenciaPlanUpdateView.as_view(), name='vigencia_plan_edit'),
-    path('vigencia/<int:pk>/cambiar-estado/',  modulo_asistencia.VigenciaPlanStatusToggleView.as_view(), name='toggle_vigencia_status'),
-    path('cuenta-bloqueada/',  modulo_asistencia.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
-    path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),  
+    path('empresa/<int:empresa_pk>/vigencia/<int:vigencia_pk>/usuario/crear/', modulo_asistencia.UsuarioCreateVigenciaView.as_view(), name='usuario_create_vigencia'),
+    path('usuario/editar/<int:pk>/', modulo_asistencia.UsuarioUpdateView.as_view(), name='usuario_edit'),
+    path('usuario/eliminar/<int:pk>/', modulo_asistencia.UsuarioDeleteView.as_view(), name='usuario_delete'),
+    path('vigencia-plan/<int:pk>/edit/', modulo_asistencia.VigenciaPlanUpdateView.as_view(), name='vigencia_plan_edit'),
+    path('vigencia/<int:pk>/cambiar-estado/', modulo_asistencia.VigenciaPlanStatusToggleView.as_view(), name='toggle_vigencia_status'),
+    path('cuenta-bloqueada/', modulo_asistencia.CuentaBloqueadaView.as_view(), name='cuenta_bloqueada'),
+    path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),
     path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
     path('eliminar_huella/<int:user_id>/', modulo_asistencia.eliminar_huella, name='eliminar_huella'),
-    
-    
-   
 
-   #supervisor_home: accciomnes 
+    # ------------------------------------------------------------------------------------ #
+    # Supervisor
+    # ------------------------------------------------------------------------------------ #
     path('usuarios/<int:vigencia_plan_id>/crear/', supervisor.UserCreateUpdateView.as_view(), name='create_user'),
     path('usuarios/<int:vigencia_plan_id>/editar/<int:user_id>/', supervisor.UserCreateUpdateView.as_view(), name='update_user'),
     path('get_form_template/<str:action>/', supervisor.GetFormTemplateView.as_view(), name='get_form_template'),
-    path('usuarios/validate/',supervisor.ValidationView.as_view(), name='validation'),
+    path('usuarios/validate/', supervisor.ValidationView.as_view(), name='validation'),
     path('validar-campo/', supervisor.ValidationView.as_view(), name='validate_field'),
     path('validar-rut/', supervisor.ValidationView.as_view(), name='validate_rut'),
     path('validar-email/', supervisor.ValidationView.as_view(), name='validate_email'),
     path('delete_user/<int:vigencia_plan_id>/<int:user_id>/', supervisor.UserCreateUpdateView.as_view(), name='delete_user'),
-    
-     # New URLs
     path('horarios/', supervisor.HorarioListView.as_view(), name='horarios_list'),
     path('horarios/nuevo/', supervisor.HorarioCreateView.as_view(), name='horario_create'),
-    path('horarios/<int:pk>/editar/',  supervisor.HorarioUpdateView.as_view(), name='horario_update'),
-    path('horarios/<int:pk>/eliminar/',  supervisor.HorarioDeleteView.as_view(), name='horario_delete'),
-    path('turnos/',  supervisor.TurnoListView.as_view(), name='turnos_list'),
-    path('turnos/nuevo/',  supervisor.TurnoCreateView.as_view(), name='turno_create'),
-    path('turnos/<int:pk>/editar/',  supervisor.TurnoUpdateView.as_view(), name='turno_update'),
-    path('turnos/<int:pk>/eliminar/',  supervisor.TurnoDeleteView.as_view(), name='turno_delete'),
+    path('horarios/<int:pk>/editar/', supervisor.HorarioUpdateView.as_view(), name='horario_update'),
+    path('horarios/<int:pk>/eliminar/', supervisor.HorarioDeleteView.as_view(), name='horario_delete'),
+    path('turnos/', supervisor.TurnoListView.as_view(), name='turnos_list'),
+    path('turnos/nuevo/', supervisor.TurnoCreateView.as_view(), name='turno_create'),
+    path('turnos/<int:pk>/editar/', supervisor.TurnoUpdateView.as_view(), name='turno_update'),
+    path('turnos/<int:pk>/eliminar/', supervisor.TurnoDeleteView.as_view(), name='turno_delete'),
 
-  
-   
-    # Empresa
-    
-   
+    # ------------------------------------------------------------------------------------ #
+    # Utilidades y APIs
+    # ------------------------------------------------------------------------------------ #
+    path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
+    path('api/get_comunas/', utilidades.get_comunas, name='get_comunas'),
 
-   #---------------------------------------------------------------------------------------------------------------------------------------------------#
-    # biomtrica 
+    # ------------------------------------------------------------------------------------ #
+    # Biometría
+    # ------------------------------------------------------------------------------------ #
     path('biometrics/', include('biometrics.urls')),
-    
-    ] 
+
+    # ------------------------------------------------------------------------------------ #
+    # Otras URL
+    # ------------------------------------------------------------------------------------ #
+    path('ver_registros/', trabajadores.ver_registros, name='ver_registros'),
+]

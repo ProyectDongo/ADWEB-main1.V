@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
-from WEB.models.empresa.empresa import RegistroEmpresas
+from django.core.exceptions import ValidationError
+from WEB.models.ubicacion.region import Region, Provincia, Comuna
 from WEB.views.scripts import validar_rut
-from WEB.models import *
+from django.utils import timezone
+from django.db import transaction
+from django.db.models import Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
-
-
-
 
 class Horario(models.Model):
     TIPO_HORARIO = [
@@ -35,8 +35,6 @@ class Turno(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.dias_trabajo}x{self.dias_descanso})"
 
-
-
 class Usuario(AbstractUser):
     ROLES = (
         ('admin', 'Administrador'),
@@ -56,10 +54,16 @@ class Usuario(AbstractUser):
         blank=True, 
         related_name="usuarios"
     )
-    rut = models.CharField(max_length=12, unique=True, blank=True)  # Assuming validar_rut is defined
+    rut = models.CharField(max_length=12, unique=True, blank=True, validators=[validar_rut])
     celular = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
-    vigencia_plan = models.ForeignKey('VigenciaPlan', on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
+    vigencia_plan = models.ForeignKey(
+        'VigenciaPlan', 
+        on_delete=models.CASCADE, 
+        related_name='usuarios', 
+        null=True, 
+        blank=True
+    )
     
     groups = models.ManyToManyField(
         Group,
@@ -93,7 +97,7 @@ class Usuario(AbstractUser):
     turno = models.ForeignKey(Turno, on_delete=models.SET_NULL, null=True, blank=True, related_name='usuarios')
     metodo_registro_permitido = models.CharField(
         max_length=20,
-        choices=[('firma', 'Firma Digital'), ('huella', 'Huella Digital'), ('geo', 'Geolocalización')],
+        choices=METODOS_REGISTRO,
         default='firma'
     )
 
@@ -103,11 +107,37 @@ class Usuario(AbstractUser):
         return hasattr(self, 'huellas')
 
     def debe_trabajar(self, fecha):
+        """Determina si el usuario debe trabajar en una fecha dada según su turno."""
         if not self.turno or not self.turno.inicio_turno:
             return True 
         ciclo_total = self.turno.dias_trabajo + self.turno.dias_descanso
         dias_desde_inicio = (fecha - self.turno.inicio_turno).days % ciclo_total
         return dias_desde_inicio < self.turno.dias_trabajo
+
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribe el método save para validar el límite de usuarios antes de guardar un nuevo usuario.
+
+        - Si el usuario está asociado a una vigencia_plan y es un nuevo registro (no tiene pk),
+          se verifica si el número de usuarios actuales supera el límite del plan.
+        - Si se alcanza o excede el límite, se lanza una ValidationError.
+        - Si pasa la validación, se procede con el guardado normal.
+        """
+        # Verificar si hay una vigencia asociada y es un nuevo usuario
+        if self.vigencia_plan and not self.pk:
+            # Contar usuarios actuales en la vigencia
+            current_users = self.vigencia_plan.usuarios.count()
+            max_users = self.vigencia_plan.get_max_usuarios()
+
+            # Verificar si se ha alcanzado el límite
+            if current_users >= max_users:
+                raise ValidationError(
+                    f"No se pueden añadir más usuarios. El límite del plan "
+                    f"{self.vigencia_plan.plan.nombre} ({max_users}) ha sido alcanzado."
+                )
+        
+        # Si pasa la validación, proceder con el guardado
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Usuario"
@@ -124,6 +154,7 @@ class Usuario(AbstractUser):
         ]
 
     def __str__(self):
+        """Retorna una representación en cadena del usuario."""
         return f"{self.username} ({self.get_role_display()})"
     
 

@@ -74,7 +74,98 @@
             padding: 10px !important;
         }
 
-      
+        .messages-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 9999;
+        width: 380px;
+        max-width: 90%;
+    }
+
+        .alert {
+            position: relative;
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: slideInFromRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .alert:hover {
+            transform: translateX(-5px);
+        }
+
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .alert-info {
+            background: #cff4fc;
+            color: #055160;
+        }
+
+        .bi {
+            flex-shrink: 0;
+        }
+
+        .btn-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            animation: progress 5s linear forwards;
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes progress {
+            from {
+                width: 100%;
+            }
+            to {
+                width: 0%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .messages-container {
+                width: 100%;
+                right: 0;
+                padding: 0 1rem;
+            }
+            
+            .alert {
+                border-radius: 8px;
+            }
+        }
     </style>
     <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
     {% block css-page %}
@@ -93,6 +184,28 @@
             </div>
             <!-- Asignamos un id al contenido principal -->
             <main id="mainContent" role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" aria-live="assertive">
+                            <div class="d-flex align-items-center">
+                                {% if message.tags == 'error' %}
+                                    <i class="bi bi-x-octagon-fill me-3 fs-5"></i>
+                                {% elif message.tags == 'success' %}
+                                    <i class="bi bi-check2-circle me-3 fs-5"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle me-3 fs-5"></i>
+                                {% endif %}
+                                <div class="message-content">
+                                    {{ message }}
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <div class="progress-bar"></div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
                 {% block content %}
                 {% endblock %}
             </main>

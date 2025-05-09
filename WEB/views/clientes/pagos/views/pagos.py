@@ -188,14 +188,38 @@ def gestion_pagos(request, empresa_id):
     
     # Calcular total de todas las vigencias
     total_vigencias = vigencias.aggregate(total=Sum('monto_final'))['total'] or 0
-    total_vigencias = round(total_vigencias, 2)  # Asegurar 2 decimales
+    total_vigencias = round(total_vigencias, 2)
     
+    # Obtener el mes y año actual
+    hoy = timezone.now()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+    
+    # Determinar si hay pagos realizados en el mes actual para cada vigencia
+    pagos_mes_actual = {}
+    for vigencia in vigencias:
+        pagos = Pago.objects.filter(
+            cobro__vigencia_plan=vigencia,
+            fecha_pago__year=anio_actual,
+            fecha_pago__month=mes_actual
+        )
+        pagos_mes_actual[vigencia.id] = pagos.exists()
+    
+    # Obtener cobros pendientes
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
     
-    historial_notificaciones = HistorialNotificaciones.objects.filter(
-        empresa=empresa
-    ).order_by('-fecha_envio')[:10]
+    # Crear lista de vigencias con pagos en el mes actual
+    vigencias_con_pagos_mes_actual = [vigencia for vigencia in vigencias if pagos_mes_actual.get(vigencia.id, False)]
     
+    # Obtener notificaciones por vigencia
+    notificaciones_por_vigencia = {}
+    for vigencia in vigencias:
+        notificaciones_por_vigencia[vigencia.id] = HistorialNotificaciones.objects.filter(
+            empresa=empresa,
+            vigencia_plan=vigencia
+        ).order_by('-fecha_envio')[:10]  # Limitar a 10 notificaciones por vigencia
+    
+    # Obtener historial de pagos
     historial = HistorialPagos.objects.filter(
         pago__empresa=empresa
     ).select_related('pago', 'usuario', 'pago__cobro').order_by('-fecha')
@@ -205,8 +229,11 @@ def gestion_pagos(request, empresa_id):
         'vigencias': vigencias,
         'cobros': cobros_pendientes,
         'historial': historial,
-        'historial_notificaciones': historial_notificaciones,
-        'total_vigencias': total_vigencias,  # Añadir al contexto
+        'notificaciones_por_vigencia': notificaciones_por_vigencia,
+        'total_vigencias': total_vigencias,
+        'vigencias_con_pagos_mes_actual': vigencias_con_pagos_mes_actual,
+        'pagos_mes_actual': pagos_mes_actual,
+        'mes_actual': hoy.strftime("%B %Y"),  # Ej: "Octubre 2023"
     }
     return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 
@@ -229,10 +256,9 @@ def gestion_pagos(request, empresa_id):
 
 
 
-
 # DE AQUI EN ADELEANTE ES TODO LO QUE TIENE QUE VER CON EL ENVIO DE CORREOS Y LA RECEPCION DE LOS MISMOS
 #----------------------------------------------------------------------------------------------------
-@login_required
+
 def send_manual_payment_email(empresa, next_due):
     """Envía correo con instrucciones para pago manual."""
     try:

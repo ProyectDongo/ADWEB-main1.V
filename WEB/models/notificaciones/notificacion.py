@@ -16,7 +16,8 @@ class HistorialNotificaciones(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
     fecha_envio = models.DateTimeField(auto_now_add=True)
     estado = models.BooleanField(default=True)
-    
+    vigencia_plan = models.ForeignKey('VigenciaPlan', on_delete=models.SET_NULL, null=True, blank=True)  # Relación añadida
+
     class Meta:
         verbose_name_plural = "Historial de Notificaciones"
         ordering = ['-fecha_envio']
