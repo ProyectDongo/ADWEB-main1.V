@@ -61,8 +61,17 @@ def handle_entrada(request):
             latitud = request.POST.get('latitud')
             longitud = request.POST.get('longitud')
             if latitud and longitud:
-                entrada.latitud = latitud
-                entrada.longitud = longitud
+                try:
+                    latitud = float(latitud)
+                    longitud = float(longitud)
+                    if not (-90 <= latitud <= 90) or not (-180 <= longitud <= 180):
+                        raise ValueError("Coordenadas fuera de rango")
+                    entrada.latitud = latitud
+                    entrada.longitud = longitud
+                except ValueError:
+                    messages.error(request, 'Coordenadas inválidas')
+                    context['form_entrada'] = form
+                    return render(request, 'home/users/trabajador_home.html', context)
             else:
                 messages.error(request, 'Geolocalización requerida')
                 context['form_entrada'] = form
@@ -75,7 +84,7 @@ def handle_entrada(request):
         messages.success(request, 'Entrada registrada correctamente')
         return redirect('trabajador_home')
     else:
-        print("Errores del formulario:", form.errors)  # Imprime los errores en la consola
+        print("Errores del formulario:", form.errors)
         messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
         context['form_entrada'] = form
         return render(request, 'home/users/trabajador_home.html', context)

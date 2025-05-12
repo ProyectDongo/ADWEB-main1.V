@@ -24,6 +24,9 @@ import logging
 
 
 
+
+
+
 class RoleBasedLoginMixin:
     role = None  # Debe ser definido en las clases hijas
     max_attempts = 5  # Intentos máximos antes de bloquear
@@ -103,6 +106,11 @@ class RoleBasedLoginMixin:
             user.save()
             messages.error(self.request, 'Cuenta bloqueada por seguridad')
 
+
+
+
+
+
 # Vistas de login específicas para cada rol
 class AdminLoginView(RoleBasedLoginMixin, LoginView):
     role = 'admin'
@@ -128,6 +136,11 @@ class LoginSelectorView(TemplateView):
             return redirect('redirect_after_login')
         return super().dispatch(request, *args, **kwargs)
 
+
+
+
+
+
 # Funciones auxiliares para redirección y vistas de inicio
 @login_required
 def redirect_after_login(request):
@@ -145,6 +158,9 @@ def redirect_after_login(request):
     elif role == 'trabajador':
         return redirect('trabajador_home')
     return redirect('login_selector')
+
+
+
 
 @login_required
 def admin_home(request):
@@ -236,26 +252,56 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
 
 
-
 @login_required
-def supervisor_home_contabilidad(request, empresa_id, vigencia_plan_id):
+def supervisor_home_contabilidad(request, empresa_id,vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id, empresa=empresa)  
+
+    if request.method == 'POST':
+        form = TransaccionForm(request.POST)
+        if form.is_valid():
+            transaccion = form.save(commit=False)
+            transaccion.empresa = empresa
+            transaccion.save()
+            return redirect('supervisor_home_contabilidad', empresa_id=empresa.id)
+    else:
+        form = TransaccionForm()
+    
+    # Obtener lista de transacciones para mostrar en la tabla
+    transacciones = Transaccion.objects.filter(empresa=empresa)
     
     context = {
         'empresa': empresa,
-        'vigencia_plan': vigencia_plan
+        'vigencia_plan': vigencia_plan,
+        'form_transaccion': form,
+        'transacciones': transacciones,
     }
     return render(request, 'home/supervisores/supervisor_home_contabilidad.html', context)
 
 @login_required
-def supervisor_home_almacen(request, empresa_id, vigencia_plan_id):
+def supervisor_home_almacen(request, empresa_id,vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
-    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id, empresa=empresa)  
+
+    # Verificar si el usuario tiene permisos para acceder a esta vista  
+    if request.method == 'POST':
+        form = ItemInventarioForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.empresa = empresa
+            item.save()
+            return redirect('supervisor_home_almacen', empresa_id=empresa.id)
+    else:
+        form = ItemInventarioForm()
+    
+    # Obtener lista de ítems para mostrar en la tabla
+    items = ItemInventario.objects.filter(empresa=empresa)
     
     context = {
         'empresa': empresa,
-        'vigencia_plan': vigencia_plan
+        'vigencia_plan': vigencia_plan,
+        'form_inventario': form,
+        'items': items,
     }
     return render(request, 'home/supervisores/supervisor_home_almacen.html', context)
 #------------ FIN ------------

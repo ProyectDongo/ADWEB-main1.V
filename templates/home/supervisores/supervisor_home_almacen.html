@@ -96,12 +96,12 @@
                     </div>
 
                     <!-- Pestaña Categorías -->
-                    <div class="tab-pane fade" id="categorias">
+                    <div class="tab-pane fade show active" id="inventario">
                         <div class="table-section">
                             <div class="section-header">
-                                <h3>Categorías de Productos</h3>
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaCategoriaModal">
-                                    <i class="fas fa-plus-circle me-2"></i>Nueva Categoría
+                                <h3>Registro de Inventario</h3>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoItemModal">
+                                    <i class="fas fa-plus-circle me-2"></i>Nuevo Item
                                 </button>
                             </div>
                             
@@ -109,16 +109,20 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th>Nombre</th>
-                                            <th>Productos</th>
+                                            <th>Producto</th>
+                                            <th>Código</th>
+                                            <th>Categoría</th>
+                                            <th>Stock</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <!-- Ejemplo de fila -->
+                                        {% for item in items %}
                                         <tr>
-                                            <td>Ferretería</td>
-                                            <td>85</td>
+                                            <td>{{ item.nombre }}</td>
+                                            <td>{{ item.codigo }}</td>
+                                            <td>{{ item.categoria }}</td>
+                                            <td>{{ item.stock }}</td>
                                             <td>
                                                 <div class="actions">
                                                     <button class="btn-action">
@@ -130,6 +134,11 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5">No hay ítems en el inventario.</td>
+                                        </tr>
+                                        {% endfor %}
                                     </tbody>
                                 </table>
                             </div>

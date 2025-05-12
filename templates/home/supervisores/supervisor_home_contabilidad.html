@@ -47,76 +47,57 @@
                 </ul>
             </div>
 
-            <div class="card-body">
-                <div class="tab-content" id="contabilidadTabsContent">
-                    <!-- Pestaña Transacciones -->
-                    <div class="tab-pane fade show active" id="transacciones">
-                        <div class="table-section">
-                            <div class="section-header">
-                                <h3>Registro de Transacciones</h3>
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTransaccionModal">
-                                    <i class="fas fa-plus-circle me-2"></i>Nueva Transacción
-                                </button>
-                            </div>
-                            
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Fecha</th>
-                                            <th>Descripción</th>
-                                            <th>Tipo</th>
-                                            <th>Monto</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Ejemplo de fila -->
-                                        <tr>
-                                            <td>15/03/2024</td>
-                                            <td>Compra materiales construcción</td>
-                                            <td><span class="badge bg-danger">Egreso</span></td>
-                                            <td>$1,250,000</td>
-                                            <td>
-                                                <div class="actions">
-                                                    <button class="btn-action">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn-action">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="tab-pane fade show active" id="transacciones">
+                <div class="table-section">
+                    <div class="section-header">
+                        <h3>Registro de Transacciones</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTransaccionModal">
+                            <i class="fas fa-plus-circle me-2"></i>Nueva Transacción
+                        </button>
                     </div>
-
-                    <!-- Pestaña Informes -->
-                    <div class="tab-pane fade" id="informes">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="card mb-4">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Balance General</h5>
-                                        <p class="display-6">$15.2M</p>
-                                        <a href="#" class="btn btn-outline-primary">
-                                            Ver Detalle <i class="fas fa-arrow-right"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Flujo de Caja</h5>
-                                        <canvas id="flujoCajaChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Tipo</th>
+                                    <th>Monto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaccion in transacciones %}
+                                <tr>
+                                    <td>{{ transaccion.fecha }}</td>
+                                    <td>{{ transaccion.descripcion }}</td>
+                                    <td>
+                                        {% if transaccion.tipo == 'Egreso' %}
+                                        <span class="badge bg-danger">Egreso</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Ingreso</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ transaccion.monto }}</td>
+                                    <td>
+                                        <div class="actions">
+                                            <button class="btn-action">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-action">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5">No hay transacciones registradas.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -147,6 +128,10 @@
 {% block extra_scripts %}
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+
 <script>
     // Ejemplo de gráfico para flujo de caja
     const ctx = document.getElementById('flujoCajaChart');

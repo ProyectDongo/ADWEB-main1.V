@@ -370,3 +370,19 @@ class VigenciaPlan(models.Model):
         :return: max_usuarios_override si está definido; de lo contrario, max_usuarios del plan base.
         """
         return self.max_usuarios_override if self.max_usuarios_override is not None else self.plan.max_usuarios
+    
+
+
+class ItemInventario(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100)
+    codigo = models.CharField(max_length=50)
+    categoria = models.CharField(max_length=50)
+    stock = models.IntegerField()
+
+class Transaccion(models.Model):
+    empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
+    fecha = models.DateField()
+    descripcion = models.TextField()
+    tipo = models.CharField(max_length=10)  # Ej: 'Ingreso', 'Egreso'
+    monto = models.DecimalField(max_digits=10, decimal_places=2)

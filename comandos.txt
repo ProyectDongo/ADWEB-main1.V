@@ -48,6 +48,8 @@ docker-compose up --build      levantar y construir
 
 docker-compose exec web python manage.py crear_grupos  (para ejecutar comandos ) 
 
+python manage.py collectstatic
 
+python manage.py collectstatic --noinput
 
 
