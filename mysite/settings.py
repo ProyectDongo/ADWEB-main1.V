@@ -248,5 +248,5 @@ CSRF_COOKIE_HTTPONLY = False
 
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
-
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOGIN_URL = '/login-selector/'  # Apunta a tu vista de selección de login

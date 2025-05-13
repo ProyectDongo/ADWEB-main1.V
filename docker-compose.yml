@@ -34,5 +34,17 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"  # Necesario en Linux para mapear host.docker.internal
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl/nginx.crt:/etc/nginx/certs/fullchain.pem
+      - ./ssl/nginx.key:/etc/nginx/certs/privkey.pem
+    depends_on:
+      - web
+
 volumes:
   postgres_data:
