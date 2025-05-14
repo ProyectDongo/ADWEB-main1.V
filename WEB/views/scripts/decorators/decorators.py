@@ -22,6 +22,8 @@ def permiso_requerido(permiso):                                             #
     return decorator                                                        #
                                                                             #           
 #----------------------------------------------------------------------------
+
+
 # implementar a futuro
 # Crear un usuario supervisor al registrar una empresa
 #@receiver(post_save, sender=RegistroEmpresas)
@@ -48,6 +50,11 @@ def crear_supervisor(sender, instance, created, **kwargs):
         supervisor.set_password(temp_password)
         supervisor.save()
         # Enviar correo con temp_password (implementar según necesidad)
+
+
+
+
+
 
 #---------------------------------------------------------------------------
 # implementar a futuro

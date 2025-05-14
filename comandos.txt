@@ -53,3 +53,59 @@ python manage.py collectstatic
 python manage.py collectstatic --noinput
 
 
+coamndos ssl
+Set-ExecutionPolicy Bypass -Scope Process -Force
+iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+
+
+
+choco install openssl.light -y
+
+
+
+
+openssl version
+
+
+
+
+cd C:\Users\facil\OneDrive\Escritorio\web
+openssl req -new -key nginx.key -out nginx.csr -subj "/C=CL/ST=Santiago/L=Santiago/O=MiProyecto/OU=Dev/CN=localhost"
+
+
+wsl --install
+
+sudo apt update
+sudo apt install openssl -y
+cd /mnt/c/Users/facil/OneDrive/Escritorio/web
+openssl req -new -key nginx.key -out nginx.csr \
+  -subj "/C=CL/ST=Santiago/L=Santiago/O=MiProyecto/OU=Dev/CN=localhost"
+
+openssl x509 -req -days 365 -in nginx.csr -signkey nginx.key -out nginx.crt
+
+# Desde la misma carpeta donde están nginx.key y nginx.csr:
+openssl x509 -req -days 365 \
+  -in nginx.csr \
+  -signkey nginx.key \
+  -out nginx.
+
+
+refreshenv
+
+
+openssl version
+
+
+
+cd C:\Users\facil\OneDrive\Escritorio\web
+openssl req -new -key nginx.key -out nginx.csr -subj "/C=CL/ST=Santiago/L=Santiago/O=MiProyecto/OU=Dev/CN=localhost"
+
+# Desde la misma carpeta donde están nginx.key y nginx.csr:
+openssl x509 -req -days 365 \
+  -in nginx.csr \
+  -signkey nginx.key \
+  -out nginx.crt
+
+
+openssl x509 -req -days 365 -in nginx.csr -signkey nginx.key -out nginx.crt
