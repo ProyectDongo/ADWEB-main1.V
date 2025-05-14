@@ -27,6 +27,7 @@ urlpatterns = [
     # ------------------------------------------------------------------------------------ #
     # Autenticación y Selección de Roles
     # ------------------------------------------------------------------------------------ #
+    
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
     path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
     path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),

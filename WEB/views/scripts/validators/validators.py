@@ -2,6 +2,9 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
+
+
+
 def validar_rut(value):
     rut = value.upper().replace(".", "").replace("-", "")
     rut_body = rut[:-1]

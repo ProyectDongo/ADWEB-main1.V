@@ -147,7 +147,8 @@ class LoginSelectorView(TemplateView):
 
 
 
-
+class AttendanceSelectorView(TemplateView):
+    template_name = 'login/attendance_selector.html'
 
 
 

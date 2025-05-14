@@ -8,11 +8,10 @@ class Cobro(models.Model):
     vigencia_plan = models.ForeignKey(
         VigenciaPlan, 
         on_delete=models.CASCADE, 
-        related_name='cobros_relacionados',  # Cambiado para evitar conflicto de nombres
+        related_name='cobros_relacionados',  
         null=True, 
         blank=True
     )
-    # Agregar campo ManyToMany para asociar múltiples planes
     vigencias_planes = models.ManyToManyField(  
         VigenciaPlan, 
         related_name='cobros_planes',
