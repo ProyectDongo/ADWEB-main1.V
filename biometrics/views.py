@@ -342,8 +342,6 @@ class EditAttendanceView(LoginRequiredMixin, UpdateView):
 
 
 # Generación de reporte PDF
-
-
 class GenerateReportView(LoginRequiredMixin, View):
     def get(self, request, user_id):
         if request.user.role not in ['supervisor', 'admin']:
@@ -378,7 +376,7 @@ class GenerateReportView(LoginRequiredMixin, View):
             parent=styles['Title'],
             fontSize=24,
             spaceAfter=20,
-            alignment=1,  # Centrado
+            alignment=1,
             textColor=colors.HexColor('#2c3e50'),
             fontName='Roboto-Bold' if 'Roboto-Bold' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
         )
@@ -405,8 +403,13 @@ class GenerateReportView(LoginRequiredMixin, View):
         ]
         
         total_horas = 0
+        unique_dates = set()  # Conjunto para rastrear fechas únicas
+        
         for reg in registros:
-            fecha = reg.hora_entrada.strftime('%d/%m/%Y')
+            fecha = reg.hora_entrada.date()  # Extraer la fecha como objeto date
+            unique_dates.add(fecha)  # Agregar la fecha al conjunto
+            
+            fecha_str = reg.hora_entrada.strftime('%d/%m/%Y')
             entrada = reg.hora_entrada.strftime('%H:%M:%S')
             salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else '--:--:--'
             
@@ -420,7 +423,7 @@ class GenerateReportView(LoginRequiredMixin, View):
                 estado = "PENDIENTE"
             
             data.append([
-                fecha,
+                fecha_str,
                 entrada,
                 salida,
                 horas_str,
@@ -433,7 +436,7 @@ class GenerateReportView(LoginRequiredMixin, View):
             '', 
             '', 
             f"{total_horas:.2f} h", 
-            f"{len(registros)} días"
+            f"{len(unique_dates)} días"  # Usar el número de fechas únicas
         ])
 
         # Crear tabla
@@ -464,7 +467,7 @@ class GenerateReportView(LoginRequiredMixin, View):
                 name='FooterStyle',
                 fontSize=8,
                 textColor=colors.grey,
-                alignment=2  # Derecha
+                alignment=2
             )
         )
         elements.append(footer_text)
