@@ -136,6 +136,7 @@ class TrabajadorLoginView(RoleBasedLoginMixin, LoginView):
     template_name = 'login/user/user_login.html'
     success_url = reverse_lazy('trabajador_home')
 
+
 # Vista para seleccionar el tipo de login
 class LoginSelectorView(TemplateView):
     template_name = 'login/home/login_selector.html'
@@ -147,8 +148,6 @@ class LoginSelectorView(TemplateView):
 
 
 
-class AttendanceSelectorView(TemplateView):
-    template_name = 'login/attendance_selector.html'
 
 
 
@@ -165,7 +164,7 @@ def redirect_after_login(request):
     if role == 'admin':
         return redirect('admin_home')
     elif role == 'supervisor':
-        return redirect('supervisor_selector_modulo', empresa_id=request.user.empresa_id,)
+        return redirect('supervisor_selector')
     elif role == 'trabajador':
         return redirect('trabajador_home')
     return redirect('login_selector')

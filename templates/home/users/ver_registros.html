@@ -10,10 +10,17 @@
                     <i class="fas fa-calendar-alt me-3"></i>
                     Historial de Asistencia
                 </h2>
-                <a href="{% url 'trabajador_home' %}" 
-                   class="btn btn-light btn-sm rounded-pill">
-                    <i class="fas fa-arrow-left me-2"></i>Volver
-                </a>
+                {% if user.role == 'supervisor' %}
+                    <a href="{% url 'supervisor_register' %}" 
+                       class="btn btn-light btn-sm rounded-pill">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                {% else %}
+                    <a href="{% url 'trabajador_home' %}" 
+                       class="btn btn-light btn-sm rounded-pill">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                {% endif %}
             </div>
         </div>
         

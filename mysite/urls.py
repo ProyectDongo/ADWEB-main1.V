@@ -14,7 +14,7 @@ from WEB.views.admin.estadisticas.views import estadisticas
 from WEB.views.tools.views import utilidades
 from WEB.views.admin.clientes.pagos.views import pagos
 from WEB.views.admin.clientes.empresa.views import empresas, planes
-from WEB.views.supervisor.modulos.views import almacen, asistencia, contabilidad
+from WEB.views.supervisor.modulos.views import almacen, asistencia, contabilidad,selector
 from WEB.views.trabajador.views import trabajadores
 
 urlpatterns = [
@@ -30,6 +30,8 @@ urlpatterns = [
     
     path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
     path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
+    path('supervisor/selector/', selector.SupervisorSelectorView.as_view(), name='supervisor_selector'),
+    path('supervisor/register/', selector.supervisor_register, name='supervisor_register'),
     path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),
     path('supervisor/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.SupervisorLoginView.as_view()), name='supervisor_login'),
     path('trabajador/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.TrabajadorLoginView.as_view()), name='trabajador_login'),
@@ -77,7 +79,6 @@ urlpatterns = [
     path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
     path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
     path('enviar-notificacion/<int:empresa_id>/', pagos.enviar_notificacion, name='enviar_notificacion'),
-    # Nota: 'gestion-pagos/<int:empresa_id>/' parece duplicado de 'empresa/<int:empresa_id>/pagos/'. Revisar si es intencional.
 
     # ------------------------------------------------------------------------------------ #
     # Planes
@@ -88,7 +89,7 @@ urlpatterns = [
     # ------------------------------------------------------------------------------------ #
     # Estadísticas
     # ------------------------------------------------------------------------------------ #
-    path('home_estadisticas/', estadisticas.home_estadisticas, name='home_estadisticas'),  # Corregido: faltaba una barra al final
+    path('home_estadisticas/', estadisticas.home_estadisticas, name='home_estadisticas'),  # 
     path('estadisticas/empresas/', estadisticas.estadisticas_empresas, name='estadisticas_empresas'),
     path('estadisticas/pagos/', estadisticas.estadisticas_pagos, name='estadisticas_pagos'),
 

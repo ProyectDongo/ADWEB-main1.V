@@ -69,6 +69,10 @@ def crear_trabajador(request):
     return render(request, 'admin/Sofware/user/crear_trabajador.html', {'form': form})
 
 
+
+
+
+
 def get_vigencias(request):
     empresa_id = request.GET.get('empresa')
     if empresa_id:

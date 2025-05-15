@@ -1,0 +1,413 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block content %}
+{% block sidebar %}{% endblock %}
+<div class="container-fluid p-0 min-vh-100 bg-light">
+    <main class="container py-4">
+        <div class="row g-4">
+            <div class="container py-4">
+                <a href="{% url 'supervisor_selector' %}" class="btn btn-primary btn-lg shadow-sm mb-4">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Panel Supervisor
+                </a>
+            </div>
+            <!-- Sección de Entrada -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-header bg-primary-gradient text-white py-4">
+                        <h2 class="h4 mb-0 d-flex align-items-center">
+                            <i class="fas fa-sign-in-alt me-3"></i>
+                            Registrar Entrada
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data" id="entradaForm">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">Método de Registro</label>
+                                <div class="d-grid gap-2">
+                                    <div class="btn-group-vertical" role="group">
+                                        <input type="radio" class="btn-check" name="metodo" id="firmaRadio" 
+                                               value="firma" checked>
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" 
+                                               for="firmaRadio">
+                                            <i class="fas fa-signature fa-2x me-3"></i>
+                                            <div>
+                                                <h5 class="mb-1">Firma Digital</h5>
+                                                <small class="text-muted">Dibuja tu firma en el área designada</small>
+                                            </div>
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="metodo" id="geoRadio" 
+                                               value="geo">
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" 
+                                               for="geoRadio">
+                                            <i class="fas fa-map-marker-alt fa-2x me-3"></i>
+                                            <div>
+                                                <h5 class="mb-1">Geolocalización</h5>
+                                                <small class="text-muted">Usar ubicación actual</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sección Firma -->
+                            <div id="firmaSection" class="metodo-section">
+                                <div class="signature-container mb-4">
+                                    <canvas id="firmaCanvas" class="signature-pad border rounded-2" 
+                                            width="300px" height="200"></canvas>
+                                    <input type="hidden" name="firma_digital" id="firmaInput">
+                                    <button type="button" class="btn btn-link text-danger mt-2" 
+                                            onclick="limpiarFirma()">
+                                        <i class="fas fa-undo me-2"></i>Limpiar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Sección Geolocalización -->
+                            <div id="geoSection" class="metodo-section d-none">
+                                <div class="alert alert-info d-flex align-items-center">
+                                    <div class="spinner-border text-primary me-3" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="alert-heading">Obteniendo ubicación</h5>
+                                        <p class="mb-0">Por favor espera...</p>
+                                        <input type="hidden" name="latitud" id="latitudInput">
+                                        <input type="hidden" name="longitud" id="longitudInput">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" name="entrada" 
+                                    class="btn btn-primary btn-lg w-100 py-3 shadow-sm"
+                                    {% if ultima_entrada_activa %}disabled{% endif %}>
+                                <span class="submit-content">
+                                    {% if ultima_entrada_activa %}
+                                        <i class="fas fa-check-circle me-2"></i>Entrada Registrada
+                                    {% else %}
+                                        <i class="fas fa-fingerprint me-2"></i>Confirmar Entrada
+                                    {% endif %}
+                                </span>
+                                <div class="spinner-border spinner-border-sm d-none" 
+                                     role="status"></div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Salida -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-header bg-success-gradient text-white py-4">
+                        <h2 class="h4 mb-0 d-flex align-items-center">
+                            <i class="fas fa-sign-out-alt me-3"></i>
+                            Registrar Salida
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" id="salidaForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="salida" value="true">
+                            
+                            <div class="alert alert-{% if ultima_entrada_activa %}info{% else %}secondary{% endif %} 
+                                        d-flex align-items-center mb-4">
+                                <i class="fas fa-clock fa-3x me-3"></i>
+                                <div>
+                                    <h4 class="mb-1">
+                                        {% if ultima_entrada_activa %}
+                                            <span class="text-success">Jornada Activa</span>
+                                        {% else %}
+                                            <span class="text-muted">Sin Jornada</span>
+                                        {% endif %}
+                                    </h4>
+                                    <small class="d-block text-muted">
+                                        {% if ultima_entrada_activa %}
+                                            Iniciada: {{ ultima_entrada_activa.hora_entrada|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            Última salida: {{ ultima_salida.hora_salida|date:"d/m/Y H:i"|default:"-" }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+
+                            <button type="submit" 
+                                    class="btn btn-lg w-100 py-3 shadow-sm
+                                           {% if ultima_entrada_activa %}btn-danger{% else %}btn-secondary{% endif %}"
+                                    {% if not ultima_entrada_activa %}disabled{% endif %}>
+                                <span class="submit-content">
+                                    {% if ultima_entrada_activa %}
+                                        <i class="fas fa-power-off me-2"></i>Finalizar Jornada
+                                    {% else %}
+                                        <i class="fas fa-ban me-2"></i>No disponible
+                                    {% endif %}
+                                </span>
+                                <div class="spinner-border spinner-border-sm d-none" 
+                                     role="status"></div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón Historial -->
+            <div class="col-12">
+                <a href="{% url 'ver_registros' %}" 
+                   class="btn btn-outline-primary btn-lg w-100 py-3 shadow-sm">
+                    <i class="fas fa-history me-2"></i>Ver Historial Completo
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+
+
+
+
+
+
+
+<script>
+    // Animaciones y mejoras de UI
+document.addEventListener('DOMContentLoaded', function() {
+    // Efecto de carga inicial
+    document.body.style.opacity = '0';
+    setTimeout(() => document.body.style.opacity = '1', 100);
+    
+    // Actualización dinámica de geolocalización
+    const geoSection = document.getElementById('geoSection');
+    document.querySelectorAll('input[name="metodo"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if(this.value === 'geo') {
+                geoSection.classList.remove('d-none');
+                navigator.geolocation.getCurrentPosition(position => {
+                    document.getElementById('latitudInput').value = position.coords.latitude;
+                    document.getElementById('longitudInput').value = position.coords.longitude;
+                    geoSection.innerHTML = `
+                        <div class="alert alert-success d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt fa-3x me-3"></i>
+                            <div>
+                                <h5 class="alert-heading">Ubicación obtenida</h5>
+                                <small class="text-muted">
+                                    Lat: ${position.coords.latitude.toFixed(4)}<br>
+                                    Lon: ${position.coords.longitude.toFixed(4)}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }, error => {
+                    geoSection.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error obteniendo ubicación: ${error.message}
+                        </div>
+                    `;
+                });
+            } else {
+                geoSection.classList.add('d-none');
+            }
+        });
+    });
+
+    
+});
+
+// Función para obtener el token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Configuración inicial de la firma digital
+const canvas = document.getElementById('firmaCanvas');
+const ctx = canvas.getContext('2d');
+let dibujando = false;
+let lastX = 0;
+let lastY = 0;
+
+// Eventos de dibujo
+canvas.addEventListener('mousedown', iniciarDibujo);
+canvas.addEventListener('mousemove', dibujar);
+canvas.addEventListener('mouseup', terminarDibujo);
+canvas.addEventListener('mouseout', terminarDibujo);
+canvas.addEventListener('touchstart', iniciarDibujo);
+canvas.addEventListener('touchmove', dibujar);
+canvas.addEventListener('touchend', terminarDibujo);
+
+// Manejo de envío de formularios
+document.getElementById('salidaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('button');
+    const originalHTML = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+    
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        },
+        body: new FormData(this)
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.json().then(data => {
+                if (data.error) throw new Error(data.error);
+                window.location.reload();
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        alert(error.message);
+    });
+});
+
+// Funciones de dibujo
+function getEventPosition(e) {
+    const rect = canvas.getBoundingClientRect();
+    return e.touches ? {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+    } : {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+function iniciarDibujo(e) {
+    dibujando = true;
+    const pos = getEventPosition(e);
+    [lastX, lastY] = [pos.x, pos.y];
+    ctx.beginPath();
+}
+
+function dibujar(e) {
+    if (!dibujando) return;
+    e.preventDefault();
+    const pos = getEventPosition(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    [lastX, lastY] = [pos.x, pos.y];
+    document.getElementById('firmaInput').value = canvas.toDataURL();
+}
+
+function terminarDibujo() {
+    dibujando = false;
+}
+
+function limpiarFirma() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('firmaInput').value = '';
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+
+/* Animaciones */
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.fadeInRight {
+    animation: fadeInRight 0.3s ease-out;
+}
+
+/* Estilos mejorados */
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.bg-success-gradient {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.signature-pad {
+    background: #ffffff;
+    touch-action: none;
+    border: 2px dashed #e2e8f0 !important;
+}
+
+.signature-container {
+    position: relative;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.btn-check:checked + .btn {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.toast {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .card-header h2 { font-size: 1.25rem; }
+    .signature-pad { height: 180px; }
+    .btn-lg { font-size: 1rem; padding: 0.8rem; }
+}
+
+#firmaCanvas {
+    background: #f8f9fa;
+    touch-action: none;
+    border-radius: 8px;
+}
+
+.toast {
+    min-width: 300px;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important;
+    border: none;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .toast {
+        width: 90%;
+        margin: 0 auto;
+    }
+}
+</style>
+{% endblock %}

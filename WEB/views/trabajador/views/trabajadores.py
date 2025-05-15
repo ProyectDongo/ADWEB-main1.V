@@ -246,6 +246,8 @@ def ver_registros(request):
     }
     return render(request, 'home/users/ver_registros.html', context)
 
+    
+
 #------------------------------------------------------------------------------- #FIN DE MANEJO DE REGISTROS
 
 

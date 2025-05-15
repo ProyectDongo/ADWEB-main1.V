@@ -4,10 +4,13 @@ from WEB.models import RegistroEntrada, Usuario
 from WEB.forms import RegistroEntradaForm, RegistroForm
 from django.urls import reverse_lazy, reverse
 import requests
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from django.shortcuts import render,get_object_or_404
 from django.http import JsonResponse,HttpResponse
@@ -340,45 +343,136 @@ class EditAttendanceView(LoginRequiredMixin, UpdateView):
 
 # Generación de reporte PDF
 
+
 class GenerateReportView(LoginRequiredMixin, View):
     def get(self, request, user_id):
         if request.user.role not in ['supervisor', 'admin']:
             return render(request, 'access_denied.html')
+        
         user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
         registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(buffer, 
+                              pagesize=landscape(letter),
+                              title=f"Asistencia {user.get_full_name()}",
+                              author=request.user.empresa.nombre,
+                              leftMargin=0.5*inch,
+                              rightMargin=0.5*inch,
+                              topMargin=0.5*inch,
+                              bottomMargin=0.5*inch)
+        
         elements = []
         styles = getSampleStyleSheet()
+        
+        # Registrar fuentes personalizadas (opcional)
+        try:
+            pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Regular.ttf'))
+            pdfmetrics.registerFont(TTFont('Roboto-Bold', 'Roboto-Bold.ttf'))
+        except:
+            pass  # Usar fuentes por defecto si falla
 
-        # Título
-        elements.append(Paragraph(f"Registro de Asistencia - {user.get_full_name()}", styles['Title']))
+        # Estilos personalizados
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontSize=24,
+            spaceAfter=20,
+            alignment=1,  # Centrado
+            textColor=colors.HexColor('#2c3e50'),
+            fontName='Roboto-Bold' if 'Roboto-Bold' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
+        )
 
-        # Tabla
-        data = [['Fecha', 'Hora Entrada', 'Hora Salida', 'Horas Totales']]
+        header_style = ParagraphStyle(
+            'HeaderStyle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.whitesmoke,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        )
+
+        # Encabezado del documento
+        elements.append(Paragraph(f"{request.user.empresa.nombre.upper()}", styles['Normal']))
+        elements.append(Paragraph(f"Reporte de Asistencia", title_style))
+        elements.append(Paragraph(f"Empleado: {user.get_full_name()}", styles['Normal']))
+        elements.append(Paragraph(f"Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 20))
+
+        # Datos de la tabla
+        data = [
+            ['Fecha', 'Hora Entrada', 'Hora Salida', 'Horas Trabajadas', 'Estado']
+        ]
+        
+        total_horas = 0
         for reg in registros:
-            fecha = reg.hora_entrada.strftime('%Y-%m-%d')
+            fecha = reg.hora_entrada.strftime('%d/%m/%Y')
             entrada = reg.hora_entrada.strftime('%H:%M:%S')
-            salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else 'N/A'
-            horas = (reg.hora_salida - reg.hora_entrada).total_seconds() // 3600 if reg.hora_salida else 0
-            data.append([fecha, entrada, salida, f"{horas:.2f}" if horas else 'N/A'])
+            salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else '--:--:--'
+            
+            if reg.hora_salida:
+                horas = (reg.hora_salida - reg.hora_entrada).total_seconds() / 3600
+                total_horas += horas
+                estado = "COMPLETO" if horas >= 8 else "PARCIAL"
+                horas_str = f"{horas:.2f} h"
+            else:
+                horas_str = "N/A"
+                estado = "PENDIENTE"
+            
+            data.append([
+                fecha,
+                entrada,
+                salida,
+                horas_str,
+                estado
+            ])
 
+        # Añadir totales
+        data.append([
+            'TOTAL', 
+            '', 
+            '', 
+            f"{total_horas:.2f} h", 
+            f"{len(registros)} días"
+        ])
+
+        # Crear tabla
         table = Table(data)
         table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#34495e')),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('FONTSIZE', (0,0), (-1,0), 12),
+            ('BOTTOMPADDING', (0,0), (-1,0), 12),
+            ('BACKGROUND', (0,1), (-1,-2), colors.HexColor('#f8f9fa')),
+            ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#e9ecef')),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dee2e6')),
+            ('ALIGN', (3,1), (3,-1), 'RIGHT'),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+            ('LEFTPADDING', (0,0), (-1,-1), 10),
+            ('RIGHTPADDING', (0,0), (-1,-1), 10),
         ]))
+        
         elements.append(table)
+        elements.append(Spacer(1, 30))
+        
+        # Añadir leyenda
+        footer_text = Paragraph(
+            f"* Reporte generado automáticamente por el sistema de gestión {request.user.empresa.nombre}",
+            ParagraphStyle(
+                name='FooterStyle',
+                fontSize=8,
+                textColor=colors.grey,
+                alignment=2  # Derecha
+            )
+        )
+        elements.append(footer_text)
 
+        # Generar PDF
         doc.build(elements)
         buffer.seek(0)
+        
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="registro_asistencia_{user.username}.pdf"'
+        response['Content-Disposition'] = f'filename="Asistencia_{user.username}_{datetime.now().strftime("%Y%m%d")}.pdf"'
         return response

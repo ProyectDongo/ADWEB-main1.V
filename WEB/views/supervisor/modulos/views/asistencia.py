@@ -171,6 +171,8 @@ class TurnoListView(LoginRequiredMixin, ListView):
         return context
     
 
+
+
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
