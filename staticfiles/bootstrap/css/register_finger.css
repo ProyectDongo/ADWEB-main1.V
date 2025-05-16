@@ -57,6 +57,12 @@
     margin-bottom: 2rem;
 }
 
+.result-card mt-4 {
+     margin-top: 0 !important; 
+}
+.btn btn-warning mb-3 {
+     margin-top: 0 !important; 
+}
 .custom-select {
     position: relative;
 }

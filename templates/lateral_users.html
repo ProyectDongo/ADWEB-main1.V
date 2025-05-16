@@ -5,72 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
-    :root {
-    --sidebar-width: 280px;
-    --sidebar-bg: #2c3e50;
-    --header-height: 60px;
-    --primary-color: #3498db;
-    --transition-speed: 0.3s;
-}
-    
-.wrapper {
-    display: flex;
-    min-height: 100vh;
-}
+    .wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
 
-.corporate-sidebar {
-    width: var(--sidebar-width);
-    background: var(--sidebar-bg);
-    color: white;
-    transition: all var(--transition-speed) ease;
-    position: absolute;
-    height: 100vh;
-    z-index: 1000;
-    left: 0;
-}
+    .corporate-sidebar {
+        --sidebar-width: 280px;
+        --sidebar-bg:linear-gradient(135deg, rgba(13, 110, 253, 0.25) 0%, rgba(29, 78, 216, 0.98) 100%);;
+        --header-height: 60px;
+        --primary-color: #3498db;
+        --transition-speed: 0.3s;
+
+        width: var(--sidebar-width);
+        background: var(--sidebar-bg);
+        color: white;
+        transition: all var(--transition-speed) ease;
+        position: absolute;
+        height: 100vh;
+        z-index: 1000;
+        left: 0;
+    }
     
-    .sidebar-header {
+    .corporate-sidebar .sidebar-header {
         padding: 1.5rem;
         border-bottom: 1px solid rgba(255,255,255,0.1);
         position: relative;
     }
     
-    .company-brand {
+    .corporate-sidebar .company-brand {
         display: flex;
         align-items: center;
         gap: 1rem;
     }
     
-    .company-brand i {
+    .corporate-sidebar .company-brand i {
         background: rgba(255,255,255,0.1);
         padding: 1rem;
         border-radius: 8px;
     }
     
-    .sidebar-toggle {
-    position: absolute;
-    right: -40px;
-    top: 20px;
-    background: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-speed) ease;
-}
+    .corporate-sidebar .sidebar-toggle {
+        position: absolute;
+        right: -40px;
+        top: 20px;
+        background: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-speed) ease;
+    }
     
-    .info-list {
+    .corporate-sidebar .info-list {
         list-style: none;
         padding: 0;
         margin: 2rem 0;
     }
     
-    .info-list li {
+    .corporate-sidebar .info-list li {
         display: flex;
         align-items: center;
         gap: 1rem;
@@ -80,41 +78,45 @@
         transition: background 0.3s ease;
     }
     
-    .info-list li:hover {
+    .corporate-sidebar .info-list li:hover {
         background: rgba(255,255,255,0.05);
     }
     
-    .info-list .icon {
+    .corporate-sidebar .info-list .icon {
         font-size: 1.2rem;
         opacity: 0.7;
     }
     
-    .plan-status {
+    .corporate-sidebar .plan-status {
         padding: 1.5rem;
         text-align: center;
     }
     
-    .plan-status .badge {
+    .corporate-sidebar .plan-status .badge {
         background: rgba(255,255,255,0.1);
         padding: 0.5rem 1rem;
         border-radius: 20px;
         font-size: 0.9rem;
     }
+    
     .corporate-sidebar.collapsed {
-    left: calc(-1 * var(--sidebar-width));
-}
+        left: calc(-1 * var(--sidebar-width));
+    }
+    
     .main-content {
-    margin-left: var(--sidebar-width);
-    flex: 1;
-    transition: margin var(--transition-speed) ease;
-    width: calc(100% - var(--sidebar-width));
-}
-.main-content.expanded {
-    margin-left: 0;
-    width: 100%;
-}
+        margin-left: 0px; 
+        flex: 1;
+        transition: margin 0.3s ease;
+        width: calc(100% - 280px);
+    }
+    
+    .main-content.expanded {
+        margin-left: 0;
+        width: 100%;
+    }
+    
     .main-header {
-        height: var(--header-height);
+        height: 60px; /* Valor fijo en lugar de variable */
         background: white;
         padding: 1rem 2rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -142,7 +144,7 @@
         width: 40px;
         height: 40px;
         border-radius: 8px;
-        background: var(--primary-color);
+        background: #3498db; /* Valor fijo en lugar de variable */
         color: white;
         display: flex;
         align-items: center;
@@ -167,31 +169,31 @@
     
     .btn-action:hover {
         background: #f8f9fa;
-        color: var(--primary-color);
+        color: #3498db; /* Valor fijo en lugar de variable */
     }
     
     @media (max-width: 768px) {
-    .corporate-sidebar {
-        left: calc(-1 * var(--sidebar-width));
+        .corporate-sidebar {
+            left: calc(-1 * var(--sidebar-width));
+        }
+        
+        .corporate-sidebar.collapsed {
+            left: 0;
+        }
+        
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+        }
+        
+        .sidebar-toggle-mobile {
+            display: block !important;
+        }
+        
+        .sidebar-toggle {
+            display: none;
+        }
     }
-    
-    .corporate-sidebar.collapsed {
-        left: 0;
-    }
-    
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-    
-    .sidebar-toggle-mobile {
-        display: block !important;
-    }
-    
-    .sidebar-toggle {
-        display: none;
-    }
-}
     </style>
 </head>
 <body>
@@ -201,9 +203,6 @@
                 <i class="fas fa-building fa-2x text-white"></i>
                 <h2>{{ empresa.nombre|truncatechars:30 }}</h2>
             </div>
-            <button class="sidebar-toggle">
-                <i class="fas fa-chevron-left"></i>
-            </button>
         </div>
         
         <div class="sidebar-body">
@@ -241,6 +240,5 @@
             </div>
         </div>
     </aside>
-
 </body>
 </html>
