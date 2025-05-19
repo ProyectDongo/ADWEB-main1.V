@@ -60,81 +60,87 @@
   </div>
 </div>
 
-
 <div class="container py-3 text-center">
   <a href="{% url 'home_estadisticas' %}" class="btn btn-secondary">
     <i class="bi bi-arrow-left me-1"></i> Volver al Home
   </a>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {{ empresas_por_mes|json_script:"empresas-data" }}
 <script>
-
   const monthNames = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
   const fullLabels = monthNames;
 
-
+  // Obtener y depurar los datos
   const empresasDataRaw = JSON.parse(document.getElementById('empresas-data').textContent);
+  console.log('Datos crudos (empresasDataRaw):', empresasDataRaw);
 
   function getValueForMonth(data, field, monthIndex) {
     const monthNumber = String(monthIndex + 1).padStart(2, '0');
-    const found = data.find(item => item.mes.substring(5,7) === monthNumber);
+    const found = data.find(item => {
+      const monthExtracted = item.mes.substring(5, 7); // Asume formato "YYYY-MM-DD"
+      console.log(`Comparando mes ${monthExtracted} con ${monthNumber} para item:`, item);
+      return monthExtracted === monthNumber;
+    });
     return found ? found[field] : 0;
   }
 
   const empresasCount = fullLabels.map((_, index) => getValueForMonth(empresasDataRaw, 'total', index));
+  console.log('Conteo por mes (empresasCount):', empresasCount);
 
+  // Gráfico de línea
   const ctxLine = document.getElementById('empresasLineChart').getContext('2d');
   new Chart(ctxLine, {
-      type: 'line',
-      data: {
-          labels: fullLabels,
-          datasets: [{
-              label: 'Empresas Registradas',
-              data: empresasCount,
-              borderColor: 'rgba(75, 192, 192, 1)',
-              fill: false,
-              tension: 0.1
-          }]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-              x: { title: { display: true, text: 'Mes' } },
-              y: { title: { display: true, text: 'Cantidad' } }
-          }
+    type: 'line',
+    data: {
+      labels: fullLabels,
+      datasets: [{
+        label: 'Empresas Registradas',
+        data: empresasCount,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        fill: false,
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Mes' } },
+        y: { title: { display: true, text: 'Cantidad' } }
       }
+    }
   });
 
+  // Gráfico de barras
   const ctxBar = document.getElementById('empresasBarChart').getContext('2d');
   new Chart(ctxBar, {
-      type: 'bar',
-      data: {
-          labels: fullLabels,
-          datasets: [{
-              label: 'Empresas Registradas',
-              data: empresasCount,
-              backgroundColor: 'rgba(75, 192, 192, 0.5)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 1
-          }]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-              x: { title: { display: true, text: 'Mes' } },
-              y: { title: { display: true, text: 'Cantidad' }, beginAtZero: true }
-          }
+    type: 'bar',
+    data: {
+      labels: fullLabels,
+      datasets: [{
+        label: 'Empresas Registradas',
+        data: empresasCount,
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Mes' } },
+        y: { title: { display: true, text: 'Cantidad' }, beginAtZero: true }
       }
+    }
   });
 
+  // Llenar la tabla
   const tableBody = document.getElementById('empresas-table-body');
   fullLabels.forEach((label, index) => {
     tableBody.innerHTML += `<tr>

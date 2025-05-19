@@ -4,155 +4,211 @@
 {% block title %}Detalles de la Empresa{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container-fluid py-4">
     <form method="post">
         {% csrf_token %}
+        
+        <!-- Mensajes de alerta -->
         {% if messages %}
-        <div id="message-container" class="alert alert-success alert-dismissible fade show" role="alert">
-            {% for message in messages %}
-                {{ message }}
-            {% endfor %}
+        <div id="message-container" class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <div>
+                {% for message in messages %}{{ message }}{% endfor %}
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endif %}
+        
         {% if form.errors %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error en el formulario!</strong> Corrige los siguientes errores:
-            <ul>
-            {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                <li>{{ field|title }}: {{ error }}</li>
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>
+                <strong>Error en el formulario!</strong>
+                <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
-            </ul>
+                </ul>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endif %}
-        
-        <!-- Encabezado y botón Guardar -->
+
+        <!-- Encabezado -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-         
-            <a href="{% url 'listar_clientes' %}" class=" btn btn-info btn-md mx-1 my-1">
-                    <i class="bi bi-arrow-left me-2"></i> Volver
+            <a href="{% url 'listar_clientes' %}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-arrow-left me-2"></i>Volver
             </a>
-        
-            <h1 class="text-primary fw-bold">{{ empresa.nombre }}</h1>
-            <button type="submit" name="guardar" class="btn btn-success btn-lg">
-                <i class="bi bi-save"></i> Guardar Cambios
+            <h1 class="text-primary fw-bold mb-0 display-5">{{ empresa.nombre }}</h1>
+            <button type="submit" name="guardar" class="btn btn-primary btn-lg px-4">
+                <i class="bi bi-save me-2"></i>Guardar
             </button>
-            
         </div>
 
         <!-- Pestañas -->
-        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        <ul class="nav nav-pills mb-4 justify-content-center" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Generales</button>
+                <button class="nav-link active" id="datos-tab" data-bs-toggle="pill" data-bs-target="#datos">
+                    <i class="bi bi-building me-2"></i>Datos
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">contacto</button>
+                <button class="nav-link" id="contacto-tab" data-bs-toggle="pill" data-bs-target="#contacto">
+                    <i class="bi bi-person-lines-fill me-2"></i>Contacto
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#representante" type="button" role="tab">Representante</button>
+                <button class="nav-link" id="representante-tab" data-bs-toggle="pill" data-bs-target="#representante">
+                    <i class="bi bi-person-badge me-2"></i>Representante
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="representante-tab" data-bs-toggle="tab" data-bs-target="#plan" type="button" role="tab">Estado </button>
-            </li>
-            
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">servicios</button>
+                <button class="nav-link" id="plan-tab" data-bs-toggle="pill" data-bs-target="#plan">
+                    <i class="bi bi-clipboard-check me-2"></i>Estado
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial</button>
+                <button class="nav-link" id="servicios-tab" data-bs-toggle="pill" data-bs-target="#personal">
+                    <i class="bi bi-list-task me-2"></i>Servicios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historial-tab" data-bs-toggle="pill" data-bs-target="#historial">
+                    <i class="bi bi-clock-history me-2"></i>Historial
+                </button>
             </li>
         </ul>
 
         <!-- Contenido de las pestañas -->
         <div class="tab-content" id="myTabContent">
             
-            <!-- Pestaña Datos Generales -->
-            <div class="tab-pane fade show active" id="datos" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Información Básica</h4>
-                        <div class="row">
-                            <div class="col-md-6">
+            <!-- Datos Generales -->
+            <div class="tab-pane fade show active" id="datos">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-info-circle me-2"></i>Información General</h4>
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="form-floating mb-3">
                                     {{ form.codigo_cliente|as_crispy_field }}
+                                </div>
+                                <div class="form-floating mb-3">
                                     {{ form.nombre|as_crispy_field }}
-                                    {{ form.rut|as_crispy_field }}
-                                    {{ form.giro|as_crispy_field }}
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6 form-floating">
+                                        {{ form.rut|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 form-floating">
+                                        {{ form.giro|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div class="form-floating mb-3">
                                     {{ form.direccion|as_crispy_field }}
-                                    {{ form.email|as_crispy_field}}
-
-                            </div>
-                            <div class="col-md-6">
-                                    {{ form.region|as_crispy_field }}
-                                    {{ form.provincia|as_crispy_field }}
-                                    {{ form.comuna|as_crispy_field }}
-                                    {{ form.telefono|as_crispy_field }}
-                                    {{ form.numero|as_crispy_field }}
-                                    {{ form.oficina|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Pestaña contacto -->
-            <div class="tab-pane fade" id="contacto" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Contacto</h4>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                {{ form.nombre_contacto|as_crispy_field }}
-                                {{ form.celular_contacto|as_crispy_field }}
-                                {{ form.mail_contacto|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                
-
+                                </div>
+                                <div class="col-md-6 form-floating">
+                                         {{ form.numero|as_crispy_field }}
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-4 form-floating">
+                                        {{ form.region|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-4 form-floating">
+                                        {{ form.provincia|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-4 form-floating">
+                                        {{ form.comuna|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6 form-floating">
+                                        {{ form.telefono|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 form-floating">
+                                        {{ form.email|as_crispy_field }}
+                                    </div>
+                                    
+                                     
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Pestaña Plan -->
-            <div class="tab-pane fade" id="plan" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">estado</h4>
-                        <div class="row">
+            <!-- Contacto -->
+            <div class="tab-pane fade" id="contacto">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-person-lines-fill me-2"></i>Contacto</h4>
+                        <div class="row g-4">
                             <div class="col-md-6">
-                                {{ form.estado|as_crispy_field }}
-                                {{ form.vigente|as_crispy_field}}
-                                
+                                <div class="form-floating mb-3">
+                                    {{ form.nombre_contacto|as_crispy_field }}
+                                </div>
+                                <div class="form-floating mb-3">
+                                    {{ form.celular_contacto|as_crispy_field }}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.mail_contacto|as_crispy_field }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Pestaña Representante Legal -->
-            <div class="tab-pane fade" id="representante" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Datos del Representante</h4>
-                        <div class="row">
+
+            <!-- Estado -->
+            <div class="tab-pane fade" id="plan">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-clipboard-check me-2"></i>Estado</h4>
+                        <div class="row g-4">
                             <div class="col-md-6">
-                                {{ form.rut_representante|as_crispy_field }}
-                                {{ form.nombre_representante|as_crispy_field }}
+                                <div class="form-floating mb-3">
+                                    {{ form.estado|as_crispy_field }}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.vigente|as_crispy_field }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>            
-            <div class="tab-pane fade" id="personal" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4"> Servicios </h4>
+            </div>
 
+            <!-- Representante -->
+            <div class="tab-pane fade" id="representante">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-person-badge me-2"></i>Representante Legal</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.rut_representante|as_crispy_field }}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.nombre_representante|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servicios -->
+            <div class="tab-pane fade" id="personal">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-list-task me-2"></i>Servicios</h4>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Plan</th>
                                         <th>Empresa ID</th>
@@ -160,41 +216,42 @@
                                         <th>Fecha de Inicio</th>
                                         <th>Monto Final</th>
                                         <th>Estado</th>
-                                     
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for vigencia in vigencias %}
                                     <tr>
                                         <td>{{ vigencia.plan.nombre }}</td>
-                                        <td> {{vigencia.empresa_id}}</td>
+                                        <td>{{ vigencia.empresa_id }}</td>
                                         <td>{{ vigencia.codigo_plan }}</td>
                                         <td>{{ vigencia.fecha_inicio|date:"d/m/Y" }}</td>
-                                        <td>{{ vigencia.monto_final }}</td>
-                                        <td> {{ vigencia.estado }}</td>
-                                      
+                                        <td>${{ vigencia.monto_final|floatformat:"0" }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if vigencia.estado == 'Activo' %}success{% else %}secondary{% endif %}">
+                                                {{ vigencia.estado }}
+                                            </span>
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="5" class="text-center">No hay registros de vigencias.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">No hay registros de servicios</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                        
                         </div>
-    
-                    </div>  
+                    </div>
                 </div>
             </div>
-            <!-- Pestaña Historial y Configuración -->
-            <div class="tab-pane fade" id="historial" role="tabpanel">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h4 class="text-primary mb-4">Historial de Cambios</h4>
+
+            <!-- Historial -->
+            <div class="tab-pane fade" id="historial">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-4 fw-bold"><i class="bi bi-clock-history me-2"></i>Historial</h4>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Fecha</th>
                                         <th>Usuario</th>
@@ -206,26 +263,25 @@
                                     <tr>
                                         <td>{{ cambio.fecha|date:"d/m/Y H:i" }}</td>
                                         <td>{{ cambio.usuario.get_full_name }}</td>
-                                        <td>{{ cambio.descripcion }}</td>
+                                        <td class="text-truncate" style="max-width: 300px;">{{ cambio.descripcion }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="3" class="text-center">No hay registros de cambios</td>
+                                        <td colspan="3" class="text-center text-muted py-4">No hay registros de cambios</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- Botón de Eliminación -->
-                         
+                        <!-- Eliminar Empresa -->
                         <div class="mt-5 border-top pt-4">
                             {% for permiso in user_permisos %}
-                            {% if permiso.nombre == "eliminar_empresa" %}
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
-                                <i class="bi bi-trash"></i> Eliminar Empresa
-                            </button>
-                            {% endif %}
+                                {% if permiso.nombre == "eliminar_empresa" %}
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete">
+                                    <i class="bi bi-trash me-2"></i>Eliminar Empresa
+                                </button>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -235,29 +291,34 @@
     </form>
 </div>
 
-<!-- Modal de Confirmación de Eliminación -->
+<!-- Modal Eliminación -->
 <div class="modal fade" id="confirmDelete" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <h5 class="modal-title"><i class="bi bi-exclamation-octagon me-2"></i>Confirmar Eliminación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                ¿Estás seguro que deseas eliminar permanentemente esta empresa y todos sus datos asociados?
+                <p class="lead mb-1">¿Estás seguro de eliminar permanentemente esta empresa?</p>
+                <p class="text-muted">Esta acción eliminará todos los datos asociados y no se puede deshacer.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <form method="post" class="d-inline">
                     {% csrf_token %}
                     <button type="submit" name="eliminar" class="btn btn-danger">
-                        Sí, Eliminar Definitivamente
+                        <i class="bi bi-trash me-2"></i>Eliminar Definitivamente
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -312,7 +373,15 @@
             })();
         {% endif %}
     });
+    document.querySelectorAll('.nav-link').forEach(tab => {
+    tab.addEventListener('click', function(e) {
+        e.preventDefault(); // Evita que el formulario se envíe al cambiar pestañas
+    });
+});
 </script>
+
+
+
 <style>
     .select2-container {
         width: 100% !important;
@@ -331,5 +400,25 @@
     .nav-tabs .nav-link.active {
         border-bottom: 3px solid #0d6efd;
     }
+     .nav-pills .nav-link {
+        border-radius: 8px;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+    
+    .form-floating label {
+        padding-left: 35px;
+    }
+    
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+    
+  
 </style>
 {% endblock %}

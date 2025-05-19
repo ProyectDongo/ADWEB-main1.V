@@ -146,7 +146,9 @@
                                                         <i class="bi bi-plus-circle me-1"></i>Nuevo Supervisor
                                                     </a>
                                                 </div>
-                                                
+                                                <div class="mb-3">
+                                                    <input type="text" class="form-control" placeholder="Buscar supervisores..." id="searchSupervisores{{ plan_data.vigencia.pk }}">
+                                                </div>
                                                 {% if plan_data.supervisores %}
                                                 <div class="table-responsive">
                                                     <table class="table table-hover align-middle">
@@ -180,35 +182,25 @@
                                                                 </td>
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
-                                                                        <a href="{% url 'usuario_edit' supervisor.pk %}" 
-                                                                           class="btn btn-link btn-sm text-dark"
-                                                                           title="Editar">
+                                                                        <a href="{% url 'usuario_edit' supervisor.pk %}" class="btn btn-link btn-sm text-dark" title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
-                                                                        <a href="{% url 'usuario_delete' supervisor.pk %}" 
-                                                                           class="btn btn-link btn-sm text-danger"
-                                                                           onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');"
-                                                                           title="Eliminar Supervisor">
+                                                                        <a href="{% url 'usuario_delete' supervisor.pk %}" class="btn btn-link btn-sm text-danger" onclick="return confirm('¿Seguro que quieres eliminar a {{ supervisor.username }}?');" title="Eliminar Supervisor">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
-                                                                    </div>
-                                                                    <span class="ms-2">
                                                                         {% if supervisor.has_huella %}
-                                                                            <i class="bi bi-fingerprint text-success" title="Huella registrada"></i>
-                                                                        {% else %}
-                                                                            <i class="bi bi-fingerprint text-muted" title="Sin huella"></i>
-                                                                        {% endif %}
-                                                                    </span>
-                                                                    {% if supervisor.has_huella %}
-                                                                        <form method="post" action="{% url 'eliminar_huella' supervisor.id %}">
+                                                                        <form method="post" action="{% url 'eliminar_huella' supervisor.id %}" class="d-inline">
                                                                             {% csrf_token %}
-                                                                            <button type="submit"   class="btn btn-link btn-sm text-danger"
-                                                                                    onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');"
-                                                                                    title="Eliminar Huella">
-                                                                                    <i class="fas fa-trash"></i>
+                                                                            <button type="submit" class="btn btn-link btn-sm text-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');" title="Eliminar Huella">
+                                                                                <i class="bi bi-fingerprint text-success"></i>
                                                                             </button>
                                                                         </form>
-                                                                    {% endif %}
+                                                                        {% else %}
+                                                                        <button class="btn btn-link btn-sm text-muted" disabled title="Sin huella">
+                                                                            <i class="bi bi-fingerprint"></i>
+                                                                        </button>
+                                                                        {% endif %}
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                             {% endfor %}
@@ -226,7 +218,7 @@
                                                 {% endif %}
                                             </div>
 
-                                            <!-- Trabajador Tab -->
+                                            <!-- Trabajadores Tab -->
                                             <div class="tab-pane fade" id="trabajadores-{{ plan_data.vigencia.pk }}" role="tabpanel">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                                     <h5 class="h6 mb-0">Personal del Plan</h5>
@@ -235,7 +227,9 @@
                                                         <i class="bi bi-plus-circle me-1"></i>Nuevo Trabajador
                                                     </a>
                                                 </div>
-                                                
+                                                <div class="mb-3">
+                                                    <input type="text" class="form-control" placeholder="Buscar trabajadores..." id="searchTrabajadores{{ plan_data.vigencia.pk }}">
+                                                </div>
                                                 {% if plan_data.trabajadores %}
                                                 <div class="table-responsive">
                                                     <table class="table table-hover align-middle">
@@ -275,35 +269,25 @@
                                                                 </td>
                                                                 <td class="text-end">
                                                                     <div class="btn-group">
-                                                                        <a href="{% url 'usuario_edit' trabajador.pk %}" 
-                                                                           class="btn btn-link btn-sm text-dark"
-                                                                           title="Editar">
+                                                                        <a href="{% url 'usuario_edit' trabajador.pk %}" class="btn btn-link btn-sm text-dark" title="Editar">
                                                                             <i class="bi bi-pencil-square"></i>
                                                                         </a>
-                                                                        <a href="{% url 'usuario_delete' trabajador.pk %}" 
-                                                                           class="btn btn-link btn-sm text-danger"
-                                                                           onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');"
-                                                                           title="Eliminar trabajador">
+                                                                        <a href="{% url 'usuario_delete' trabajador.pk %}" class="btn btn-link btn-sm text-danger" onclick="return confirm('¿Seguro que quieres eliminar a {{ trabajador.username }}?');" title="Eliminar Trabajador">
                                                                             <i class="bi bi-trash"></i>
                                                                         </a>
-                                                                    </div>
-                                                                    <span class="ms-2">
                                                                         {% if trabajador.has_huella %}
-                                                                            <i class="bi bi-fingerprint text-success" title="Huella registrada"></i>
-                                                                        {% else %}
-                                                                            <i class="bi bi-fingerprint text-muted" title="Sin huella"></i>
-                                                                        {% endif %}
-                                                                    </span>
-                                                                    {% if trabajador.has_huella %}
-                                                                        <form method="post" action="{% url 'eliminar_huella' trabajador.id %}">
+                                                                        <form method="post" action="{% url 'eliminar_huella' trabajador.id %}" class="d-inline">
                                                                             {% csrf_token %}
-                                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                                                    onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');"
-                                                                                    title="Eliminar Huella">
-                                                                                <i class="fas fa-trash"></i>
+                                                                            <button type="submit" class="btn btn-link btn-sm text-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar la huella?');" title="Eliminar Huella">
+                                                                                <i class="bi bi-fingerprint text-success"></i>
                                                                             </button>
                                                                         </form>
-                                                                    {% endif %}
+                                                                        {% else %}
+                                                                        <button class="btn btn-link btn-sm text-muted" disabled title="Sin huella">
+                                                                            <i class="bi bi-fingerprint"></i>
+                                                                        </button>
+                                                                        {% endif %}
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                             {% endfor %}
@@ -343,12 +327,6 @@
         </div>
     </div>
 </div>
-
-
-
-
-
-
 
 <style>
     .bg-dark-blue-gradient {
@@ -423,14 +401,8 @@
     }
 </style>
 
-
-
-
-
-
-
 <script>
-    // Función para guardar el estado del acordeón en localStorage
+    // Guardar el estado del acordeón en localStorage
     function saveAccordionState() {
         const openPanel = document.querySelector('.accordion-collapse.show');
         if (openPanel) {
@@ -440,7 +412,7 @@
         }
     }
 
-    // Función para restaurar el estado del acordeón desde localStorage
+    // Restaurar el estado del acordeón desde localStorage
     function restoreAccordionState() {
         const openPanelId = localStorage.getItem('openPanelId');
         if (openPanelId) {
@@ -470,17 +442,58 @@
                 bootstrap.Collapse.getOrCreateInstance(item).show();
             }
         });
-        // Guardar el estado después de expandir/colapsar todo
         setTimeout(saveAccordionState, 500); // Esperar a que la animación termine
     });
 
-    // Cuenta dinámicamente los usuarios supervisores y trabajadores
+    // Contar usuarios y aplicar advertencia si está cerca del límite
     document.querySelectorAll('.user-counter').forEach(counter => {
         const supervisores = parseInt(counter.dataset.supervisores);
         const trabajadores = parseInt(counter.dataset.trabajadores);
         const max = parseInt(counter.dataset.max);
         const total = supervisores + trabajadores;
+        if (max > 0) {
+            const percentage = (total / max) * 100;
+            if (percentage >= 80) {
+                counter.classList.add('text-warning');
+            }
+        }
         counter.textContent = `${total}/${max} usuarios`;
+    });
+
+    // Búsqueda para supervisores
+    document.querySelectorAll('[id^="searchSupervisores"]').forEach(input => {
+        input.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const table = this.closest('.tab-pane').querySelector('.table');
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const username = row.querySelector('td:nth-child(1) .fw-semibold').textContent.toLowerCase();
+                const email = row.querySelector('td:nth-child(1) small').textContent.toLowerCase();
+                if (username.includes(filter) || email.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Búsqueda para trabajadores
+    document.querySelectorAll('[id^="searchTrabajadores"]').forEach(input => {
+        input.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const table = this.closest('.tab-pane').querySelector('.table');
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const username = row.querySelector('td:nth-child(1) .fw-semibold').textContent.toLowerCase();
+                const email = row.querySelector('td:nth-child(1) small').textContent.toLowerCase();
+                if (username.includes(filter) || email.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
     });
 </script>
 {% endblock %}
