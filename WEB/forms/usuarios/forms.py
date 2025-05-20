@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan
+from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan, DiaHabilitado
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
@@ -657,4 +657,14 @@ class RegistroForm(forms.ModelForm):
             'minutos_retraso': forms.NumberInput(attrs={'min': 0}),
             'es_horas_extra': forms.CheckboxInput(),
             'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
+        }
+
+
+class DiaHabilitadoForm(forms.ModelForm):
+    class Meta:
+        model = DiaHabilitado
+        fields = ['fecha', 'habilitado']
+        widgets = {
+            'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'habilitado': forms.CheckboxInput(),
         }

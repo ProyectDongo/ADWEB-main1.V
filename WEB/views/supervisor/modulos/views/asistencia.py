@@ -8,11 +8,14 @@ from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado
 from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from datetime import datetime, timedelta, date
+from calendar import monthrange
 import logging
+from django import template
 
 
 
@@ -254,3 +257,94 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
         else:
             errors = {f: [str(e) for e in e_list] for f, e_list in form.errors.items()}
             return JsonResponse({'errors': errors}, status=400)
+        
+
+
+
+
+
+
+
+class CalendarioTurnoView(LoginRequiredMixin, View):
+    template_name = 'home/supervisores/turno/calendario_turno.html'
+
+    def get(self, request, user_id):
+        usuario = get_object_or_404(Usuario, pk=user_id)
+        año = int(request.GET.get('año', date.today().year))
+        
+        # Generar todos los días del año
+        inicio_año = date(año, 1, 1)
+        fin_año = date(año, 12, 31)
+        dias = []
+        current = inicio_año
+        while current <= fin_año:
+            dia_habilitado = DiaHabilitado.objects.filter(usuario=usuario, fecha=current).first()
+            estado = dia_habilitado.habilitado if dia_habilitado else usuario.debe_trabajar(current)
+            dias.append({
+                'fecha': current,
+                'habilitado': estado,
+                'mes': current.month,
+                'dia_semana': current.weekday(),
+            })
+            current += timedelta(days=1)
+
+        # Organizar los días por mes
+        meses = {}
+        for i in range(1, 13):
+            meses[i] = [d for d in dias if d['mes'] == i]
+
+        context = {
+            'usuario': usuario,
+            'año': año,
+            'meses': meses,
+            'empresa_id': usuario.vigencia_plan.empresa.id,
+            'vigencia_plan_id': usuario.vigencia_plan.id,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, user_id):
+        usuario = get_object_or_404(Usuario, pk=user_id)
+        año = int(request.POST.get('año', date.today().year))
+        
+        # Procesar los datos enviados
+        inicio_año = date(año, 1, 1)
+        fin_año = date(año, 12, 31)
+        current = inicio_año
+        while current <= fin_año:
+            fecha_str = current.strftime('%Y-%m-%d')
+            habilitado = request.POST.get(f'dia_{fecha_str}') == 'on'
+            DiaHabilitado.objects.update_or_create(
+                usuario=usuario,
+                fecha=current,
+                defaults={'habilitado': habilitado}
+            )
+            current += timedelta(days=1)
+
+        # Redirigir a supervisor_home_asistencia con empresa_id y vigencia_plan_id
+        return redirect('supervisor_home_asistencia', 
+                        empresa_id=usuario.vigencia_plan.empresa.id, 
+                        vigencia_plan_id=usuario.vigencia_plan.id)
+    
+
+class ActualizarDiaView(LoginRequiredMixin, View):
+    def post(self, request, user_id):
+        # Obtener el usuario o devolver 404 si no existe
+        usuario = get_object_or_404(Usuario, pk=user_id)
+        
+        # Obtener datos del cuerpo de la solicitud
+        fecha = request.POST.get('fecha')
+        habilitado = request.POST.get('habilitado') == 'true'
+        
+        # Validar que se proporcione la fecha
+        if not fecha:
+            return JsonResponse({'success': False, 'error': 'Fecha no proporcionada'}, status=400)
+        
+        # Actualizar o crear el registro en DiaHabilitado
+        dia, created = DiaHabilitado.objects.update_or_create(
+            usuario=usuario,
+            fecha=fecha,
+            defaults={'habilitado': habilitado}
+        )
+        
+        # Devolver respuesta JSON exitosa
+        return JsonResponse({'success': True})

@@ -111,6 +111,13 @@
                                                             title="Editar Supervisor">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+
+                                                   <button class="btn btn-sm btn-outline-primary edit-turno" 
+                                                            title="Editar Turno"
+                                                            onclick="window.location.href='{% url 'calendario_turno' supervisor.id %}'">
+                                                        <i class="fas fa-calendar"></i>
+                                                    </button>
+
                                                     {% if supervisor.has_huella %}
                                                     <span class="btn btn-sm btn-success" title="Huella registrada">
                                                         <i class="fas fa-fingerprint"></i>
@@ -204,6 +211,14 @@
                                                             title="Editar Trabajador">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+
+                                                    <button class="btn btn-sm btn-outline-primary edit-turno" 
+                                                            title="Editar Turno"
+                                                            onclick="window.location.href='{% url 'calendario_turno' trabajador.id %}'">
+                                                        <i class="fas fa-calendar"></i>
+                                                    </button>
+
+
                                                     {% if trabajador.has_huella %}
                                                     <span class="btn btn-sm btn-success" title="Huella registrada">
                                                         <i class="fas fa-fingerprint"></i>
@@ -251,6 +266,7 @@
     </main>
 </div>
 
+
 <!-- Modal Usuario -->
 <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -287,7 +303,6 @@
         </div>
     </div>
 </div>
-
 
 
 <div id="urls" 
@@ -403,6 +418,7 @@ style="display: none;"></div>
         border-bottom: 1px solid #dee2e6;
     }
 }
+
 </style>
 {% endblock %}
 
@@ -423,6 +439,7 @@ style="display: none;"></div>
 
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
     const vigenciaPlanId = "{{ vigencia_plan.id }}";
     const empresaId = "{{ empresa.id }}";
@@ -675,6 +692,8 @@ document.addEventListener('DOMContentLoaded', function() {
         $(field).removeClass('is-invalid');
         $(field).next('.invalid-feedback').hide();
     }
+
+
 });
     </script>
 {% endblock %}

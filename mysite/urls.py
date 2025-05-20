@@ -108,6 +108,9 @@ urlpatterns = [
     path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),
     path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
     path('eliminar_huella/<int:user_id>/', gestion_planes.eliminar_huella, name='eliminar_huella'),
+    path('usuario/<int:user_id>/calendario/', asistencia.CalendarioTurnoView.as_view(), name='calendario_turno'),
+    path('usuario/<int:user_id>/actualizar_dia/', asistencia.ActualizarDiaView.as_view(), name='actualizar_dia'),
+
 
     # ------------------------------------------------------------------------------------ #
     # Supervisor

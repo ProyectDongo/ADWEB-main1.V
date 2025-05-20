@@ -8,6 +8,9 @@ from django.db import transaction
 from django.db.models import Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
+
+
 class Horario(models.Model):
     TIPO_HORARIO = [
         ('diurno', 'Diurno'),
@@ -34,6 +37,7 @@ class Turno(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.dias_trabajo}x{self.dias_descanso})"
+
 
 class Usuario(AbstractUser):
     ROLES = (
@@ -159,12 +163,16 @@ class Usuario(AbstractUser):
     
 
 
+class DiaHabilitado(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='dias_habilitados')
+    fecha = models.DateField()
+    habilitado = models.BooleanField(default=True)  # True si el día está habilitado, False si está bloqueado
 
+    class Meta:
+        unique_together = ('usuario', 'fecha')  # Evita duplicados por usuario y fecha
 
-
-
-
-
+    def __str__(self):
+        return f"{self.usuario.username} - {self.fecha} - {'Habilitado' if self.habilitado else 'Bloqueado'}"
 
 
 
