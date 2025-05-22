@@ -9,24 +9,21 @@
     <meta name="generator" content="Jekyll v4.1.1">
     <title>{% block title %}Mi Sitio{% endblock %}</title>
 
-   
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/dashboard/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-      
     
-
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    {% block extra_styles %}{% endblock %}
 
-
-        <style>
+    <style>
         body {
-            
-            background-color :#495057; /* Color de fondo */
+            background-color: #495057; /* Color de fondo */
+            padding-bottom: 80px; /* Espacio para el footer fijo */
         }
         /* Estilos personalizados adicionales */
         .dual-listbox {
@@ -43,18 +40,17 @@
             box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
         .card {
-            
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
         .invalid-feedback {
             display: block;
             margin-top: 0.25rem;
         }
-        #bootstrap-duallistbox-nonselected-list_permisos{
-            width: 100% !important; 
+        #bootstrap-duallistbox-nonselected-list_permisos {
+            width: 100% !important;
         }
-        #bootstrap-duallistbox-selected-list_permisos{
-            width: 100% !important; 
+        #bootstrap-duallistbox-selected-list_permisos {
+            width: 100% !important;
         }
    
         .bd-placeholder-img {
@@ -76,102 +72,142 @@
             padding: 10px !important;
         }
         .messages-container {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    z-index: 9999;
-    width: 380px;
-    max-width: 90%;
-}
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            width: 380px;
+            max-width: 90%;
+        }
 
-.alert {
-    position: relative;
-    border: none;
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    animation: slideInFromRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    transition: transform 0.3s ease;
-    overflow: hidden;
-}
+        .alert {
+            position: relative;
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: slideInFromRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
 
-.alert:hover {
-    transform: translateX(-5px);
-}
+        .alert:hover {
+            transform: translateX(-5px);
+        }
 
-.alert-success {
-    background: #d1e7dd;
-    color: #0f5132;
-}
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
 
-.alert-error {
-    background: #f8d7da;
-    color: #842029;
-}
+        .alert-error {
+            background: #f8d7da;
+            color: #842029;
+        }
 
-.alert-info {
-    background: #cff4fc;
-    color: #055160;
-}
+        .alert-info {
+            background: #cff4fc;
+            color: #055160;
+        }
 
-.bi {
-    flex-shrink: 0;
-}
+        .bi {
+            flex-shrink: 0;
+        }
 
-.btn-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    padding: 0.5rem;
-}
+        .btn-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+        }
 
-.progress-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    background: rgba(0,0,0,0.1);
-    width: 100%;
-    animation: progress 5s linear forwards;
-}
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            animation: progress 5s linear forwards;
+        }
 
-@keyframes slideInFromRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
 
-@keyframes progress {
-    from {
-        width: 100%;
-    }
-    to {
-        width: 0%;
-    }
-}
+        @keyframes progress {
+            from {
+                width: 100%;
+            }
+            to {
+                width: 0%;
+            }
+        }
 
-@media (max-width: 576px) {
-    .messages-container {
-        width: 100%;
-        right: 0;
-        padding: 0 1rem;
-    }
-    
-    .alert {
-        border-radius: 8px;
-    }
-}
-      
+        @media (max-width: 576px) {
+            .messages-container {
+                width: 100%;
+                right: 0;
+                padding: 0 1rem;
+            }
+            
+            .alert {
+                border-radius: 8px;
+            }
+        }
+
+        /* Estilos para el footer */
+        .corporate-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.25) 0%, rgba(29, 78, 216, 0.98) 100%);
+            color: white;
+            z-index: 1000;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .corporate-footer .company-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .corporate-footer .info-list {
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .corporate-footer .info-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .corporate-footer .plan-status {
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
     </style>
     <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
-    {% block css-page %}
-    {% endblock %}
+    {% block css-page %}{% endblock %}
 </head>
 <body>
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
@@ -179,142 +215,111 @@
     {% include "navbar.html" %}
    
     <div class="container-fluid">
-        <div class="row">
-            {% block sidebar %}
-            <div id="sidebarWrapper" class="col-md-3 col-lg-2">
-                {% include "lateral_users.html" %}
-            </div>
-            {% endblock sidebar %}        
-        
-            <!-- Asignamos un id al contenido principal -->
-            <main id="mainContent" role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-                {% if messages %}
-                <div class="messages-container">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" aria-live="assertive">
-                            <div class="d-flex align-items-center">
-                                {% if message.tags == 'error' %}
-                                    <i class="bi bi-x-octagon-fill me-3 fs-5"></i>
-                                {% elif message.tags == 'success' %}
-                                    <i class="bi bi-check2-circle me-3 fs-5"></i>
-                                {% else %}
-                                    <i class="bi bi-info-circle me-3 fs-5"></i>
-                                {% endif %}
-                                <div class="message-content">
-                                    {{ message }}
-                                </div>
+        <main id="mainContent" role="main" class="px-md-4">
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert" aria-live="assertive">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'error' %}
+                                <i class="bi bi-x-octagon-fill me-3 fs-5"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="bi bi-check2-circle me-3 fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle me-3 fs-5"></i>
+                            {% endif %}
+                            <div class="message-content">
+                                {{ message }}
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            <div class="progress-bar"></div>
                         </div>
-                    {% endfor %}
-                </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <div class="progress-bar"></div>
+                    </div>
+                {% endfor %}
+            </div>
             {% endif %}
-                
-                {% block content %}
-                {% endblock %}
-            </main>
-        </div>
+            
+            {% block content %}{% endblock %}
+        </main>
     </div>
+
+    <!-- Footer fijo -->
+    <aside class="corporate-footer">
+        <div class="company-brand">
+            <i class="fas fa-building fa-2x text-white"></i>
+            <h2>{{ empresa.nombre|truncatechars:30 }}</h2>
+        </div>
+        <ul class="info-list">
+            <li>
+                <i class="fas fa-id-card"></i>
+                <span>{{ empresa.rut }}</span>
+            </li>
+            <li>
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ empresa.direccion }}</span>
+            </li>
+            <li>
+                <i class="fas fa-phone"></i>
+                <span>{{ empresa.telefono }}</span>
+            </li>
+        </ul>
+        <div class="plan-status">
+            <i class="fas fa-shield-alt me-2"></i>
+            {{ vigencia_plan.codigo_plan }}
+        </div>
+    </aside>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/inputmask/inputmask.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
     <script>
-        // Inicializa Feather Icons
         $(document).ready(function() {
             feather.replace();
         });
-
-    
-    
     </script>
-      {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
-<script>
-   
-
-window.toggleEstado = function(vigenciaId, button) {
-    const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrftoken,
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const row = button.closest('tr');
-            // Actualizar estado
-            const estadoCell = row.querySelector('td:nth-child(6)');
-            estadoCell.textContent = data.new_estado_display;
+    {% block extra_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
+    <script>
+        window.toggleEstado = function(vigenciaId, button) {
+            const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            // Cambiar clase de la fila
-            row.classList.toggle('table-danger', data.new_estado === 'suspendido');
-            
-            // Actualizar botón principal
-            if (data.new_estado === 'suspendido') {
-                button.textContent = 'Habilitar';
-                button.classList.replace('btn-warning', 'btn-success');
-            } else {
-                button.textContent = 'Deshabilitar';
-                button.classList.replace('btn-success', 'btn-warning');
-            }
-            
-            // Habilitar/deshabilitar otros botones
-            row.querySelectorAll('.action-btn').forEach(btn => {
-                btn.disabled = data.new_estado === 'suspendido';
-            });
-        }
-    });
-};
-</script>
-{% endblock %}
-{% block js.bar %}
-<Script>
-    // Script para el sidebar
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.querySelector('.corporate-sidebar');
-        const toggleButtons = document.querySelectorAll('.sidebar-toggle, .sidebar-toggle-mobile');
-        
-        toggleButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                document.querySelector('.main-content').classList.toggle('expanded');
-                
-                // Rotar ícono del botón
-                const icon = btn.querySelector('i');
-                if (icon) {
-                    icon.style.transform = sidebar.classList.contains('collapsed') 
-                        ? 'rotate(180deg)' 
-                        : 'rotate(0deg)';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = button.closest('tr');
+                    const estadoCell = row.querySelector('td:nth-child(6)');
+                    estadoCell.textContent = data.new_estado_display;
+                    
+                    row.classList.toggle('table-danger', data.new_estado === 'suspendido');
+                    
+                    if (data.new_estado === 'suspendido') {
+                        button.textContent = 'Habilitar';
+                        button.classList.replace('btn-warning', 'btn-success');
+                    } else {
+                        button.textContent = 'Deshabilitar';
+                        button.classList.replace('btn-success', 'btn-warning');
+                    }
+                    
+                    row.querySelectorAll('.action-btn').forEach(btn => {
+                        btn.disabled = data.new_estado === 'suspendido';
+                    });
                 }
             });
-        });
-        
-        // Cerrar sidebar en móvil al hacer clic fuera
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target)) {
-                    sidebar.classList.add('collapsed');
-                    document.querySelector('.main-content').classList.add('expanded');
-                }
-            }
-        });
-    });
-    
- </Script>
-
-      {% endblock %}
-    {% block js.page %}
+        };
+    </script>
     {% endblock %}
+    {% block js.page %}{% endblock %}
 </body>
 </html>

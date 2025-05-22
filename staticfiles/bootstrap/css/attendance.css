@@ -1,7 +1,7 @@
 /* Animaciones personalizadas */
 @keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.7; }
-    100% { transform: scale(1.5); opacity: 0; }
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.2); opacity: 0.3; }
 }
 
 @keyframes scanning {
@@ -84,7 +84,7 @@
 }
 
 .fingerprint-container {
-    font-size: 4rem;
+    font-size: 5rem;
     color: #3b82f6;
     position: relative;
     margin: 2rem 0;
@@ -105,10 +105,11 @@
     position: relative;
     transition: transform 0.3s ease;
     min-width: 220px;
-    padding: 1rem 2rem;
+    padding: 1.2rem 2.5rem;
     border-radius: 12px;
     overflow: hidden;
     border: none;
+    font-size: 1.1rem;
 }
 
 .btn-hover-effect {
@@ -132,6 +133,7 @@
     background: #f8f9fa;
     border-radius: 12px;
     overflow: hidden;
+    margin-top: 2rem;
 }
 
 .scanning-animation {
@@ -144,7 +146,7 @@
     height: 2px;
     width: 100%;
     background: #ff4757;
-    animation: scanning 1.5s infinite;
+    animation: scanning 2s infinite;
     box-shadow: 0 0 10px rgba(255,71,87,0.3);
 }
 
@@ -158,6 +160,26 @@
 .blob-1 { width: 200px; height: 200px; top: -50px; left: -50px; }
 .blob-2 { width: 150px; height: 150px; bottom: -30px; right: -30px; }
 
+/* Mejoras en resultados */
+.result-card {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f3f5;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.success-message, .error-message {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.success-message i { color: #2ecc71; }
+.error-message i { color: #e74c3c; }
+
 /* Responsividad */
 @media (max-width: 768px) {
     .card {
@@ -166,9 +188,14 @@
     
     .btn-hover-scale {
         width: 100%;
+        margin-bottom: 1rem;
     }
     
     .fingerprint-container {
         font-size: 3rem;
+    }
+    
+    .capture-progress {
+        height: 150px;
     }
 }

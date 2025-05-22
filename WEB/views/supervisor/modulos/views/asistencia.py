@@ -262,9 +262,6 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
 
 
 
-
-
-
 class CalendarioTurnoView(LoginRequiredMixin, View):
     template_name = 'home/supervisores/turno/calendario_turno.html'
 
@@ -320,10 +317,16 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
             )
             current += timedelta(days=1)
 
+        # Agregar mensaje de éxito
+        messages.success(request, f'Los cambios para {usuario.get_full_name()} ({año}) se han guardado correctamente.')
+
         # Redirigir a supervisor_home_asistencia con empresa_id y vigencia_plan_id
         return redirect('supervisor_home_asistencia', 
                         empresa_id=usuario.vigencia_plan.empresa.id, 
                         vigencia_plan_id=usuario.vigencia_plan.id)
+
+
+
     
 
 class ActualizarDiaView(LoginRequiredMixin, View):

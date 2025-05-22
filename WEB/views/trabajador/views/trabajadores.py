@@ -29,8 +29,9 @@ def handle_entrada(request):
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('trabajador_home')
     
-    if not request.user.debe_trabajar(timezone.now().date()):
-        messages.error(request, "No estás programado para trabajar hoy según tu turno.")
+    # Verificación actualizada con puede_trabajar
+    if not request.user.puede_trabajar(timezone.now().date()):
+        messages.error(request, "No tienes permiso para trabajar hoy.")
         return redirect('trabajador_home')
     
     if RegistroEntrada.objects.filter(trabajador=request.user, hora_salida__isnull=True).exists():

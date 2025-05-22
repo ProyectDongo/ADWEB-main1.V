@@ -104,7 +104,15 @@ class Usuario(AbstractUser):
         choices=METODOS_REGISTRO,
         default='firma'
     )
-
+    def puede_trabajar(self, fecha):
+        """
+        Determina si el usuario puede trabajar en una fecha dada.
+        Prioriza los días habilitados manualmente (DiaHabilitado) sobre el turno general.
+        """
+        dia_habilitado = self.dias_habilitados.filter(fecha=fecha).first()
+        if dia_habilitado is not None:
+            return dia_habilitado.habilitado
+        return self.debe_trabajar(fecha)
     @property
     def has_huella(self):
         """Verifica si el usuario tiene una huella asociada."""

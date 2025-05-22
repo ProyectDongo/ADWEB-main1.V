@@ -9,5 +9,5 @@ urlpatterns = [
     path('attendance/', views.AttendanceView.as_view(), name='attendance'),
      path('generate-report/<int:user_id>/', views.GenerateReportView.as_view(), name='generate_report'),
     path('attendance-record/<int:user_id>/', views.AttendanceRecordView.as_view(), name='attendance_record'),
-    path('edit-attendance/<int:registro_id>/', views.EditAttendanceView.as_view(), name='edit_attendance'),
+
 ]

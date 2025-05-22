@@ -5,6 +5,7 @@
 {% block title %}{{ usuario.get_full_name }} | Calendario de Turnos{% endblock %}
 
 {% block content %}
+{% now 'n' as current_month %}
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h4 text-primary mb-0">
@@ -27,38 +28,43 @@
         <div class="card shadow-sm">
           <div class="card-header bg-light d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#month-{{ mes_num }}">
             <span class="fw-medium">{{ mes_num|month_name }}</span>
-            <i class="fas fa-chevron-down transition-icon"></i>
+            <i class="fas fa-chevron-down transition-icon {% if mes_num|stringformat:'d' != current_month %}collapsed{% endif %}"></i>
+          </div>
+          <div id="month-{{ mes_num }}" class="collapse {% if mes_num|stringformat:'d' == current_month %}show{% endif %}">
+            <div class="card-body p-0">
+              <div id="calendario">
+                <table class="table table-sm table-bordered mb-0 text-center small">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                    {% for celda in celdas %}
+                      <td class="{% if celda.tipo == 'vacio' %}empty{% else %}day-cell {% if celda.habilitado %}habilitado{% else %}no-habilitado{% endif %}{% endif %}">
+                        {% if celda.tipo != 'vacio' %}
+                          <input type="checkbox" id="dia_{{ celda.fecha|date:'Y-m-d' }}" name="dia_{{ celda.fecha|date:'Y-m-d' }}" {% if celda.habilitado %}checked{% endif %}>
+                          <label for="dia_{{ celda.fecha|date:'Y-m-d' }}" class="date-label">
+                            <span class="date-number">{{ celda.fecha.day }}</span>
+                            <span class="status-icon"></span>
+                          </label>
+                        {% endif %}
+                      </td>
+                      {% if forloop.counter|divisibleby:7 and not forloop.last %}</tr><tr>{% endif %}
+                    {% endfor %}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-                <div id="month-{{ mes_num }}" class="collapse show">
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-bordered mb-0 text-center small">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                    {% for celda in celdas %}
-                                        <td class="{% if celda.tipo == 'vacio' %}empty{% elif celda.habilitado %}habilitado{% else %}no-habilitado{% endif %}">
-                                        {% if celda.tipo != 'vacio' %}
-                                            <input type="checkbox" name="dia_{{ celda.fecha|date:'Y-m-d' }}" {% if celda.habilitado %}checked{% endif %}>
-                                            <span class="date-number">{{ celda.fecha.day }}</span>
-                                        {% endif %}
-                                        </td>
-                                        {% if forloop.counter|divisibleby:7 and not forloop.last %}</tr><tr>{% endif %}
-                                    {% endfor %}
-                                    </tr>
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+          </div>
+        </div>
       </div>
       {% endfor %}
     </div>
 
-    <div class="fixed-bottom bg-white py-2 shadow-sm text-end">
+    <div class="py-2 text-end">
       <button type="submit" class="btn btn-primary">
         <i class="fas fa-save me-2"></i>Guardar Cambios
       </button>
@@ -69,8 +75,28 @@
 
 {% block extra_styles %}
 <style>
+#calendario td.day-cell.habilitado {
+  background-color: #c6f6d5 !important; /* Verde claro */
+}
+
+#calendario td.day-cell.habilitado .status-icon::after {
+  content: '\2713'; /* Checkmark */
+  color: green !important;
+  font-weight: bold;
+}
+
+#calendario td.day-cell.no-habilitado {
+  background-color: #fed7d7 !important; /* Rojo claro */
+}
+
+#calendario td.day-cell.no-habilitado .status-icon::after {
+  content: 'X';
+  color: red !important;
+  font-weight: bold;
+}
+
 .mb-4 {
-    margin-bottom: 1rem !important;
+  margin-bottom: 1rem !important;
 }
 
 table.table-bordered td, table.table-bordered th {
@@ -79,23 +105,39 @@ table.table-bordered td, table.table-bordered th {
   height: 2.5rem;
   position: relative;
 }
-td empty {
+
+td.empty {
   background: transparent;
   border-color: transparent;
 }
-input[type=checkbox] {
+
+td.day-cell {
+  position: relative;
+}
+
+td.day-cell input[type=checkbox] {
   position: absolute;
+  top: 0;
+  left: 0;
   opacity: 0;
   width: 100%;
   height: 100%;
   cursor: pointer;
 }
-td.habilitado {
-  background-color: #c6f6d5;
+
+td.day-cell label.date-label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  text-align: center;
+  line-height: 2.5rem;
 }
-td.no-habilitado {
-  background-color: #fed7d7;
+
+td.day-cell .status-icon {
+  margin-left: 0.25rem;
 }
+
 .transition-icon { transition: transform .3s; }
 .card-header.collapsed .transition-icon { transform: rotate(-180deg); }
 </style>
@@ -103,16 +145,21 @@ td.no-habilitado {
 
 {% block extra_scripts %}
 <script>
-document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el=> el.addEventListener('click', ()=> {
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el => el.addEventListener('click', () => {
   el.querySelector('.transition-icon').classList.toggle('collapsed');
 }));
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  document.querySelectorAll('td:not(.empty)').forEach(td=>{
-    td.addEventListener('click', ()=>{
-      const chk = td.querySelector('input[type=checkbox]');
-      chk.checked = !chk.checked;
-      td.classList.toggle('habilitado'); td.classList.toggle('no-habilitado');
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('td.day-cell input[type=checkbox]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const td = chk.closest('td');
+      if (chk.checked) {
+        td.classList.add('habilitado');
+        td.classList.remove('no-habilitado');
+      } else {
+        td.classList.add('no-habilitado');
+        td.classList.remove('habilitado');
+      }
     });
   });
 });

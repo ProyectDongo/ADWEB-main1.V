@@ -14,7 +14,7 @@ from WEB.views.trabajador.views.trabajadores import calcular_horas_extra, calcul
 
 
 
-#maneja las entradas 
+# Maneja las entradas
 def handle_entrada(request):
     context = {
         'form_entrada': RegistroEntradaForm(),
@@ -29,8 +29,9 @@ def handle_entrada(request):
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('supervisor_register')
     
-    if not request.user.debe_trabajar(timezone.now().date()):
-        messages.error(request, "No estás programado para trabajar hoy según tu turno.")
+    # Verificación modificada con puede_trabajar
+    if not request.user.puede_trabajar(timezone.now().date()):
+        messages.error(request, "No tienes permiso para trabajar hoy.")
         return redirect('supervisor_register')
     
     if RegistroEntrada.objects.filter(trabajador=request.user, hora_salida__isnull=True).exists():
@@ -92,7 +93,6 @@ def handle_entrada(request):
         messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
         context['form_entrada'] = form
         return render(request, 'home/supervisores/supervisor_register.html', context)
-
 
 
 

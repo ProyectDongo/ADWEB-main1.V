@@ -307,33 +307,6 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
 
 
 
-class EditAttendanceView(LoginRequiredMixin, UpdateView):
-    model = RegistroEntrada
-    form_class = RegistroForm
-    template_name = 'home/supervisores/registro/edit_attendance.html'
-    pk_url_kwarg = 'registro_id'
-    
-
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset)
-        print(f"Objeto recuperado: {obj}, Trabajador ID: {obj.trabajador.id}")
-        return obj
-
-    def get_success_url(self):
-        return reverse('attendance_record', kwargs={'user_id': self.object.trabajador.id})
-    
-    def form_valid(self, form):
-        print("Formulario válido, intentando guardar...")
-        self.object = form.save(commit=False)  # No guarda aún
-        print(f"Antes de guardar: es_retraso={self.object.es_retraso}, minutos_retraso={self.object.minutos_retraso}")
-        self.object.save()  # Guarda manualmente
-        print(f"Después de guardar: es_retraso={self.object.es_retraso}, minutos_retraso={self.object.minutos_retraso}")
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        print("Formulario no válido, errores:", form.errors)
-        return super().form_invalid(form)
-
 
 
 

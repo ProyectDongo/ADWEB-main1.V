@@ -9,24 +9,20 @@
     <meta name="generator" content="Jekyll v4.1.1">
     <title>{% block title %}Mi Sitio{% endblock %}</title>
 
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/dashboard/">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-      
-  
-        
 
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
-
-        <style>
-             body {
-             background: #dee2e6;     }
+    <style>
+        body {
+            background: #dee2e6;
+        }
         /* Estilos personalizados adicionales */
         .dual-listbox {
             border: 1px solid #dee2e6;
@@ -77,13 +73,13 @@
         }
 
         .messages-container {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 9999;
-        width: 380px;
-        max-width: 90%;
-    }
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            width: 380px;
+            max-width: 90%;
+        }
 
         .alert {
             position: relative;
@@ -168,8 +164,15 @@
                 border-radius: 8px;
             }
         }
+        .mb-00
+        {text-align: center;
+        position: relative;
+    }
+    .bg-dark
+    {
+        background: linear-gradient(303deg, rgb(13 110 253 / 58%) 0%, rgba(29, 78, 216, 0.98) 100%) !important;
+    }
     </style>
-
 
     <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
     {% block css-page %}
@@ -209,12 +212,20 @@
                         </div>
                     {% endfor %}
                 </div>
-            {% endif %}
+                {% endif %}
                 {% block content %}
                 {% endblock %}
             </main>
         </div>
     </div>
+
+    <!-- Footer añadido -->
+    <footer class="bg-dark text-white py-3 fixed-bottom">
+        <div class="container">
+            <p class="mb-00">© 2025 Gestion Facil. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -223,91 +234,83 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
-    
-    
-    
-    
-    <script>
 
+    <script>
         // Inicializa Feather Icons
         $(document).ready(function() {
             feather.replace();
         });
-
-    
-    
     </script>
-      {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
-<script>
-   console.log(typeof $); // Debería imprimir "function" si jQuery está cargado
-if (typeof $ === "undefined") {
-    console.error("jQuery no se ha cargado correctamente.");
-}
-</script>
-<script>
-    $(document).ready(function() {
-       
-        $('#id_permisos').bootstrapDualListbox({
-            nonSelectedListLabel: 'Permisos disponibles',
-            selectedListLabel: 'Permisos asignados',
-            preserveSelectionOnMove: 'moved',
-            moveOnSelect: false,
-            helperSelectNamePostfix: '_helper',
-            infoText: 'Mostrando {0} elementos',
-            infoTextFiltered: '<span class="badge bg-warning text-dark">Filtrados</span> {0} de {1}',
-            infoTextEmpty: 'Lista vacía',
-            filterPlaceHolder: 'Buscar...',
-            filterTextClear: 'Limpiar filtro',
-            moveAllLabel: 'Mover todos',
-            removeAllLabel: 'Quitar todos',
-            selectorMinimalHeight: 300
-        });
-        
-        // Mejorar estilo de los inputs
-        $('.form-control').addClass('rounded-pill');
-        $('select:not([multiple])').addClass('form-select rounded-pill');
-    });
-window.toggleEstado = function(vigenciaId, button) {
-    const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrftoken,
-            'Accept': 'application/json'
+    {% block extra_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
+    <script>
+        console.log(typeof $); // Debería imprimir "function" si jQuery está cargado
+        if (typeof $ === "undefined") {
+            console.error("jQuery no se ha cargado correctamente.");
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const row = button.closest('tr');
-            // Actualizar estado
-            const estadoCell = row.querySelector('td:nth-child(6)');
-            estadoCell.textContent = data.new_estado_display;
-            
-            // Cambiar clase de la fila
-            row.classList.toggle('table-danger', data.new_estado === 'suspendido');
-            
-            // Actualizar botón principal
-            if (data.new_estado === 'suspendido') {
-                button.textContent = 'Habilitar';
-                button.classList.replace('btn-warning', 'btn-success');
-            } else {
-                button.textContent = 'Deshabilitar';
-                button.classList.replace('btn-success', 'btn-warning');
-            }
-            
-            // Habilitar/deshabilitar otros botones
-            row.querySelectorAll('.action-btn').forEach(btn => {
-                btn.disabled = data.new_estado === 'suspendido';
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#id_permisos').bootstrapDualListbox({
+                nonSelectedListLabel: 'Permisos disponibles',
+                selectedListLabel: 'Permisos asignados',
+                preserveSelectionOnMove: 'moved',
+                moveOnSelect: false,
+                helperSelectNamePostfix: '_helper',
+                infoText: 'Mostrando {0} elementos',
+                infoTextFiltered: '<span class="badge bg-warning text-dark">Filtrados</span> {0} de {1}',
+                infoTextEmpty: 'Lista vacía',
+                filterPlaceHolder: 'Buscar...',
+                filterTextClear: 'Limpiar filtro',
+                moveAllLabel: 'Mover todos',
+                removeAllLabel: 'Quitar todos',
+                selectorMinimalHeight: 300
             });
-        }
-    });
-};
-</script>
-      {% endblock %}
+            
+            // Mejorar estilo de los inputs
+            $('.form-control').addClass('rounded-pill');
+            $('select:not([multiple])').addClass('form-select rounded-pill');
+        });
+        window.toggleEstado = function(vigenciaId, button) {
+            const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = button.closest('tr');
+                    // Actualizar estado
+                    const estadoCell = row.querySelector('td:nth-child(6)');
+                    estadoCell.textContent = data.new_estado_display;
+                    
+                    // Cambiar clase de la fila
+                    row.classList.toggle('table-danger', data.new_estado === 'suspendido');
+                    
+                    // Actualizar botón principal
+                    if (data.new_estado === 'suspendido') {
+                        button.textContent = 'Habilitar';
+                        button.classList.replace('btn-warning', 'btn-success');
+                    } else {
+                        button.textContent = 'Deshabilitar';
+                        button.classList.replace('btn-success', 'btn-warning');
+                    }
+                    
+                    // Habilitar/deshabilitar otros botones
+                    row.querySelectorAll('.action-btn').forEach(btn => {
+                        btn.disabled = data.new_estado === 'suspendido';
+                    });
+                }
+            });
+        };
+    </script>
+    {% endblock %}
     {% block js.page %}
     {% endblock %}
 </body>

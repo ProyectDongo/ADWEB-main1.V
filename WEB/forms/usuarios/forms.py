@@ -650,7 +650,9 @@ class RegistroEntradaForm(forms.ModelForm):
 class RegistroForm(forms.ModelForm):
     class Meta:
         model = RegistroEntrada
-        fields = ['hora_salida', 'es_retraso', 'minutos_retraso', 'es_horas_extra', 'minutos_horas_extra']
+        fields = ['hora_salida', 'metodo', 'latitud', 'longitud', 
+            'firma_digital', 'huella_id', 'es_retraso', 
+            'minutos_retraso', 'es_horas_extra', 'minutos_horas_extra']
         widgets = {
             'hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'es_retraso': forms.CheckboxInput(),
