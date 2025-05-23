@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404,redirect,render
 from django.contrib.auth.decorators import login_required
 
 
+# vista para obtener las comunas de una provincia
 def get_comunas(request):
     """
     Obtiene las comunas de una provincia específica en formato JSON.
@@ -21,6 +22,10 @@ def get_comunas(request):
         return JsonResponse(list(comunas), safe=False)
     return JsonResponse({'error': 'No provincia_id provided'}, status=400)
 
+
+
+
+# vista para obtener las provincias de una region
 def get_provincias(request):
     """
     Obtiene las provincias de una región específica en formato JSON.
@@ -35,6 +40,10 @@ def get_provincias(request):
         return JsonResponse(list(provincias), safe=False)
     return JsonResponse({'error': 'No region_id provided'}, status=400)
 
+
+
+
+# vista para obtener todas las regiones
 def get_regiones(request):
     """
     Obtiene todas las regiones disponibles en formato JSON.

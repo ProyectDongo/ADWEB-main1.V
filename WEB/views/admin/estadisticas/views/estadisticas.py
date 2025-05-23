@@ -9,7 +9,7 @@ import pytz
 from collections import defaultdict
 from django.conf import settings
 
-
+## Vista para la página de inicio de estadísticas
 @login_required
 @permiso_requerido("WEB.vista_estadisticas")
 def home_estadisticas(request):
@@ -17,7 +17,7 @@ def home_estadisticas(request):
 
 
 
-
+# Vista para la página de estadísticas de empresas
 @login_required
 @permiso_requerido("WEB.vista_estadisticas")
 def estadisticas_empresas(request):
@@ -34,7 +34,7 @@ def estadisticas_empresas(request):
 
 
 
-
+# Vista para la página de estadísticas de Pagos
 
 @login_required
 @permiso_requerido("WEB.vista_estadisticas")

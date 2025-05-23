@@ -257,6 +257,8 @@ def ver_registros(request):
 
 # DE AQUI EN ADELENTE ESTA TODO LO NUEVO 
 
+
+
 def calcular_retraso(entrada, horario):
     from datetime import datetime
     hora_entrada_real = entrada.hora_entrada.time()

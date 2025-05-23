@@ -5,6 +5,7 @@ from WEB.models import RegistroEmpresas, VigenciaPlan, ItemInventario
 from WEB.forms import ItemInventarioForm
 
 
+# Vista para la página de inicio del supervisor en el módulo de almacén
 @login_required
 def supervisor_home_almacen(request, empresa_id,vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)

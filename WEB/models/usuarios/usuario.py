@@ -28,6 +28,12 @@ class Horario(models.Model):
     def __str__(self):
         return f"{self.nombre} ({self.hora_entrada} - {self.hora_salida}) - {self.get_tipo_horario_display()}"
 
+
+
+
+
+
+
 class Turno(models.Model):
     nombre = models.CharField(max_length=100)
     dias_trabajo = models.IntegerField()
@@ -37,6 +43,18 @@ class Turno(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.dias_trabajo}x{self.dias_descanso})"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class Usuario(AbstractUser):
@@ -171,6 +189,13 @@ class Usuario(AbstractUser):
     
 
 
+
+
+
+
+
+
+
 class DiaHabilitado(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='dias_habilitados')
     fecha = models.DateField()
@@ -188,6 +213,8 @@ class DiaHabilitado(models.Model):
 
 
     
+
+
 class AuditoriaAcceso(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)

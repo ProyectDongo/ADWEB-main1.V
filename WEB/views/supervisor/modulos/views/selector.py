@@ -125,6 +125,12 @@ def handle_salida(request):
     
     return HttpResponseRedirect(reverse('supervisor_register'))
 
+
+
+
+
+# Vista para la selección de supervisores
+
 class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
     template_name = 'login/supervisor/supervisor_selector_home.html'
 
@@ -136,6 +142,8 @@ class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
 
 
 
+
+# Vista para registrar entradas y salidas para supervisores
 
 @login_required
 def supervisor_register(request):

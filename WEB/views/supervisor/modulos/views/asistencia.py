@@ -20,6 +20,10 @@ from django import template
 
 
 
+
+# vsta del supervisor para la asistencia
+# Configuración del logger
+
 logger = logging.getLogger(__name__)
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
@@ -53,13 +57,6 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'form': UsuarioForm()
     }
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
-
-
-
-
-
-
-
 class ValidationView(View):
     def get(self, request):
         rut = request.GET.get('rut')
@@ -74,10 +71,6 @@ class ValidationView(View):
             return JsonResponse({'exists': exists})
             
         return JsonResponse({'error': 'Campo inválido'}, status=400)
-    
-
-
-
 class GetFormTemplateView(View):
     def get(self, request, action):
         form = UsuarioForm()
@@ -97,11 +90,7 @@ class GetFormTemplateView(View):
 
 # AQUI EN ADELANTE ESTA TODO LO NUEVO LA IMPLEMETNACION DE GESTION DE HORAIOS Y TURNOS Y BLOQUEOS ACCESO 
 
-
-
-
-
-# Manejo de Horarios
+# Manejo de Horarios,creación y edición
 
 class HorarioListView(LoginRequiredMixin, ListView):
     model = Horario
@@ -119,10 +108,6 @@ class HorarioListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
-
-
-
-
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario
     form_class = HorarioForm
@@ -150,7 +135,10 @@ class HorarioDeleteView(LoginRequiredMixin, DeleteView):
 
 
 
-# Manejo de Turnos
+
+
+
+# Manejo de Turnos,Creación y Edición
 
 class TurnoListView(LoginRequiredMixin, ListView):
     model = Turno
@@ -172,8 +160,6 @@ class TurnoListView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id if self.request.user.empresa else None
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
         return context
-    
-
 
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
@@ -203,9 +189,11 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
 
 
 
-    
 
-# Updated UserCreateUpdateView
+
+    
+# Creación y edición de usuarios
+
 class UserCreateUpdateView(LoginRequiredMixin, View):
     def get(self, request, vigencia_plan_id, user_id=None):  
         if user_id:
@@ -261,6 +249,13 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
 
 
 
+
+
+
+
+
+
+# Manejo de Calendario de Turnos
 
 class CalendarioTurnoView(LoginRequiredMixin, View):
     template_name = 'home/supervisores/turno/calendario_turno.html'
@@ -327,7 +322,13 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
 
 
 
-    
+
+
+
+
+
+
+# Actualizar el estado de un día específico    
 
 class ActualizarDiaView(LoginRequiredMixin, View):
     def post(self, request, user_id):

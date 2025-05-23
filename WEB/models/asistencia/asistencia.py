@@ -8,6 +8,10 @@ from WEB.models import RegistroEmpresas  # Importa el modelo RegistroEmpresas de
 from django.utils import timezone  # Utilidad para manejar zonas horarias
 from datetime import datetime, timedelta  # Para operaciones con fechas y horas
 
+
+
+
+
 class RegistroEntrada(models.Model):
     """
     Modelo para registrar las entradas y salidas de los trabajadores.
@@ -23,7 +27,7 @@ class RegistroEntrada(models.Model):
 
     # Campos del modelo
     trabajador = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # Relación con el modelo de usuario definido en settings (puede ser un modelo personalizado)
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,  # Si el trabajador es eliminado, se eliminan sus registros
         related_name='entradas'  # Permite acceder a los registros de entrada desde el objeto trabajador (ej. trabajador.entradas)
     )

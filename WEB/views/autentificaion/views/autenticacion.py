@@ -185,6 +185,10 @@ def admin_home(request):
 
 
 
+
+
+
+
 # generar_reporte
 # Vista para generar el reporte de gestión
 @login_required

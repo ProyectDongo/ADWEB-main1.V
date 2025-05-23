@@ -4,6 +4,8 @@ from WEB.models import RegistroEmpresas, VigenciaPlan,Transaccion
 from WEB.forms import TransaccionForm
 
 
+
+# Vista para la página de inicio del supervisor en el módulo de contabilidad
 @login_required
 def supervisor_home_contabilidad(request, empresa_id,vigencia_plan_id):
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)

@@ -373,6 +373,9 @@ class VigenciaPlan(models.Model):
     
 
 
+
+#---------------------------------------------------------------------------------------------------------
+# Modelo para representar un ítem de inventario
 class ItemInventario(models.Model):
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
     nombre = models.CharField(max_length=100)
@@ -380,6 +383,11 @@ class ItemInventario(models.Model):
     categoria = models.CharField(max_length=50)
     stock = models.IntegerField()
 
+
+
+
+#---------------------------------------------------------------------------------------------------------
+# Modelo para representar una transacción financiera
 class Transaccion(models.Model):
     empresa = models.ForeignKey(RegistroEmpresas, on_delete=models.CASCADE)
     fecha = models.DateField()
