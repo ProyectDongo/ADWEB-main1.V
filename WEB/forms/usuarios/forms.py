@@ -214,7 +214,7 @@ class TrabajadorForm(UserCreationForm):
     )
     
     vigencia_plan = forms.ModelChoiceField(
-        queryset=VigenciaPlan.objects.none(),  # Inicialmente vacío
+        queryset=VigenciaPlan.objects.none(),  
         required=True,
         widget=forms.Select(attrs={'class': 'form-control'}),
         label="Vigencia del Plan"
@@ -516,16 +516,9 @@ class UsuarioForm(forms.ModelForm):
    
     
     def clean_celular(self):
-        celular = self.cleaned_data.get('celular')
+        celular = self.cleaned_data.get('celular', '').replace(' ', '')
         if not celular:
-            return celular
-            
-        if len(celular) < 9:
-            raise ValidationError("El número debe tener al menos 9 dígitos")
-            
-        if not celular.startswith('+'):
-            raise ValidationError("Debe incluir código de país. Ej: +56 9 1234 5678")
-            
+            raise forms.ValidationError("El celular es obligatorio.")
         return celular
 
     def save(self, commit=True):
