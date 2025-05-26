@@ -139,28 +139,14 @@
         </div>
     </div>
 </div>
-
-{% if messages %}
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    {% for message in messages %}
-    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header bg-success text-white">
-            <i class="fas fa-check-circle me-2"></i>
-            <strong class="me-auto">Operación Exitosa</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            {{ message }}
-        </div>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
 {% endblock %}
 
-{% block extra_js %}
+
+{% block extra_scripts %}
+
 <script>
 $(document).ready(function() {
+    console.log('Script de vigencia plan cargado');
     // Validación en tiempo real del código de plan
     function verificarCodigoPlan() {
         const codigo = $('#id_codigo_plan').val();
@@ -180,23 +166,38 @@ $(document).ready(function() {
 
     // Cálculo en tiempo real del monto final
     function calcularMontoFinal() {
+        //console.log('Función calcularMontoFinal llamada');
         const montoBase = parseFloat($('#id_monto_plan').val()) || 0;
+        //console.log('montoBase:', montoBase);
         const descuento = parseFloat($('#id_descuento').val()) || 0;
+        //console.log('descuento:', descuento);
         const montoFinal = montoBase * (1 - (descuento / 100));
+        //console.log('montoFinal calculado:', montoFinal);
         $('#montoFinal').val(montoFinal.toFixed(2));
+        //console.log('Valor asignado a #montoFinal:', $('#montoFinal').val());
     }
 
-    // Event listeners
-    $('#id_codigo_plan').on('input', _.debounce(verificarCodigoPlan, 300));
-    $('#id_monto_plan, #id_descuento').on('input', calcularMontoFinal);
+    // Calcular al cargar la página
+    calcularMontoFinal();
+
+    // Asegurar que los event listeners estén bien configurados
+    $('#id_monto_plan').on('input', calcularMontoFinal);
+    $('#id_descuento').on('input', calcularMontoFinal);
     
+    // Depuración adicional
+    $('#id_monto_plan').on('input', function() {
+        //  console.log('Evento input disparado en descuento');
+    });
+
     $('#vigenciaForm').on('submit', function() {
         $('#submitBtn').html('<div class="spinner-border spinner-border-sm" role="status"></div> Guardando...')
                        .prop('disabled', true);
     });
 });
 </script>
+{% endblock %}
 
+{% block css-page %}
 <style>
 .card {
     border-radius: 0.75rem;

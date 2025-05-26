@@ -168,20 +168,5 @@
 }
 </style>
 
-<script>
-$(document).ready(function() {
-    // Inicializar dual listbox para permisos
-    $('#id_permisos').bootstrapDualListbox({
-        nonSelectedListLabel: 'Permisos Disponibles',
-        selectedListLabel: 'Permisos Asignados',
-        preserveSelectionOnMove: 'moved',
-        moveOnSelect: false,
-        infoText: 'Mostrando {0} elementos',
-        filterPlaceHolder: 'Buscar...',
-        moveAllLabel: 'Mover todos',
-        removeAllLabel: 'Quitar todos',
-        selectorMinimalHeight: 300
-    });
-});
-</script>
+
 {% endblock %}

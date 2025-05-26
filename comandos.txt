@@ -1,48 +1,15 @@
 python manage.py makemigrations WEB
 python manage.py makemigrations
-pip install anymail
 
-pip install django-crispy-forms
-pip install crispy_bootstrap5 
-pip install django-widget-tweaks
-pip install flask flask-cors
-pip install python-dotenv
-pip install python-dateutil
-pip install django-anymail
-
-
-pip install reportlab
-
-Set-Location -Path "C:\Users\facil\Desktop\ADWEB-main"
-python manage.py crearadmin
-
-
--- crear  poersehll am admin
-
-
-reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v DevicePath /t REG_SZ /d "C:\Users\facil\Desktop\ADWEB-main\bin" /f
-reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLogEnable /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\SecuGen\Fingerprint Recognition System\LiveFinger" /v LiveFingerLevel /t REG_DWORD /d 0 /f
-
-
-
-# error django.db.utils.OperationalError: (1050, "Table 'django_admin_log' already exists")
- in raise_mysql_exception
-
- solucion :
-    python manage.py migrate admin 0001_initial --fake
-    python manage.py migrate
-    
-comando para todos los servicios
-python manage.py runserver 0.0.0.0:8001
 
 docker
 
-
+-----------------------------------------
 docker-compose logs -f web db logs
  
 
 docker-compose build  construir 
+
 
 docker-compose up --build      levantar y construir
 
@@ -65,8 +32,8 @@ choco install openssl.light -y
 
 
 
-openssl version
 
+openssl version
 
 
 

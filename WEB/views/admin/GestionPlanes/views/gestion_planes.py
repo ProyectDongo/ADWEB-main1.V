@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan
 from django.utils.safestring import mark_safe
 from biometrics.models import *
+from django import forms
 
 
 
@@ -218,12 +219,12 @@ class VigenciaPlanUpdateView(AdminUserMixin, UpdateView):
             'pattern': '[A-Za-z0-9_-]{5,50}',
             'title': 'Solo letras, números, guiones y underscores (5-50 caracteres)'
         })
-        form.fields['monto_plan'].widget.attrs.update({
+        form.fields['monto_plan'].widget = forms.NumberInput(attrs={
             'class': 'form-control',
             'min': '0',
             'step': '0.01'
         })
-        form.fields['descuento'].widget.attrs.update({
+        form.fields['descuento'].widget = forms.NumberInput(attrs={
             'class': 'form-control',
             'min': '0',
             'max': '100',
@@ -234,7 +235,6 @@ class VigenciaPlanUpdateView(AdminUserMixin, UpdateView):
             'min': '1'
         })
         return form
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['object'] = self.get_object()

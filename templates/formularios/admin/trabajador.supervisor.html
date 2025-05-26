@@ -96,20 +96,23 @@
                             <div class="col-md-6">
                                 <div class="form-floating position-relative">
                                     <input type="password" 
-                                           name="{{ form.password1.name }}" 
-                                           id="{{ form.password1.id_for_label }}" 
-                                           class="form-control" 
-                                           placeholder="Contraseña"
-                                           {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %}>
+                                        name="{{ form.password1.name }}" 
+                                        id="{{ form.password1.id_for_label }}" 
+                                        class="form-control" 
+                                        placeholder="Contraseña"
+                                        {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %}>
                                     <label for="{{ form.password1.id_for_label }}">Contraseña</label>
                                     <div class="invalid-feedback">
                                         {{ form.password1.errors|first }}
                                     </div>
                                     <div class="password-strength mt-2">
-                                        <div class="progress" style="height: 5px;">
-                                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                        <small class="text-muted">Mínimo 8 caracteres con mayúsculas, números y símbolos</small>
+                                        
+                                        <ul class="list-unstyled mt-2">
+                                            <li id="length" class="text-muted"><i class="bi bi-x"></i> Al menos 8 caracteres</li>
+                                            <li id="uppercase" class="text-muted"><i class="bi bi-x"></i> Al menos una mayúscula</li>
+                                            <li id="number" class="text-muted"><i class="bi bi-x"></i> Al menos un número</li>
+                                            <li id="symbol" class="text-muted"><i class="bi bi-x"></i> Al menos un símbolo</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -205,11 +208,8 @@
 
 
 
-<!-- Dependencias necesarias -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-duallistbox/4.0.2/bootstrap-duallistbox.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-duallistbox/4.0.2/jquery.bootstrap-duallistbox.min.js"></script>
 
 <style>
     .square-check .form-check-input {
@@ -245,13 +245,15 @@
     }
 </style>
 
+{% block extra_scripts %}
 
-
-
-
+<!-- Dependencias necesarias -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-duallistbox/4.0.2/jquery.bootstrap-duallistbox.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Máscara para RUT
+        // Máscara para RUT (sin cambios)
         $('#{{ form.rut.id_for_label }}').inputmask({
             mask: '9{1,8}-9',
             placeholder: '12345678-9',
@@ -268,7 +270,7 @@
             }
         });
 
-        // Dual Listbox para permisos
+        // Dual Listbox para permisos (sin cambios)
         $('#id_permisos').bootstrapDualListbox({
             nonSelectedListLabel: 'Permisos Disponibles',
             selectedListLabel: 'Permisos Asignados',
@@ -284,46 +286,95 @@
         });
 
         // Validación de fortaleza de contraseña
-        $('#id_password1').on('input', function() {
+        const password1 = $('#{{ form.password1.id_for_label }}');
+        const progressBar = password1.closest('.form-floating').find('.password-strength .progress-bar');
+
+        password1.on('input', function() {
             const password = $(this).val();
-            const progress = $('.progress-bar');
             let strength = 0;
-            
-            if (password.length >= 8) strength += 25;
-            if (/[A-Z]/.test(password)) strength += 25;
-            if (/[0-9]/.test(password)) strength += 25;
-            if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-            
-            progress.css('width', strength + '%')
-                   .removeClass('bg-danger bg-warning bg-success')
-                   .addClass(
-                       strength < 50 ? 'bg-danger' :
-                       strength < 75 ? 'bg-warning' : 'bg-success'
-                   );
+
+            // Criterios de fortaleza
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+            if (hasLength) strength += 25;
+            if (hasUppercase) strength += 25;
+            if (hasNumber) strength += 25;
+            if (hasSymbol) strength += 25;
+
+            // Actualizar la barra de progreso
+            progressBar.css('width', strength + '%')
+                       .removeClass('bg-danger bg-warning bg-success')
+                       .addClass(
+                           strength < 50 ? 'bg-danger' :
+                           strength < 75 ? 'bg-warning' : 'bg-success'
+                       );
+
+            // Actualizar indicadores visuales
+            $('#length').toggleClass('text-success', hasLength).toggleClass('text-muted', !hasLength)
+                        .find('i').toggleClass('bi-check', hasLength).toggleClass('bi-x', !hasLength);
+            $('#uppercase').toggleClass('text-success', hasUppercase).toggleClass('text-muted', !hasUppercase)
+                           .find('i').toggleClass('bi-check', hasUppercase).toggleClass('bi-x', !hasUppercase);
+            $('#number').toggleClass('text-success', hasNumber).toggleClass('text-muted', !hasNumber)
+                        .find('i').toggleClass('bi-check', hasNumber).toggleClass('bi-x', !hasNumber);
+            $('#symbol').toggleClass('text-success', hasSymbol).toggleClass('text-muted', !hasSymbol)
+                        .find('i').toggleClass('bi-check', hasSymbol).toggleClass('bi-x', !hasSymbol);
+        });
+
+        // Validación en tiempo real de coincidencia de contraseñas (sin cambios)
+        const password2 = $('#{{ form.password2.id_for_label }}');
+        const feedback = $('<div class="invalid-feedback"></div>');
+        password2.closest('.form-floating').append(feedback);
+
+        function checkPasswords() {
+            const pass1Val = password1.val();
+            const pass2Val = password2.val();
+
+            if (pass1Val && pass2Val) {
+                if (pass1Val === pass2Val) {
+                    password2.removeClass('is-invalid').addClass('is-valid');
+                    feedback.text(''); // Limpia el mensaje de error
+                } else {
+                    password2.removeClass('is-valid').addClass('is-invalid');
+                    feedback.text('Las contraseñas no coinciden');
+                }
+            } else {
+                password2.removeClass('is-valid is-invalid');
+                feedback.text('');
+            }
+        }
+
+        password1.on('input', checkPasswords);
+        password2.on('input', checkPasswords);
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const empresaSelect = document.getElementById('id_empresa');
+        const vigenciaPlanSelect = document.getElementById('id_vigencia_plan');
+
+        empresaSelect.addEventListener('change', function() {
+            const empresaId = this.value;
+            if (empresaId) {
+                fetch(`/api/vigencias/?empresa=${empresaId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una vigencia</option>';
+                        data.forEach(vigencia => {
+                            const option = document.createElement('option');
+                            option.value = vigencia.id;
+                            option.textContent = `${vigencia.codigo_plan} - ${vigencia.fecha_inicio} - ${vigencia.estado}`;
+                            vigenciaPlanSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una empresa primero</option>';
+            }
         });
     });
-    document.addEventListener('DOMContentLoaded', function() {
-    const empresaSelect = document.getElementById('id_empresa');
-    const vigenciaPlanSelect = document.getElementById('id_vigencia_plan');
-
-    empresaSelect.addEventListener('change', function() {
-        const empresaId = this.value;
-        if (empresaId) {
-            fetch(`/api/vigencias/?empresa=${empresaId}`)
-                .then(response => response.json())
-                .then(data => {
-                    vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una vigencia</option>';
-                    data.forEach(vigencia => {
-                        const option = document.createElement('option');
-                        option.value = vigencia.id;
-                        option.textContent = `${vigencia.codigo_plan} - ${vigencia.fecha_inicio} - ${vigencia.estado}`;
-                        vigenciaPlanSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
-        } else {
-            vigenciaPlanSelect.innerHTML = '<option value="">Seleccione una empresa primero</option>';
-        }
-    });
-});
 </script>
+{% endblock extra_scripts %}

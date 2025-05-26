@@ -53,6 +53,7 @@
         }
     </style>
     <style>
+        
         .bd-placeholder-img {
             font-size: 1.125rem;
             text-anchor: middle;
@@ -170,12 +171,16 @@
     }
     .bg-dark
     {
-        background: linear-gradient(303deg, rgb(13 110 253 / 58%) 0%, rgba(29, 78, 216, 0.98) 100%) !important;
+        background: linear-gradient(303deg, rgb(13 110 253 / 58%) 0%, rgba(85, 86, 87, 0.98) 100%) !important;
+        position: static !important;
     }
     </style>
 
     <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
     {% block css-page %}
+    <style>
+        
+    </style>
     {% endblock %}
 </head>
 <body>
@@ -242,6 +247,7 @@
         });
     </script>
     {% block extra_scripts %}
+        
     <script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
     <script>
         console.log(typeof $); // Debería imprimir "function" si jQuery está cargado
@@ -250,6 +256,20 @@
         }
     </script>
     <script>
+        function updateSidebarSizes() {
+        const nav = document.querySelector('nav');
+        const footer = document.querySelector('footer');
+        const root = document.documentElement;
+
+        const navHeight = nav ? nav.offsetHeight : 0;
+        const footerHeight = footer ? footer.offsetHeight : 0;
+
+        root.style.setProperty('--navbar-height', navHeight + 'px');
+        root.style.setProperty('--footer-height', footerHeight + 'px');
+    }
+
+    // Agregar el event listener
+      window.addEventListener('resize', updateSidebarSizes);
         $(document).ready(function() {
             $('#id_permisos').bootstrapDualListbox({
                 nonSelectedListLabel: 'Permisos disponibles',
@@ -270,6 +290,7 @@
             // Mejorar estilo de los inputs
             $('.form-control').addClass('rounded-pill');
             $('select:not([multiple])').addClass('form-select rounded-pill');
+        
         });
         window.toggleEstado = function(vigenciaId, button) {
             const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
@@ -309,6 +330,7 @@
                 }
             });
         };
+    
     </script>
     {% endblock %}
     {% block js.page %}
