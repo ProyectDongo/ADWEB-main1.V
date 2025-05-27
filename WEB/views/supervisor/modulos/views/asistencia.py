@@ -8,7 +8,7 @@ from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado,Notificacion, Ubicacion
 from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -16,39 +16,31 @@ from datetime import datetime, timedelta, date
 from calendar import monthrange
 import logging
 from django import template
+from django.db import DatabaseError
 
 
 
 
-
-# vsta del supervisor para la asistencia
-# Configuración del logger
 
 logger = logging.getLogger(__name__)
+# Vista para el home del supervisor en el módulo de asistencia
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
-    logger.info(f"Usuario autenticado: {request.user.is_authenticated}")
-    # Verificar si el usuario está autenticado explícitamente
     if not request.user.is_authenticated:
         return render(request, 'error/error.html', {'message': 'Debes iniciar sesión para acceder a esta página'})
-
-    # Validar permisos
     if request.user.role != 'supervisor':
         return render(request, 'error/error.html', {'message': 'Acceso no autorizado'})
-    
-    # Obtener objetos necesarios
+
     empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
     vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id, empresa=empresa)
-    
-    # Filtrar usuarios
-    usuarios = Usuario.objects.filter(
-        vigencia_plan=vigencia_plan
-    ).select_related('vigencia_plan').order_by('role', 'last_name')
-    
-    # Separar por roles
+
+    if request.user.vigencia_plan != vigencia_plan:
+        return render(request, 'error/error.html', {'message': 'No tienes permiso para este módulo'})
+
+    usuarios = Usuario.objects.filter(vigencia_plan=vigencia_plan).select_related('vigencia_plan').order_by('role', 'last_name')
     supervisores = usuarios.filter(role='supervisor')
     trabajadores = usuarios.filter(role='trabajador')
-    
+
     context = {
         'empresa': empresa,
         'vigencia_plan': vigencia_plan,
@@ -57,6 +49,84 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'form': UsuarioForm()
     }
     return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
+
+
+
+
+
+# nueva vista para manejar las notificaciones del supervisor
+@login_required
+def notificaciones_supervisor_json(request, vigencia_plan_id):
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    if request.user.role != 'supervisor' or request.user.vigencia_plan != vigencia_plan:
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+
+    try:
+        notificaciones = Notificacion.objects.filter(
+            worker__vigencia_plan=vigencia_plan,
+            leido=False
+        ).select_related('worker').order_by('-timestamp')[:10]
+
+        data = {
+            'count': notificaciones.count(),
+            'notifications': [
+                {
+                    'id': n.id,
+                    'tipo': n.tipo,
+                    'timestamp': n.timestamp.isoformat(),
+                    'worker': n.worker.get_full_name(),
+                    'worker_id': n.worker.id,
+                    'ip_address': str(n.ip_address) if n.ip_address else None,
+                    'ubicacion_nombre': (
+                        Ubicacion.objects.filter(vigencia_plan=vigencia_plan, ip_address=n.ip_address)
+                        .first().nombre if Ubicacion.objects.filter(vigencia_plan=vigencia_plan, ip_address=n.ip_address).exists()
+                        else None
+                    ),
+                } for n in notificaciones
+            ]
+        }
+        return JsonResponse(data)
+    except DatabaseError as e:
+        logger.error(f"Error de base de datos: {e}")
+        return JsonResponse({'error': 'Error al acceder a la base de datos'}, status=500)
+
+
+
+
+
+# nueva vista para establecer el nombre de la ubicación
+@login_required
+def set_ubicacion_nombre(request, vigencia_plan_id, ip_address):
+    if request.user.role != 'supervisor':
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    if request.user.vigencia_plan != vigencia_plan:
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        if nombre:
+            ubicacion, created = Ubicacion.objects.get_or_create(
+                vigencia_plan=vigencia_plan,
+                ip_address=ip_address,
+                defaults={'nombre': nombre}
+            )
+            if not created:
+                ubicacion.nombre = nombre
+                ubicacion.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'error': 'Nombre requerido'}, status=400)
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+
+
+
+
+
+
 class ValidationView(View):
     def get(self, request):
         rut = request.GET.get('rut')
@@ -71,6 +141,7 @@ class ValidationView(View):
             return JsonResponse({'exists': exists})
             
         return JsonResponse({'error': 'Campo inválido'}, status=400)
+    
 class GetFormTemplateView(View):
     def get(self, request, action):
         form = UsuarioForm()

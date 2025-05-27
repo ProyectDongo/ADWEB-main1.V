@@ -137,7 +137,8 @@ urlpatterns = [
     # ------------------------------------------------------------------------------------ #
     path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
     path('api/get_comunas/', utilidades.get_comunas, name='get_comunas'),
-
+    path('notificaciones_supervisor_json/<int:vigencia_plan_id>/', asistencia.notificaciones_supervisor_json, name='notificaciones_supervisor_json'),
+    path('set_ubicacion_nombre/<int:vigencia_plan_id>/<str:ip_address>/', asistencia.set_ubicacion_nombre, name='set_ubicacion_nombre'),
     # ------------------------------------------------------------------------------------ #
     # Biometría
     # ------------------------------------------------------------------------------------ #

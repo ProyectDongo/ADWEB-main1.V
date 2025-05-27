@@ -4,7 +4,7 @@ from django.conf import settings  # Importa configuraciones globales de Django, 
 from django.db.models.signals import post_save  # Para conectar señales que se ejecutan tras guardar un objeto
 from django.dispatch import receiver  # Decorador para manejar señales
 from django.core.exceptions import ValidationError  # Excepción para validaciones personalizadas
-from WEB.models import RegistroEmpresas  # Importa el modelo RegistroEmpresas desde la app WEB
+from WEB.models import RegistroEmpresas,VigenciaPlan  # Importa el modelo RegistroEmpresas desde la app WEB
 from django.utils import timezone  # Utilidad para manejar zonas horarias
 from datetime import datetime, timedelta  # Para operaciones con fechas y horas
 
@@ -178,3 +178,4 @@ def notificar_registro_entrada(sender, instance, created, **kwargs):
     if created:  # Solo se ejecuta al crear un nuevo registro
         # Imprime un mensaje en la consola (esto podría ser un placeholder para una notificación real)
         print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+

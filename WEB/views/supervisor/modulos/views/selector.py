@@ -8,13 +8,20 @@ from django.utils import timezone
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from WEB.forms import RegistroEntradaForm  
-from WEB.models import RegistroEntrada
+from WEB.models import RegistroEntrada, Notificacion
 from WEB.views.trabajador.views.trabajadores import calcular_horas_extra, calcular_retraso
 
 
 
 
-# Maneja las entradas
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 def handle_entrada(request):
     context = {
         'form_entrada': RegistroEntradaForm(),
@@ -29,7 +36,7 @@ def handle_entrada(request):
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('supervisor_register')
     
-    # Verificación modificada con puede_trabajar
+    # Verificación con puede_trabajar
     if not request.user.puede_trabajar(timezone.now().date()):
         messages.error(request, "No tienes permiso para trabajar hoy.")
         return redirect('supervisor_register')
@@ -86,6 +93,16 @@ def handle_entrada(request):
         if request.user.horario:
             calcular_retraso(entrada, request.user.horario)
             entrada.save()
+        
+        # Crear notificación para entrada o retraso
+        ip = get_client_ip(request)
+        tipo = 'retraso' if entrada.es_retraso else 'entrada'
+        Notificacion.objects.create(
+            worker=request.user,
+            tipo=tipo,
+            ip_address=ip
+        )
+        
         messages.success(request, 'Entrada registrada correctamente')
         return redirect('supervisor_register')
     else:
@@ -94,16 +111,6 @@ def handle_entrada(request):
         context['form_entrada'] = form
         return render(request, 'home/supervisores/supervisor_register.html', context)
 
-
-
-
-
-
-
-
-
-
-# Manejo de salidas
 def handle_salida(request):
     entrada_activa = RegistroEntrada.objects.filter(
         trabajador=request.user,
@@ -119,6 +126,15 @@ def handle_salida(request):
         if request.user.horario:
             calcular_horas_extra(entrada_activa, request.user.horario)
         entrada_activa.save()
+        
+        # Crear notificación para salida
+        ip = get_client_ip(request)
+        Notificacion.objects.create(
+            worker=request.user,
+            tipo='salida',
+            ip_address=ip
+        )
+        
         messages.success(request, f'Salida registrada a las {entrada_activa.hora_salida.strftime("%H:%M")}')
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')

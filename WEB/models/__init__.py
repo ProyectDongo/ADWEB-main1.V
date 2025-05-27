@@ -1,6 +1,6 @@
 
 
-from .empresa.empresa import RegistroEmpresas, VigenciaPlan,Plan,ItemInventario,Transaccion
+from .empresa.empresa import RegistroEmpresas, VigenciaPlan,Plan,ItemInventario,Transaccion,Ubicacion,Notificacion
 from .pagos.pago import Pago
 from .cobro.cobro import Cobro
 from .historial.historial import HistorialCambios,HistorialPagos

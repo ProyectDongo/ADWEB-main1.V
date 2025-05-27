@@ -5,6 +5,7 @@ from WEB.views.scripts  import *
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum
+from django.conf import settings
 
 class Plan(models.Model):
     """
@@ -394,3 +395,44 @@ class Transaccion(models.Model):
     descripcion = models.TextField()
     tipo = models.CharField(max_length=10)  # Ej: 'Ingreso', 'Egreso'
     monto = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+
+#---------------------------------------------------------------------------------------------------------
+
+class Ubicacion(models.Model):
+    vigencia_plan = models.ForeignKey(
+        'VigenciaPlan',  # Asegúrate de que este modelo exista en tu aplicación
+        on_delete=models.CASCADE,
+        related_name='ubicaciones'
+    )
+    ip_address = models.GenericIPAddressField()
+    nombre = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('vigencia_plan', 'ip_address')
+
+    def __str__(self):
+        return f"{self.vigencia_plan} - {self.ip_address} - {self.nombre or 'Sin nombre'}"
+    
+
+#---------------------------------------------------------------------------------------------------------
+
+class Notificacion(models.Model):
+    TIPO_CHOICES = [
+        ('entrada', 'Entrada'),
+        ('salida', 'Salida'),
+        ('retraso', 'Retraso'),
+    ]
+    worker = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notificaciones'
+    )
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    leido = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.worker.get_full_name()} - {self.get_tipo_display()} - {self.timestamp}"
