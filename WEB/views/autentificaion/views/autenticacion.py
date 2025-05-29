@@ -119,47 +119,14 @@ class RoleBasedLoginMixin:
 
 
 
+class LoginUnificado(LoginView):
+    template_name = 'login/home/unified_login.html'
+    success_url = reverse_lazy('redirect_after_login')
 
-# Vistas de login específicas para cada rol
-class AdminLoginView(RoleBasedLoginMixin, LoginView):
-    role = 'admin'
-    template_name = 'login/admin/admin_login.html'
-    success_url = reverse_lazy('admin_home')
-
-class SupervisorLoginView(RoleBasedLoginMixin, LoginView):
-    role = 'supervisor'
-    template_name = 'login/supervisor/supervisor_login.html'
-    success_url = reverse_lazy('supervisor_home')
-
-class TrabajadorLoginView(RoleBasedLoginMixin, LoginView):
-    role = 'trabajador'
-    template_name = 'login/user/user_login.html'
-    success_url = reverse_lazy('trabajador_home')
-
-
-# Vista para seleccionar el tipo de login
-class LoginSelectorView(TemplateView):
-    template_name = 'login/home/login_selector.html'
-    
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('redirect_after_login')
-        return super().dispatch(request, *args, **kwargs)
-
-
-
-
-
-
-# Funciones auxiliares para redirección y vistas de inicio
 @login_required
 def redirect_after_login(request):
-    """
-    Redirige al usuario según su rol después del login
-    """
     if not hasattr(request.user, 'role'):
-        return redirect('login_selector')
-    
+        return redirect('login')
     role = request.user.role
     if role == 'admin':
         return redirect('admin_home')
@@ -167,7 +134,7 @@ def redirect_after_login(request):
         return redirect('supervisor_selector')
     elif role == 'trabajador':
         return redirect('trabajador_home')
-    return redirect('login_selector')
+    return redirect('login')
 
 
 

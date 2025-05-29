@@ -200,7 +200,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 LOGIN_REDIRECT_URL = 'redirect_after_login'  # Asegura que siempre pase por la función de redirección
-LOGOUT_REDIRECT_URL = 'login_selector'  # Para que después del logout vuelva al login
+LOGOUT_REDIRECT_URL = 'login'  # Para que después del logout vuelva al login
 
 
 AUTH_USER_MODEL = 'WEB.Usuario'
@@ -225,6 +225,7 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'biometrics.backends.FingerprintBackend',
+    'biometrics.backends.CustomBackend',
 ]
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
@@ -249,4 +250,4 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-LOGIN_URL = '/login-selector/'  # Apunta a tu vista de selección de login
+LOGIN_URL = '/login/'  # Apunta a tu vista de selección de login

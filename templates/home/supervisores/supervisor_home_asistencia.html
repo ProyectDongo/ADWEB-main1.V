@@ -9,6 +9,7 @@
 <div class="wrapper">
     <!-- Notification Container -->
     <div class="notificaciones-container position-absolute top-0 end-0 p-3">
+        
         <button class="btn btn-primary shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
             <i class="bi bi-bell-fill me-2"></i>
             <span id="notificacionesBadge" class="badge bg-danger ms-1">0</span>
@@ -20,7 +21,11 @@
                 </div>
                 <div class="card-body p-2">
                     <div class="accordion" id="notificacionesAcordeon">
+                        
                         <!-- Notifications will be inserted here via JavaScript -->
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'registros_entrada_vigencia' vigencia_plan.id %}" class="btn btn-primary">Ver Todos los Registros</a>
                     </div>
                 </div>
             </div>
@@ -287,15 +292,19 @@
 </div>
 
 
+
+
 <!-- Modal Usuario -->
 <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-gradient-primary text-white border-0 rounded-top-3">
-                <h3 class="modal-title"><i class="fas fa-user-edit me-2"></i><span id="modalTitle">Nuevo Usuario</span></h3>
+            <div class="card-header bg-primary text-white border-0 rounded-top-3">
+                <h3 class="h4 mb-0 text-center">
+                    <i class="bi bi-person-fill me-2"></i><span id="modalTitle">Nuevo Usuario</span>
+                </h3>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="usuarioForm" method="post">
+            <form id="usuarioForm" method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
                 {% if form.errors %}
                 <div class="alert alert-danger mx-4 mt-3">
@@ -309,8 +318,138 @@
                     </ul>
                 </div>
                 {% endif %}
-                <div id="formContent" class="modal-body px-4 pt-4">
-                    <!-- Aquí se cargará dinámicamente el formulario -->
+                <div class="modal-body p-4">
+                    <!-- Pestañas -->
+                    <ul class="nav nav-tabs mb-4" id="usuarioTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                                <i class="bi bi-person me-2"></i>Información Básica
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">
+                                <i class="bi bi-phone me-2"></i>Contacto
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="rol-tab" data-bs-toggle="tab" data-bs-target="#rol" type="button" role="tab">
+                                <i class="bi bi-gear me-2"></i>Rol y Asignaciones
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenido de las Pestañas -->
+                    <div class="tab-content" id="usuarioTabContent">
+                        <!-- Información Básica -->
+                        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                            <div class="mb-4 border border-dark rounded p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.rut }}
+                                            <label for="{{ form.rut.id_for_label }}">RUT</label>
+                                            <span>Formato: 12345678-9</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.username }}
+                                            <label for="{{ form.username.id_for_label }}">Nombre de Usuario</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.first_name }}
+                                            <label for="{{ form.first_name.id_for_label }}">Nombres</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.last_name }}
+                                            <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.password }}
+                                            <label for="{{ form.password.id_for_label }}">Contraseña</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-primary next-btn" data-current="info" data-next="contacto">
+                                        Siguiente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contacto -->
+                        <div class="tab-pane fade" id="contacto" role="tabpanel" aria-labelledby="contacto-tab">
+                            <div class="mb-4 border border-dark rounded p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.email }}
+                                            <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.celular }}
+                                            <label for="{{ form.celular.id_for_label }}">Celular</label>
+                                            <span>Ej: +56912345678</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="info">
+                                        Anterior
+                                    </button>
+                                    <button type="button" class="btn btn-primary next-btn" data-current="contacto" data-next="rol">
+                                        Siguiente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rol y Asignaciones -->
+                        <div class="tab-pane fade" id="rol" role="tabpanel" aria-labelledby="rol-tab">
+                            <div class="mb-4 border border-dark rounded p-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.role }}
+                                            <label for="{{ form.role.id_for_label }}">Rol</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.horario }}
+                                            <label for="{{ form.horario.id_for_label }}">Horario</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.turno }}
+                                            <label for="{{ form.turno.id_for_label }}">Turno</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            {{ form.metodo_registro_permitido }}
+                                            <label for="{{ form.metodo_registro_permitido.id_for_label }}">Método de Registro</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-3">
+                                    <button type="button" class="btn btn-primary next-btn" data-current="rol" data-next="contacto">
+                                        Anterior
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -443,7 +582,7 @@ style="display: none;"></div>
     z-index: 1000;
     width: 350px;
     margin-top: 120px;
-    margin-right: 300px;
+    margin-right: 400px;
 }
 .main-content {
     margin-left: 0;
@@ -458,6 +597,12 @@ style="display: none;"></div>
     justify-content: center;
     font-weight: 500;
 }
+.form-floating { margin-bottom: 1.25rem; }
+    .form-control:read-only { background-color: #f8f9fa !important; }
+    .nav-link.active { color: #0d6efd !important; border-bottom: 3px solid #0d6efd; }
+    .invalid-feedback { display: block; }
+    .border-dark { border-color: #343a40 !important; }
+    i { font-size: 20px; }
 
 </style>
 {% endblock %}
@@ -504,34 +649,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const formContent = $('#formContent');
         if (isEdit) {
             $('#modalTitle').text('Editar Usuario');
+            const formContent = $('#formContent');
             formContent.load("{% url 'get_form_template' 'edit' %}", function(response, status, xhr) {
                 if (status === "success") {
-                    fetch(urlData.update.replace('0', currentUser))
+                    const updateUrl = urlData.update.replace('0', currentUser);
+                    console.log('URL de actualización:', updateUrl); // Depuración
+                    fetch(updateUrl)
                         .then(r => {
-                            if (!r.ok) throw new Error('Error al cargar usuario');
+                            if (!r.ok) throw new Error(`Error ${r.status}: ${r.statusText}`);
                             return r.json();
                         })
                         .then(data => {
-                            $('input[name="rut"]').val(data.rut);
-                            $('input[name="first_name"]').val(data.first_name);
-                            $('input[name="last_name"]').val(data.last_name);
-                            $('input[name="email"]').val(data.email);
-                            $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
-                            $('input[name="celular"]').val(data.celular);
-                            $('select[name="role"]').val(data.role);
-                            $('select[name="horario"]').val(data.horario || '');
-                            $('select[name="turno"]').val(data.turno || '');
-                            $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
-                            $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
-                            originalEmail = data.email;
-                            $('select[name="role"] option[value="admin"]').remove();
+                            console.log('Datos recibidos:', data); // Depuración
+                            setTimeout(() => {
+                                $('input[name="rut"]').val(data.rut);
+                                $('input[name="first_name"]').val(data.first_name);
+                                $('input[name="last_name"]').val(data.last_name);
+                                $('input[name="email"]').val(data.email);
+                                $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
+                                $('input[name="celular"]').val(data.celular);
+                                $('select[name="role"]').val(data.role);
+                                $('select[name="horario"]').val(data.horario || '');
+                                $('select[name="turno"]').val(data.turno || '');
+                                $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
+                                $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+                                $('select[name="role"] option[value="admin"]').remove(); // Eliminar "admin"
+                                originalEmail = data.email;
+                                console.log('Campos asignados, RUT:', $('input[name="rut"]').val()); // Depuración
+                            }, 0);
                         })
                         .catch(error => {
+                            console.error('Error en fetch:', error);
                             Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
                         });
-                } else {
-                    Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
-                }
+        } else {
+            console.error('Error al cargar formulario:', xhr.statusText);
+            Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
+        }
+    
             });
         } else {
             $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
@@ -864,6 +1019,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cookieValue;
     }
+// Manejo de botones "Siguiente" y "Anterior" para cambiar de pestaña en el modal
+$('#usuarioModal').on('shown.bs.modal', function() {
+    const nextButtons = document.querySelectorAll('#usuarioModal .next-btn');
+    nextButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentSectionId = this.getAttribute('data-current');
+            const nextSectionId = this.getAttribute('data-next');
+            let valid = true;
+
+            const currentSection = document.getElementById(currentSectionId);
+            const inputs = currentSection.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    valid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            if (valid) {
+                const nextTabButton = document.querySelector(`#usuarioModal [data-bs-target="#${nextSectionId}"]`);
+                if (nextTabButton) {
+                    const tab = new bootstrap.Tab(nextTabButton);
+                    tab.show();
+                }
+            } else {
+                currentSection.classList.add('was-validated');
+            }
+        });
+    });
+});
 });
     </script>
 {% endblock %}

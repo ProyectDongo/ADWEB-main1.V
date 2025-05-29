@@ -28,14 +28,11 @@ urlpatterns = [
     # Autenticación y Selección de Roles
     # ------------------------------------------------------------------------------------ #
     
-    path('', RedirectView.as_view(url='/login-selector/', permanent=True)),
-    path('login-selector/', autenticacion.LoginSelectorView.as_view(), name='login_selector'),
+    path('', RedirectView.as_view(url='/login/', permanent=True)),
+    path('login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.LoginUnificado.as_view()), name='login'),
     path('supervisor/selector/', selector.SupervisorSelectorView.as_view(), name='supervisor_selector'),
     path('supervisor/register/', selector.supervisor_register, name='supervisor_register'),
-    path('admin/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.AdminLoginView.as_view()), name='admin_login'),
-    path('supervisor/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.SupervisorLoginView.as_view()), name='supervisor_login'),
-    path('trabajador/login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.TrabajadorLoginView.as_view()), name='trabajador_login'),
-    path('logout/', LogoutView.as_view(next_page='login_selector'), name='logout'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
 
     # ------------------------------------------------------------------------------------ #
@@ -139,6 +136,7 @@ urlpatterns = [
     path('api/get_comunas/', utilidades.get_comunas, name='get_comunas'),
     path('notificaciones_supervisor_json/<int:vigencia_plan_id>/', asistencia.notificaciones_supervisor_json, name='notificaciones_supervisor_json'),
     path('set_ubicacion_nombre/<int:vigencia_plan_id>/<str:ip_address>/', asistencia.set_ubicacion_nombre, name='set_ubicacion_nombre'),
+    path('vigencia/<int:vigencia_plan_id>/registros/', asistencia.registros_entrada_vigencia, name='registros_entrada_vigencia'),
     # ------------------------------------------------------------------------------------ #
     # Biometría
     # ------------------------------------------------------------------------------------ #

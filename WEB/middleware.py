@@ -28,3 +28,7 @@ class ValidationErrorMiddleware:
             messages.error(request, str(exception))
             return redirect(request.path)
         return None
+    
+
+
+    

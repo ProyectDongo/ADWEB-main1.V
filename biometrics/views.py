@@ -23,6 +23,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 from datetime import datetime, time
+from django.utils.dateparse import parse_date
 
 
 
@@ -275,9 +276,18 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
     context_object_name = 'registros'
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
-        trabajador = get_object_or_404(Usuario, id=user_id, empresa=self.request.user.empresa)
-        return RegistroEntrada.objects.filter(trabajador=trabajador).order_by('-hora_entrada')
+        # Obtener el trabajador y los registros base
+        trabajador = get_object_or_404(Usuario, id=self.kwargs['user_id'], empresa=self.request.user.empresa)
+        queryset = RegistroEntrada.objects.filter(trabajador=trabajador)
+
+        # Filtrar por fecha si está presente en los parámetros GET
+        fecha_str = self.request.GET.get('fecha')
+        if fecha_str:
+            fecha = parse_date(fecha_str)
+            if fecha:
+                queryset = queryset.filter(hora_entrada__date=fecha)
+
+        return queryset.order_by('-hora_entrada')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -285,6 +295,13 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
         context['trabajador'] = trabajador
         context['empresa_id'] = self.request.user.empresa.id
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
+
+        # Agregar la fecha seleccionada al contexto en formato dd/mm/yyyy
+        fecha_str = self.request.GET.get('fecha')
+        if fecha_str:
+            fecha = parse_date(fecha_str)
+            if fecha:
+                context['fecha_seleccionada'] = fecha.strftime('%d/%m/%Y')
 
         # Calcular horas totales para cada registro
         for registro in context['registros']:
@@ -301,7 +318,6 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
         if request.user.role not in ['supervisor', 'admin']:
             return render(request, 'error/error.html')
         return super().dispatch(request, *args, **kwargs)
-
 
 
 

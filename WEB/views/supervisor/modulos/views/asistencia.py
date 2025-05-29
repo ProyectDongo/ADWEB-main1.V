@@ -65,7 +65,7 @@ def notificaciones_supervisor_json(request, vigencia_plan_id):
         notificaciones = Notificacion.objects.filter(
             worker__vigencia_plan=vigencia_plan,
             leido=False
-        ).select_related('worker').order_by('-timestamp')[:10]
+        ).select_related('worker').order_by('-timestamp')[:5]
 
         data = {
             'count': notificaciones.count(),
@@ -121,6 +121,28 @@ def set_ubicacion_nombre(request, vigencia_plan_id, ip_address):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+@login_required
+def registros_entrada_vigencia(request, vigencia_plan_id):
+    if request.user.role != 'supervisor':
+        return render(request, 'error/error.html', {'message': 'Acceso no autorizado'})
+    
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    if request.user.vigencia_plan != vigencia_plan:
+        return render(request, 'error/error.html', {'message': 'No tienes permiso para este módulo'})
+    
+    registros = RegistroEntrada.objects.filter(
+        trabajador__vigencia_plan=vigencia_plan
+    ).select_related('trabajador').order_by('-hora_entrada')
+    
+    empresa_id = vigencia_plan.empresa.id
+    
+    context = {
+        'vigencia_plan': vigencia_plan,
+        'registros': registros,
+        'empresa_id': empresa_id,
+        'vigencia_plan_id': vigencia_plan_id,
+    }
+    return render(request, 'home/supervisores/registros_entrada.html', context)
 
 
 

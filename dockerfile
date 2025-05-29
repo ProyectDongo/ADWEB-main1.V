@@ -4,7 +4,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-
 # Instala curl y ca-certificates para HTTPS
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -28,10 +27,11 @@ RUN pip install --upgrade pip \
 FROM python:3.13-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
-# Instalar bibliotecas necesarias para psycopg2
+# Instalar bibliotecas necesarias para psycopg2 y postgresql-client
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        libpq-dev \
+       postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar gunicorn directamente en runtime como respaldo
