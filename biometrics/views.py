@@ -268,26 +268,20 @@ class AttendanceView(View):
 
 
 
-# Registro de asistencia
-
 class AttendanceRecordView(LoginRequiredMixin, ListView):
     model = RegistroEntrada
     template_name = 'home/supervisores/registro/attendance_record.html'
     context_object_name = 'registros'
 
     def get_queryset(self):
-        # Obtener el trabajador y los registros base
         trabajador = get_object_or_404(Usuario, id=self.kwargs['user_id'], empresa=self.request.user.empresa)
         queryset = RegistroEntrada.objects.filter(trabajador=trabajador)
-
-        # Filtrar por fecha si está presente en los parámetros GET
         fecha_str = self.request.GET.get('fecha')
         if fecha_str:
             fecha = parse_date(fecha_str)
             if fecha:
                 queryset = queryset.filter(hora_entrada__date=fecha)
-
-        return queryset.order_by('-hora_entrada')
+        return queryset.order_by('hora_entrada')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -296,21 +290,39 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
         context['empresa_id'] = self.request.user.empresa.id
         context['vigencia_plan_id'] = self.request.user.vigencia_plan.id if self.request.user.vigencia_plan else None
 
-        # Agregar la fecha seleccionada al contexto en formato dd/mm/yyyy
+        for registro in context['registros']:
+            # Calculate hours worked
+            if registro.hora_salida:
+                diferencia = registro.hora_salida - registro.hora_entrada
+                total_seconds = int(diferencia.total_seconds())
+                horas = total_seconds // 3600
+                minutos = (total_seconds % 3600) // 60
+                segundos = total_seconds % 60
+                registro.horas_totales_str = f"{horas} h {minutos} min {segundos} s"
+                if horas >= 8:
+                    registro.horas_ordinarias_str = "8 h 0 min 0 s"
+                    extra_seconds = total_seconds - (8 * 3600)
+                    extra_horas = extra_seconds // 3600
+                    extra_minutos = (extra_seconds % 3600) // 60
+                    extra_segundos = extra_seconds % 60
+                    registro.horas_extra_str = f"{extra_horas} h {extra_minutos} min {extra_segundos} s"
+                else:
+                    registro.horas_ordinarias_str = f"{horas} h {minutos} min {segundos} s"
+                    registro.horas_extra_str = "0 h 0 min 0 s"
+            else:
+                registro.horas_totales_str = "N/A"
+                registro.horas_ordinarias_str = "0 h 0 min 0 s"
+                registro.horas_extra_str = "0 h 0 min 0 s"
+
+            # Assign method display values
+            registro.metodo_entrada_display = registro.get_metodo_display()
+            registro.metodo_salida_display = registro.get_metodo_display() if registro.hora_salida else "N/A"
+
         fecha_str = self.request.GET.get('fecha')
         if fecha_str:
             fecha = parse_date(fecha_str)
             if fecha:
                 context['fecha_seleccionada'] = fecha.strftime('%d/%m/%Y')
-
-        # Calcular horas totales para cada registro
-        for registro in context['registros']:
-            if registro.hora_salida:
-                diferencia = registro.hora_salida - registro.hora_entrada
-                horas_totales = diferencia.total_seconds() // 3600
-                registro.horas_totales = round(horas_totales, 2)
-            else:
-                registro.horas_totales = None
 
         return context
 
@@ -329,37 +341,28 @@ class AttendanceRecordView(LoginRequiredMixin, ListView):
 
 
 
-
-# Generación de reporte PDF
 class GenerateReportView(LoginRequiredMixin, View):
     def get(self, request, user_id):
         if request.user.role not in ['supervisor', 'admin']:
             return render(request, 'access_denied.html')
-        
+
         user = get_object_or_404(Usuario, id=user_id, empresa=request.user.empresa)
-        registros = RegistroEntrada.objects.filter(trabajador=user).order_by('-hora_entrada')
+        registros = RegistroEntrada.objects.filter(trabajador=user).order_by('hora_entrada')
 
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, 
-                              pagesize=landscape(letter),
-                              title=f"Asistencia {user.get_full_name()}",
-                              author=request.user.empresa.nombre,
-                              leftMargin=0.5*inch,
-                              rightMargin=0.5*inch,
-                              topMargin=0.5*inch,
-                              bottomMargin=0.5*inch)
-        
+                                pagesize=landscape(letter),
+                                title=f"Asistencia {user.get_full_name()}",
+                                author=request.user.empresa.nombre,
+                                leftMargin=0.5*inch,
+                                rightMargin=0.5*inch,
+                                topMargin=0.5*inch,
+                                bottomMargin=0.5*inch)
+
         elements = []
         styles = getSampleStyleSheet()
-        
-        # Registrar fuentes personalizadas (opcional)
-        try:
-            pdfmetrics.registerFont(TTFont('Roboto', 'Roboto-Regular.ttf'))
-            pdfmetrics.registerFont(TTFont('Roboto-Bold', 'Roboto-Bold.ttf'))
-        except:
-            pass  # Usar fuentes por defecto si falla
 
-        # Estilos personalizados
+        # Estilo para el título
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Title'],
@@ -367,104 +370,69 @@ class GenerateReportView(LoginRequiredMixin, View):
             spaceAfter=20,
             alignment=1,
             textColor=colors.HexColor('#2c3e50'),
-            fontName='Roboto-Bold' if 'Roboto-Bold' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
-        )
-
-        header_style = ParagraphStyle(
-            'HeaderStyle',
-            parent=styles['Normal'],
-            fontSize=12,
-            textColor=colors.whitesmoke,
-            alignment=1,
             fontName='Helvetica-Bold'
         )
 
         # Encabezado del documento
-        elements.append(Paragraph(f"{request.user.empresa.nombre.upper()}", styles['Normal']))
-        elements.append(Paragraph(f"Reporte de Asistencia", title_style))
-        elements.append(Paragraph(f"Empleado: {user.get_full_name()}", styles['Normal']))
-        elements.append(Paragraph(f"Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Paragraph(f"Libro de Asistencias - {user.get_full_name()}", title_style))
         elements.append(Spacer(1, 20))
 
-        # Datos de la tabla
-        data = [
-            ['Fecha', 'Hora Entrada', 'Hora Salida', 'Horas Trabajadas', 'Estado']
-        ]
-        
-        total_horas = 0
-        unique_dates = set()  # Conjunto para rastrear fechas únicas
-        
+        # Agrupar registros por mes y año
+        from collections import defaultdict
+        grouped = defaultdict(list)
         for reg in registros:
-            fecha = reg.hora_entrada.date()  # Extraer la fecha como objeto date
-            unique_dates.add(fecha)  # Agregar la fecha al conjunto
-            
-            fecha_str = reg.hora_entrada.strftime('%d/%m/%Y')
-            entrada = reg.hora_entrada.strftime('%H:%M:%S')
-            salida = reg.hora_salida.strftime('%H:%M:%S') if reg.hora_salida else '--:--:--'
-            
-            if reg.hora_salida:
-                horas = (reg.hora_salida - reg.hora_entrada).total_seconds() / 3600
-                total_horas += horas
-                estado = "COMPLETO" if horas >= 8 else "PARCIAL"
-                horas_str = f"{horas:.2f} h"
-            else:
-                horas_str = "N/A"
-                estado = "PENDIENTE"
-            
-            data.append([
-                fecha_str,
-                entrada,
-                salida,
-                horas_str,
-                estado
-            ])
+            key = reg.hora_entrada.strftime('%B %Y')
+            grouped[key].append(reg)
 
-        # Añadir totales
-        data.append([
-            'TOTAL', 
-            '', 
-            '', 
-            f"{total_horas:.2f} h", 
-            f"{len(unique_dates)} días"  # Usar el número de fechas únicas
-        ])
+        for mes, regs in grouped.items():
+            elements.append(Paragraph(mes, styles['Heading2']))
+            data = [
+                ['Día', 'Hora Entrada (Método)', 'Hora Salida (Método)', 'Horas Trabajadas', 'Horas Ordinarias', 'Horas Extraordinarias']
+            ]
 
-        # Crear tabla
-        table = Table(data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#34495e')),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('FONTSIZE', (0,0), (-1,0), 12),
-            ('BOTTOMPADDING', (0,0), (-1,0), 12),
-            ('BACKGROUND', (0,1), (-1,-2), colors.HexColor('#f8f9fa')),
-            ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#e9ecef')),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dee2e6')),
-            ('ALIGN', (3,1), (3,-1), 'RIGHT'),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
-            ('LEFTPADDING', (0,0), (-1,-1), 10),
-            ('RIGHTPADDING', (0,0), (-1,-1), 10),
-        ]))
-        
-        elements.append(table)
-        elements.append(Spacer(1, 30))
-        
+            for reg in regs:
+                dia = reg.hora_entrada.strftime('%d')
+                entrada = f"{reg.hora_entrada.strftime('%H:%M:%S')} ({reg.get_metodo_display()})"
+                salida = f"{reg.hora_salida.strftime('%H:%M:%S')} ({reg.get_metodo_display()})" if reg.hora_salida else '--:--:--'
+                if reg.hora_salida:
+                    diferencia = reg.hora_salida - reg.hora_entrada
+                    horas_totales = diferencia.total_seconds() / 3600
+                    horas_trabajadas = f"{horas_totales:.2f} h"
+                    horas_ordinarias = f"{min(horas_totales, 8):.2f} h"
+                    horas_extra = f"{max(horas_totales - 8, 0):.2f} h"
+                else:
+                    horas_trabajadas = 'N/A'
+                    horas_ordinarias = '0 h'
+                    horas_extra = '0 h'
+
+                data.append([dia, entrada, salida, horas_trabajadas, horas_ordinarias, horas_extra])
+
+            # Crear tabla con estilos
+            table = Table(data, colWidths=[50, 150, 150, 100, 100, 100])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#34495e')),
+                ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f8f9fa')),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dee2e6')),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('LEFTPADDING', (0,0), (-1,-1), 10),
+                ('RIGHTPADDING', (0,0), (-1,-1), 10),
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 20))
+
         # Añadir leyenda
         footer_text = Paragraph(
             f"* Reporte generado automáticamente por el sistema de gestión {request.user.empresa.nombre}",
-            ParagraphStyle(
-                name='FooterStyle',
-                fontSize=8,
-                textColor=colors.grey,
-                alignment=2
-            )
+            ParagraphStyle(name='FooterStyle', fontSize=8, textColor=colors.grey, alignment=2)
         )
         elements.append(footer_text)
 
         # Generar PDF
         doc.build(elements)
         buffer.seek(0)
-        
+
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'filename="Asistencia_{user.username}_{datetime.now().strftime("%Y%m%d")}.pdf"'
         return response

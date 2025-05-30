@@ -258,7 +258,7 @@ class Otros(models.Model):
     tasa_indemnizacion = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
 class AntecedentesConducir(models.Model):
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='antecedentes_conducir')
     tipo_licencia = models.CharField(max_length=50, blank=True, null=True)
     municipalidad = models.CharField(max_length=100, blank=True, null=True)
     fecha_ultimo_control = models.DateField(blank=True, null=True)

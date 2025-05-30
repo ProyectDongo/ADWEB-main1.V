@@ -1,11 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan, DiaHabilitado
+from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan, DiaHabilitado,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
-
+from django.forms import inlineformset_factory
 
 class AdminForm(UserCreationForm):
     rut = forms.CharField(
@@ -459,6 +459,7 @@ class UsuarioForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['role'].choices = [(k, v) for k, v in Usuario.ROLES if k != 'admin']
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.form_id = 'userForm'
@@ -534,6 +535,205 @@ class UsuarioForm(forms.ModelForm):
 
 
 
+class PerfilUsuarioForm(forms.ModelForm):
+    class Meta:
+        model = PerfilUsuario
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
+            'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
+            'nombres': forms.TextInput(attrs={'class': 'form-control'}),
+            'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'edad': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nacionalidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'sexo': forms.Select(attrs={'class': 'form-control'}),
+            'fecha_contrato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'cargo': forms.TextInput(attrs={'class': 'form-control'}),
+            'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'sindicato': forms.TextInput(attrs={'class': 'form-control'}),
+            'fecha_ingreso_sindicato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'tipo_jornada': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class ContactoUsuarioForm(forms.ModelForm):
+    class Meta:
+        model = ContactoUsuario
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero': forms.TextInput(attrs={'class': 'form-control'}),
+            'dpto': forms.TextInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'celular': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'region': forms.TextInput(attrs={'class': 'form-control'}),
+            'provincia': forms.TextInput(attrs={'class': 'form-control'}),
+            'comuna': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class InformacionBancariaForm(forms.ModelForm):
+    class Meta:
+        model = InformacionBancaria
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'banco': forms.Select(attrs={'class': 'form-control'}),
+            'tipo_cuenta': forms.Select(attrs={'class': 'form-control'}),
+            'numero_cuenta': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class InformacionAdicionalForm(forms.ModelForm):
+    class Meta:
+        model = InformacionAdicional
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'fecha_primera_cotizacion': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'anos_anteriores': forms.NumberInput(attrs={'class': 'form-control'}),
+            'meses_anteriores': forms.NumberInput(attrs={'class': 'form-control'}),
+            'dias_vacaciones_usados': forms.NumberInput(attrs={'class': 'form-control'}),
+            'fecha_reconocimiento_vacaciones': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'dias_vacaciones_anuales': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ajustes_vacaciones_progresivas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class SeguroCesantiaForm(forms.ModelForm):
+    class Meta:
+        model = SeguroCesantia
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'acogido_seguro': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'afp_recaudadora': forms.TextInput(attrs={'class': 'form-control'}),
+            'sueldo_patronal': forms.NumberInput(attrs={'class': 'form-control'}),
+            'acogido_seguro_accidentes': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class PrevisionForm(forms.ModelForm):
+    class Meta:
+        model = Prevision
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'salud': forms.Select(attrs={'class': 'form-control'}),
+            'regimen': forms.Select(attrs={'class': 'form-control'}),
+            'tasa': forms.NumberInput(attrs={'class': 'form-control'}),
+            'afp': forms.Select(attrs={'class': 'form-control'}),
+            'pensionado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class OtrosForm(forms.ModelForm):
+    class Meta:
+        model = Otros
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'tipo_discapacidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'tasa_indemnizacion': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+class AntecedentesConducirForm(forms.ModelForm):
+    class Meta:
+        model = AntecedentesConducir
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'tipo_licencia': forms.TextInput(attrs={'class': 'form-control'}),
+            'municipalidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'fecha_ultimo_control': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'hoja_vida_conducir': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+AntecedentesConducirFormSet = inlineformset_factory(
+    Usuario, AntecedentesConducir,
+    form=AntecedentesConducirForm,
+    fields=['tipo_licencia', 'municipalidad', 'fecha_ultimo_control', 'fecha_vencimiento', 'hoja_vida_conducir'],
+    extra=1, can_delete=True
+)
+
+class NivelEstudiosForm(forms.ModelForm):
+    class Meta:
+        model = NivelEstudios
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'nivel_estudios': forms.TextInput(attrs={'class': 'form-control'}),
+            'completo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'ultimo_curso': forms.TextInput(attrs={'class': 'form-control'}),
+            'carrera': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class InformacionComplementariaForm(forms.ModelForm):
+    class Meta:
+        model = InformacionComplementaria
+        fields = '__all__'
+        exclude = ['usuario']
+        widgets = {
+            'pais_origen': forms.TextInput(attrs={'class': 'form-control'}),
+            'pasaporte': forms.TextInput(attrs={'class': 'form-control'}),
+            'estado_civil': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_visa': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_calzado': forms.TextInput(attrs={'class': 'form-control'}),
+            'talla_ropa': forms.TextInput(attrs={'class': 'form-control'}),
+            'grupo_sanguineo': forms.TextInput(attrs={'class': 'form-control'}),
+            'alergico': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'personal_destacado': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+# Formsets para relaciones ForeignKey
+ExamenesMutualFormSet = inlineformset_factory(
+    Usuario, ExamenesMutual,
+    fields=['tipo_examen', 'fecha_examen', 'fecha_vencimiento'],
+    widgets={
+        'tipo_examen': forms.TextInput(attrs={'class': 'form-control'}),
+        'fecha_examen': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    },
+    extra=1, can_delete=True
+)
+
+GrupoFamiliarFormSet = inlineformset_factory(
+    Usuario, GrupoFamiliar,
+    fields=['rut_carga', 'nombre_carga', 'fecha_nacimiento', 'edad', 'sexo'],
+    widgets={
+        'rut_carga': forms.TextInput(attrs={'class': 'form-control'}),
+        'nombre_carga': forms.TextInput(attrs={'class': 'form-control'}),
+        'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'edad': forms.NumberInput(attrs={'class': 'form-control'}),
+        'sexo': forms.Select(attrs={'class': 'form-control'}),
+    },
+    extra=1, can_delete=True
+)
+
+CapacitacionFormSet = inlineformset_factory(
+    Usuario, Capacitacion,
+    fields=['descripcion', 'horas', 'institucion'],
+    widgets={
+        'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        'horas': forms.NumberInput(attrs={'class': 'form-control'}),
+        'institucion': forms.TextInput(attrs={'class': 'form-control'}),
+    },
+    extra=1, can_delete=True
+)
+
+LicenciasMedicasFormSet = inlineformset_factory(
+    Usuario, LicenciasMedicas,
+    fields=['tipo_accidente', 'clasificacion_accidente', 'fecha_inicio_reposo', 'fecha_termino', 'fecha_alta', 'dias_reposo'],
+    widgets={
+        'tipo_accidente': forms.TextInput(attrs={'class': 'form-control'}),
+        'clasificacion_accidente': forms.TextInput(attrs={'class': 'form-control'}),
+        'fecha_inicio_reposo': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_alta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'dias_reposo': forms.NumberInput(attrs={'class': 'form-control'}),
+    },
+    extra=1, can_delete=True
+)
+
 
 
 
@@ -576,8 +776,6 @@ class HorarioForm(forms.ModelForm):
             }),
             
         }
-         
-        
 
 
 

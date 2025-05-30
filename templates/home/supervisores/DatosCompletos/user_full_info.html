@@ -1,0 +1,999 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block title %}{{ user.get_full_name }} | Información Completa{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para pestañas atractivas */
+    .nav-pills .nav-link {
+        transition: all 0.3s;
+        border-radius: 5px;
+        margin: 2px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #4e73df, #224abe);
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: #f8f9fc;
+    }
+    
+    /* Estilos para listas tipo Excel */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .data-table th {
+        background-color: #4e73df;
+        color: white;
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .data-table tr {
+        border-bottom: 1px solid #e3e6f0;
+    }
+    
+    .data-table tr:nth-child(even) {
+        background-color: #f8f9fc;
+    }
+    
+    .data-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    
+    .data-table .actions {
+        white-space: nowrap;
+    }
+    
+    /* Estilos para formularios en dos columnas */
+    .two-column-form .row {
+        margin-bottom: 15px;
+    }
+    
+    .two-column-form label {
+        font-weight: 500;
+        color: #5a5c69;
+    }
+    
+    /* Botones de acción */
+    .btn-action {
+        padding: 5px 10px;
+        margin: 0 3px;
+        font-size: 0.85rem;
+    }
+    
+    .btn-add {
+        background: linear-gradient(135deg, #1cc88a, #13855c);
+        border: none;
+        margin-bottom: 15px;
+    }
+    
+    .btn-export {
+        background: linear-gradient(135deg, #36b9cc, #258391);
+        border: none;
+        margin-top: 15px;
+    }
+    
+    /* Contenedores para textareas */
+    .textarea-container {
+        height: 120px;
+        overflow: auto;
+        resize: vertical;
+        max-height: 200px;
+    }
+    
+    /* Scrollable tab content */
+    .tab-content {
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    /* Estilos para tarjetas */
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="margin-bottom:100px;">
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-primary text-white border-0 rounded-top-3">
+            <h3 class="h4 mb-0 text-center">
+                <i class="bi bi-person-fill me-2"></i>Información Completa de {{ user.get_full_name }}
+            </h3>
+        </div>
+        <div class="card-body p-4">
+            <!-- Botón Volver -->
+            <a href="{% url 'supervisor_home_asistencia' user.vigencia_plan.empresa.id user.vigencia_plan.id %}" 
+               class="btn btn-secondary mb-4">
+                <i class="fas fa-arrow-left me-2"></i>Volver
+            </a>
+
+            <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Pestañas con nuevo diseño -->
+            <ul class="nav nav-pills nav-fill flex-wrap mb-4" id="userInfoTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="usuario-tab" data-bs-toggle="tab" href="#usuario" role="tab">
+                        <i class="bi bi-person me-2"></i>Información Básica
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="perfil-tab" data-bs-toggle="tab" href="#perfil" role="tab">
+                        <i class="bi bi-person-lines-fill me-2"></i>Perfil Usuario
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="contacto-tab" data-bs-toggle="tab" href="#contacto" role="tab">
+                        <i class="bi bi-phone me-2"></i>Contacto
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="info_bancaria-tab" data-bs-toggle="tab" href="#info_bancaria" role="tab">
+                        <i class="bi bi-bank me-2"></i>Bancaria
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="info_adicional-tab" data-bs-toggle="tab" href="#info_adicional" role="tab">
+                        <i class="bi bi-info-circle me-2"></i>Adicional
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="seguro_cesantia-tab" data-bs-toggle="tab" href="#seguro_cesantia" role="tab">
+                        <i class="bi bi-shield me-2"></i>Cesantía
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="prevision-tab" data-bs-toggle="tab" href="#prevision" role="tab">
+                        <i class="bi bi-heart-pulse me-2"></i>Previsión
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="otros-tab" data-bs-toggle="tab" href="#otros" role="tab">
+                        <i class="bi bi-file-text me-2"></i>Otros
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="antecedentes_conducir-tab" data-bs-toggle="tab" href="#antecedentes_conducir" role="tab">
+                        <i class="bi bi-car-front me-2"></i>Licencias
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="nivel_estudios-tab" data-bs-toggle="tab" href="#nivel_estudios" role="tab">
+                        <i class="bi bi-book me-2"></i>Estudios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="info_complementaria-tab" data-bs-toggle="tab" href="#info_complementaria" role="tab">
+                        <i class="bi bi-person-plus me-2"></i>Complementaria
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="examenes-tab" data-bs-toggle="tab" href="#examenes" role="tab">
+                        <i class="bi bi-clipboard-check me-2"></i>Exámenes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="grupo_familiar-tab" data-bs-toggle="tab" href="#grupo_familiar" role="tab">
+                        <i class="bi bi-people me-2"></i>Familia
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="capacitacion-tab" data-bs-toggle="tab" href="#capacitacion" role="tab">
+                        <i class="bi bi-award me-2"></i>Capacitaciones
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="licencias_medicas-tab" data-bs-toggle="tab" href="#licencias_medicas" role="tab">
+                        <i class="bi bi-file-medical me-2"></i>Lic. Médicas
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Contenido de las Pestañas -->
+            <div class="tab-content" id="userInfoTabContent">
+                <!-- Información Básica - Formulario en dos columnas -->
+                <div class="tab-pane fade show active" id="usuario" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="usuario">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">RUT</label>
+                                            {{ usuario_form.rut }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nombre de usuario</label>
+                                            {{ usuario_form.username }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nombres</label>
+                                            {{ usuario_form.first_name }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Apellidos</label>
+                                            {{ usuario_form.last_name }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Correo electrónico</label>
+                                            {{ usuario_form.email }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Celular</label>
+                                            {{ usuario_form.celular }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Rol</label>
+                                            {{ usuario_form.role }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Método de registro</label>
+                                            {{ usuario_form.metodo_registro_permitido }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Perfil Usuario -->
+                <div class="tab-pane fade" id="perfil" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="perfil">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Apellido Paterno</label>
+                                            {{ perfil_form.apellido_paterno }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha de Nacimiento</label>
+                                            {{ perfil_form.fecha_nacimiento }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha de Contrato</label>
+                                            {{ perfil_form.fecha_contrato }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Cargo</label>
+                                            {{ perfil_form.cargo }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Sindicato</label>
+                                            {{ perfil_form.sindicato }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Apellido Materno</label>
+                                            {{ perfil_form.apellido_materno }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nacionalidad</label>
+                                            {{ perfil_form.nacionalidad }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha de Término</label>
+                                            {{ perfil_form.fecha_termino }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tipo de Jornada</label>
+                                            {{ perfil_form.tipo_jornada }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha Ingreso Sindicato</label>
+                                            {{ perfil_form.fecha_ingreso_sindicato }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Observaciones</label>
+                                            <div class="textarea-container">
+                                                {{ perfil_form.observaciones }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Contacto -->
+                <div class="tab-pane fade" id="contacto" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="contacto">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Dirección</label>
+                                            {{ contacto_form.direccion }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Número</label>
+                                            {{ contacto_form.numero }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Teléfono</label>
+                                            {{ contacto_form.telefono }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Región</label>
+                                            {{ contacto_form.region }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Departamento</label>
+                                            {{ contacto_form.dpto }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Celular</label>
+                                            {{ contacto_form.celular }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Provincia</label>
+                                            {{ contacto_form.provincia }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Comuna</label>
+                                            {{ contacto_form.comuna }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información Bancaria -->
+                <div class="tab-pane fade" id="info_bancaria" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="info_bancaria">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Banco</label>
+                                            {{ info_bancaria_form.banco }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tipo de Cuenta</label>
+                                            {{ info_bancaria_form.tipo_cuenta }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Número de Cuenta</label>
+                                            {{ info_bancaria_form.numero_cuenta }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="tab-pane fade" id="info_adicional" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="info_adicional">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha Primera Cotización</label>
+                                            {{ info_adicional_form.fecha_primera_cotizacion }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Meses Anteriores</label>
+                                            {{ info_adicional_form.meses_anteriores }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Fecha Reconocimiento Vacaciones</label>
+                                            {{ info_adicional_form.fecha_reconocimiento_vacaciones }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Años Anteriores</label>
+                                            {{ info_adicional_form.anos_anteriores }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Días Vacaciones Usados</label>
+                                            {{ info_adicional_form.dias_vacaciones_usados }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Días Vacaciones Anuales</label>
+                                            {{ info_adicional_form.dias_vacaciones_anuales }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">Ajustes Vacaciones Progresivas</label>
+                                            <div class="textarea-container">
+                                                {{ info_adicional_form.ajustes_vacaciones_progresivas }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Seguro Cesantía -->
+                <div class="tab-pane fade" id="seguro_cesantia" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="seguro_cesantia">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check">
+                                            {{ seguro_cesantia_form.acogido_seguro }}
+                                            <label class="form-check-label">Acogido a Seguro de Cesantía</label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">AFP Recaudadora</label>
+                                            {{ seguro_cesantia_form.afp_recaudadora }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check">
+                                            {{ seguro_cesantia_form.acogido_seguro_accidentes }}
+                                            <label class="form-check-label">Acogido a Seguro de Accidentes</label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Sueldo Patronal</label>
+                                            {{ seguro_cesantia_form.sueldo_patronal }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Previsión -->
+                <div class="tab-pane fade" id="prevision" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="prevision">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Sistema de Salud</label>
+                                            {{ prevision_form.salud }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tasa de Cotización</label>
+                                            {{ prevision_form.tasa }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Régimen Previsional</label>
+                                            {{ prevision_form.regimen }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">AFP</label>
+                                            {{ prevision_form.afp }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3 form-check">
+                                            {{ prevision_form.pensionado }}
+                                            <label class="form-check-label">Pensionado</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Otros -->
+                <div class="tab-pane fade" id="otros" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="otros">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tipo de Discapacidad</label>
+                                            {{ otros_form.tipo_discapacidad }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tasa de Indemnización</label>
+                                            {{ otros_form.tasa_indemnizacion }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Antecedentes Conducir - Lista tipo Excel -->
+                <div class="tab-pane fade" id="antecedentes_conducir" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="antecedentes_conducir">
+                            {{ antecedentes_conducir_formset.management_form }}
+                            
+                            <button type="button" class="btn btn-add text-white" onclick="addForm('antecedentes_conducir')">
+                                <i class="fas fa-plus me-2"></i>Agregar Licencia
+                            </button>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo Licencia</th>
+                                        <th>Municipalidad</th>
+                                        <th>Último Control</th>
+                                        <th>Vencimiento</th>
+                                        <th>Hoja de Vida</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="antecedentes_conducir-forms">
+                                    {% for form in antecedentes_conducir_formset %}
+                                        <tr>
+                                            <td>{{ form.tipo_licencia }}</td>
+                                            <td>{{ form.municipalidad }}</td>
+                                            <td>{{ form.fecha_ultimo_control }}</td>
+                                            <td>{{ form.fecha_vencimiento }}</td>
+                                            <td>
+                                                <div class="textarea-container">
+                                                    {{ form.hoja_vida_conducir }}
+                                                </div>
+                                            </td>
+                                            <td class="actions">
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="this.closest('tr').remove()">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" name="export_antecedentes_conducir" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Nivel Estudios -->
+                <div class="tab-pane fade" id="nivel_estudios" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="nivel_estudios">
+                            <div class="two-column-form">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nivel de Estudios</label>
+                                            {{ nivel_estudios_form.nivel_estudios }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Último Curso</label>
+                                            {{ nivel_estudios_form.ultimo_curso }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check">
+                                            {{ nivel_estudios_form.completo }}
+                                            <label class="form-check-label">Estudios Completos</label>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Carrera</label>
+                                            {{ nivel_estudios_form.carrera }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información Complementaria - Lista tipo Excel -->
+                <div class="tab-pane fade" id="info_complementaria" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="info_complementaria">
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Campo</th>
+                                        <th>Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>País de Origen</td>
+                                        <td>{{ info_complementaria_form.pais_origen }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pasaporte</td>
+                                        <td>{{ info_complementaria_form.pasaporte }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Estado Civil</td>
+                                        <td>{{ info_complementaria_form.estado_civil }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tipo de Visa</td>
+                                        <td>{{ info_complementaria_form.tipo_visa }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Número de Calzado</td>
+                                        <td>{{ info_complementaria_form.numero_calzado }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Talla de Ropa</td>
+                                        <td>{{ info_complementaria_form.talla_ropa }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Grupo Sanguíneo</td>
+                                        <td>{{ info_complementaria_form.grupo_sanguineo }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Alérgico a</td>
+                                        <td>
+                                            <div class="textarea-container">
+                                                {{ info_complementaria_form.alergico }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Personal Destacado</td>
+                                        <td>{{ info_complementaria_form.personal_destacado }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Exámenes Mutual - Lista tipo Excel -->
+                <div class="tab-pane fade" id="examenes" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="examenes">
+                            {{ examenes_formset.management_form }}
+                            
+                            <button type="button" class="btn btn-add text-white" onclick="addForm('examenes')">
+                                <i class="fas fa-plus me-2"></i>Agregar Examen
+                            </button>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo de Examen</th>
+                                        <th>Fecha de Examen</th>
+                                        <th>Fecha de Vencimiento</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="examenes-forms">
+                                    {% for form in examenes_formset %}
+                                        <tr>
+                                            <td>{{ form.tipo_examen }}</td>
+                                            <td>{{ form.fecha_examen }}</td>
+                                            <td>{{ form.fecha_vencimiento }}</td>
+                                            <td class="actions">
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="this.closest('tr').remove()">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" name="export_examenes" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Grupo Familiar - Lista tipo Excel -->
+                <div class="tab-pane fade" id="grupo_familiar" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="grupo_familiar">
+                            {{ grupo_familiar_formset.management_form }}
+                            
+                            <button type="button" class="btn btn-add text-white" onclick="addForm('grupo_familiar')">
+                                <i class="fas fa-plus me-2"></i>Agregar Familiar
+                            </button>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>RUT</th>
+                                        <th>Nombre</th>
+                                        <th>Fecha Nacimiento</th>
+                                        <th>Edad</th>
+                                        <th>Sexo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grupo_familiar-forms">
+                                    {% for form in grupo_familiar_formset %}
+                                        <tr>
+                                            <td>{{ form.rut_carga }}</td>
+                                            <td>{{ form.nombre_carga }}</td>
+                                            <td>{{ form.fecha_nacimiento }}</td>
+                                            <td>{{ form.edad }}</td>
+                                            <td>{{ form.sexo }}</td>
+                                            <td class="actions">
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="this.closest('tr').remove()">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" name="export_grupo_familiar" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Capacitaciones - Lista tipo Excel -->
+                <div class="tab-pane fade" id="capacitacion" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="capacitacion">
+                            {{ capacitacion_formset.management_form }}
+                            
+                            <button type="button" class="btn btn-add text-white" onclick="addForm('capacitacion')">
+                                <i class="fas fa-plus me-2"></i>Agregar Capacitación
+                            </button>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th>Horas</th>
+                                        <th>Institución</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="capacitacion-forms">
+                                    {% for form in capacitacion_formset %}
+                                        <tr>
+                                            <td>
+                                                <div class="textarea-container">
+                                                    {{ form.descripcion }}
+                                                </div>
+                                            </td>
+                                            <td>{{ form.horas }}</td>
+                                            <td>{{ form.institucion }}</td>
+                                            <td class="actions">
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="this.closest('tr').remove()">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" name="export_capacitaciones" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Licencias Médicas - Lista tipo Excel -->
+                <div class="tab-pane fade" id="licencias_medicas" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="licencias_medicas">
+                            {{ licencias_medicas_formset.management_form }}
+                            
+                            <button type="button" class="btn btn-add text-white" onclick="addForm('licencias_medicas')">
+                                <i class="fas fa-plus me-2"></i>Agregar Licencia
+                            </button>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo Accidente</th>
+                                        <th>Clasificación</th>
+                                        <th>Inicio Reposo</th>
+                                        <th>Término</th>
+                                        <th>Alta</th>
+                                        <th>Días Reposo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="licencias_medicas-forms">
+                                    {% for form in licencias_medicas_formset %}
+                                        <tr>
+                                            <td>{{ form.tipo_accidente }}</td>
+                                            <td>{{ form.clasificacion_accidente }}</td>
+                                            <td>{{ form.fecha_inicio_reposo }}</td>
+                                            <td>{{ form.fecha_termino }}</td>
+                                            <td>{{ form.fecha_alta }}</td>
+                                            <td>{{ form.dias_reposo }}</td>
+                                            <td class="actions">
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="this.closest('tr').remove()">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="d-flex justify-content-between mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" name="export_licencias_medicas" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para agregar nuevos formularios dinámicamente
+    function addForm(formsetId) {
+        const formsContainer = document.getElementById(`${formsetId}-forms`);
+        const formCount = formsContainer.children.length;
+        const newForm = formsContainer.children[0].cloneNode(true);
+        
+        // Limpiar los valores del nuevo formulario
+        const inputs = newForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type !== 'button') {
+                input.value = '';
+            }
+            // Actualizar nombres de campos para evitar conflictos
+            const name = input.getAttribute('name');
+            if (name) {
+                const newName = name.replace(/-0-/, `-${formCount}-`);
+                input.setAttribute('name', newName);
+            }
+            
+            const id = input.getAttribute('id');
+            if (id) {
+                const newId = id.replace(/-0-/, `-${formCount}-`);
+                input.setAttribute('id', newId);
+            }
+        });
+        
+        formsContainer.appendChild(newForm);
+        
+        // Actualizar el contador de formularios
+        const totalForms = document.getElementById(`id_${formsetId}-TOTAL_FORMS`);
+        totalForms.value = parseInt(totalForms.value) + 1;
+    }
+    
+    // Inicializar componentes después de cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar datepickers
+        $('input[type="date"]').each(function() {
+            if (!this.value) {
+                this.valueAsDate = new Date();
+            }
+        });
+        
+        // Ajustar altura de textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(ta => {
+            ta.style.height = '120px';
+        });
+    });
+</script>
+{% endblock %}

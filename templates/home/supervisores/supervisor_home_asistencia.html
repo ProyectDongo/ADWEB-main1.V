@@ -159,6 +159,11 @@
                                                         title="Registro de Asistencia">
                                                         <i class="fas fa-list"></i>
                                                     </a>
+                                                    <a href="{% url 'user_full_info' supervisor.id %}"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        title="Información Completa">
+                                                            <i class="fas fa-info-circle"></i>
+                                                        </a>
                                                     <button class="btn btn-sm btn-outline-danger delete-user" 
                                                             data-id="{{ supervisor.id }}"
                                                             title="Eliminar Supervisor">
@@ -259,6 +264,11 @@
                                                         class="btn btn-sm btn-outline-info"
                                                         title="Registro de Asistencia">
                                                         <i class="fas fa-list"></i>
+                                                    </a>
+                                                    <a href="{% url 'user_full_info' trabajador.id %}"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        title="Información Completa">
+                                                        <i class="fas fa-info-circle"></i>
                                                     </a>
                                                     <button class="btn btn-sm btn-outline-danger delete-user" 
                                                             data-id="{{ trabajador.id }}"
@@ -641,69 +651,66 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Configurar modal
-    $('#usuarioModal').on('show.bs.modal', function(e) {
-        const isEdit = $(e.relatedTarget).hasClass('edit-user');
-        const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
-        currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
+   $('#usuarioModal').on('show.bs.modal', function(e) {
+    const isEdit = $(e.relatedTarget).hasClass('edit-user');
+    const tipo = $(e.relatedTarget).closest('[data-tipo]').data('tipo') || 'trabajador';
+    currentUser = isEdit ? $(e.relatedTarget).data('id') : null;
 
-        const formContent = $('#formContent');
-        if (isEdit) {
-            $('#modalTitle').text('Editar Usuario');
-            const formContent = $('#formContent');
-            formContent.load("{% url 'get_form_template' 'edit' %}", function(response, status, xhr) {
-                if (status === "success") {
-                    const updateUrl = urlData.update.replace('0', currentUser);
-                    console.log('URL de actualización:', updateUrl); // Depuración
-                    fetch(updateUrl)
-                        .then(r => {
-                            if (!r.ok) throw new Error(`Error ${r.status}: ${r.statusText}`);
-                            return r.json();
-                        })
-                        .then(data => {
-                            console.log('Datos recibidos:', data); // Depuración
-                            setTimeout(() => {
-                                $('input[name="rut"]').val(data.rut);
-                                $('input[name="first_name"]').val(data.first_name);
-                                $('input[name="last_name"]').val(data.last_name);
-                                $('input[name="email"]').val(data.email);
-                                $('input[name="username"]').val(data.username || data.rut.replace('-', ''));
-                                $('input[name="celular"]').val(data.celular);
-                                $('select[name="role"]').val(data.role);
-                                $('select[name="horario"]').val(data.horario || '');
-                                $('select[name="turno"]').val(data.turno || '');
-                                $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
-                                $('#id_password').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
-                                $('select[name="role"] option[value="admin"]').remove(); // Eliminar "admin"
-                                originalEmail = data.email;
-                                console.log('Campos asignados, RUT:', $('input[name="rut"]').val()); // Depuración
-                            }, 0);
-                        })
-                        .catch(error => {
-                            console.error('Error en fetch:', error);
-                            Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
-                        });
-        } else {
-            console.error('Error al cargar formulario:', xhr.statusText);
-            Swal.fire('Error', 'No se pudo cargar el formulario', 'error');
-        }
-    
-            });
-        } else {
-            $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-            formContent.load("{% url 'get_form_template' 'create' %}", function() {
-                $('#usuarioForm')[0].reset();
-                $('#id_password').attr({'required': true, 'placeholder': 'Contraseña'});
-                $('select[name="role"]').val(tipo);
-                originalEmail = null;
-                // Eliminar opción "admin" al crear nuevo usuario
-                $('select[name="role"] option[value="admin"]').remove();
-            });
-        }
+    if (isEdit) {
+        $('#modalTitle').text('Editar Usuario');
+        const updateUrl = urlData.update.replace('0', currentUser);
+        console.log('URL de actualización:', updateUrl); // Depuración
 
-        $('#usuarioForm').attr('action', isEdit ? 
-            urlData.update.replace('0', currentUser) : 
-            urlData.create);
-    });
+        // Hacer la petición para obtener los datos del usuario
+        fetch(updateUrl, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': "{{ csrf_token }}"
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data); // Depuración
+            // Asignar los datos a los campos del formulario
+            $('input[name="rut"]').val(data.rut || '');
+            $('input[name="username"]').val(data.username || '');
+            $('input[name="first_name"]').val(data.first_name || '');
+            $('input[name="last_name"]').val(data.last_name || '');
+            $('input[name="email"]').val(data.email || '');
+            $('input[name="celular"]').val(data.celular || '');
+            $('select[name="role"]').val(data.role || '');
+            $('select[name="horario"]').val(data.horario || '');
+            $('select[name="turno"]').val(data.turno || '');
+            $('select[name="metodo_registro_permitido"]').val(data.metodo_registro_permitido || '');
+            // Configurar el campo de contraseña para edición
+            $('input[name="password"]').val('').attr('placeholder', 'Dejar en blanco para no cambiar').removeAttr('required');
+            // Eliminar la opción "admin" del select de roles
+            $('select[name="role"] option[value="admin"]').remove();
+            originalEmail = data.email;
+        })
+        .catch(error => {
+            console.error('Error al cargar datos:', error);
+            Swal.fire('Error', 'No se pudo cargar los datos del usuario', 'error');
+        });
+    } else {
+        $('#modalTitle').text(`Nuevo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+        // Resetear el formulario para creación
+        $('#usuarioForm')[0].reset();
+        $('input[name="password"]').attr({'required': true, 'placeholder': 'Contraseña'}).val('');
+        $('select[name="role"]').val(tipo);
+        // Eliminar la opción "admin" del select de roles
+        $('select[name="role"] option[value="admin"]').remove();
+        originalEmail = null;
+    }
+
+    // Configurar la acción del formulario
+    $('#usuarioForm').attr('action', isEdit ? 
+        urlData.update.replace('0', currentUser) : 
+        urlData.create);
+});
 
     // Validación RUT en tiempo real
     $('body').on('input', '[name="rut"]', _.debounce(function() {

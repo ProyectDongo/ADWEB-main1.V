@@ -137,6 +137,7 @@ urlpatterns = [
     path('notificaciones_supervisor_json/<int:vigencia_plan_id>/', asistencia.notificaciones_supervisor_json, name='notificaciones_supervisor_json'),
     path('set_ubicacion_nombre/<int:vigencia_plan_id>/<str:ip_address>/', asistencia.set_ubicacion_nombre, name='set_ubicacion_nombre'),
     path('vigencia/<int:vigencia_plan_id>/registros/', asistencia.registros_entrada_vigencia, name='registros_entrada_vigencia'),
+    path('user/<int:user_id>/full-info/', asistencia.user_full_info, name='user_full_info'),
     # ------------------------------------------------------------------------------------ #
     # Biometría
     # ------------------------------------------------------------------------------------ #

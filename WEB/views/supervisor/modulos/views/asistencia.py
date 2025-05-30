@@ -8,8 +8,8 @@ from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado,Notificacion, Ubicacion
-from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado,Notificacion, Ubicacion,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
+from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm, PerfilUsuarioForm, ContactoUsuarioForm, InformacionBancariaForm,InformacionAdicionalForm, SeguroCesantiaForm, PrevisionForm, OtrosForm,AntecedentesConducirForm, NivelEstudiosForm, InformacionComplementariaForm,ExamenesMutualFormSet, GrupoFamiliarFormSet, CapacitacionFormSet, LicenciasMedicasFormSet, AntecedentesConducirFormSet
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, date
@@ -17,6 +17,8 @@ from calendar import monthrange
 import logging
 from django import template
 from django.db import DatabaseError
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 
 
@@ -320,6 +322,9 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
         
         form = UsuarioForm(request.POST, instance=user)
         if form.is_valid():
+            if form.cleaned_data['role'] == 'admin':
+                return JsonResponse({'errors': {'role': ['No se permite asignar el rol de administrador']}}, status=403)
+            
             user = form.save(commit=False)
             user.empresa = vigencia_plan.empresa
             user.vigencia_plan = vigencia_plan
@@ -327,7 +332,6 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
             if password:
                 user.set_password(password)
             user.save()
-            print(f"Usuario autenticado tras guardar: {request.user.is_authenticated}")  # Depuración
             return JsonResponse({
                 'message': 'Usuario guardado exitosamente',
                 'redirect_url': reverse('supervisor_home_asistencia', kwargs={
@@ -445,3 +449,208 @@ class ActualizarDiaView(LoginRequiredMixin, View):
         
         # Devolver respuesta JSON exitosa
         return JsonResponse({'success': True})
+    
+
+@login_required
+def user_full_info(request, user_id):
+    user = get_object_or_404(Usuario, id=user_id)
+    
+    # Verificación de permisos
+    if request.user.role not in ['supervisor', 'admin'] or user.vigencia_plan != request.user.vigencia_plan:
+        return render(request, 'error/error.html', {'message': 'Acceso no autorizado'})
+
+    # Obtener o crear instancias de modelos OneToOne
+    perfil, _ = PerfilUsuario.objects.get_or_create(usuario=user)
+    contacto, _ = ContactoUsuario.objects.get_or_create(usuario=user)
+    info_bancaria, _ = InformacionBancaria.objects.get_or_create(usuario=user)
+    info_adicional, _ = InformacionAdicional.objects.get_or_create(usuario=user)
+    seguro_cesantia, _ = SeguroCesantia.objects.get_or_create(usuario=user)
+    prevision, _ = Prevision.objects.get_or_create(usuario=user)
+    otros, _ = Otros.objects.get_or_create(usuario=user)
+    nivel_estudios, _ = NivelEstudios.objects.get_or_create(usuario=user)
+    info_complementaria, _ = InformacionComplementaria.objects.get_or_create(usuario=user)
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        # Manejo de formularios OneToOne
+        if form_type == 'usuario':
+            form = UsuarioForm(request.POST, instance=user)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Información básica actualizada.')
+        
+        elif form_type == 'perfil':
+            form = PerfilUsuarioForm(request.POST, instance=perfil)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Perfil actualizado.')
+        
+        elif form_type == 'contacto':
+            form = ContactoUsuarioForm(request.POST, instance=contacto)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Contacto actualizado.')
+        
+        elif form_type == 'info_bancaria':
+            form = InformacionBancariaForm(request.POST, instance=info_bancaria)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Información bancaria actualizada.')
+        
+        elif form_type == 'info_adicional':
+            form = InformacionAdicionalForm(request.POST, instance=info_adicional)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Información adicional actualizada.')
+        
+        elif form_type == 'seguro_cesantia':
+            form = SeguroCesantiaForm(request.POST, instance=seguro_cesantia)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Seguro de cesantía actualizado.')
+        
+        elif form_type == 'prevision':
+            form = PrevisionForm(request.POST, instance=prevision)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Previsión actualizada.')
+        
+        elif form_type == 'otros':
+            form = OtrosForm(request.POST, instance=otros)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Otros datos actualizados.')
+        
+        elif form_type == 'nivel_estudios':
+            form = NivelEstudiosForm(request.POST, instance=nivel_estudios)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Nivel de estudios actualizado.')
+        
+        elif form_type == 'info_complementaria':
+            form = InformacionComplementariaForm(request.POST, instance=info_complementaria)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Información complementaria actualizada.')
+        
+        # Manejo de formsets ForeignKey
+        elif form_type == 'examenes':
+            formset = ExamenesMutualFormSet(request.POST, instance=user)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, 'Exámenes mutual actualizados.')
+            if 'export_examenes' in request.POST:
+                queryset = user.examenes_mutual.all()
+                fields = ['tipo_examen', 'fecha_examen', 'fecha_vencimiento']
+                return export_to_excel(request, queryset, fields, f"examenes_mutual_{user.username}")
+        
+        elif form_type == 'grupo_familiar':
+            formset = GrupoFamiliarFormSet(request.POST, instance=user)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, 'Grupo familiar actualizado.')
+            if 'export_grupo_familiar' in request.POST:
+                queryset = user.grupo_familiar.all()
+                fields = ['rut_carga', 'nombre_carga', 'fecha_nacimiento', 'edad', 'sexo']
+                return export_to_excel(request, queryset, fields, f"grupo_familiar_{user.username}")
+        
+        elif form_type == 'capacitacion':
+            formset = CapacitacionFormSet(request.POST, instance=user)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, 'Capacitaciones actualizadas.')
+            if 'export_capacitaciones' in request.POST:
+                queryset = user.capacitaciones.all()
+                fields = ['descripcion', 'horas', 'institucion']
+                return export_to_excel(request, queryset, fields, f"capacitaciones_{user.username}")
+        
+        elif form_type == 'licencias_medicas':
+            formset = LicenciasMedicasFormSet(request.POST, instance=user)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, 'Licencias médicas actualizadas.')
+            if 'export_licencias_medicas' in request.POST:
+                queryset = user.licencias_medicas.all()
+                fields = ['tipo_accidente', 'clasificacion_accidente', 'fecha_inicio_reposo', 
+                          'fecha_termino', 'fecha_alta', 'dias_reposo']
+                return export_to_excel(request, queryset, fields, f"licencias_medicas_{user.username}")
+        
+        elif form_type == 'antecedentes_conducir':
+            formset = AntecedentesConducirFormSet(request.POST, instance=user)
+            if formset.is_valid():
+                formset.save()
+                messages.success(request, 'Antecedentes de conducir actualizados.')
+            if 'export_antecedentes_conducir' in request.POST:
+                queryset = user.antecedentes_conducir.all()
+                fields = ['tipo_licencia', 'municipalidad', 'fecha_ultimo_control', 
+                          'fecha_vencimiento', 'hoja_vida_conducir']
+                return export_to_excel(request, queryset, fields, f"antecedentes_conducir_{user.username}")
+        
+        return redirect('user_full_info', user_id=user.id)
+
+    # GET: Preparar formularios y formsets
+    usuario_form = UsuarioForm(instance=user)
+    perfil_form = PerfilUsuarioForm(instance=perfil)
+    contacto_form = ContactoUsuarioForm(instance=contacto)
+    info_bancaria_form = InformacionBancariaForm(instance=info_bancaria)
+    info_adicional_form = InformacionAdicionalForm(instance=info_adicional)
+    seguro_cesantia_form = SeguroCesantiaForm(instance=seguro_cesantia)
+    prevision_form = PrevisionForm(instance=prevision)
+    otros_form = OtrosForm(instance=otros)
+    nivel_estudios_form = NivelEstudiosForm(instance=nivel_estudios)
+    info_complementaria_form = InformacionComplementariaForm(instance=info_complementaria)
+    
+    examenes_formset = ExamenesMutualFormSet(instance=user)
+    grupo_familiar_formset = GrupoFamiliarFormSet(instance=user)
+    capacitacion_formset = CapacitacionFormSet(instance=user)
+    licencias_medicas_formset = LicenciasMedicasFormSet(instance=user)
+    antecedentes_conducir_formset = AntecedentesConducirFormSet(instance=user)
+
+    context = {
+        'user': user,
+        'usuario_form': usuario_form,
+        'perfil_form': perfil_form,
+        'contacto_form': contacto_form,
+        'info_bancaria_form': info_bancaria_form,
+        'info_adicional_form': info_adicional_form,
+        'seguro_cesantia_form': seguro_cesantia_form,
+        'prevision_form': prevision_form,
+        'otros_form': otros_form,
+        'nivel_estudios_form': nivel_estudios_form,
+        'info_complementaria_form': info_complementaria_form,
+        'examenes_formset': examenes_formset,
+        'grupo_familiar_formset': grupo_familiar_formset,
+        'capacitacion_formset': capacitacion_formset,
+        'licencias_medicas_formset': licencias_medicas_formset,
+        'antecedentes_conducir_formset': antecedentes_conducir_formset,
+    }
+    
+    return render(request, 'home/supervisores/DatosCompletos/user_full_info.html', context)
+
+# Función para exportar a Excel
+def export_to_excel(request, queryset, fields, filename):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Datos"
+
+    # Escribir encabezados
+    for col_num, field in enumerate(fields, 1):
+        col_letter = get_column_letter(col_num)
+        ws[f"{col_letter}1"] = field
+
+    # Escribir datos
+    for row_num, obj in enumerate(queryset, 2):
+        for col_num, field in enumerate(fields, 1):
+            col_letter = get_column_letter(col_num)
+            value = getattr(obj, field, '')
+            if isinstance(value, (date, datetime)):
+                value = value.strftime("%Y-%m-%d")
+            elif value is None:
+                value = ''
+            ws[f"{col_letter}{row_num}"] = str(value)
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f"attachment; filename={filename}.xlsx"
+    wb.save(response)
+    return response
