@@ -666,6 +666,11 @@ class NivelEstudiosForm(forms.ModelForm):
             'ultimo_curso': forms.TextInput(attrs={'class': 'form-control'}),
             'carrera': forms.TextInput(attrs={'class': 'form-control'}),
         }
+NivelEstudiosFormSet = inlineformset_factory(
+    Usuario, NivelEstudios,
+    fields=('nivel_estudios', 'completo', 'ultimo_curso', 'carrera'),
+    extra=1, can_delete=True
+)
 
 class InformacionComplementariaForm(forms.ModelForm):
     class Meta:

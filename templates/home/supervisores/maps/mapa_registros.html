@@ -1,0 +1,32 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block title %}Mapa de Registros - {{ vigencia_plan.plan.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h4 mb-4 text-primary"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Registros de Entrada</h1>
+    <a href="{% url 'supervisor_home_asistencia' vigencia_plan.empresa.id vigencia_plan.id %}" class="btn btn-outline-secondary mb-4">
+        <i class="fas fa-arrow-left me-2"></i>Volver
+    </a>
+    <div id="map" style="height: 500px; width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+</div>
+
+<script>
+function initMap() {
+    var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        center: {lat: -33.4489, lng: -70.6693} // Centro por defecto (ajusta según tu ubicación)
+    });
+
+    {% for registro in registros %}
+    var marker = new google.maps.Marker({
+        position: {lat: {{ registro.latitud }}, lng: {{ registro.longitud }}},
+        map: map,
+        title: '{{ registro.trabajador.get_full_name }} - {{ registro.hora_entrada|date:"d/m/Y H:i" }}'
+    });
+    {% endfor %}
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
+{% endblock %}

@@ -69,8 +69,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ('bootstrap5',)
 
 # Configuración CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8001",
-    "http://localhost:8001"
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
 ]
 
 
@@ -81,8 +81,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8001",
-    "http://127.0.0.1:8001"
+    "http://localhost:8000",
+    "http://127.0.0.1:8000"
 ]
 CORS_ALLOW_METHODS = [
     'GET',
@@ -251,3 +251,6 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOGIN_URL = '/login/'  # Apunta a tu vista de selección de login
+
+API_KEY =config('API_KEY')
+

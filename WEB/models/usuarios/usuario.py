@@ -159,6 +159,13 @@ class Usuario(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
 
+
+
+
+
+
+
+
 # Modelos adicionales
 
 class PerfilUsuario(models.Model):
@@ -295,7 +302,7 @@ class LicenciasMedicas(models.Model):
     dias_reposo = models.IntegerField(blank=True, null=True)
 
 class NivelEstudios(models.Model):
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, primary_key=True)
+    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, related_name='niveles_estudios')
     nivel_estudios = models.CharField(max_length=100, blank=True, null=True)
     completo = models.BooleanField(default=False)
     ultimo_curso = models.CharField(max_length=100, blank=True, null=True)

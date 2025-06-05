@@ -138,8 +138,8 @@ urlpatterns = [
     path('set_ubicacion_nombre/<int:vigencia_plan_id>/<str:ip_address>/', asistencia.set_ubicacion_nombre, name='set_ubicacion_nombre'),
     path('vigencia/<int:vigencia_plan_id>/registros/', asistencia.registros_entrada_vigencia, name='registros_entrada_vigencia'),
     path('user/<int:user_id>/full-info/', asistencia.user_full_info, name='user_full_info'),
-    # ------------------------------------------------------------------------------------ #
-    # Biometría
+    path('exportar_pestanas/<int:user_id>/', asistencia.export_selected_tabs, name='export_selected_tabs'), 
+    path('supervisor/mapa/<int:vigencia_plan_id>/', asistencia.ver_mapa_registros, name='ver_mapa_registros'),   # Biometría
     # ------------------------------------------------------------------------------------ #
     path('biometrics/', include('biometrics.urls')),
 

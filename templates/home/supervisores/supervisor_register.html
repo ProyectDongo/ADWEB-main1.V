@@ -38,10 +38,8 @@
                                             </div>
                                         </label>
 
-                                        <input type="radio" class="btn-check" name="metodo" id="geoRadio" 
-                                               value="geo">
-                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" 
-                                               for="geoRadio">
+                                        <input type="radio" class="btn-check" name="metodo" id="geoRadio" value="geo">
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" for="geoRadio">
                                             <i class="fas fa-map-marker-alt fa-2x me-3"></i>
                                             <div>
                                                 <h5 class="mb-1">Geolocalización</h5>
@@ -170,48 +168,76 @@
 
 
 <script>
-    // Animaciones y mejoras de UI
-document.addEventListener('DOMContentLoaded', function() {
-    // Efecto de carga inicial
-    document.body.style.opacity = '0';
-    setTimeout(() => document.body.style.opacity = '1', 100);
-    
-    // Actualización dinámica de geolocalización
+ document.addEventListener('DOMContentLoaded', function() {
     const geoSection = document.getElementById('geoSection');
     document.querySelectorAll('input[name="metodo"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            if(this.value === 'geo') {
+            if (this.value === 'geo') {
                 geoSection.classList.remove('d-none');
-                navigator.geolocation.getCurrentPosition(position => {
-                    document.getElementById('latitudInput').value = position.coords.latitude;
-                    document.getElementById('longitudInput').value = position.coords.longitude;
-                    geoSection.innerHTML = `
-                        <div class="alert alert-success d-flex align-items-center">
-                            <i class="fas fa-map-marker-alt fa-3x me-3"></i>
-                            <div>
-                                <h5 class="alert-heading">Ubicación obtenida</h5>
-                                <small class="text-muted">
-                                    Lat: ${position.coords.latitude.toFixed(4)}<br>
-                                    Lon: ${position.coords.longitude.toFixed(4)}
-                                </small>
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        document.getElementById('latitudInput').value = position.coords.latitude;
+                        document.getElementById('longitudInput').value = position.coords.longitude;
+                        geoSection.innerHTML = `
+                            <div class="alert alert-success d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt fa-3x me-3"></i>
+                                <div>
+                                    <h5 class="alert-heading">Ubicación obtenida</h5>
+                                    <small class="text-muted">
+                                        Lat: ${position.coords.latitude.toFixed(4)}<br>
+                                        Lon: ${position.coords.longitude.toFixed(4)}
+                                    </small>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                }, error => {
+                        `;
+                    }, error => {
+                        let errorMessage;
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Permiso denegado. Habilita la ubicación en tu navegador.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Ubicación no disponible.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "Tiempo agotado al obtener la ubicación.";
+                                break;
+                            default:
+                                errorMessage = "Error desconocido.";
+                        }
+                        geoSection.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                ${errorMessage}
+                            </div>
+                        `;
+                    });
+                } else {
                     geoSection.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Error obteniendo ubicación: ${error.message}
+                            Tu navegador no soporta geolocalización.
                         </div>
                     `;
-                });
+                }
             } else {
                 geoSection.classList.add('d-none');
             }
         });
     });
 
-    
+    // Validación del formulario antes de enviar
+    document.getElementById('entradaForm').addEventListener('submit', function(e) {
+        const metodo = document.querySelector('input[name="metodo"]:checked').value;
+        if (metodo === 'geo') {
+            const latitud = document.getElementById('latitudInput').value;
+            const longitud = document.getElementById('longitudInput').value;
+            if (!latitud || !longitud) {
+                e.preventDefault();
+                alert('Por favor, espera a que se obtenga la ubicación o selecciona otro método.');
+            }
+        }
+    });
 });
 
 // Función para obtener el token CSRF
@@ -321,6 +347,7 @@ function limpiarFirma() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('firmaInput').value = '';
 }
+
 </script>
 
 

@@ -33,6 +33,11 @@
     </div>
     <!-- Contenido Principal -->
     <main class="main-content">
+        <div class="d-flex justify-content-end mb-4">
+            <a href="{% url 'ver_mapa_registros' vigencia_plan.id %}" class="btn btn-info shadow-sm">
+                <i class="fas fa-map me-2"></i>Ver Mapa de Registros
+            </a>
+        </div>
         <!-- Header -->
         <header class="main-header">
             <div class="d-flex justify-content-between w-100">
@@ -1059,5 +1064,75 @@ $('#usuarioModal').on('shown.bs.modal', function() {
     });
 });
 });
+async function actualizarNotificaciones() {
+    try {
+        const response = await fetch(`{% url 'notificaciones_supervisor_json' vigencia_plan.id %}`);
+        const data = await response.json();
+
+        if (data.error) {
+            console.error('Error fetching notifications:', data.error);
+            return;
+        }
+
+        const badge = document.getElementById('notificacionesBadge');
+        badge.textContent = data.count;
+        badge.classList.toggle('invisible', data.count === 0);
+
+        const acordeon = document.getElementById('notificacionesAcordeon');
+        acordeon.innerHTML = '';
+
+        data.notifications.forEach((noti, index) => {
+            const itemId = `noti-${index}`;
+            const fecha = new Date(noti.timestamp).toLocaleString();
+            let mensaje = `${noti.worker} registró ${noti.tipo} a las ${fecha}`;
+            let ubicacionInfo = noti.ubicacion_nombre ? ` desde ${noti.ubicacion_nombre}` : (noti.ip_address ? ` desde IP ${noti.ip_address}` : '');
+            if (noti.latitud && noti.longitud) {
+                ubicacionInfo += ` (Lat: ${noti.latitud}, Lon: ${noti.longitud})`;
+            }
+            mensaje += ubicacionInfo;
+
+            const ubicacionBtn = noti.ubicacion_nombre ? `
+                <button class="btn btn-sm btn-outline-secondary mt-2 cambiar-nombre-btn" 
+                        data-vigencia-plan-id="${vigenciaPlanId}" 
+                        data-ip-address="${noti.ip_address}">
+                    Cambiar nombre de ubicación
+                </button>` : `
+                <button class="btn btn-sm btn-outline-primary mt-2 asignar-nombre-btn" 
+                        data-vigencia-plan-id="${vigenciaPlanId}" 
+                        data-ip-address="${noti.ip_address}">
+                    Asignar nombre a ubicación
+                </button>`;
+
+            const itemHTML = `
+                <div class="notificacion-item">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#${itemId}">
+                                <i class="bi bi-clock notificacion-icon"></i>
+                                <div class="d-flex flex-column">
+                                    <span class="small text-muted">${fecha}</span>
+                                    <div class="text-truncate" style="max-width: 250px;">
+                                        ${noti.worker} - ${noti.tipo}
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="${itemId}" class="accordion-collapse collapse" 
+                             data-bs-parent="#notificacionesAcordeon">
+                            <div class="accordion-body notificacion-body">
+                                <p>${mensaje}</p>
+                                ${ubicacionBtn}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            acordeon.insertAdjacentHTML('beforeend', itemHTML);
+        });
+    } catch (error) {
+        console.error('Error actualizando notificaciones:', error);
+    }
+}
     </script>
 {% endblock %}

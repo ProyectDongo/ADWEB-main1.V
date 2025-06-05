@@ -37,12 +37,12 @@
                                         </label>
 
                                        
-                                        <label class="text-start d-flex align-items-center" 
-                                              ">
+                                       <input type="radio" class="btn-check" name="metodo" id="geoRadio" value="geo">
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" for="geoRadio">
                                             <i class="fas fa-map-marker-alt fa-2x me-3"></i>
                                             <div>
                                                 <h5 class="mb-1">Geolocalización</h5>
-                                                <small class="text-muted">Se usara tu ubicación actual </small>
+                                                <small class="text-muted">Usar ubicación actual</small>
                                             </div>
                                         </label>
                                     </div>
@@ -319,6 +319,44 @@ function limpiarFirma() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('firmaInput').value = '';
 }
+navigator.geolocation.getCurrentPosition(position => {
+    document.getElementById('latitudInput').value = position.coords.latitude;
+    document.getElementById('longitudInput').value = position.coords.longitude;
+    geoSection.innerHTML = `
+        <div class="alert alert-success d-flex align-items-center">
+            <i class="fas fa-map-marker-alt fa-3x me-3"></i>
+            <div>
+                <h5 class="alert-heading">Ubicación obtenida</h5>
+                <small class="text-muted">
+                    Lat: ${position.coords.latitude.toFixed(4)}<br>
+                    Lon: ${position.coords.longitude.toFixed(4)}
+                </small>
+            </div>
+        </div>
+    `;
+}, error => {
+    let errorMessage;
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            errorMessage = "Permiso denegado para acceder a la ubicación. Por favor, permite el acceso en tu navegador.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            errorMessage = "La posición no está disponible.";
+            break;
+        case error.TIMEOUT:
+            errorMessage = "Tiempo de espera agotado al obtener la ubicación.";
+            break;
+        default:
+            errorMessage = "Error desconocido al obtener la ubicación.";
+            break;
+    }
+    geoSection.innerHTML = `
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${errorMessage}
+        </div>
+    `;
+});
 </script>
 
 

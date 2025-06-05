@@ -1,17 +1,29 @@
-{% extends "central_user.html" %}
+}{% extends "central_user.html" %}
 {% load static %}
 
 {% block title %}{{ user.get_full_name }} | Información Completa{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Estilos para pestañas atractivas */
+    /* Improved tab styling with horizontal scroll */
+    .nav-pills-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .nav-pills {
+        display: inline-flex;
+        flex-wrap: nowrap;
+    }
+    
     .nav-pills .nav-link {
         transition: all 0.3s;
         border-radius: 5px;
         margin: 2px;
         color: #333;
         font-weight: 500;
+        white-space: nowrap;
     }
     
     .nav-pills .nav-link.active {
@@ -24,23 +36,27 @@
         background-color: #f8f9fc;
     }
     
-    /* Estilos para listas tipo Excel */
+    /* Excel-like table styling */
     .data-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 20px;
         background: white;
+        border: 1px solid #e3e6f0;
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        font-size: 0.9rem;
     }
     
     .data-table th {
         background-color: #4e73df;
         color: white;
-        padding: 12px 15px;
+        padding: 10px 12px;
         text-align: left;
         font-weight: 600;
+        position: sticky;
+        top: 0;
     }
     
     .data-table tr {
@@ -52,15 +68,16 @@
     }
     
     .data-table td {
-        padding: 12px 15px;
+        padding: 10px 12px;
         vertical-align: middle;
     }
     
     .data-table .actions {
         white-space: nowrap;
+        text-align: center;
     }
     
-    /* Estilos para formularios en dos columnas */
+    /* Form styling */
     .two-column-form .row {
         margin-bottom: 15px;
     }
@@ -70,11 +87,11 @@
         color: #5a5c69;
     }
     
-    /* Botones de acción */
+    /* Action buttons */
     .btn-action {
-        padding: 5px 10px;
-        margin: 0 3px;
-        font-size: 0.85rem;
+        padding: 5px 8px;
+        margin: 0 2px;
+        font-size: 0.8rem;
     }
     
     .btn-add {
@@ -86,31 +103,48 @@
     .btn-export {
         background: linear-gradient(135deg, #36b9cc, #258391);
         border: none;
-        margin-top: 15px;
+        margin-left: 10px;
     }
     
-    /* Contenedores para textareas */
+    .btn-export-all {
+        background: linear-gradient(135deg, #6f42c1, #523091);
+        border: none;
+        margin: 15px 0;
+    }
+    
+    /* Textarea container */
     .textarea-container {
-        height: 120px;
+        height: 100px;
         overflow: auto;
         resize: vertical;
         max-height: 200px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 6px 12px;
     }
     
     /* Scrollable tab content */
     .tab-content {
-        max-height: 600px;
+        max-height: 70vh;
         overflow-y: auto;
         padding-right: 10px;
     }
     
-    /* Estilos para tarjetas */
+    /* Form cards */
     .form-card {
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         padding: 20px;
         margin-bottom: 20px;
+    }
+    
+    /* Table actions */
+    .table-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
     }
 </style>
 {% endblock %}
@@ -119,106 +153,108 @@
 <div class="container mt-4" style="margin-bottom:100px;">
     <div class="card border-0 shadow-lg">
         <div class="card-header bg-primary text-white border-0 rounded-top-3">
-            <h3 class="h4 mb-0 text-center">
-                <i class="bi bi-person-fill me-2"></i>Información Completa de {{ user.get_full_name }}
-            </h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="h4 mb-0">
+                    <i class="bi bi-person-fill me-2"></i>Información Completa de {{ user.get_full_name }}
+                </h3>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                <i class="fas fa-file-excel me-2"></i>Exportar Pestañas Seleccionadas
+                </button>
+            </div>
         </div>
         <div class="card-body p-4">
-            <!-- Botón Volver -->
+            <!-- Back button -->
             <a href="{% url 'supervisor_home_asistencia' user.vigencia_plan.empresa.id user.vigencia_plan.id %}" 
                class="btn btn-secondary mb-4">
                 <i class="fas fa-arrow-left me-2"></i>Volver
             </a>
 
-            <!-- Mensajes -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+           
 
-            <!-- Pestañas con nuevo diseño -->
-            <ul class="nav nav-pills nav-fill flex-wrap mb-4" id="userInfoTab" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="usuario-tab" data-bs-toggle="tab" href="#usuario" role="tab">
-                        <i class="bi bi-person me-2"></i>Información Básica
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="perfil-tab" data-bs-toggle="tab" href="#perfil" role="tab">
-                        <i class="bi bi-person-lines-fill me-2"></i>Perfil Usuario
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="contacto-tab" data-bs-toggle="tab" href="#contacto" role="tab">
-                        <i class="bi bi-phone me-2"></i>Contacto
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="info_bancaria-tab" data-bs-toggle="tab" href="#info_bancaria" role="tab">
-                        <i class="bi bi-bank me-2"></i>Bancaria
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="info_adicional-tab" data-bs-toggle="tab" href="#info_adicional" role="tab">
-                        <i class="bi bi-info-circle me-2"></i>Adicional
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="seguro_cesantia-tab" data-bs-toggle="tab" href="#seguro_cesantia" role="tab">
-                        <i class="bi bi-shield me-2"></i>Cesantía
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="prevision-tab" data-bs-toggle="tab" href="#prevision" role="tab">
-                        <i class="bi bi-heart-pulse me-2"></i>Previsión
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="otros-tab" data-bs-toggle="tab" href="#otros" role="tab">
-                        <i class="bi bi-file-text me-2"></i>Otros
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="antecedentes_conducir-tab" data-bs-toggle="tab" href="#antecedentes_conducir" role="tab">
-                        <i class="bi bi-car-front me-2"></i>Licencias
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="nivel_estudios-tab" data-bs-toggle="tab" href="#nivel_estudios" role="tab">
-                        <i class="bi bi-book me-2"></i>Estudios
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="info_complementaria-tab" data-bs-toggle="tab" href="#info_complementaria" role="tab">
-                        <i class="bi bi-person-plus me-2"></i>Complementaria
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="examenes-tab" data-bs-toggle="tab" href="#examenes" role="tab">
-                        <i class="bi bi-clipboard-check me-2"></i>Exámenes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="grupo_familiar-tab" data-bs-toggle="tab" href="#grupo_familiar" role="tab">
-                        <i class="bi bi-people me-2"></i>Familia
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="capacitacion-tab" data-bs-toggle="tab" href="#capacitacion" role="tab">
-                        <i class="bi bi-award me-2"></i>Capacitaciones
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="licencias_medicas-tab" data-bs-toggle="tab" href="#licencias_medicas" role="tab">
-                        <i class="bi bi-file-medical me-2"></i>Lic. Médicas
-                    </a>
-                </li>
-            </ul>
+            <!-- Tabs with horizontal scroll -->
+            <div class="nav-pills-container mb-4">
+                <ul class="nav nav-pills nav-fill" id="userInfoTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="usuario-tab" data-bs-toggle="tab" href="#usuario" role="tab">
+                            <i class="bi bi-person me-1"></i>Básica
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="perfil-tab" data-bs-toggle="tab" href="#perfil" role="tab">
+                            <i class="bi bi-person-lines-fill me-1"></i>Perfil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="contacto-tab" data-bs-toggle="tab" href="#contacto" role="tab">
+                            <i class="bi bi-phone me-1"></i>Contacto
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="info_bancaria-tab" data-bs-toggle="tab" href="#info_bancaria" role="tab">
+                            <i class="bi bi-bank me-1"></i>Bancaria
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="info_adicional-tab" data-bs-toggle="tab" href="#info_adicional" role="tab">
+                            <i class="bi bi-info-circle me-1"></i>Adicional
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="seguro_cesantia-tab" data-bs-toggle="tab" href="#seguro_cesantia" role="tab">
+                            <i class="bi bi-shield me-1"></i>Cesantía
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="prevision-tab" data-bs-toggle="tab" href="#prevision" role="tab">
+                            <i class="bi bi-heart-pulse me-1"></i>Previsión
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="otros-tab" data-bs-toggle="tab" href="#otros" role="tab">
+                            <i class="bi bi-file-text me-1"></i>Otros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="antecedentes_conducir-tab" data-bs-toggle="tab" href="#antecedentes_conducir" role="tab">
+                            <i class="bi bi-car-front me-1"></i>Licencias
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nivel_estudios-tab" data-bs-toggle="tab" href="#nivel_estudios" role="tab">
+                            <i class="bi bi-book me-1"></i>Estudios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="info_complementaria-tab" data-bs-toggle="tab" href="#info_complementaria" role="tab">
+                            <i class="bi bi-person-plus me-1"></i>Complementaria
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="examenes-tab" data-bs-toggle="tab" href="#examenes" role="tab">
+                            <i class="bi bi-clipboard-check me-1"></i>Exámenes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="grupo_familiar-tab" data-bs-toggle="tab" href="#grupo_familiar" role="tab">
+                            <i class="bi bi-people me-1"></i>Familia
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="capacitacion-tab" data-bs-toggle="tab" href="#capacitacion" role="tab">
+                            <i class="bi bi-award me-1"></i>Capacitaciones
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="licencias_medicas-tab" data-bs-toggle="tab" href="#licencias_medicas" role="tab">
+                            <i class="bi bi-file-medical me-1"></i>Lic. Médicas
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-            <!-- Contenido de las Pestañas -->
+            <!-- Tab content -->
             <div class="tab-content" id="userInfoTabContent">
-                <!-- Información Básica - Formulario en dos columnas -->
+                <!-- Basic Information -->
                 <div class="tab-pane fade show active" id="usuario" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -269,7 +305,7 @@
                     </div>
                 </div>
 
-                <!-- Perfil Usuario -->
+                <!-- User Profile -->
                 <div class="tab-pane fade" id="perfil" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -338,7 +374,7 @@
                     </div>
                 </div>
 
-                <!-- Contacto -->
+                <!-- Contact Information -->
                 <div class="tab-pane fade" id="contacto" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -389,7 +425,7 @@
                     </div>
                 </div>
 
-                <!-- Información Bancaria -->
+                <!-- Banking Information -->
                 <div class="tab-pane fade" id="info_bancaria" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -424,7 +460,7 @@
                     </div>
                 </div>
 
-                <!-- Información Adicional -->
+                <!-- Additional Information -->
                 <div class="tab-pane fade" id="info_adicional" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -477,7 +513,7 @@
                     </div>
                 </div>
 
-                <!-- Seguro Cesantía -->
+                <!-- Unemployment Insurance -->
                 <div class="tab-pane fade" id="seguro_cesantia" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -512,7 +548,7 @@
                     </div>
                 </div>
 
-                <!-- Previsión -->
+                <!-- Pension Information -->
                 <div class="tab-pane fade" id="prevision" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -555,7 +591,7 @@
                     </div>
                 </div>
 
-                <!-- Otros -->
+                <!-- Other Information -->
                 <div class="tab-pane fade" id="otros" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -582,7 +618,7 @@
                     </div>
                 </div>
 
-                <!-- Antecedentes Conducir - Lista tipo Excel -->
+                <!-- Driving Records - Excel-like list -->
                 <div class="tab-pane fade" id="antecedentes_conducir" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -590,9 +626,12 @@
                             <input type="hidden" name="form_type" value="antecedentes_conducir">
                             {{ antecedentes_conducir_formset.management_form }}
                             
-                            <button type="button" class="btn btn-add text-white" onclick="addForm('antecedentes_conducir')">
-                                <i class="fas fa-plus me-2"></i>Agregar Licencia
-                            </button>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('antecedentes_conducir')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Licencia
+                                </button>
+                                
+                            </div>
                             
                             <table class="data-table">
                                 <thead>
@@ -619,7 +658,7 @@
                                             </td>
                                             <td class="actions">
                                                 <button type="button" class="btn btn-danger btn-sm btn-action" 
-                                                    onclick="this.closest('tr').remove()">
+                                                    onclick="this.closest('tr').remove(); updateTotalForms('antecedentes_conducir')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -628,57 +667,68 @@
                                 </tbody>
                             </table>
                             
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="submit" name="export_antecedentes_conducir" class="btn btn-export text-white">
-                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Nivel Estudios -->
-                <div class="tab-pane fade" id="nivel_estudios" role="tabpanel">
-                    <div class="form-card">
-                        <form method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="form_type" value="nivel_estudios">
-                            <div class="two-column-form">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Nivel de Estudios</label>
-                                            {{ nivel_estudios_form.nivel_estudios }}
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Último Curso</label>
-                                            {{ nivel_estudios_form.ultimo_curso }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3 form-check">
-                                            {{ nivel_estudios_form.completo }}
-                                            <label class="form-check-label">Estudios Completos</label>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Carrera</label>
-                                            {{ nivel_estudios_form.carrera }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                             <button type="submit" class="btn btn-primary">Guardar</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Información Complementaria - Lista tipo Excel -->
+               <div class="tab-pane fade" id="nivel_estudios" role="tabpanel">
+                    <div class="form-card">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="nivel_estudios">
+                            {{ nivel_estudios_formset.management_form }}
+                            
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('nivel_estudios')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Nivel
+                                </button>
+                            </div>
+                            
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nivel de Estudios</th>
+                                        <th>Completo</th>
+                                        <th>Último Curso</th>
+                                        <th>Carrera</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="nivel_estudios-forms">
+                                    {% for form in nivel_estudios_formset %}
+                                        <tr class="formset-row">
+                                            <td>{{ form.nivel_estudios }}</td>
+                                            <td>{{ form.completo }}</td>
+                                            <td>{{ form.ultimo_curso }}</td>
+                                            <td>{{ form.carrera }}</td>
+                                            <td class="actions">
+                                                {{ form.DELETE }} <!-- Campo oculto para eliminación -->
+                                                <button type="button" class="btn btn-danger btn-sm btn-action" 
+                                                    onclick="markForDeletion(this, 'nivel_estudios')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Complementary Information - Excel-like list -->
                 <div class="tab-pane fade" id="info_complementaria" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
                             {% csrf_token %}
                             <input type="hidden" name="form_type" value="info_complementaria">
+                            
+                            <button type="submit" name="export_info_complementaria" class="btn btn-export text-white mb-3">
+                                <i class="fas fa-file-excel me-2"></i>Exportar
+                            </button>
                             
                             <table class="data-table">
                                 <thead>
@@ -736,7 +786,7 @@
                     </div>
                 </div>
 
-                <!-- Exámenes Mutual - Lista tipo Excel -->
+                <!-- Mutual Exams - Excel-like list -->
                 <div class="tab-pane fade" id="examenes" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -744,9 +794,14 @@
                             <input type="hidden" name="form_type" value="examenes">
                             {{ examenes_formset.management_form }}
                             
-                            <button type="button" class="btn btn-add text-white" onclick="addForm('examenes')">
-                                <i class="fas fa-plus me-2"></i>Agregar Examen
-                            </button>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('examenes')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Examen
+                                </button>
+                                <button type="submit" name="export_examenes" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar
+                                </button>
+                            </div>
                             
                             <table class="data-table">
                                 <thead>
@@ -765,7 +820,7 @@
                                             <td>{{ form.fecha_vencimiento }}</td>
                                             <td class="actions">
                                                 <button type="button" class="btn btn-danger btn-sm btn-action" 
-                                                    onclick="this.closest('tr').remove()">
+                                                    onclick="this.closest('tr').remove(); updateTotalForms('examenes')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -774,17 +829,12 @@
                                 </tbody>
                             </table>
                             
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="submit" name="export_examenes" class="btn btn-export text-white">
-                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Grupo Familiar - Lista tipo Excel -->
+                <!-- Family Group - Excel-like list -->
                 <div class="tab-pane fade" id="grupo_familiar" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -792,9 +842,14 @@
                             <input type="hidden" name="form_type" value="grupo_familiar">
                             {{ grupo_familiar_formset.management_form }}
                             
-                            <button type="button" class="btn btn-add text-white" onclick="addForm('grupo_familiar')">
-                                <i class="fas fa-plus me-2"></i>Agregar Familiar
-                            </button>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('grupo_familiar')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Familiar
+                                </button>
+                                <button type="submit" name="export_grupo_familiar" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar
+                                </button>
+                            </div>
                             
                             <table class="data-table">
                                 <thead>
@@ -817,7 +872,7 @@
                                             <td>{{ form.sexo }}</td>
                                             <td class="actions">
                                                 <button type="button" class="btn btn-danger btn-sm btn-action" 
-                                                    onclick="this.closest('tr').remove()">
+                                                    onclick="this.closest('tr').remove(); updateTotalForms('grupo_familiar')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -826,17 +881,12 @@
                                 </tbody>
                             </table>
                             
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="submit" name="export_grupo_familiar" class="btn btn-export text-white">
-                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Capacitaciones - Lista tipo Excel -->
+                <!-- Training - Excel-like list -->
                 <div class="tab-pane fade" id="capacitacion" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -844,9 +894,14 @@
                             <input type="hidden" name="form_type" value="capacitacion">
                             {{ capacitacion_formset.management_form }}
                             
-                            <button type="button" class="btn btn-add text-white" onclick="addForm('capacitacion')">
-                                <i class="fas fa-plus me-2"></i>Agregar Capacitación
-                            </button>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('capacitacion')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Capacitación
+                                </button>
+                                <button type="submit" name="export_capacitaciones" class="btn btn-export text-white">
+                                    <i class="fas fa-file-excel me-2"></i>Exportar
+                                </button>
+                            </div>
                             
                             <table class="data-table">
                                 <thead>
@@ -869,7 +924,7 @@
                                             <td>{{ form.institucion }}</td>
                                             <td class="actions">
                                                 <button type="button" class="btn btn-danger btn-sm btn-action" 
-                                                    onclick="this.closest('tr').remove()">
+                                                    onclick="this.closest('tr').remove(); updateTotalForms('capacitacion')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -878,17 +933,12 @@
                                 </tbody>
                             </table>
                             
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="submit" name="export_capacitaciones" class="btn btn-export text-white">
-                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Licencias Médicas - Lista tipo Excel -->
+                <!-- Medical Licenses - Excel-like list -->
                 <div class="tab-pane fade" id="licencias_medicas" role="tabpanel">
                     <div class="form-card">
                         <form method="post">
@@ -896,9 +946,12 @@
                             <input type="hidden" name="form_type" value="licencias_medicas">
                             {{ licencias_medicas_formset.management_form }}
                             
-                            <button type="button" class="btn btn-add text-white" onclick="addForm('licencias_medicas')">
-                                <i class="fas fa-plus me-2"></i>Agregar Licencia
-                            </button>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-add text-white" onclick="addForm('licencias_medicas')">
+                                    <i class="fas fa-plus me-2"></i>Agregar Licencia
+                                </button>
+                                
+                            </div>
                             
                             <table class="data-table">
                                 <thead>
@@ -923,7 +976,7 @@
                                             <td>{{ form.dias_reposo }}</td>
                                             <td class="actions">
                                                 <button type="button" class="btn btn-danger btn-sm btn-action" 
-                                                    onclick="this.closest('tr').remove()">
+                                                    onclick="this.closest('tr').remove(); updateTotalForms('licencias_medicas')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -932,12 +985,7 @@
                                 </tbody>
                             </table>
                             
-                            <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="submit" name="export_licencias_medicas" class="btn btn-export text-white">
-                                    <i class="fas fa-file-excel me-2"></i>Exportar a Excel
-                                </button>
-                            </div>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
                         </form>
                     </div>
                 </div>
@@ -945,55 +993,140 @@
         </div>
     </div>
 </div>
+<!-- Modal para seleccionar pestañas -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exportModalLabel">Seleccionar Pestañas para Exportar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="exportForm" method="post" action="{% url 'export_selected_tabs' user.id %}">
+            {% csrf_token %}
+          
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="perfil" id="tabPerfil">
+            <label class="form-check-label" for="tabPerfil">Perfil</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="contacto" id="tabContacto">
+            <label class="form-check-label" for="tabContacto">Contacto</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="info_bancaria" id="tabInfoBancaria">
+            <label class="form-check-label" for="tabInfoBancaria">Información Bancaria</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="info_adicional" id="tabInfoAdicional">
+            <label class="form-check-label" for="tabInfoAdicional">Información Adicional</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="seguro_cesantia" id="tabSeguroCesantia">
+            <label class="form-check-label" for="tabSeguroCesantia">Seguro de Cesantía</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="prevision" id="tabPrevision">
+            <label class="form-check-label" for="tabPrevision">Previsión</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="otros" id="tabOtros">
+            <label class="form-check-label" for="tabOtros">Otros</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="antecedentes_conducir" id="tabAntecedentesConducir">
+            <label class="form-check-label" for="tabAntecedentesConducir">Antecedentes de Conducir</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="nivel_estudios" id="tabNivelEstudios">
+            <label class="form-check-label" for="tabNivelEstudios">Nivel de Estudios</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="info_complementaria" id="tabInfoComplementaria">
+            <label class="form-check-label" for="tabInfoComplementaria">Información Complementaria</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="examenes" id="tabExamenes">
+            <label class="form-check-label" for="tabExamenes">Exámenes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="grupo_familiar" id="tabGrupoFamiliar">
+            <label class="form-check-label" for="tabGrupoFamiliar">Grupo Familiar</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="capacitacion" id="tabCapacitacion">
+            <label class="form-check-label" for="tabCapacitacion">Capacitación</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tabs" value="licencias_medicas" id="tabLicenciasMedicas">
+            <label class="form-check-label" for="tabLicenciasMedicas">Licencias Médicas</label>
+          </div>
 
+          <!-- Nuevo checkbox para combinar las pestañas en un solo archivo -->
+          <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" name="combine" id="combine">
+            <label class="form-check-label" for="combine">Combinar en un solo archivo</label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="submit" form="exportForm" class="btn btn-primary">Exportar Seleccionadas</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-    // Función para agregar nuevos formularios dinámicamente
-    function addForm(formsetId) {
-        const formsContainer = document.getElementById(`${formsetId}-forms`);
-        const formCount = formsContainer.children.length;
-        const newForm = formsContainer.children[0].cloneNode(true);
-        
-        // Limpiar los valores del nuevo formulario
-        const inputs = newForm.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            if (input.type !== 'button') {
-                input.value = '';
-            }
-            // Actualizar nombres de campos para evitar conflictos
-            const name = input.getAttribute('name');
-            if (name) {
-                const newName = name.replace(/-0-/, `-${formCount}-`);
-                input.setAttribute('name', newName);
-            }
-            
-            const id = input.getAttribute('id');
-            if (id) {
-                const newId = id.replace(/-0-/, `-${formCount}-`);
-                input.setAttribute('id', newId);
-            }
-        });
-        
-        formsContainer.appendChild(newForm);
-        
-        // Actualizar el contador de formularios
-        const totalForms = document.getElementById(`id_${formsetId}-TOTAL_FORMS`);
-        totalForms.value = parseInt(totalForms.value) + 1;
+function addForm(formsetId) {
+    const formsContainer = document.getElementById(`${formsetId}-forms`);
+    if (!formsContainer || formsContainer.children.length === 0) {
+        console.error(`No se encontró el contenedor o está vacío para ${formsetId}`);
+        return;
     }
     
-    // Inicializar componentes después de cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar datepickers
-        $('input[type="date"]').each(function() {
-            if (!this.value) {
-                this.valueAsDate = new Date();
-            }
-        });
-        
-        // Ajustar altura de textareas
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(ta => {
-            ta.style.height = '120px';
-        });
+    const formCount = formsContainer.children.length;
+    const totalForms = document.getElementById(`id_${formsetId}-TOTAL_FORMS`);
+    const newForm = formsContainer.children[0].cloneNode(true);
+    
+    // Limpiar valores y actualizar nombres/IDs
+    const inputs = newForm.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            input.checked = false;
+        } else if (input.type !== 'button') {
+            input.value = '';
+        }
+        const name = input.getAttribute('name');
+        if (name) {
+            input.setAttribute('name', name.replace(/-\d+-/, `-${formCount}-`));
+        }
+        const id = input.getAttribute('id');
+        if (id) {
+            input.setAttribute('id', id.replace(/-\d+-/, `-${formCount}-`));
+        }
     });
+    
+    formsContainer.appendChild(newForm);
+    totalForms.value = parseInt(totalForms.value) + 1;
+}
+
+function markForDeletion(button, formsetId) {
+    const row = button.closest('tr');
+    const deleteInput = row.querySelector('input[name$="-DELETE"]');
+    if (deleteInput) {
+        deleteInput.checked = true; // Marcar para eliminación
+        row.style.display = 'none'; // Ocultar visualmente
+    } else {
+        row.remove(); // Si es un formulario nuevo, eliminarlo directamente
+        updateTotalForms(formsetId);
+    }
+}
+
+function updateTotalForms(formsetId) {
+    const formsContainer = document.getElementById(`${formsetId}-forms`);
+    const totalForms = document.getElementById(`id_${formsetId}-TOTAL_FORMS`);
+    totalForms.value = formsContainer.children.length;
+}
 </script>
+
 {% endblock %}
