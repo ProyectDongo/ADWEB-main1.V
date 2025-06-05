@@ -13,20 +13,40 @@
 </div>
 
 <script>
-function initMap() {
-    var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: {lat: -33.4489, lng: -70.6693} // Centro por defecto (ajusta según tu ubicación)
-    });
+    // Convertir la cadena JSON en un arreglo JavaScript
+    var registrosData = JSON.parse('{{ registros_data|escapejs }}');
 
-    {% for registro in registros %}
-    var marker = new google.maps.Marker({
-        position: {lat: {{ registro.latitud }}, lng: {{ registro.longitud }}},
-        map: map,
-        title: '{{ registro.trabajador.get_full_name }} - {{ registro.hora_entrada|date:"d/m/Y H:i" }}'
-    });
-    {% endfor %}
-}
+    // Depuración: Verificar que registrosData es un arreglo
+    console.log('registrosData:', registrosData);
+    console.log('Es un arreglo:', Array.isArray(registrosData));
+
+    window.initMap = function() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10,
+            center: {lat: -33.4489, lng: -70.6693},
+            mapId: '{{ google_maps_map_id }}'
+        });
+
+        if (registrosData.length > 0) {
+            var bounds = new google.maps.LatLngBounds();
+            registrosData.forEach(function(registro) {
+                var position = {lat: registro.lat, lng: registro.lng};
+                bounds.extend(position);
+                new google.maps.marker.AdvancedMarkerElement({
+                    map: map,
+                    position: position,
+                    title: registro.title
+                });
+            });
+            map.fitBounds(bounds);
+        }
+    };
+
+    // Cargar el script de Google Maps de forma asíncrona con loading=async y libraries=marker
+    var script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&loading=async&libraries=marker';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
 {% endblock %}

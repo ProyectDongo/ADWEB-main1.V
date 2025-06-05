@@ -825,20 +825,13 @@ class TurnoForm(forms.ModelForm):
 class RegistroEntradaForm(forms.ModelForm):
     class Meta:
         model = RegistroEntrada
-        fields = ['hora_entrada', 'hora_salida', 'metodo', 'latitud', 'longitud', 'precision', 'es_retraso', 'minutos_retraso', 'es_horas_extra', 'minutos_horas_extra']
+        fields = ['metodo', 'latitud', 'longitud', 'firma_digital']
         widgets = {
-            'hora_entrada': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'metodo': forms.Select(attrs={'class': 'form-select'}),
-            'latitud': forms.NumberInput(attrs={'step': 'any'}),
-            'longitud': forms.NumberInput(attrs={'step': 'any'}),
-            'precision': forms.NumberInput(attrs={'step': 'any'}),
-            'es_retraso': forms.CheckboxInput(),
-            'minutos_retraso': forms.NumberInput(attrs={'seg': 0}),
-            'es_horas_extra': forms.CheckboxInput(),
-            'minutos_horas_extra': forms.NumberInput(attrs={'min': 0}),
+            'metodo': forms.Select(attrs={'class': 'form-control'}),
+            'latitud': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'longitud': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'firma_digital': forms.FileInput(attrs={'class': 'form-control'}),
         }
-        exclude = ['hora_entrada','minutos_horas_extra','es_horas_extra','minutos_retraso']
 
 
 

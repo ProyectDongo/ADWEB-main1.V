@@ -68,6 +68,9 @@ def handle_entrada(request):
         if form.cleaned_data['metodo'] == 'geo':
             latitud = request.POST.get('latitud')
             longitud = request.POST.get('longitud')
+            print("Datos recibidos:", request.POST)
+            if not form.is_valid():
+                print("Errores del formulario:", form.errors)
             if latitud and longitud:
                 try:
                     latitud = float(latitud)
@@ -81,6 +84,10 @@ def handle_entrada(request):
                     context['form_entrada'] = form
                     return render(request, 'home/users/trabajador_home.html', context)
             else:
+                print("Errores del formulario:", form.errors)
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Error en {field}: {error}")
                 messages.error(request, 'Geolocalización requerida')
                 context['form_entrada'] = form
                 return render(request, 'home/users/trabajador_home.html', context)

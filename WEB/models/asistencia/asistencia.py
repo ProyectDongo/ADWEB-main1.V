@@ -158,7 +158,8 @@ class RegistroEntrada(models.Model):
                 raise ValidationError("La empresa no tiene un plan de asistencia activo")  # Error si no hay plan
             # Verifica si se excede el límite de usuarios de la empresa
             if self.empresa.usuarios.count() >= self.empresa.limite_usuarios:
-                raise ValidationError("Límite de usuarios excedido para este plan")  # Error si se supera el límite
+                raise ValidationError("Límite de usuarios excedido para este plan")  
+        # Error si se supera el límite
 
     def save(self, *args, **kwargs):
         """

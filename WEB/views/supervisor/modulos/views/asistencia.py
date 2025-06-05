@@ -22,6 +22,7 @@ from openpyxl.utils import get_column_letter
 from io import BytesIO
 from zipfile import ZipFile
 from django.conf import settings
+import json
 
 
 
@@ -130,7 +131,6 @@ def set_ubicacion_nombre(request, vigencia_plan_id, ip_address):
 
 
 
-
 @login_required
 def ver_mapa_registros(request, vigencia_plan_id):
     if request.user.role != 'supervisor':
@@ -146,12 +146,29 @@ def ver_mapa_registros(request, vigencia_plan_id):
         longitud__isnull=False
     ).select_related('trabajador')
     
+    # Depuración: Imprime los valores para verificar
+    for registro in registros:
+        print(f"Latitud: {registro.latitud}, Longitud: {registro.longitud}")
+    
+    # Serializar los datos en JSON
+    registros_data = [
+        {
+            'lat': float(registro.latitud),
+            'lng': float(registro.longitud),
+            'title': f"{registro.trabajador.get_full_name()} - {registro.hora_entrada.strftime('%d/%m/%Y %H:%M')}"
+        }
+        for registro in registros
+    ]
+    
     context = {
-        'registros': registros,
+        'registros_data': json.dumps(registros_data),
         'vigencia_plan': vigencia_plan,
-        'google_maps_api_key': settings.API_KEY  
+        'google_maps_api_key': settings.API_KEY, 
+        'google_maps_map_id': settings.MAP_ID  # Asegúrate de que este ID esté configurado en tu settings.py
     }
     return render(request, 'home/supervisores/maps/mapa_registros.html', context)
+
+
 
 
 class ValidationView(View):

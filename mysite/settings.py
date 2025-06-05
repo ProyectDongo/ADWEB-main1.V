@@ -82,8 +82,10 @@ CORS_ALLOW_HEADERS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
-    "http://127.0.0.1:8000"
+    "http://127.0.0.1:8000",
+    "https://*.ngrok-free.app"
 ]
+
 CORS_ALLOW_METHODS = [
     'GET',
     'OPTIONS',
@@ -240,11 +242,11 @@ RECAPTCHA_PRIVATE_KEY = '0101'
 RECAPTCHA_REQUIRED_SCORE = 0.85
 
 SESSION_COOKIE_SAMESITE = 'Lax'  # Permite enviar cookies en redirecciones
-SESSION_COOKIE_SECURE = False     # Usa True si estás en HTTPS, False en desarrollo local
+SESSION_COOKIE_SECURE = True     # Usa True si estás en HTTPS, False en desarrollo local
 
 RATELIMIT_ENABLE = True
 
-CSRF_COOKIE_SECURE = False  # Solo para desarrollo
+CSRF_COOKIE_SECURE = True # Solo para desarrollo
 CSRF_COOKIE_HTTPONLY = False
 
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -253,4 +255,5 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 LOGIN_URL = '/login/'  # Apunta a tu vista de selección de login
 
 API_KEY =config('API_KEY')
+MAP_ID= config('MAP_ID')
 
