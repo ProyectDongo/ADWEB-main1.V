@@ -140,31 +140,41 @@ def ver_mapa_registros(request, vigencia_plan_id):
     if request.user.vigencia_plan != vigencia_plan:
         return render(request, 'error/error.html', {'message': 'No tienes permiso para este módulo'})
     
+    # Obtener registros de entrada y salida
     registros = RegistroEntrada.objects.filter(
-        trabajador__vigencia_plan=vigencia_plan,
-        latitud__isnull=False,
-        longitud__isnull=False
+        trabajador__vigencia_plan=vigencia_plan
     ).select_related('trabajador')
     
-    # Depuración: Imprime los valores para verificar
+    registros_data = []
     for registro in registros:
-        print(f"Latitud: {registro.latitud}, Longitud: {registro.longitud}")
+        if registro.latitud and registro.longitud:
+            registros_data.append({
+                'lat': float(registro.latitud),
+                'lng': float(registro.longitud),
+                'title': f"{registro.trabajador.get_full_name()} - Entrada - {registro.hora_entrada.strftime('%d/%m/%Y %H:%M')}",
+                'type': 'entrada',
+                'fecha': registro.hora_entrada.strftime('%Y-%m-%d'),
+                'trabajador': registro.trabajador.id
+            })
+        if registro.hora_salida and registro.latitud_salida and registro.longitud_salida:
+            registros_data.append({
+                'lat': float(registro.latitud_salida),
+                'lng': float(registro.longitud_salida),
+                'title': f"{registro.trabajador.get_full_name()} - Salida - {registro.hora_salida.strftime('%d/%m/%Y %H:%M')}",
+                'type': 'salida',
+                'fecha': registro.hora_salida.strftime('%Y-%m-%d'),
+                'trabajador': registro.trabajador.id
+            })
     
-    # Serializar los datos en JSON
-    registros_data = [
-        {
-            'lat': float(registro.latitud),
-            'lng': float(registro.longitud),
-            'title': f"{registro.trabajador.get_full_name()} - {registro.hora_entrada.strftime('%d/%m/%Y %H:%M')}"
-        }
-        for registro in registros
-    ]
+    # Obtener lista de usuarios para el filtro
+    usuarios = Usuario.objects.filter(vigencia_plan=vigencia_plan)
     
     context = {
         'registros_data': json.dumps(registros_data),
+        'usuarios': usuarios,
         'vigencia_plan': vigencia_plan,
-        'google_maps_api_key': settings.API_KEY, 
-        'google_maps_map_id': settings.MAP_ID  # Asegúrate de que este ID esté configurado en tu settings.py
+        'google_maps_api_key': settings.API_KEY,
+        'google_maps_map_id': settings.MAP_ID
     }
     return render(request, 'home/supervisores/maps/mapa_registros.html', context)
 

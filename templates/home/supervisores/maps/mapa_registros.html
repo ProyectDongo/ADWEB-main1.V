@@ -5,48 +5,183 @@
 
 {% block content %}
 <div class="container py-4">
-    <h1 class="h4 mb-4 text-primary"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Registros de Entrada</h1>
+    <h1 class="h4 mb-4 text-primary"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Registros</h1>
     <a href="{% url 'supervisor_home_asistencia' vigencia_plan.empresa.id vigencia_plan.id %}" class="btn btn-outline-secondary mb-4">
         <i class="fas fa-arrow-left me-2"></i>Volver
     </a>
-    <div id="map" style="height: 500px; width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div id="map" style="height: 500px; width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+        </div>
+        <div class="col-md-4">
+            <h3>Registros del Día</h3>
+            <ul id="registros-list" class="list-group mb-4"></ul>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="fas fa-filter me-2"></i>Filtrar Registros
+            </button>
+        </div>
+    </div>
 </div>
 
+<!-- Modal para filtrar -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">Filtrar Registros</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="fecha" class="form-label">Fecha</label>
+                    <input type="date" class="form-control" id="fecha">
+                </div>
+                <div class="mb-3">
+                    <label for="usuario" class="form-label">Usuario</label>
+                    <select class="form-select" id="usuario">
+                        <option value="">Todos</option>
+                        {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}">{{ usuario.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="aplicarFiltro">Aplicar Filtro</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}  
+<!-- Scripts al final del body -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Convertir la cadena JSON en un arreglo JavaScript
-    var registrosData = JSON.parse('{{ registros_data|escapejs }}');
+var map;
+var markers = [];
+var registros = JSON.parse('{{ registros_data|escapejs }}');
+var filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
 
-    // Depuración: Verificar que registrosData es un arreglo
-    console.log('registrosData:', registrosData);
-    console.log('Es un arreglo:', Array.isArray(registrosData));
+function mostrarRegistrosDelDia() {
+    var hoy = new Date().toISOString().split('T')[0];
+    var registrosHoy = registros.filter(function(registro) {
+        return registro.fecha === hoy;
+    });
+    mostrarRegistrosEnMapa(registrosHoy);
+    mostrarListaRegistros(registrosHoy);
+}
 
-    window.initMap = function() {
-        var map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 10,
-            center: {lat: -33.4489, lng: -70.6693},
-            mapId: '{{ google_maps_map_id }}'
+function mostrarRegistrosEnMapa(registrosFiltrados) {
+    markers.forEach(function(marker) {
+        marker.setMap(null);
+    });
+    markers = [];
+    var bounds = new google.maps.LatLngBounds();
+    registrosFiltrados.forEach(function(registro) {
+        var position = {lat: registro.lat, lng: registro.lng};
+        bounds.extend(position);
+        var marker = new google.maps.marker.AdvancedMarkerElement({
+            map: map,
+            position: position,
+            title: registro.title
         });
+        markers.push(marker);
+    });
+    if (registrosFiltrados.length > 0) {
+        map.fitBounds(bounds);
+    }
+}
 
-        if (registrosData.length > 0) {
-            var bounds = new google.maps.LatLngBounds();
-            registrosData.forEach(function(registro) {
-                var position = {lat: registro.lat, lng: registro.lng};
-                bounds.extend(position);
-                new google.maps.marker.AdvancedMarkerElement({
-                    map: map,
-                    position: position,
-                    title: registro.title
-                });
-            });
-            map.fitBounds(bounds);
+function mostrarListaRegistros(registrosFiltrados) {
+    var lista = document.getElementById('registros-list');
+    lista.innerHTML = '';
+    var usuarios = {};
+    registrosFiltrados.forEach(function(registro) {
+        if (!usuarios[registro.trabajador]) {
+            usuarios[registro.trabajador] = {entradas: [], salidas: []};
         }
-    };
+        if (registro.type === 'entrada') {
+            usuarios[registro.trabajador].entradas.push(registro);
+        } else {
+            usuarios[registro.trabajador].salidas.push(registro);
+        }
+    });
+    for (var usuarioId in usuarios) {
+        var usuario = usuarios[usuarioId];
+        var li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `<strong>${usuario.entradas[0]?.title.split(' - ')[0] || usuario.salidas[0]?.title.split(' - ')[0]}</strong>`;
+        var ulEntradas = document.createElement('ul');
+        ulEntradas.className = 'list-unstyled mb-2';
+        usuario.entradas.forEach(function(entrada) {
+            var liEntrada = document.createElement('li');
+            liEntrada.className = 'd-flex justify-content-between align-items-center mb-2';
+            liEntrada.innerHTML = `Entrada: ${entrada.title.split(' - ')[2]} <button class="btn btn-sm btn-primary" onclick="centrarMapa(${entrada.lat}, ${entrada.lng})">Ver</button>`;
+            ulEntradas.appendChild(liEntrada);
+        });
+        li.appendChild(ulEntradas);
+        var ulSalidas = document.createElement('ul');
+        ulSalidas.className = 'list-unstyled mb-2';
+        usuario.salidas.forEach(function(salida) {
+            var liSalida = document.createElement('li');
+            liSalida.className = 'd-flex justify-content-between align-items-center mb-2';
+            liSalida.innerHTML = `Salida: ${salida.title.split(' - ')[2]} <button class="btn btn-sm btn-primary" onclick="centrarMapa(${salida.lat}, ${salida.lng})">Ver</button>`;
+            ulSalidas.appendChild(liSalida);
+        });
+        li.appendChild(ulSalidas);
+        lista.appendChild(li);
+    }
+}
 
-    // Cargar el script de Google Maps de forma asíncrona con loading=async y libraries=marker
-    var script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&loading=async&libraries=marker';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+function centrarMapa(lat, lng) {
+    map.setCenter({lat: lat, lng: lng});
+    map.setZoom(15);
+}
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        center: {lat: -33.4489, lng: -70.6693},
+        mapId: '{{ google_maps_map_id }}'
+    });
+    mostrarRegistrosDelDia();
+}
+
+// Cargar el script de Google Maps
+var script = document.createElement('script');
+script.src = 'https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&loading=async&libraries=marker';
+script.async = true;
+script.defer = true;
+document.head.appendChild(script);
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('aplicarFiltro').addEventListener('click', function() {
+        console.log('Filtro aplicado'); // Verifica si el evento se dispara
+        var fecha = document.getElementById('fecha').value;
+        var usuario = document.getElementById('usuario').value;
+        var registrosFiltrados = registros.filter(function(registro) {
+            var coincideFecha = !fecha || registro.fecha === fecha;
+            var coincideUsuario = !usuario || registro.trabajador === parseInt(usuario, 10);
+            return coincideFecha && coincideUsuario;
+        });
+        mostrarRegistrosEnMapa(registrosFiltrados);
+        mostrarListaRegistros(registrosFiltrados);
+        
+        // Mover el foco a un elemento fuera del modal
+        document.getElementById('map').focus();
+        
+        filterModal.hide();
+        
+        // Elimina el backdrop con un pequeño retraso
+        setTimeout(function() {
+            document.body.classList.remove('modal-open');
+            var backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) backdrop.remove();
+        }, 300); // Retraso de 300ms
+    });
+});
 </script>
 {% endblock %}

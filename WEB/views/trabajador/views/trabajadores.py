@@ -114,6 +114,10 @@ def handle_entrada(request):
         context['form_entrada'] = form
         return render(request, 'home/users/trabajador_home.html', context)
 
+
+
+
+
 def handle_salida(request):
     entrada_activa = RegistroEntrada.objects.filter(
         trabajador=request.user,
@@ -126,6 +130,19 @@ def handle_salida(request):
     
     try:
         entrada_activa.hora_salida = timezone.now()
+        # Capturar ubicación de salida desde el formulario
+        if 'latitud_salida' in request.POST and 'longitud_salida' in request.POST:
+            try:
+                latitud_salida = float(request.POST['latitud_salida'])
+                longitud_salida = float(request.POST['longitud_salida'])
+                if (-90 <= latitud_salida <= 90) and (-180 <= longitud_salida <= 180):
+                    entrada_activa.latitud_salida = latitud_salida
+                    entrada_activa.longitud_salida = longitud_salida
+                else:
+                    messages.warning(request, 'Coordenadas de salida fuera de rango')
+            except ValueError:
+                messages.warning(request, 'Coordenadas de salida inválidas')
+        
         if request.user.horario:
             calcular_horas_extra(entrada_activa, request.user.horario)
         entrada_activa.save()

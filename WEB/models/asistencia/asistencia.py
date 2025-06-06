@@ -61,6 +61,8 @@ class RegistroEntrada(models.Model):
     - Precisión de 6 decimales para mayor exactitud (aproximadamente 11 cm).
     - Opcionales, ya que no todos los métodos los requieren.
     """
+    latitud_salida = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitud_salida = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     firma_digital = models.TextField(null=True, blank=True)
     """

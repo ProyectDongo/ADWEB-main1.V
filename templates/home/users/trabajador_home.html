@@ -3,10 +3,7 @@
 
 {% block content %}
 {% block sidebar %}{% endblock %}
-<br> <br> <br> <br><br> <br> <br> <br>
 <div class="container-fluid p-0 min-vh-100 bg-light">
-   
-
     <main class="container py-4">
         <div class="row g-4">
             <!-- Sección de Entrada -->
@@ -35,9 +32,7 @@
                                                 <small class="text-muted">Dibuja tu firma en el área designada</small>
                                             </div>
                                         </label>
-
-                                       
-                                       <input type="radio" class="btn-check" name="metodo" id="geoRadio" value="geo">
+                                        <input type="radio" class="btn-check" name="metodo" id="geoRadio" value="geo">
                                         <label class="btn btn-outline-primary text-start d-flex align-items-center" for="geoRadio">
                                             <i class="fas fa-map-marker-alt fa-2x me-3"></i>
                                             <div>
@@ -48,12 +43,11 @@
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Sección Firma -->
                             <div id="firmaSection" class="metodo-section">
                                 <div class="signature-container mb-4">
                                     <canvas id="firmaCanvas" class="signature-pad border rounded-2" 
-                                            width="300px" height="200"></canvas>
+                                            width="300" height="200"></canvas>
                                     <input type="hidden" name="firma_digital" id="firmaInput">
                                     <button type="button" class="btn btn-link text-danger mt-2" 
                                             onclick="limpiarFirma()">
@@ -61,17 +55,12 @@
                                     </button>
                                 </div>
                             </div>
-
                             <!-- Sección Geolocalización -->
-                                                    
                             <div id="geoSection" class="metodo-section d-none">
-                                <!-- Inputs ocultos siempre presentes -->
                                 <input type="hidden" name="latitud" id="latitudInput">
                                 <input type="hidden" name="longitud" id="longitudInput">
-                                <!-- Contenedor para mensajes dinámicos -->
                                 <div id="geoStatus"></div>
                             </div>
-
                             <button type="submit" name="entrada" 
                                     class="btn btn-primary btn-lg w-100 py-3 shadow-sm"
                                     {% if ultima_entrada_activa %}disabled{% endif %}>
@@ -89,7 +78,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Sección de Salida -->
             <div class="col-12 col-lg-6">
                 <div class="card shadow-lg border-0 rounded-3">
@@ -103,7 +91,8 @@
                         <form method="post" id="salidaForm">
                             {% csrf_token %}
                             <input type="hidden" name="salida" value="true">
-                            
+                            <input type="hidden" name="latitud_salida" id="latitudSalidaInput">
+                            <input type="hidden" name="longitud_salida" id="longitudSalidaInput">
                             <div class="alert alert-{% if ultima_entrada_activa %}info{% else %}secondary{% endif %} 
                                         d-flex align-items-center mb-4">
                                 <i class="fas fa-clock fa-3x me-3"></i>
@@ -124,7 +113,6 @@
                                     </small>
                                 </div>
                             </div>
-
                             <button type="submit" 
                                     class="btn btn-lg w-100 py-3 shadow-sm
                                            {% if ultima_entrada_activa %}btn-danger{% else %}btn-secondary{% endif %}"
@@ -143,7 +131,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Botón Historial -->
             <div class="col-12">
                 <a href="{% url 'ver_registros' %}" 
@@ -154,6 +141,7 @@
         </div>
     </main>
 </div>
+{% endblock %}
 
 
 
@@ -161,9 +149,8 @@
 
 
 
-
+{% block extra_scripts %}
 <script>
-
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos del DOM
     const geoSection = document.getElementById('geoSection');
@@ -275,11 +262,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejo de envío del formulario de salida
     document.getElementById('salidaForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const btn = this.querySelector('button');
-        const originalHTML = btn.innerHTML;
+    e.preventDefault();
+    const btn = this.querySelector('button');
+    const originalHTML = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Obteniendo ubicación...';
+    
+    navigator.geolocation.getCurrentPosition(position => {
+        const lat = Number(position.coords.latitude.toFixed(6));
+        const lon = Number(position.coords.longitude.toFixed(6));
+        document.getElementById('latitudSalidaInput').value = lat;
+        document.getElementById('longitudSalidaInput').value = lon;
         
-        btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
         
         fetch(this.action, {
@@ -306,7 +301,27 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = originalHTML;
             alert(error.message);
         });
+    }, error => {
+        let errorMessage;
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage = "Permiso denegado para acceder a la ubicación. Por favor, permite el acceso en tu navegador.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage = "La posición no está disponible.";
+                break;
+            case error.TIMEOUT:
+                errorMessage = "Tiempo de espera agotado al obtener la ubicación.";
+                break;
+            default:
+                errorMessage = "Error desconocido al obtener la ubicación.";
+                break;
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        alert(errorMessage);
     });
+});
 
     // Funciones de dibujo
     function getEventPosition(e) {
