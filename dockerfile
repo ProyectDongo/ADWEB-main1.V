@@ -42,6 +42,7 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
 COPY . .
 
+RUN mkdir -p /app/staticfiles && chown -R appuser:appuser /app /app/staticfiles
 RUN chown -R appuser:appuser /app
 
 USER appuser

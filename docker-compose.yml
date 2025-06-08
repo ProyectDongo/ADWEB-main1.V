@@ -26,7 +26,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-      - ./staticfiles:/app/staticfiles
+      - staticfiles:/app/staticfiles
     command: >
       sh -c "python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
@@ -48,3 +48,4 @@ services:
 
 volumes:
   postgres_data:
+  staticfiles:
