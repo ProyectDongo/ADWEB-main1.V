@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'django_recaptcha',
     'widget_tweaks',
     'crispy_bootstrap5',
+    
    
     
 
@@ -256,4 +257,5 @@ LOGIN_URL = '/login/'  # Apunta a tu vista de selección de login
 
 API_KEY =config('API_KEY')
 MAP_ID= config('MAP_ID')
-
+DATE_FORMAT = '%Y-%m-%d'
+DATE_INPUT_FORMATS = ['%Y-%m-%d']

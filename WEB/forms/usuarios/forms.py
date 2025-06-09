@@ -544,19 +544,18 @@ class PerfilUsuarioForm(forms.ModelForm):
             'apellido_paterno': forms.TextInput(attrs={'class': 'form-control'}),
             'apellido_materno': forms.TextInput(attrs={'class': 'form-control'}),
             'nombres': forms.TextInput(attrs={'class': 'form-control'}),
-            'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'edad': forms.NumberInput(attrs={'class': 'form-control'}),
             'nacionalidad': forms.TextInput(attrs={'class': 'form-control'}),
             'sexo': forms.Select(attrs={'class': 'form-control'}),
-            'fecha_contrato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_contrato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+            'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'cargo': forms.TextInput(attrs={'class': 'form-control'}),
             'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'sindicato': forms.TextInput(attrs={'class': 'form-control'}),
-            'fecha_ingreso_sindicato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_ingreso_sindicato': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'tipo_jornada': forms.TextInput(attrs={'class': 'form-control'}),
         }
-
 class ContactoUsuarioForm(forms.ModelForm):
     class Meta:
         model = ContactoUsuario
@@ -591,11 +590,11 @@ class InformacionAdicionalForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['usuario']
         widgets = {
-            'fecha_primera_cotizacion': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_primera_cotizacion': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'anos_anteriores': forms.NumberInput(attrs={'class': 'form-control'}),
             'meses_anteriores': forms.NumberInput(attrs={'class': 'form-control'}),
             'dias_vacaciones_usados': forms.NumberInput(attrs={'class': 'form-control'}),
-            'fecha_reconocimiento_vacaciones': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_reconocimiento_vacaciones': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'dias_vacaciones_anuales': forms.NumberInput(attrs={'class': 'form-control'}),
             'ajustes_vacaciones_progresivas': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
@@ -643,8 +642,8 @@ class AntecedentesConducirForm(forms.ModelForm):
         widgets = {
             'tipo_licencia': forms.TextInput(attrs={'class': 'form-control'}),
             'municipalidad': forms.TextInput(attrs={'class': 'form-control'}),
-            'fecha_ultimo_control': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_ultimo_control': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+            'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
             'hoja_vida_conducir': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
@@ -652,6 +651,14 @@ AntecedentesConducirFormSet = inlineformset_factory(
     Usuario, AntecedentesConducir,
     form=AntecedentesConducirForm,
     fields=['tipo_licencia', 'municipalidad', 'fecha_ultimo_control', 'fecha_vencimiento', 'hoja_vida_conducir'],
+    widgets={
+        'tipo_licencia': forms.TextInput(attrs={'class': 'form-control'}),
+        'municipalidad': forms.TextInput(attrs={'class': 'form-control'}),
+        'fecha_ultimo_control': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        'hoja_vida_conducir': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+    },
+                                                   
     extra=1, can_delete=True
 )
 
@@ -669,6 +676,12 @@ class NivelEstudiosForm(forms.ModelForm):
 NivelEstudiosFormSet = inlineformset_factory(
     Usuario, NivelEstudios,
     fields=('nivel_estudios', 'completo', 'ultimo_curso', 'carrera'),
+    widgets={
+        'nivel_estudios': forms.TextInput(attrs={'class': 'form-control'}),
+        'completo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        'ultimo_curso': forms.TextInput(attrs={'class': 'form-control'}),
+        'carrera': forms.TextInput(attrs={'class': 'form-control'}),
+    },
     extra=1, can_delete=True
 )
 
@@ -695,8 +708,8 @@ ExamenesMutualFormSet = inlineformset_factory(
     fields=['tipo_examen', 'fecha_examen', 'fecha_vencimiento'],
     widgets={
         'tipo_examen': forms.TextInput(attrs={'class': 'form-control'}),
-        'fecha_examen': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-        'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_examen': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        'fecha_vencimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
     },
     extra=1, can_delete=True
 )
@@ -707,7 +720,7 @@ GrupoFamiliarFormSet = inlineformset_factory(
     widgets={
         'rut_carga': forms.TextInput(attrs={'class': 'form-control'}),
         'nombre_carga': forms.TextInput(attrs={'class': 'form-control'}),
-        'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
         'edad': forms.NumberInput(attrs={'class': 'form-control'}),
         'sexo': forms.Select(attrs={'class': 'form-control'}),
     },
@@ -731,9 +744,9 @@ LicenciasMedicasFormSet = inlineformset_factory(
     widgets={
         'tipo_accidente': forms.TextInput(attrs={'class': 'form-control'}),
         'clasificacion_accidente': forms.TextInput(attrs={'class': 'form-control'}),
-        'fecha_inicio_reposo': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-        'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-        'fecha_alta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        'fecha_inicio_reposo': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        'fecha_termino': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+        'fecha_alta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
         'dias_reposo': forms.NumberInput(attrs={'class': 'form-control'}),
     },
     extra=1, can_delete=True

@@ -5,42 +5,85 @@
 
 {% block content %}
 <div class="container py-4">
-    <h1 class="h4 mb-4 text-primary"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Registros</h1>
-    <a href="{% url 'supervisor_home_asistencia' vigencia_plan.empresa.id vigencia_plan.id %}" class="btn btn-outline-secondary mb-4">
-        <i class="fas fa-arrow-left me-2"></i>Volver
-    </a>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div id="map" style="height: 500px; width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+    <!-- Cabecera mejorada -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary fw-bold"><i class="fas fa-map-marked-alt me-2"></i>Mapa de Registros</h1>
+            <p class="text-muted mb-0">{{ vigencia_plan.plan.nombre }} - {{ vigencia_plan.empresa.nombre }}</p>
         </div>
-        <div class="col-md-4">
-            <h3>Registros del Día</h3>
-            <ul id="registros-list" class="list-group mb-4"></ul>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
-                <i class="fas fa-filter me-2"></i>Filtrar Registros
-            </button>
+        <a href="{% url 'supervisor_home_asistencia' vigencia_plan.empresa.id vigencia_plan.id %}" class="btn btn-outline-primary transition-all hover:shadow-md">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Mapa mejorado -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-map me-2 text-primary"></i>Ubicaciones de registros</h5>
+                        <div class="d-flex">
+                            <span class="badge bg-success-light text-success me-2">
+                                <i class="fas fa-sign-in-alt me-1"></i>Entradas: {{ registros_entradas }}
+                            </span>
+                            <span class="badge bg-danger-light text-danger">
+                                <i class="fas fa-sign-out-alt me-1"></i>Salidas: {{ registros_salidas }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 500px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de registros mejorado -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>Registros del Día</h5>
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-filter me-1"></i>Filtrar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body position-relative" style="overflow-y: auto; max-height: 440px;">
+                    <div id="loader" class="d-none position-absolute top-50 start-50 translate-middle">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <div id="registros-container">
+                        <ul id="registros-list" class="list-group list-group-flush"></ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal para filtrar -->
+<!-- Modal para filtrar mejorado -->
 <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="filterModalLabel">Filtrar Registros</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-semibold" id="filterModalLabel">
+                    <i class="fas fa-filter me-2"></i>Filtrar Registros
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="fecha" class="form-label">Fecha</label>
+                    <label for="fecha" class="form-label fw-medium">Fecha</label>
                     <input type="date" class="form-control" id="fecha">
                 </div>
                 <div class="mb-3">
-                    <label for="usuario" class="form-label">Usuario</label>
+                    <label for="usuario" class="form-label fw-medium">Usuario</label>
                     <select class="form-select" id="usuario">
-                        <option value="">Todos</option>
+                        <option value="">Todos los usuarios</option>
                         {% for usuario in usuarios %}
                             <option value="{{ usuario.id }}">{{ usuario.get_full_name }}</option>
                         {% endfor %}
@@ -49,57 +92,225 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="aplicarFiltro">Aplicar Filtro</button>
+                <button type="button" class="btn btn-primary" id="aplicarFiltro">
+                    <i class="fas fa-check me-2"></i>Aplicar Filtro
+                </button>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_scripts %}  
-<!-- Scripts al final del body -->
+{% block extra_scripts %}
+<style>
+    :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --accent-color: #4cc9f0;
+        --light-bg: #f8f9fa;
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+    
+    body {
+        background-color: #f8fafc;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+        transition: var(--transition);
+    }
+    
+    .card:hover {
+        box-shadow: var(--card-shadow);
+    }
+    
+    .list-group-item {
+        background-color: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 15px 0;
+        transition: background-color 0.3s ease;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .list-group-item:hover {
+        background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .btn-sm {
+        transition: var(--transition);
+    }
+    
+    .btn-sm:hover {
+        transform: translateY(-2px);
+    }
+    
+    .transition-all {
+        transition: var(--transition);
+    }
+    
+    .hover\:shadow-md:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .badge {
+        padding: 0.5em 0.8em;
+        border-radius: 50px;
+        font-weight: 500;
+    }
+    
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+    
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+    
+    #map {
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .user-registro {
+        border-left: 3px solid var(--primary-color);
+        padding-left: 15px;
+    }
+    
+    .entrada-item {
+        border-left: 3px solid #28a745;
+    }
+    
+    .salida-item {
+        border-left: 3px solid #dc3545;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+const mapElement = document.getElementById('map');
+const registrosList = document.getElementById('registros-list');
+const loader = document.getElementById('loader');
 var map;
 var markers = [];
 var registros = JSON.parse('{{ registros_data|escapejs }}');
 var filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
 
+// Función para inicializar el mapa (requerida por Google Maps)
+function initMap() {
+    map = new google.maps.Map(mapElement, {
+        zoom: 10,
+        center: {lat: -33.4489, lng: -70.6693}, // Centro por defecto (Santiago, Chile)
+        mapId: '{{ google_maps_map_id }}' // Si usas un ID de mapa personalizado
+    });
+    // Mostrar los registros del día una vez que el mapa está inicializado
+    mostrarRegistrosDelDia();
+}
+
 function mostrarRegistrosDelDia() {
     var hoy = new Date().toISOString().split('T')[0];
-    var registrosHoy = registros.filter(function(registro) {
-        return registro.fecha === hoy;
-    });
+    var registrosHoy = registros.filter(registro => registro.fecha === hoy);
     mostrarRegistrosEnMapa(registrosHoy);
     mostrarListaRegistros(registrosHoy);
 }
 
 function mostrarRegistrosEnMapa(registrosFiltrados) {
-    markers.forEach(function(marker) {
-        marker.setMap(null);
-    });
+    loader.classList.remove('d-none');
+    markers.forEach(marker => marker.map = null);
     markers = [];
     var bounds = new google.maps.LatLngBounds();
-    registrosFiltrados.forEach(function(registro) {
-        var position = {lat: registro.lat, lng: registro.lng};
+    
+    registrosFiltrados.forEach(registro => {
+        var position = {lat: parseFloat(registro.lat), lng: parseFloat(registro.lng)};
         bounds.extend(position);
+        
+        // Personalizar marcadores según tipo de registro
+        var iconColor = registro.type === 'entrada' ? '#28a745' : '#dc3545';
+        
+        // Usar AdvancedMarkerElement en lugar de Marker
         var marker = new google.maps.marker.AdvancedMarkerElement({
             map: map,
             position: position,
-            title: registro.title
+            title: registro.title,
+            content: new google.maps.marker.PinElement({
+                glyph: '',
+                background: iconColor,
+                borderColor: iconColor,
+            }).element,
         });
+        
         markers.push(marker);
     });
+    
     if (registrosFiltrados.length > 0) {
         map.fitBounds(bounds);
+    } else {
+        map.setCenter({lat: -33.4489, lng: -70.6693});
+        map.setZoom(10);
     }
+    
+    setTimeout(() => {
+        loader.classList.add('d-none');
+    }, 500);
+}
+
+function createRegistroItem(registro, type) {
+    var li = document.createElement('li');
+    li.className = 'list-group-item fade-in ' + (type === 'Entrada' ? 'entrada-item' : 'salida-item');
+    
+    var icon = type === 'Entrada' ? 
+        '<span class="badge bg-success-light text-success me-2"><i class="fas fa-sign-in-alt"></i></span>' : 
+        '<span class="badge bg-danger-light text-danger me-2"><i class="fas fa-sign-out-alt"></i></span>';
+    
+    var hora = registro.title.split(' - ')[2];
+    var direccion = registro.direccion || 'Ubicación registrada';
+    
+    li.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="fw-medium">${type} - ${hora}</div>
+                <small class="text-muted">${direccion}</small>
+            </div>
+            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="centrarMapa(${registro.lat}, ${registro.lng})">
+                <i class="fas fa-location-arrow"></i>
+            </button>
+        </div>
+    `;
+    
+    return li;
 }
 
 function mostrarListaRegistros(registrosFiltrados) {
-    var lista = document.getElementById('registros-list');
-    lista.innerHTML = '';
+    registrosList.innerHTML = '';
+    loader.classList.remove('d-none');
+    
+    if (registrosFiltrados.length === 0) {
+        registrosList.innerHTML = `
+            <li class="list-group-item text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h6 class="fw-medium">No se encontraron registros</h6>
+                <p class="text-muted small">Prueba con otro filtro o fecha</p>
+            </li>
+        `;
+        loader.classList.add('d-none');
+        return;
+    }
+    
     var usuarios = {};
-    registrosFiltrados.forEach(function(registro) {
+    
+    registrosFiltrados.forEach(registro => {
         if (!usuarios[registro.trabajador]) {
             usuarios[registro.trabajador] = {entradas: [], salidas: []};
         }
@@ -109,78 +320,81 @@ function mostrarListaRegistros(registrosFiltrados) {
             usuarios[registro.trabajador].salidas.push(registro);
         }
     });
+    
     for (var usuarioId in usuarios) {
         var usuario = usuarios[usuarioId];
-        var li = document.createElement('li');
-        li.className = 'list-group-item';
-        li.innerHTML = `<strong>${usuario.entradas[0]?.title.split(' - ')[0] || usuario.salidas[0]?.title.split(' - ')[0]}</strong>`;
-        var ulEntradas = document.createElement('ul');
-        ulEntradas.className = 'list-unstyled mb-2';
-        usuario.entradas.forEach(function(entrada) {
-            var liEntrada = document.createElement('li');
-            liEntrada.className = 'd-flex justify-content-between align-items-center mb-2';
-            liEntrada.innerHTML = `Entrada: ${entrada.title.split(' - ')[2]} <button class="btn btn-sm btn-primary" onclick="centrarMapa(${entrada.lat}, ${entrada.lng})">Ver</button>`;
-            ulEntradas.appendChild(liEntrada);
+        var usuarioName = usuario.entradas[0]?.title.split(' - ')[0] || usuario.salidas[0]?.title.split(' - ')[0];
+        
+        
+        var liUsuario = document.createElement('li');
+        liUsuario.className = 'list-group-item user-registro fade-in';
+        liUsuario.innerHTML = `
+            <div class="d-flex align-items-center mb-2">
+             
+                <strong>${usuarioName}</strong>
+            </div>
+        `;
+        
+        var ulRegistros = document.createElement('ul');
+        ulRegistros.className = 'list-group list-group-flush ms-4';
+        
+        var allRegistros = [...usuario.entradas, ...usuario.salidas];
+        allRegistros.sort((a, b) => {
+            var timeA = a.title.split(' - ')[2];
+            var timeB = b.title.split(' - ')[2];
+            return timeA.localeCompare(timeB);
         });
-        li.appendChild(ulEntradas);
-        var ulSalidas = document.createElement('ul');
-        ulSalidas.className = 'list-unstyled mb-2';
-        usuario.salidas.forEach(function(salida) {
-            var liSalida = document.createElement('li');
-            liSalida.className = 'd-flex justify-content-between align-items-center mb-2';
-            liSalida.innerHTML = `Salida: ${salida.title.split(' - ')[2]} <button class="btn btn-sm btn-primary" onclick="centrarMapa(${salida.lat}, ${salida.lng})">Ver</button>`;
-            ulSalidas.appendChild(liSalida);
+        
+        allRegistros.forEach(registro => {
+            var type = registro.type === 'entrada' ? 'Entrada' : 'Salida';
+            ulRegistros.appendChild(createRegistroItem(registro, type));
         });
-        li.appendChild(ulSalidas);
-        lista.appendChild(li);
+        
+        liUsuario.appendChild(ulRegistros);
+        registrosList.appendChild(liUsuario);
     }
+    
+    setTimeout(() => {
+        loader.classList.add('d-none');
+    }, 500);
 }
 
 function centrarMapa(lat, lng) {
-    map.setCenter({lat: lat, lng: lng});
-    map.setZoom(15);
+    map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
+    map.setZoom(16);
 }
 
-function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: {lat: -33.4489, lng: -70.6693},
-        mapId: '{{ google_maps_map_id }}'
-    });
-    mostrarRegistrosDelDia();
-}
-
-// Cargar el script de Google Maps
 var script = document.createElement('script');
-script.src = 'https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&loading=async&libraries=marker';
+script.src = 'https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&libraries=marker';
 script.async = true;
 script.defer = true;
 document.head.appendChild(script);
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('aplicarFiltro').addEventListener('click', function() {
-        console.log('Filtro aplicado'); // Verifica si el evento se dispara
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha').value = today;
+    
+    document.getElementById('aplicarFiltro').addEventListener('click', () => {
         var fecha = document.getElementById('fecha').value;
         var usuario = document.getElementById('usuario').value;
-        var registrosFiltrados = registros.filter(function(registro) {
+        
+        var registrosFiltrados = registros.filter(registro => {
             var coincideFecha = !fecha || registro.fecha === fecha;
             var coincideUsuario = !usuario || registro.trabajador === parseInt(usuario, 10);
             return coincideFecha && coincideUsuario;
         });
+        
         mostrarRegistrosEnMapa(registrosFiltrados);
         mostrarListaRegistros(registrosFiltrados);
-        
-        // Mover el foco a un elemento fuera del modal
-        document.getElementById('map').focus();
-        
         filterModal.hide();
-        
-        // Elimina el backdrop con un pequeño retraso
-        setTimeout(function() {
+        setTimeout(() => {
+            document.getElementById('filterModal').classList.remove('show');
             document.body.classList.remove('modal-open');
             var backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) backdrop.remove();
-        }, 300); // Retraso de 300ms
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }, 300);
     });
 });
 </script>

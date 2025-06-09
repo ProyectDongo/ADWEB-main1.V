@@ -123,6 +123,8 @@ class LoginUnificado(LoginView):
     template_name = 'login/home/unified_login.html'
     success_url = reverse_lazy('redirect_after_login')
 
+
+
 @login_required
 def redirect_after_login(request):
     if not hasattr(request.user, 'role'):
