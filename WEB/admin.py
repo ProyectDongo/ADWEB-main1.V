@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from WEB.models import Usuario,RegistroEmpresas,VigenciaPlan,Plan, Pago, Cobro, HistorialCambios, HistorialPagos, EmailNotification, HistorialNotificaciones, Region, Provincia, Comuna, RegistroEntrada
+from WEB.models import *
+from ModuloAsistencia.models import *
 
 # Register your models here.
 admin.site.register(Usuario)

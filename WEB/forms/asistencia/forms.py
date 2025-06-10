@@ -1,5 +1,6 @@
 from django import forms
 from WEB.models import *
+from ModuloAsistencia.models import RegistroEntrada
 
 class RegistroEntradaForm(forms.ModelForm):
     class Meta:

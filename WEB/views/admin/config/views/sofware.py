@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from WEB.views.scripts import *
 from WEB.forms import AdminForm, SupervisorForm, TrabajadorForm
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno, RegistroEntrada
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno
+
 
 
 

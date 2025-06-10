@@ -1,11 +1,12 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario, RegistroEmpresas, Horario, Turno, RegistroEntrada, VigenciaPlan, DiaHabilitado,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
+from WEB.models import Usuario, RegistroEmpresas, Horario, Turno ,VigenciaPlan, DiaHabilitado,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
 from WEB.views.scripts import validar_rut, format_rut, mobile_validator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 from django.forms import inlineformset_factory
+from ModuloAsistencia.models import RegistroEntrada
 
 class AdminForm(UserCreationForm):
     rut = forms.CharField(

@@ -15,8 +15,9 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-#from django.contrib.gis.geos import Point
-from WEB.models import  Usuario, RegistroEmpresas, RegistroEntrada, VigenciaPlan
+
+from WEB.models import  Usuario, RegistroEmpresas,  VigenciaPlan
+from ModuloAsistencia.models import RegistroEntrada
 from WEB.forms import *
 from django.views import View
 from django.views.generic import DetailView

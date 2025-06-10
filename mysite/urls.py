@@ -14,8 +14,9 @@ from WEB.views.admin.estadisticas.views import estadisticas
 from WEB.views.tools.views import utilidades
 from WEB.views.admin.clientes.pagos.views import pagos
 from WEB.views.admin.clientes.empresa.views import empresas, planes
-from WEB.views.supervisor.modulos.views import almacen, asistencia, contabilidad,selector
+from WEB.views.supervisor.modulos.views import almacen,contabilidad,selector
 from WEB.views.trabajador.views import trabajadores
+
 
 urlpatterns = [
     # ------------------------------------------------------------------------------------ #
@@ -41,7 +42,6 @@ urlpatterns = [
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
     path('generar-reporte/', autenticacion.generar_reporte, name='generar_reporte'),
     path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
-    path('supervisor/asistencia/<int:empresa_id>/<int:vigencia_plan_id>/', asistencia.supervisor_home_asistencia, name='supervisor_home_asistencia'),
     path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', contabilidad.supervisor_home_contabilidad, name='supervisor_home_contabilidad'),
     path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', almacen.supervisor_home_almacen, name='supervisor_home_almacen'),
     path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),
@@ -105,43 +105,23 @@ urlpatterns = [
     path('gestion-usuarios/', lambda request: redirect('empresa_detail', pk=1), name='gestion_usuarios'),
     path('gestion-planes/', lambda request: redirect('empresa_detail', pk=1), name='gestion_planes'),
     path('eliminar_huella/<int:user_id>/', gestion_planes.eliminar_huella, name='eliminar_huella'),
-    path('usuario/<int:user_id>/calendario/', asistencia.CalendarioTurnoView.as_view(), name='calendario_turno'),
-    path('usuario/<int:user_id>/actualizar_dia/', asistencia.ActualizarDiaView.as_view(), name='actualizar_dia'),
+
 
 
     # ------------------------------------------------------------------------------------ #
     # Supervisor
     # ------------------------------------------------------------------------------------ #
-    path('usuarios/<int:vigencia_plan_id>/crear/', asistencia.UserCreateUpdateView.as_view(), name='create_user'),
-    path('usuarios/<int:vigencia_plan_id>/editar/<int:user_id>/', asistencia.UserCreateUpdateView.as_view(), name='update_user'),
-    path('get_form_template/<str:action>/', asistencia.GetFormTemplateView.as_view(), name='get_form_template'),
-    path('usuarios/validate/', asistencia.ValidationView.as_view(), name='validation'),
-    path('validar-campo/', asistencia.ValidationView.as_view(), name='validate_field'),
-    path('validar-rut/', asistencia.ValidationView.as_view(), name='validate_rut'),
-    path('validar-email/', asistencia.ValidationView.as_view(), name='validate_email'),
-    path('delete_user/<int:vigencia_plan_id>/<int:user_id>/', asistencia.UserCreateUpdateView.as_view(), name='delete_user'),
-    path('horarios/', asistencia.HorarioListView.as_view(), name='horarios_list'),
-    path('horarios/nuevo/', asistencia.HorarioCreateView.as_view(), name='horario_create'),
-    path('horarios/<int:pk>/editar/', asistencia.HorarioUpdateView.as_view(), name='horario_update'),
-    path('horarios/<int:pk>/eliminar/', asistencia.HorarioDeleteView.as_view(), name='horario_delete'),
-    path('turnos/', asistencia.TurnoListView.as_view(), name='turnos_list'),
-    path('turnos/nuevo/', asistencia.TurnoCreateView.as_view(), name='turno_create'),
-    path('turnos/<int:pk>/editar/', asistencia.TurnoUpdateView.as_view(), name='turno_update'),
-    path('turnos/<int:pk>/eliminar/', asistencia.TurnoDeleteView.as_view(), name='turno_delete'),
+    
 
     # ------------------------------------------------------------------------------------ #
     # Utilidades y APIs
     # ------------------------------------------------------------------------------------ #
     path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
     path('api/get_comunas/', utilidades.get_comunas, name='get_comunas'),
-    path('notificaciones_supervisor_json/<int:vigencia_plan_id>/', asistencia.notificaciones_supervisor_json, name='notificaciones_supervisor_json'),
-    path('set_ubicacion_nombre/<int:vigencia_plan_id>/<str:ip_address>/', asistencia.set_ubicacion_nombre, name='set_ubicacion_nombre'),
-    path('vigencia/<int:vigencia_plan_id>/registros/', asistencia.registros_entrada_vigencia, name='registros_entrada_vigencia'),
-    path('user/<int:user_id>/full-info/', asistencia.user_full_info, name='user_full_info'),
-    path('exportar_pestanas/<int:user_id>/', asistencia.export_selected_tabs, name='export_selected_tabs'), 
-    path('supervisor/mapa/<int:vigencia_plan_id>/', asistencia.ver_mapa_registros, name='ver_mapa_registros'),   # Biometría
+   
     # ------------------------------------------------------------------------------------ #
     path('biometrics/', include('biometrics.urls')),
+    path('ModuloAsistencia/', include('ModuloAsistencia.urls')),
 
     # ------------------------------------------------------------------------------------ #
     # Otras URL

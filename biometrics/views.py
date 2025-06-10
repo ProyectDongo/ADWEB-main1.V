@@ -1,7 +1,8 @@
 
 from .models import *
-from WEB.models import RegistroEntrada, Usuario
+from WEB.models import  Usuario
 from WEB.forms import RegistroEntradaForm, RegistroForm
+from ModuloAsistencia.models import RegistroEntrada
 from django.urls import reverse_lazy, reverse
 import requests
 from reportlab.lib.pagesizes import letter, landscape
@@ -48,7 +49,7 @@ class CaptureFingerprintView(View):
             except Usuario.DoesNotExist:
                 selected_user = None
         
-        return render(request, 'home/supervisores/biometrics/register_fingerprint.html', {
+        return render(request, 'Supervisores/Modulo_asistencia/biometrics/register_fingerprint.html', {
             'empresa': empresa,
             'usuarios': usuarios,
             'selected_user': selected_user,
@@ -257,7 +258,7 @@ class AuthenticateFingerprintView(View):
 class AttendanceView(View):
     def get(self, request):
         empresa = request.user.empresa
-        return render(request, 'home/supervisores/biometrics/attendance.html', {
+        return render(request, 'Supervisores/Modulo_asistencia/biometrics/attendance.html', {
                'empresa': empresa,
                 'empresa_id': empresa.id,
                 'vigencia_plan_id': request.user.vigencia_plan.id if request.user.vigencia_plan else None
@@ -270,7 +271,7 @@ class AttendanceView(View):
 
 class AttendanceRecordView(LoginRequiredMixin, ListView):
     model = RegistroEntrada
-    template_name = 'home/supervisores/registro/attendance_record.html'
+    template_name = 'Supervisores/Modulo_asistencia/registro/attendance_record.html'
     context_object_name = 'registros'
 
     def get_queryset(self):

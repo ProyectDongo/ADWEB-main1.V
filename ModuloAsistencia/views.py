@@ -1,14 +1,13 @@
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from WEB.models import RegistroEmpresas, VigenciaPlan,Usuario
-from WEB.forms import UsuarioForm
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView,View
 from django.views import View
 from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,RegistroEntrada,DiaHabilitado,Notificacion, Ubicacion,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
+from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,DiaHabilitado,Notificacion, Ubicacion,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
 from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm, PerfilUsuarioForm, ContactoUsuarioForm, InformacionBancariaForm,InformacionAdicionalForm, SeguroCesantiaForm, PrevisionForm, OtrosForm,AntecedentesConducirForm, NivelEstudiosForm, InformacionComplementariaForm,ExamenesMutualFormSet, GrupoFamiliarFormSet, CapacitacionFormSet, LicenciasMedicasFormSet, AntecedentesConducirFormSet, NivelEstudiosFormSet
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -23,7 +22,7 @@ from io import BytesIO
 from zipfile import ZipFile
 from django.conf import settings
 import json
-
+from .models import RegistroEntrada
 
 
 
@@ -54,7 +53,7 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'trabajadores': trabajadores,
         'form': UsuarioForm()
     }
-    return render(request, 'home/supervisores/supervisor_home_asistencia.html', context)
+    return render(request, 'Supervisores/Modulo_asistencia/home/supervisor_home_asistencia.html', context)
 
 
 
@@ -176,7 +175,7 @@ def ver_mapa_registros(request, vigencia_plan_id):
         'google_maps_api_key': settings.API_KEY,
         'google_maps_map_id': settings.MAP_ID
     }
-    return render(request, 'home/supervisores/maps/mapa_registros.html', context)
+    return render(request, 'Supervisores/Modulo_asistencia/maps/mapa_registros.html', context)
 
 
 
@@ -229,7 +228,7 @@ def registros_entrada_vigencia(request, vigencia_plan_id):
         'empresa_id': empresa_id,
         'vigencia_plan_id': vigencia_plan_id,
     }
-    return render(request, 'home/supervisores/registros_entrada.html', context)
+    return render(request, 'Supervisores/Modulo_asistencia/registros_entrada/registros_entrada.html', context)
 
 
 
@@ -241,7 +240,7 @@ def registros_entrada_vigencia(request, vigencia_plan_id):
 
 class HorarioListView(LoginRequiredMixin, ListView):
     model = Horario
-    template_name = 'home/supervisores/horario/horarios_list.html'
+    template_name = 'Supervisores/Modulo_asistencia/horario/horarios_list.html'
     context_object_name = 'horarios'
 
     def get_queryset(self):
@@ -258,7 +257,7 @@ class HorarioListView(LoginRequiredMixin, ListView):
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'home/supervisores/horario/horario_form.html'
+    template_name = 'Supervisores/Modulo_asistencia/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
     def form_valid(self, form):
@@ -268,12 +267,12 @@ class HorarioCreateView(LoginRequiredMixin, CreateView):
 class HorarioUpdateView(LoginRequiredMixin, UpdateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'home/supervisores/horario/horario_form.html'
+    template_name = 'Supervisores/Modulo_asistencia/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
 class HorarioDeleteView(LoginRequiredMixin, DeleteView):
     model = Horario
-    template_name = 'home/supervisores/horario/horario_confirm_delete.html'
+    template_name = 'Supervisores/Modulo_asistencia/horario/horario_confirm_delete.html'
     success_url = reverse_lazy('horarios_list')
 
 
@@ -289,7 +288,7 @@ class HorarioDeleteView(LoginRequiredMixin, DeleteView):
 
 class TurnoListView(LoginRequiredMixin, ListView):
     model = Turno
-    template_name = 'home/supervisores/turno/turnos_list.html'
+    template_name = 'Supervisores/Modulo_asistencia/turno/turnos_list.html'
     context_object_name = 'turnos'
 
     def get_queryset(self):
@@ -312,7 +311,7 @@ class TurnoListView(LoginRequiredMixin, ListView):
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'home/supervisores/turno/turno_form.html'
+    template_name = 'Supervisores/Modulo_asistencia/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
     def form_valid(self, form):
@@ -322,12 +321,12 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
 class TurnoUpdateView(LoginRequiredMixin, UpdateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'home/supervisores/turno/turno_form.html'
+    template_name = 'Supervisores/Modulo_asistencia/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
 class TurnoDeleteView(LoginRequiredMixin, DeleteView):
     model = Turno
-    template_name = 'home/supervisores/turno/turno_confirm_delete.html'
+    template_name = 'Supervisores/Modulo_asistencia/turno/turno_confirm_delete.html'
     success_url = reverse_lazy('turnos_list')
 
 
@@ -407,7 +406,7 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
 # Manejo de Calendario de Turnos
 
 class CalendarioTurnoView(LoginRequiredMixin, View):
-    template_name = 'home/supervisores/turno/calendario_turno.html'
+    template_name = 'Supervisores/Modulo_asistencia/turno/calendario_turno.html'
 
     def get(self, request, user_id):
         usuario = get_object_or_404(Usuario, pk=user_id)
@@ -477,6 +476,7 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
 
 
 
+
 # Actualizar el estado de un día específico    
 
 class ActualizarDiaView(LoginRequiredMixin, View):
@@ -505,6 +505,8 @@ class ActualizarDiaView(LoginRequiredMixin, View):
 
 
 
+
+
 # Función para exportar querysets a Excel
 def export_queryset_to_excel(request, queryset, fields, filename):
     wb = Workbook()
@@ -525,6 +527,7 @@ def export_queryset_to_excel(request, queryset, fields, filename):
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
     return response
+
 
 
 
@@ -744,7 +747,9 @@ def user_full_info(request, user_id):
         'licencias_medicas_formset': licencias_medicas_formset,
     }
     
-    return render(request, 'home/supervisores/DatosCompletos/user_full_info.html', context)
+    return render(request, 'Supervisores/Modulo_asistencia/DatosCompletos/usuario_datos.html', context)
+
+
 
 
 

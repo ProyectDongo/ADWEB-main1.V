@@ -1,0 +1,116 @@
+.main-content {
+    margin-left: 0;
+    width: 100%;
+}
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.nav-pills .nav-link {
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    padding: 0.75rem 1.5rem;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .table-responsive {
+        border: 0;
+    }
+    
+    .table thead {
+        display: none;
+    }
+    
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+    }
+    
+    .table td {
+        display: block;
+        text-align: right;
+        padding: 0.75rem;
+    }
+    
+    .table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .table td:first-child {
+        text-align: left;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+}
+.notificaciones-container {
+    position: absolute;
+    z-index: 1000;
+    width: 350px;
+    margin-top: 120px;
+    margin-right: 400px;
+}
+.main-content {
+    margin-left: 0;
+    width: 100%;
+}
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+.form-floating { margin-bottom: 1.25rem; }
+    .form-control:read-only { background-color: #f8f9fa !important; }
+    .nav-link.active { color: #0d6efd !important; border-bottom: 3px solid #0d6efd; }
+    .invalid-feedback { display: block; }
+    .border-dark { border-color: #343a40 !important; }
+    i { font-size: 20px; }

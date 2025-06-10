@@ -1,6 +1,6 @@
 from django.db.models import Sum, F
 from datetime import timedelta, datetime
-from WEB.models import RegistroEntrada, RegistroEmpresas, Usuario,Notificacion
+from WEB.models import  RegistroEmpresas, Usuario,Notificacion
 from WEB.forms import RegistroEntradaForm
 from django.contrib.auth.decorators import login_required       
 from django.contrib import messages
@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from ModuloAsistencia.models import RegistroEntrada
 
 
 def get_client_ip(request):

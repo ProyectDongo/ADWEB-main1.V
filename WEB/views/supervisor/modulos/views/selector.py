@@ -8,8 +8,9 @@ from django.utils import timezone
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from WEB.forms import RegistroEntradaForm  
-from WEB.models import RegistroEntrada, Notificacion
+from WEB.models import  Notificacion
 from WEB.views.trabajador.views.trabajadores import calcular_horas_extra, calcular_retraso
+from ModuloAsistencia.models import RegistroEntrada
 
 
 
@@ -178,4 +179,4 @@ def supervisor_register(request):
         if 'salida' in request.POST:
             return handle_salida(request)   # Reutilizamos la función existente
     
-    return render(request, 'home/supervisores/supervisor_register.html', context)
+    return render(request, 'Supervisores/Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)

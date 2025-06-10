@@ -48,6 +48,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 INSTALLED_APPS = [
     'biometrics.apps.BiometricsConfig',
     'WEB',
+    'ModuloAsistencia',
     "anymail",
     'corsheaders',
     'django.contrib.admin', 

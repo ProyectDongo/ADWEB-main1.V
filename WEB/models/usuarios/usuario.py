@@ -32,8 +32,6 @@ class Horario(models.Model):
 
 
 
-
-
 class Turno(models.Model):
     nombre = models.CharField(max_length=100)
     dias_trabajo = models.IntegerField()
@@ -279,12 +277,18 @@ class ExamenesMutual(models.Model):
     fecha_vencimiento = models.DateField(blank=True, null=True)
 
 class GrupoFamiliar(models.Model):
+    SEXO_OPCIONES = [
+        ('MASCULINO', 'masculino'),
+        ('FEMENINO', 'femenino'),
+    ]
+      
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='grupo_familiar')
     rut_carga = models.CharField(max_length=12, validators=[validar_rut], blank=True, null=True)
     nombre_carga = models.CharField(max_length=100, blank=True, null=True)
     fecha_nacimiento = models.DateField(blank=True, null=True)
     edad = models.IntegerField(blank=True, null=True)
-    sexo = models.CharField(max_length=10, blank=True, null=True)
+    sexo = models.CharField(max_length=10, blank=True ,choices=SEXO_OPCIONES, null=True)
+  
 
 class Capacitacion(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='capacitaciones')
@@ -329,13 +333,6 @@ class InformacionComplementaria(models.Model):
     
 
 
-
-
-
-
-
-
-
 class DiaHabilitado(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='dias_habilitados')
     fecha = models.DateField()
@@ -352,7 +349,6 @@ class DiaHabilitado(models.Model):
 
 
 
-    
 
 
 class AuditoriaAcceso(models.Model):
