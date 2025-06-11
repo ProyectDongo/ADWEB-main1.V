@@ -1,17 +1,10 @@
 from django.db import models
 from django.conf import settings
-from ..empresa.empresa import RegistroEmpresas
+from .empresa import RegistroEmpresas
 from ..usuarios.usuario import Usuario
-from ..pagos.pago import Pago
+from ..gestion_administrativa.transacciones import Pago
 
-class HistorialPagos(models.Model):
-    pago = models.ForeignKey(Pago, on_delete=models.CASCADE, related_name='historial')
-    usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
-    fecha = models.DateTimeField(auto_now_add=True)
-    descripcion = models.TextField()
 
-    def __str__(self):
-        return f"Historial Pago {self.pago.id} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
 
 class HistorialCambios(models.Model):
     """

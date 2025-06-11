@@ -1,5 +1,5 @@
 from django.db import models
-from ..empresa.empresa import RegistroEmpresas
+from ..gestion_administrativa.empresa import RegistroEmpresas
 from ..usuarios.usuario import Usuario
 
 class EmailNotification(models.Model):

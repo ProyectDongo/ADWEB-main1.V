@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.exceptions import ValidationError
-from WEB.models.ubicacion.region import Region, Provincia, Comuna
+from WEB.models.gestion_administrativa.geografia import Region, Provincia, Comuna
 from WEB.views.scripts import validar_rut
 from django.utils import timezone
 from django.db import transaction

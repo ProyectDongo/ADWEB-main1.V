@@ -2,14 +2,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from WEB.forms import RegistroEntradaForm  
 from WEB.models import  Notificacion
-from WEB.views.trabajador.views.trabajadores import calcular_horas_extra, calcular_retraso
+from WEB.models.gestion_administrativa.empresa import  RegistroEmpresas, VigenciaPlan
+from ModuloAsistencia.views.trabajadores import calcular_horas_extra, calcular_retraso
 from ModuloAsistencia.models import RegistroEntrada
 
 
@@ -163,15 +164,24 @@ class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
 # Vista para registrar entradas y salidas para supervisores
 
 @login_required
-def supervisor_register(request):
+def supervisor_register(request,empresa_id, vigencia_plan_id):
+
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id, empresa=empresa)
+
     context = {
+        'empresa': empresa,
+        'vigencia_plan': vigencia_plan,
         'form_entrada': RegistroEntradaForm(),
         'ultima_entrada_activa': RegistroEntrada.objects.filter(
             trabajador=request.user,
             hora_salida__isnull=True
         ).order_by('-hora_entrada').first(),
+     
         'ultima_entrada': RegistroEntrada.objects.filter(trabajador=request.user).last()
+        
     }
+
     
     if request.method == 'POST':
         if 'entrada' in request.POST:

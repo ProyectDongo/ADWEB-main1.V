@@ -15,7 +15,7 @@ from WEB.views.tools.views import utilidades
 from WEB.views.admin.clientes.pagos.views import pagos
 from WEB.views.admin.clientes.empresa.views import empresas, planes
 from WEB.views.supervisor.modulos.views import almacen,contabilidad,selector
-from WEB.views.trabajador.views import trabajadores
+
 
 
 urlpatterns = [
@@ -32,7 +32,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/login/', permanent=True)),
     path('login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.LoginUnificado.as_view()), name='login'),
     path('supervisor/selector/', selector.SupervisorSelectorView.as_view(), name='supervisor_selector'),
-    path('supervisor/register/', selector.supervisor_register, name='supervisor_register'),
+    path('supervisor/register/<int:empresa_id>/<int:vigencia_plan_id>/', selector.supervisor_register, name='supervisor_register'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
 
@@ -44,7 +44,6 @@ urlpatterns = [
     path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
     path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', contabilidad.supervisor_home_contabilidad, name='supervisor_home_contabilidad'),
     path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', almacen.supervisor_home_almacen, name='supervisor_home_almacen'),
-    path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
     # ------------------------------------------------------------------------------------ #
@@ -126,5 +125,4 @@ urlpatterns = [
     # ------------------------------------------------------------------------------------ #
     # Otras URL
     # ------------------------------------------------------------------------------------ #
-    path('ver_registros/', trabajadores.ver_registros, name='ver_registros'),
 ]

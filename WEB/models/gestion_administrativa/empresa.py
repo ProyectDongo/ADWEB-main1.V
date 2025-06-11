@@ -1,11 +1,14 @@
 from math import perm
 from django.db import models
-from WEB.models.ubicacion.region import Region, Provincia, Comuna
+from WEB.models.gestion_administrativa.geografia import Region, Provincia, Comuna
 from WEB.views.scripts  import *
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum
 from django.conf import settings
+
+
+
 
 class Plan(models.Model):
     """
@@ -126,11 +129,16 @@ class RegistroEmpresas(models.Model):
         save: Sobrescribe el método de guardado para generar automáticamente el 'codigo_cliente'
               y actualizar el 'limite_usuarios' en función del plan contratado.
     """
+    FRECUENCIA_PAGO_CHOICES = [
+        ('mensual', 'Mensual'),
+        ('anual', 'Anual'),
+    ]
     ESTADO_CHOICES = [
         ('aldia', 'Al día'),
         ('atrasado', 'Atrasado'),
         ('suspendido', 'Suspendido'),
     ]
+    frecuencia_pago = models.CharField(max_length=20, choices=FRECUENCIA_PAGO_CHOICES, default='mensual')
     
     codigo_cliente = models.CharField(max_length=20, unique=True)
 
@@ -142,6 +150,7 @@ class RegistroEmpresas(models.Model):
 
     giro = models.CharField(max_length=100)
 
+    
     direccion = models.CharField(max_length=200)
 
     numero = models.CharField(max_length=20)

@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-
+from WEB.views.scripts.utils import hay_pagos_atrasados
 class EmpresaStatusMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -30,5 +30,18 @@ class ValidationErrorMiddleware:
         return None
     
 
+class NotificacionPagosMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    def __call__(self, request):
+        response = self.get_response(request)
+        return response
+
+    def process_template_response(self, request, response):
+        if request.user.is_authenticated and hasattr(request.user, 'vigencia_plan'):
+            empresa = request.user.vigencia_plan.empresa
+            vigencia_plan = request.user.vigencia_plan
+            response.context_data['mostrar_mensaje'] = hay_pagos_atrasados(empresa, vigencia_plan)
+        return response
     

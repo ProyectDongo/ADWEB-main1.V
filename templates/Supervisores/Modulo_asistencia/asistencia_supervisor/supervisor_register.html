@@ -7,8 +7,9 @@
     <main class="container py-4">
         <div class="row g-4">
             <div class="container py-4">
-                <a href="{% url 'supervisor_selector' %}" class="btn btn-primary btn-lg shadow-sm mb-4">
-                    <i class="fas fa-arrow-left me-2"></i>Volver al Panel Supervisor
+                 <a href="{% url 'supervisor_home_asistencia' empresa.id vigencia_plan.id %}" 
+                class="btn btn-outline-primary btn-back">
+                 <i class="bi bi-arrow-left me-2"></i>Volver al panel
                 </a>
             </div>
             <!-- Sección de Entrada -->

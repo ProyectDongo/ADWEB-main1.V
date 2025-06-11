@@ -27,7 +27,7 @@ class FingerprintBackend(BaseBackend):
 
 class CustomBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        UserModel = get_user_model()  # Esto obtiene tu modelo Usuario
+        UserModel = get_user_model()  
         if username is None or password is None:
             return None
 

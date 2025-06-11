@@ -178,7 +178,7 @@ def actualizar_cobro(request, empresa_id, cobro_id):
 
 
 #ESTA VISTA ES PARA LA GESTION DE PAGOS, DONDE SE MUESTRAN LOS PAGOS REALIZADOS Y LOS COBROS PENDIENTES
-
+from WEB.views.scripts.utils import hay_pagos_atrasados
 #----------------------------------------------------------------------------------------------------
 @login_required
 @permiso_requerido("WEB.Registrar_pago")
@@ -197,6 +197,7 @@ def gestion_pagos(request, empresa_id):
     
     # Determinar si hay pagos realizados en el mes actual para cada vigencia
     pagos_mes_actual = {}
+    vigencias_atrasadas = {}
     for vigencia in vigencias:
         pagos = Pago.objects.filter(
             cobro__vigencia_plan=vigencia,
@@ -204,6 +205,7 @@ def gestion_pagos(request, empresa_id):
             fecha_pago__month=mes_actual
         )
         pagos_mes_actual[vigencia.id] = pagos.exists()
+        vigencias_atrasadas[vigencia.id] = hay_pagos_atrasados(empresa, vigencia)
     
     # Obtener cobros pendientes
     cobros_pendientes = empresa.cobros.filter(estado='pendiente')
@@ -233,7 +235,8 @@ def gestion_pagos(request, empresa_id):
         'total_vigencias': total_vigencias,
         'vigencias_con_pagos_mes_actual': vigencias_con_pagos_mes_actual,
         'pagos_mes_actual': pagos_mes_actual,
-        'mes_actual': hoy.strftime("%B %Y"),  # Ej: "Octubre 2023"
+        'mes_actual': hoy.strftime("%B %Y"), 
+        'vigencias_atrasadas': vigencias_atrasadas, # Ej: "Octubre 2023"
     }
     return render(request, 'admin/clientes/lista_clientes/pagos/gestion_pagos.html', context)
 

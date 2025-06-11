@@ -216,6 +216,12 @@
    
     <div class="container-fluid">
         <main id="mainContent" role="main" class="px-md-4">
+             {% if mostrar_mensaje %}
+                            <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
+                                <strong>¡Atención!</strong> Recuerde pagar su plan. Hay pagos pendientes que deben ser atendidos.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+             {% endif %}
             {% if messages %}
             <div class="messages-container">
                 {% for message in messages %}
@@ -228,6 +234,7 @@
                             {% else %}
                                 <i class="bi bi-info-circle me-3 fs-5"></i>
                             {% endif %}
+                           
                             <div class="message-content">
                                 {{ message }}
                             </div>
