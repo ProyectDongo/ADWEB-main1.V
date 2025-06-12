@@ -12,7 +12,7 @@
 <br>
 <div class="wrapper">
     <!-- Notification Container -->
-    <div class="notificaciones-container position-absolute " style="z-index: 99999;">
+    <div class="notificaciones-container position-absolute " style="z-index: 99999;margin-top: 40px;">
         
         <button class="btn btn-primary shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesPanel">
             <i class="bi bi-bell-fill me-2"></i>
@@ -39,17 +39,7 @@
     </div>
     <!-- Contenido Principal -->
     <main class="main-content">
-        <div class="d-flex justify-content-end mb-4">
-            <a href="{% url 'ver_mapa_registros' vigencia_plan.id %}" class="btn btn-info shadow-sm">
-                <i class="fas fa-map me-2"></i>Ver Mapa de Registros
-            </a>
-        </div>
-         <div class="d-flex justify-content-end mb-4">
-            <a href="{% url 'supervisor_register' empresa.id vigencia_plan.id %}" class="btn btn-success btn-role ms-auto">
-                <i class="fas fa-clipboard-check me-2"></i>Registrar Entrada/Salida 
-            </a>
-        </div>
-        
+       
         <!-- Header -->
         <header class="main-header">
             <div class="d-flex justify-content-between w-100">
@@ -70,6 +60,12 @@
                     </a>
                     <a href="{% url 'attendance' %}" class="btn btn-primary btn-sm">
                         <i class="fas fa-clock me-2"></i>Asistencia
+                    </a>
+                    <a href="{% url 'ver_mapa_registros' vigencia_plan.id %}" class="btn btn-info shadow-sm">
+                        <i class="fas fa-map me-2"></i>Visualizar Registros
+                    </a>
+                    <a href="{% url 'supervisor_register' empresa.id vigencia_plan.id %}" class="btn btn-success btn-role ms-auto">
+                        <i class="fas fa-clipboard-check me-2"></i> Registrar Entrada
                     </a>
                 </div>
             </div>

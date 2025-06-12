@@ -20,193 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     {% block extra_styles %}{% endblock %}
 
-    <style>
-        body {
-            background-color: #495057; /* Color de fondo */
-           
-        }
-        /* Estilos personalizados adicionales */
-        .dual-listbox {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-        }
-        .dual-listbox .listbox-btn {
-            margin: 0.5rem 0;
-        }
-        .form-floating > label {
-            padding: 1rem 1.25rem;
-        }
-        .form-control:focus {
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-        .card {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        }
-        .invalid-feedback {
-            display: block;
-            margin-top: 0.25rem;
-        }
-        #bootstrap-duallistbox-nonselected-list_permisos {
-            width: 100% !important;
-        }
-        #bootstrap-duallistbox-selected-list_permisos {
-            width: 100% !important;
-        }
-   
-        .bd-placeholder-img {
-            font-size: 1.125rem;
-            text-anchor: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        @media (min-width: 768px) {
-            .bd-placeholder-img-lg {
-                font-size: 3.5rem;
-            }
-        }
-        select[multiple] { 
-            min-height: 150px;
-            padding: 10px !important;
-        }
-        .messages-container {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 9999;
-            width: 380px;
-            max-width: 90%;
-        }
-
-        .alert {
-            position: relative;
-            border: none;
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            animation: slideInFromRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transition: transform 0.3s ease;
-            overflow: hidden;
-        }
-
-        .alert:hover {
-            transform: translateX(-5px);
-        }
-
-        .alert-success {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #842029;
-        }
-
-        .alert-info {
-            background: #cff4fc;
-            color: #055160;
-        }
-
-        .bi {
-            flex-shrink: 0;
-        }
-
-        .btn-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem;
-        }
-
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: rgba(0,0,0,0.1);
-            width: 100%;
-            animation: progress 5s linear forwards;
-        }
-
-        @keyframes slideInFromRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes progress {
-            from {
-                width: 100%;
-            }
-            to {
-                width: 0%;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .messages-container {
-                width: 100%;
-                right: 0;
-                padding: 0 1rem;
-            }
-            
-            .alert {
-                border-radius: 8px;
-            }
-        }
-
-        /* Estilos para el footer */
-        .corporate-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.25) 0%, rgba(29, 78, 216, 0.98) 100%);
-            color: white;
-            z-index: 1000;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .corporate-footer .company-brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .corporate-footer .info-list {
-            display: flex;
-            gap: 2rem;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .corporate-footer .info-list li {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .corporate-footer .plan-status {
-            background: rgba(255,255,255,0.1);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-    </style>
-    <link rel="stylesheet" href="{% static 'bootstrap/base/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/base/css/baseuser.css' %}">
     {% block css-page %}{% endblock %}
 </head>
 <body>
@@ -216,12 +30,16 @@
    
     <div class="container-fluid">
         <main id="mainContent" role="main" class="px-md-4">
-             {% if mostrar_mensaje %}
-                            <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-                                <strong>¡Atención!</strong> Recuerde pagar su plan. Hay pagos pendientes que deben ser atendidos.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-             {% endif %}
+                {% if mostrar_mensaje %}
+                <!-- Mensaje -->
+                <div id="mensaje-pago-atrasado" class="mensaje-atrasado">
+                    
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>¡Atención!</strong> Recuerde pagar su plan. Hay pagos pendientes que deben ser atendidos.
+                </div>
+
+                
+                {% endif %}
             {% if messages %}
             <div class="messages-container">
                 {% for message in messages %}
@@ -283,6 +101,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+    <script src="{% static 'bootstrap/base/js/baseuser.js' %}"></script>
   
 
     <script>
@@ -292,42 +111,7 @@
     </script>
     {% block extra_scripts %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap4-duallistbox@4.0.2/dist/jquery.bootstrap-duallistbox.min.js"></script>
-    <script>
-        window.toggleEstado = function(vigenciaId, button) {
-            const url = `/vigencia_plan/${vigenciaId}/toggle_estado/`;
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const row = button.closest('tr');
-                    const estadoCell = row.querySelector('td:nth-child(6)');
-                    estadoCell.textContent = data.new_estado_display;
-                    
-                    row.classList.toggle('table-danger', data.new_estado === 'suspendido');
-                    
-                    if (data.new_estado === 'suspendido') {
-                        button.textContent = 'Habilitar';
-                        button.classList.replace('btn-warning', 'btn-success');
-                    } else {
-                        button.textContent = 'Deshabilitar';
-                        button.classList.replace('btn-success', 'btn-warning');
-                    }
-                    
-                    row.querySelectorAll('.action-btn').forEach(btn => {
-                        btn.disabled = data.new_estado === 'suspendido';
-                    });
-                }
-            });
-        };
-    </script>
+   
     {% endblock %}
     {% block js.page %}{% endblock %}
 </body>
