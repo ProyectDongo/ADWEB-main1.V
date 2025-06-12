@@ -5,254 +5,11 @@
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Inter', sans-serif;
-    }
+<link rel="stylesheet" href="{% static 'bootstrap/base/css/login.css' %}">
 
-    :root {
-        --primary: #2c3e50;
-        --primary-dark: #1a252f;
-        --accent: #3498db;
-        --text-dark: #34495e;
-        --text-light: #7f8c8d;
-        --light-bg: #f8f9fa;
-        --white: #ffffff;
-        --gray-light: #ecf0f1;
-        --gray-medium: #bdc3c7;
-        --border-radius: 10px;
-        --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    }
-
-    .login-container {
-        width: 100%;
-        max-width: 480px;
-    }
-
-    .login-card {
-        background: var(--white);
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-    }
-
-    .card-header {
-        background: var(--primary-dark);
-        color: var(--white);
-        text-align: center;
-        padding: 40px 20px 30px;
-        position: relative;
-    }
-
-    .card-header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-            linear-gradient(45deg, transparent 65%, rgba(255,255,255,0.03) 65%),
-            linear-gradient(-45deg, transparent 65%, rgba(255,255,255,0.03) 65%);
-        background-size: 30px 30px;
-    }
-
-    .logo {
-        width: 80px;
-        height: 80px;
-        background: var(--white);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    }
-
-    .logo i {
-        font-size: 36px;
-        color: var(--primary);
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .card-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .card-header p {
-        font-size: 15px;
-        opacity: 0.85;
-        font-weight: 300;
-    }
-
-    .card-body {
-        padding: 50px 40px 40px;
-    }
-
-    .form-group {
-        margin-bottom: 28px;
-    }
-
-    .form-group label {
-        font-size: 14px;
-        color: var(--text-dark);
-        font-weight: 500;
-        margin-bottom: 8px;
-        padding-left: 10px;
-    }
-
-    .form-group label::after {
-        content: "*";
-        color: #e74c3c;
-        margin-left: 4px;
-    }
-
-    .input-with-icon {
-        position: relative;
-    }
-
-    .input-with-icon i {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-light);
-        font-size: 18px;
-        transition: var(--transition);
-    }
-
-    .form-control {
-        width: 100%;
-        height: 56px;
-        padding: 0 20px 0 52px;
-        border: 2px solid var(--gray-light);
-        border-radius: var(--border-radius);
-        font-size: 16px;
-        color: var(--text-dark);
-        background: var(--light-bg);
-        transition: var(--transition);
-    }
-
-    .form-control:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
-        outline: none;
-        background: var(--white);
-    }
-
-    .form-control:focus + i {
-        color: var(--accent);
-    }
-
-    .rut-hint {
-        font-size: 12px;
-        color: var(--text-light);
-        margin-top: 6px;
-        padding-left: 10px;
-    }
-
-    .password-container {
-        position: relative;
-    }
-
-    .toggle-password {
-        position: absolute;
-        right: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--text-light);
-        cursor: pointer;
-        font-size: 18px;
-        transition: var(--transition);
-    }
-
-    .toggle-password:hover {
-        color: var(--accent);
-    }
-
-    .options {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 25px 0 30px;
-        font-size: 14px;
-    }
-
-    .remember-me {
-        display: flex;
-        align-items: center;
-    }
-
-    .remember-me input {
-        width: 20px;
-        height: 20px;
-        margin-right: 10px;
-        accent-color: var(--accent);
-    }
-
-    .remember-me label {
-        color: var(--text-dark);
-        font-weight: 500;
-    }
-
-    .forgot-password {
-        color: var(--accent);
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .login-btn {
-        width: 100%;
-        height: 56px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: var(--white);
-        font-size: 16px;
-        font-weight: 600;
-        border: none;
-        border-radius: var(--border-radius);
-        transition: var(--transition);
-    }
-
-    .login-btn:hover {
-        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    }
-
-    .security-info {
-        text-align: center;
-        margin-top: 25px;
-        font-size: 13px;
-        color: var(--text-light);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    @media (max-width: 576px) {
-        .card-body {
-            padding: 40px 25px 30px;
-        }
-        .options {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-    }
-</style>
 {% endblock %}
 
- maltrato infantil {% block content %}
+{% block content %}
 <div class="login-container mx-auto">
     <div class="login-card auth-card">
         <div class="card-header">
@@ -263,9 +20,8 @@
             <p>Sistema de autenticación segura</p>
         </div>
         <div class="card-body">
-            <!-- Mostrar errores del formulario -->
             {% if form.errors %}
-            <div class="alert alert-danger">
+            <div class="form-alert">
                 <ul>
                 {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
@@ -273,8 +29,7 @@
                 </ul>
             </div>
             {% endif %}
-        
-        <div class="card-body">
+            
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
@@ -318,16 +73,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    
-    togglePassword.addEventListener('click', function() {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-    });
-});
-</script>
+<script src="{% static 'bootstrap/base/js/login.js' %}"></script>
+
 {% endblock %}
