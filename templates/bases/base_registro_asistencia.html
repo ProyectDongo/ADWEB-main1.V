@@ -1,0 +1,155 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block title %}
+    {% block custom_title %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+{% block sidebar %}{% endblock %}
+<link rel="stylesheet" href="{% static 'bootstrap/base/css/registroentrada.css' %}">
+<div class="container-fluid p-0 min-vh-100 bg-light">
+    <main class="container py-4">
+        {% block additional_content %}{% endblock %}
+        <div class="row g-4">
+            <!-- Sección de Entrada -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-header bg-primary-gradient text-white py-4">
+                        <h2 class="h4 mb-0 d-flex align-items-center">
+                            <i class="fas fa-sign-in-alt me-3"></i>
+                            Registrar Entrada
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data" id="entradaForm">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">Método de Registro</label>
+                                <div class="d-grid gap-2">
+                                    <div class="btn-group-vertical" role="group">
+                                        <input type="radio" class="btn-check" name="metodo" id="firmaRadio" 
+                                               value="firma" checked>
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" 
+                                               for="firmaRadio">
+                                            <i class="fas fa-signature fa-2x me-3"></i>
+                                            <div>
+                                                <h5 class="mb-1">Firma Digital</h5>
+                                                <small class="text-muted">Dibuja tu firma en el área designada</small>
+                                            </div>
+                                        </label>
+                                        <input type="radio" class="btn-check" name="metodo" id="geoRadio" value="geo">
+                                        <label class="btn btn-outline-primary text-start d-flex align-items-center" for="geoRadio">
+                                            <i class="fas fa-map-marker-alt fa-2x me-3"></i>
+                                            <div>
+                                                <h5 class="mb-1">Geolocalización</h5>
+                                                <small class="text-muted">Usar ubicación actual</small>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Sección Firma -->
+                            <div id="firmaSection" class="metodo-section">
+                                <div class="signature-container mb-4">
+                                    <canvas id="firmaCanvas" class="signature-pad border rounded-2" 
+                                            width="300" height="200"></canvas>
+                                    <input type="hidden" name="firma_digital" id="firmaInput">
+                                    <button type="button" class="btn btn-link text-danger mt-2" 
+                                            onclick="limpiarFirma()">
+                                        <i class="fas fa-undo me-2"></i>Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Sección Geolocalización -->
+                            <div id="geoSection" class="metodo-section d-none">
+                                <input type="hidden" name="latitud" id="latitudInput">
+                                <input type="hidden" name="longitud" id="longitudInput">
+                                <input type="hidden" name="precision" id="precisionInput">
+                                <div id="geoStatus"></div>
+                            </div>
+                            <button type="submit" name="entrada" 
+                                    class="btn btn-primary btn-lg w-100 py-3 shadow-sm"
+                                    {% if ultima_entrada_activa %}disabled{% endif %}>
+                                <span class="submit-content">
+                                    {% if ultima_entrada_activa %}
+                                        <i class="fas fa-check-circle me-2"></i>Entrada Registrada
+                                    {% else %}
+                                        <i class="fas fa-fingerprint me-2"></i>Confirmar Entrada
+                                    {% endif %}
+                                </span>
+                                <div class="spinner-border spinner-border-sm d-none" 
+                                     role="status"></div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Sección de Salida -->
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-lg border-0 rounded-3">
+                    <div class="card-header bg-success-gradient text-white py-4">
+                        <h2 class="h4 mb-0 d-flex align-items-center">
+                            <i class="fas fa-sign-out-alt me-3"></i>
+                            Registrar Salida
+                        </h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" id="salidaForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="salida" value="true">
+                            <input type="hidden" name="latitud_salida" id="latitudSalidaInput">
+                            <input type="hidden" name="longitud_salida" id="longitudSalidaInput">
+                            <div class="alert alert-{% if ultima_entrada_activa %}info{% else %}secondary{% endif %} 
+                                        d-flex align-items-center mb-4">
+                                <i class="fas fa-clock fa-3x me-3"></i>
+                                <div>
+                                    <h4 class="mb-1">
+                                        {% if ultima_entrada_activa %}
+                                            <span class="text-success">Jornada Activa</span>
+                                        {% else %}
+                                            <span class="text-muted">Sin Jornada</span>
+                                        {% endif %}
+                                    </h4>
+                                    <small class="d-block text-muted">
+                                        {% if ultima_entrada_activa %}
+                                            Iniciada: {{ ultima_entrada_activa.hora_entrada|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            Última salida: {{ ultima_salida.hora_salida|date:"d/m/Y H:i"|default:"-" }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            <button type="submit" 
+                                    class="btn btn-lg w-100 py-3 shadow-sm
+                                           {% if ultima_entrada_activa %}btn-danger{% else %}btn-secondary{% endif %}"
+                                    {% if not ultima_entrada_activa %}disabled{% endif %}>
+                                <span class="submit-content">
+                                    {% if ultima_entrada_activa %}
+                                        <i class="fas fa-power-off me-2"></i>Finalizar Jornada
+                                    {% else %}
+                                        <i class="fas fa-ban me-2"></i>No disponible
+                                    {% endif %}
+                                </span>
+                                <div class="spinner-border spinner-border-sm d-none" 
+                                     role="status"></div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Botón Historial -->
+            <div class="col-12">
+                <a href="{% url 'ver_registros' %}" 
+                   class="btn btn-outline-primary btn-lg w-100 py-3 shadow-sm">
+                    <i class="fas fa-history me-2"></i>Ver Historial Completo
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{% static 'bootstrap/base/js/registroentrada.js' %}"></script>
+
+
+{% endblock %}

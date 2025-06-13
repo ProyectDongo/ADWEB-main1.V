@@ -174,9 +174,15 @@ class UsuarioUpdateView(AdminUserMixin, UpdateView):
 # Usuario eliminado
 class UsuarioDeleteView(AdminUserMixin, DeleteView):
     model = Usuario
-    template_name = 'modules/asistencia/usuario_confirm_delete.html'
+    template_name = 'bases/modulo_asistencia/base_delete.html'
     success_url = reverse_lazy('gestion_usuarios')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_type'] = 'usuario'
+        context['cancel_url'] = 'gestion_usuarios'  # Nombre del patrón de URL para "Cancelar"
+        return context
+    
     def delete(self, request, *args, **kwargs):
         messages.success(self.request, 'Usuario eliminado correctamente')
         return super().delete(request, *args, **kwargs)

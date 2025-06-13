@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,DiaHabilitado,Notificacion, Ubicacion,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
-from WEB.forms import UsuarioForm, HorarioForm, TurnoForm ,RegistroEntradaForm, PerfilUsuarioForm, ContactoUsuarioForm, InformacionBancariaForm,InformacionAdicionalForm, SeguroCesantiaForm, PrevisionForm, OtrosForm,AntecedentesConducirForm, NivelEstudiosForm, InformacionComplementariaForm,ExamenesMutualFormSet, GrupoFamiliarFormSet, CapacitacionFormSet, LicenciasMedicasFormSet, AntecedentesConducirFormSet, NivelEstudiosFormSet
+from WEB.forms.modulo_asistencia.forms import UsuarioForm, HorarioForm, TurnoForm, PerfilUsuarioForm, ContactoUsuarioForm, InformacionBancariaForm, InformacionAdicionalForm, SeguroCesantiaForm, PrevisionForm, OtrosForm, InformacionComplementariaForm, AntecedentesConducirFormSet, ExamenesMutualFormSet, GrupoFamiliarFormSet, CapacitacionFormSet, LicenciasMedicasFormSet, NivelEstudiosFormSet
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, date
@@ -276,8 +276,14 @@ class HorarioUpdateView(LoginRequiredMixin, UpdateView):
 
 class HorarioDeleteView(LoginRequiredMixin, DeleteView):
     model = Horario
-    template_name = 'Supervisores/Modulo_asistencia/horario/horario_confirm_delete.html'
+    template_name = 'bases/modulo_asistencia/base_delete.html'
     success_url = reverse_lazy('horarios_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_type'] = 'horario'
+        context['cancel_url'] = 'horarios_list'  # Nombre del patrón de URL para "Cancelar"
+        return context
 
 
 
@@ -330,8 +336,14 @@ class TurnoUpdateView(LoginRequiredMixin, UpdateView):
 
 class TurnoDeleteView(LoginRequiredMixin, DeleteView):
     model = Turno
-    template_name = 'Supervisores/Modulo_asistencia/turno/turno_confirm_delete.html'
+    template_name = 'bases/modulo_asistencia/base_delete.html'
     success_url = reverse_lazy('turnos_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_type'] = 'Turno'
+        context['cancel_url'] = 'turnos_list'  # Nombre del patrón de URL para "Cancelar"
+        return context
 
 
 

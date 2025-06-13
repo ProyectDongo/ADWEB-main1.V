@@ -1,7 +1,7 @@
 from django.db.models import Sum, F
 from datetime import timedelta, datetime
 from WEB.models import  RegistroEmpresas, Usuario,Notificacion
-from WEB.forms import RegistroEntradaForm
+from WEB.forms.modulo_asistencia.forms import *
 from django.contrib.auth.decorators import login_required       
 from django.contrib import messages
 from django.shortcuts import render, redirect

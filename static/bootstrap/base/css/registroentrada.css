@@ -1,0 +1,61 @@
+.bg-primary-gradient {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.bg-success-gradient {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.signature-pad {
+    background: #ffffff;
+    touch-action: none;
+    border: 2px dashed #e2e8f0 !important;
+}
+
+.signature-container {
+    position: relative;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.btn-check:checked + .btn {
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.toast {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .card-header h2 { font-size: 1.25rem; }
+    .signature-pad { height: 180px; }
+    .btn-lg { font-size: 1rem; padding: 0.8rem; }
+}
+
+#firmaCanvas {
+    background: #f8f9fa;
+    touch-action: none;
+    border-radius: 8px;
+}
+
+.toast {
+    min-width: 300px;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important;
+    border: none;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .toast {
+        width: 90%;
+        margin: 0 auto;
+    }
+}

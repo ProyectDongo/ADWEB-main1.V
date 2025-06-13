@@ -16,7 +16,9 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 
-from WEB.models import  Usuario, RegistroEmpresas,  VigenciaPlan
+
+
+from WEB.models import  Usuario, RegistroEmpresas,  VigenciaPlan,Cobro,Transaccion
 from ModuloAsistencia.models import RegistroEntrada
 from WEB.forms import *
 from django.views import View

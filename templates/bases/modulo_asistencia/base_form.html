@@ -1,0 +1,33 @@
+{% extends "central_user.html" %}
+{% block content %}
+<div class="container-lg py-4">
+    <div class="card border-0 shadow-lg">
+        {% block form_header %}
+        <div class="card-header bg-primary text-white py-3">
+            <h2 class="h5 mb-0">
+                <i class="bi bi-form me-2"></i>
+                Formulario
+            </h2>
+        </div>
+        {% endblock %}
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {% block form_fields %}
+                <!-- Campos del formulario aquí -->
+                {% endblock %}
+                {% block form_buttons %}
+                <div class="d-flex justify-content-between mt-5">
+                    <a href="#" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-2"></i>Guardar
+                    </button>
+                </div>
+                {% endblock %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
