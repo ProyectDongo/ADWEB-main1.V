@@ -7,8 +7,8 @@ from django.urls import reverse,reverse_lazy
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan, Horario, Turno ,DiaHabilitado,Notificacion, Ubicacion,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
-from WEB.forms.modulo_asistencia.forms import UsuarioForm, HorarioForm, TurnoForm, PerfilUsuarioForm, ContactoUsuarioForm, InformacionBancariaForm, InformacionAdicionalForm, SeguroCesantiaForm, PrevisionForm, OtrosForm, InformacionComplementariaForm, AntecedentesConducirFormSet, ExamenesMutualFormSet, GrupoFamiliarFormSet, CapacitacionFormSet, LicenciasMedicasFormSet, NivelEstudiosFormSet
+from WEB.models import *
+from WEB.forms.modulo_asistencia.forms import *
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from datetime import datetime, timedelta, date
@@ -350,6 +350,135 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
 
 
 
+#Nueva vista para generar asignaciones masivas
+class GenerarAsignacionesView(LoginRequiredMixin, View):
+    template_name = 'Supervisores/Modulo_asistencia/turno/generar_asignaciones.html'
+
+    def get(self, request, user_id):
+        usuario = get_object_or_404(Usuario, pk=user_id)
+        form = GenerarAsignacionesForm(empresa=usuario.empresa)
+        context = {
+            'usuario': usuario,
+            'form': form,
+            'empresa_id': usuario.vigencia_plan.empresa.id,
+            'vigencia_plan_id': usuario.vigencia_plan.id,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, user_id):
+        usuario = get_object_or_404(Usuario, pk=user_id)
+        form = GenerarAsignacionesForm(request.POST, empresa=usuario.empresa)
+        if form.is_valid():
+            fecha_inicio = form.cleaned_data['fecha_inicio']
+            fecha_fin = form.cleaned_data['fecha_fin']
+            tipo_rotacion = form.cleaned_data['tipo_rotacion']
+            horarios = form.cleaned_data['horarios']
+            current = fecha_inicio
+
+            if tipo_rotacion == '3_turnos_8h':
+                i = 0
+                while current <= fecha_fin:
+                    horario = horarios[i % len(horarios)] if horarios else None
+                    if horario:
+                        AsignacionDiaria.objects.update_or_create(
+                            usuario=usuario, fecha=current, defaults={'horario': horario}
+                        )
+                    i += 1
+                    current += timedelta(days=1)
+
+            elif tipo_rotacion == '12x36':
+                while current <= fecha_fin:
+                    horario = horarios[0] if horarios else None
+                    if horario:
+                        AsignacionDiaria.objects.update_or_create(
+                            usuario=usuario, fecha=current, defaults={'horario': horario}
+                        )
+                    current += timedelta(days=2)
+
+            elif tipo_rotacion == '5x2':
+                while current <= fecha_fin:
+                    for _ in range(5):  # 5 días de trabajo
+                        if current > fecha_fin:
+                            break
+                        horario = horarios[0] if horarios else None
+                        if horario:
+                            AsignacionDiaria.objects.update_or_create(
+                                usuario=usuario, fecha=current, defaults={'horario': horario}
+                            )
+                        current += timedelta(days=1)
+                    current += timedelta(days=2)  # 2 días de descanso
+
+            elif tipo_rotacion == '4x3_12h':
+                while current <= fecha_fin:
+                    for _ in range(4):  # 4 días de trabajo
+                        if current > fecha_fin:
+                            break
+                        horario = horarios[0] if horarios else None
+                        if horario:
+                            AsignacionDiaria.objects.update_or_create(
+                                usuario=usuario, fecha=current, defaults={'horario': horario}
+                            )
+                        current += timedelta(days=1)
+                    current += timedelta(days=3)  # 3 días de descanso
+
+            elif tipo_rotacion == '7x7':
+                horario_semana_1 = form.cleaned_data['horario_semana_1']
+                horario_semana_2 = form.cleaned_data['horario_semana_2']
+                ciclo = 0
+                while current <= fecha_fin:
+                    if ciclo % 2 == 0:  # Primera semana (7 días a las 9 AM)
+                        for _ in range(7):
+                            if current > fecha_fin:
+                                break
+                            AsignacionDiaria.objects.update_or_create(
+                                usuario=usuario, fecha=current, defaults={'horario': horario_semana_1}
+                            )
+                            current += timedelta(days=1)
+                    else:  # Segunda semana (7 días a las 9 PM)
+                        for _ in range(7):
+                            if current > fecha_fin:
+                                break
+                            AsignacionDiaria.objects.update_or_create(
+                                usuario=usuario, fecha=current, defaults={'horario': horario_semana_2}
+                            )
+                            current += timedelta(days=1)
+                    current += timedelta(days=7)  # 7 días de descanso
+                    ciclo += 1
+
+            elif tipo_rotacion == 'personalizado':
+                secuencia = form.cleaned_data['secuencia'].split(',')
+                repeticion = form.cleaned_data['repeticion']
+                i = 0
+                while current <= fecha_fin:
+                    if i % repeticion == 0:
+                        idx = (i // repeticion) % len(secuencia)
+                        horario_id = secuencia[idx].strip()
+                        horario = Horario.objects.get(id=horario_id) if horario_id else None
+                    else:
+                        horario = None  # Descanso
+                    if horario:
+                        AsignacionDiaria.objects.update_or_create(
+                            usuario=usuario, fecha=current, defaults={'horario': horario}
+                        )
+                    else:
+                        AsignacionDiaria.objects.filter(usuario=usuario, fecha=current).delete()
+                    i += 1
+                    current += timedelta(days=1)
+
+            messages.success(request, f'Asignaciones generadas para {usuario.get_full_name()}.')
+            return redirect('calendario_turno', user_id=user_id)
+        else:
+            context = {
+                'usuario': usuario,
+                'form': form,
+                'empresa_id': usuario.vigencia_plan.empresa.id,
+                'vigencia_plan_id': usuario.vigencia_plan.id,
+            }
+            return render(request, self.template_name, context)
+
+
+
+
 
 
 
@@ -420,39 +549,37 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
 
 
 # Manejo de Calendario de Turnos
-
 class CalendarioTurnoView(LoginRequiredMixin, View):
     template_name = 'Supervisores/Modulo_asistencia/turno/calendario_turno.html'
 
     def get(self, request, user_id):
         usuario = get_object_or_404(Usuario, pk=user_id)
         año = int(request.GET.get('año', date.today().year))
-        
+        horarios = Horario.objects.filter(empresa=usuario.empresa)
+
         # Generar todos los días del año
         inicio_año = date(año, 1, 1)
         fin_año = date(año, 12, 31)
         dias = []
         current = inicio_año
         while current <= fin_año:
-            dia_habilitado = DiaHabilitado.objects.filter(usuario=usuario, fecha=current).first()
-            estado = dia_habilitado.habilitado if dia_habilitado else usuario.debe_trabajar(current)
+            asignacion = AsignacionDiaria.objects.filter(usuario=usuario, fecha=current).first()
             dias.append({
                 'fecha': current,
-                'habilitado': estado,
+                'horario': asignacion.horario if asignacion else None,
                 'mes': current.month,
                 'dia_semana': current.weekday(),
             })
             current += timedelta(days=1)
 
-        # Organizar los días por mes
-        meses = {}
-        for i in range(1, 13):
-            meses[i] = [d for d in dias if d['mes'] == i]
+        # Organizar por meses
+        meses = {i: [d for d in dias if d['mes'] == i] for i in range(1, 13)}
 
         context = {
             'usuario': usuario,
             'año': año,
             'meses': meses,
+            'horarios': horarios,
             'empresa_id': usuario.vigencia_plan.empresa.id,
             'vigencia_plan_id': usuario.vigencia_plan.id,
         }
@@ -461,61 +588,45 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
     def post(self, request, user_id):
         usuario = get_object_or_404(Usuario, pk=user_id)
         año = int(request.POST.get('año', date.today().year))
-        
-        # Procesar los datos enviados
-        inicio_año = date(año, 1, 1)
-        fin_año = date(año, 12, 31)
-        current = inicio_año
-        while current <= fin_año:
-            fecha_str = current.strftime('%Y-%m-%d')
-            habilitado = request.POST.get(f'dia_{fecha_str}') == 'on'
-            DiaHabilitado.objects.update_or_create(
-                usuario=usuario,
-                fecha=current,
-                defaults={'habilitado': habilitado}
-            )
-            current += timedelta(days=1)
+        horarios_enviados = {k: v for k, v in request.POST.items() if k.startswith('horario_')}
 
-        # Agregar mensaje de éxito
-        messages.success(request, f'Los cambios para {usuario.get_full_name()} ({año}) se han guardado correctamente.')
+        for key, horario_id in horarios_enviados.items():
+            fecha = date.fromisoformat(key.split('_')[1])
+            if horario_id:
+                horario = Horario.objects.get(id=horario_id)
+                AsignacionDiaria.objects.update_or_create(
+                    usuario=usuario, fecha=fecha, defaults={'horario': horario}
+                )
+            else:
+                AsignacionDiaria.objects.filter(usuario=usuario, fecha=fecha).delete()
 
-        # Redirigir a supervisor_home_asistencia con empresa_id y vigencia_plan_id
+        messages.success(request, f'Horarios de {usuario.get_full_name()} ({año}) guardados.')
         return redirect('supervisor_home_asistencia', 
                         empresa_id=usuario.vigencia_plan.empresa.id, 
                         vigencia_plan_id=usuario.vigencia_plan.id)
+    
 
 
 
 
-
-
-
-
-
-
-# Actualizar el estado de un día específico    
 
 class ActualizarDiaView(LoginRequiredMixin, View):
     def post(self, request, user_id):
-        # Obtener el usuario o devolver 404 si no existe
         usuario = get_object_or_404(Usuario, pk=user_id)
-        
-        # Obtener datos del cuerpo de la solicitud
         fecha = request.POST.get('fecha')
-        habilitado = request.POST.get('habilitado') == 'true'
-        
-        # Validar que se proporcione la fecha
+        horario_id = request.POST.get('horario_id')
+
         if not fecha:
             return JsonResponse({'success': False, 'error': 'Fecha no proporcionada'}, status=400)
-        
-        # Actualizar o crear el registro en DiaHabilitado
-        dia, created = DiaHabilitado.objects.update_or_create(
-            usuario=usuario,
-            fecha=fecha,
-            defaults={'habilitado': habilitado}
-        )
-        
-        # Devolver respuesta JSON exitosa
+
+        if horario_id:
+            horario = Horario.objects.get(id=horario_id)
+            AsignacionDiaria.objects.update_or_create(
+                usuario=usuario, fecha=fecha, defaults={'horario': horario}
+            )
+        else:
+            AsignacionDiaria.objects.filter(usuario=usuario, fecha=fecha).delete()
+
         return JsonResponse({'success': True})
     
 

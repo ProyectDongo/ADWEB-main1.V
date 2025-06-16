@@ -31,16 +31,27 @@ class Horario(models.Model):
 
 
 
-
 class Turno(models.Model):
     nombre = models.CharField(max_length=100)
-    dias_trabajo = models.IntegerField()
-    dias_descanso = models.IntegerField()
-    inicio_turno = models.DateField(null=True, blank=True) 
+    dias_trabajo = models.IntegerField(null=True, blank=True)  # Opcional, para referencia
+    dias_descanso = models.IntegerField(null=True, blank=True)  # Opcional, para referencia
+    inicio_turno = models.DateField(null=True, blank=True)
     empresa = models.ForeignKey('RegistroEmpresas', on_delete=models.CASCADE, related_name='turnos')
 
     def __str__(self):
-        return f"{self.nombre} ({self.dias_trabajo}x{self.dias_descanso})"
+        return f"{self.nombre}"
+
+# Nuevo modelo AsignacionDiaria
+class AsignacionDiaria(models.Model):
+    usuario = models.ForeignKey('Usuario', on_delete=models.CASCADE, related_name='asignaciones_diarias')
+    fecha = models.DateField()
+    horario = models.ForeignKey(Horario, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('usuario', 'fecha')  # Evita duplicados por usuario y fecha
+
+    def __str__(self):
+        return f"{self.usuario} - {self.fecha} - {self.horario if self.horario else 'Descanso'}"
 
 
 
@@ -123,11 +134,16 @@ class Usuario(AbstractUser):
         return hasattr(self, 'huellas')
 
     def debe_trabajar(self, fecha):
-        if not self.turno or not self.turno.inicio_turno:
-            return True 
-        ciclo_total = self.turno.dias_trabajo + self.turno.dias_descanso
-        dias_desde_inicio = (fecha - self.turno.inicio_turno).days % ciclo_total
-        return dias_desde_inicio < self.turno.dias_trabajo
+        asignacion = self.asignaciones_diarias.filter(fecha=fecha).first()
+        if asignacion:
+            return asignacion.horario is not None
+        # Fallback al turno si no hay asignación diaria
+        if self.turno and self.turno.inicio_turno:
+            ciclo_total = (self.turno.dias_trabajo or 0) + (self.turno.dias_descanso or 0)
+            if ciclo_total > 0:
+                dias_desde_inicio = (fecha - self.turno.inicio_turno).days % ciclo_total
+                return dias_desde_inicio < (self.turno.dias_trabajo or 0)
+        return True  # Por defecto trabaja si no hay datos
 
     def save(self, *args, **kwargs):
         if self.vigencia_plan and not self.pk:

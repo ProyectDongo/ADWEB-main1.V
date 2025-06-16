@@ -526,6 +526,96 @@ class DiaHabilitadoForm(forms.ModelForm):
 
 
 
+class GenerarAsignacionesForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        label="Fecha Inicio",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        required=True
+    )
+    fecha_fin = forms.DateField(
+        label="Fecha Fin",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        required=True
+    )
+    tipo_rotacion = forms.ChoiceField(
+        label="Tipo de Rotación",
+        choices=[
+            ('3_turnos_8h', 'Rotación 3 Turnos 8h'),
+            ('12x36', '12×36 Horas'),
+            ('5x2', '5×2 Clásico (5 días trabajo, 2 descanso)'),
+            ('4x3_12h', '4×3 (12h, 4 días trabajo, 3 descanso)'),
+            ('7x7', '7x7 (7 días trabajo, 7 descanso)'),
+            ('personalizado', 'Rotación Personalizada'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True
+    )
+    horarios = forms.ModelMultipleChoiceField(
+        label="Horarios",
+        queryset=Horario.objects.none(),  # Se llenará dinámicamente en la vista
+        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        required=True,
+        help_text="Seleccione uno o más horarios para la rotación."
+    )
+    # Campos para 7x7 con horarios distintos por semana
+    horario_semana_1 = forms.ModelChoiceField(
+        label="Horario Semana 1 (7x7)",
+        queryset=Horario.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False,
+        help_text="Horario para los 7 días de trabajo de la primera semana (ej. 9 AM)."
+    )
+    horario_semana_2 = forms.ModelChoiceField(
+        label="Horario Semana 2 (7x7)",
+        queryset=Horario.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=False,
+        help_text="Horario para los 7 días de trabajo de la segunda semana (ej. 9 PM)."
+    )
+    # Campos para rotación personalizada
+    secuencia = forms.CharField(
+        label="Secuencia de Horarios (IDs separados por comas)",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 1,2'}),
+        required=False,
+        help_text="Ingrese los IDs de horarios en el orden deseado (ej. 1 para 9 AM, 2 para 9 PM)."
+    )
+    repeticion = forms.IntegerField(
+        label="Repetir cada (días)",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'value': 1}),
+        required=False,
+        help_text="Frecuencia de repetición de la secuencia (ej. 1 para diario, 2 para cada 2 días)."
+    )
+
+    def __init__(self, *args, empresa=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if empresa:
+            self.fields['horarios'].queryset = Horario.objects.filter(empresa=empresa)
+            self.fields['horario_semana_1'].queryset = Horario.objects.filter(empresa=empresa)
+            self.fields['horario_semana_2'].queryset = Horario.objects.filter(empresa=empresa)
+
+
+            self.fields['horarios'].label_from_instance = self.horario_label
+            self.fields['horario_semana_1'].label_from_instance = self.horario_label
+            self.fields['horario_semana_2'].label_from_instance = self.horario_label
+
+    def horario_label(self, obj):
+       
+        return f"{obj.id} - {obj.nombre} ({obj.hora_entrada.strftime('%H:%M')} - {obj.hora_salida.strftime('%H:%M')})"
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_rotacion = cleaned_data.get('tipo_rotacion')
+        horarios = cleaned_data.get('horarios')
+        horario_semana_1 = cleaned_data.get('horario_semana_1')
+        horario_semana_2 = cleaned_data.get('horario_semana_2')
+        secuencia = cleaned_data.get('secuencia')
+        repeticion = cleaned_data.get('repeticion')
+
+        if tipo_rotacion == '7x7' and (not horario_semana_1 or not horario_semana_2):
+            raise forms.ValidationError("Para el patrón 7x7, debe especificar los horarios de ambas semanas.")
+        if tipo_rotacion == 'personalizado' and (not secuencia or not repeticion):
+            raise forms.ValidationError("Para rotación personalizada, debe ingresar una secuencia y una frecuencia de repetición.")
+        return cleaned_data
 
 
 

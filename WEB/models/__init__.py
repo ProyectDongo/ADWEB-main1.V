@@ -5,6 +5,6 @@ from .gestion_administrativa.transacciones import Pago, HistorialPagos,Cobro
 from .gestion_administrativa.geografia import Region, Provincia, Comuna
 from .gestion_administrativa.historial import HistorialCambios
 from .gestion_administrativa.notificacion import EmailNotification,HistorialNotificaciones
-from .usuarios.usuario import Usuario, Horario, Turno,DiaHabilitado,SeguroCesantia,PerfilUsuario,ContactoUsuario,InformacionAdicional,InformacionBancaria,InformacionComplementaria,Prevision,Otros,AntecedentesConducir,ExamenesMutual,GrupoFamiliar,Capacitacion,LicenciasMedicas,NivelEstudios
+from .usuarios.usuario import *
 
 
