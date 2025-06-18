@@ -526,6 +526,10 @@ class DiaHabilitadoForm(forms.ModelForm):
 
 
 
+
+
+
+
 class GenerarAsignacionesForm(forms.Form):
     fecha_inicio = forms.DateField(
         label="Fecha Inicio",
@@ -542,9 +546,26 @@ class GenerarAsignacionesForm(forms.Form):
         choices=[
             ('3_turnos_8h', 'Rotación 3 Turnos 8h'),
             ('12x36', '12×36 Horas'),
-            ('5x2', '5×2 Clásico (5 días trabajo, 2 descanso)'),
-            ('4x3_12h', '4×3 (12h, 4 días trabajo, 3 descanso)'),
-            ('7x7', '7x7 (7 días trabajo, 7 descanso)'),
+            ('2x2', '2×2 (2 días trabajo, 2 descanso) - Guardia'),
+            ('2x3', '2×3 (2 días trabajo, 3 descanso) - Producción'),
+            ('3x2', '3×2 (3 días trabajo, 2 descanso) - Vigilancia'),
+            ('3x3', '3×3 (3 días trabajo, 3 descanso) - 24/7'),
+            ('4x2', '4×2 (4 días trabajo, 2 descanso) - Operarios'),
+            ('4x3', '4×3 (4 días trabajo, 3 descanso) - Guardia'),
+            ('4x4', '4×4 (4 días trabajo, 4 descanso) - Minería'),
+            ('5x1', '5×1 (5 días trabajo, 1 descanso) - Comprimido'),
+            ('5x2', '5×2 (5 días trabajo, 2 descanso) - Oficina/Retail'),
+            ('6x1', '6×1 (6 días trabajo, 1 descanso) - Excepcional'),
+            ('6x2', '6×2 (6 días trabajo, 2 descanso) - Manufactura'),
+            ('6x3', '6×3 (6 días trabajo, 3 descanso) - 24/7'),
+            ('7x7', '7×7 (7 días trabajo, 7 descanso) - Minería camp.'),
+            ('8x4', '8×4 (8 días trabajo, 4 descanso) - Faena interna'),
+            ('8x8', '8×8 (8 días trabajo, 8 descanso) - Minería'),
+            ('10x10', '10×10 (10 días trabajo, 10 descanso) - Minería camp.'),
+            ('12x12', '12×12 (12 días trabajo, 12 descanso) - Guardia/Seguridad'),
+            ('14x7', '14×7 (14 días trabajo, 7 descanso) - Minería remota'),
+            ('14x14', '14×14 (14 días trabajo, 14 descanso) - Remoto'),
+            ('21x7', '21×7 (21 días trabajo, 7 descanso) - Muy excepcional'),
             ('personalizado', 'Rotación Personalizada'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'}),
@@ -552,70 +573,53 @@ class GenerarAsignacionesForm(forms.Form):
     )
     horarios = forms.ModelMultipleChoiceField(
         label="Horarios",
-        queryset=Horario.objects.none(),  # Se llenará dinámicamente en la vista
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        queryset=Horario.objects.none(),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         required=True,
-        help_text="Seleccione uno o más horarios para la rotación."
+        help_text="Seleccione uno o más horarios. Se aplicarán en orden cíclico durante los días de trabajo."
     )
-    # Campos para 7x7 con horarios distintos por semana
-    horario_semana_1 = forms.ModelChoiceField(
-        label="Horario Semana 1 (7x7)",
-        queryset=Horario.objects.none(),
-        widget=forms.Select(attrs={'class': 'form-select'}),
+    dias_trabajo = forms.IntegerField(
+        label="Días de Trabajo (X)",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         required=False,
-        help_text="Horario para los 7 días de trabajo de la primera semana (ej. 9 AM)."
+        help_text="Número de días consecutivos de trabajo para la rotación personalizada."
     )
-    horario_semana_2 = forms.ModelChoiceField(
-        label="Horario Semana 2 (7x7)",
-        queryset=Horario.objects.none(),
-        widget=forms.Select(attrs={'class': 'form-select'}),
+    dias_descanso = forms.IntegerField(
+        label="Días de Descanso (Y)",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         required=False,
-        help_text="Horario para los 7 días de trabajo de la segunda semana (ej. 9 PM)."
-    )
-    # Campos para rotación personalizada
-    secuencia = forms.CharField(
-        label="Secuencia de Horarios (IDs separados por comas)",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 1,2'}),
-        required=False,
-        help_text="Ingrese los IDs de horarios en el orden deseado (ej. 1 para 9 AM, 2 para 9 PM)."
-    )
-    repeticion = forms.IntegerField(
-        label="Repetir cada (días)",
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'value': 1}),
-        required=False,
-        help_text="Frecuencia de repetición de la secuencia (ej. 1 para diario, 2 para cada 2 días)."
+        help_text="Número de días consecutivos de descanso para la rotación personalizada."
     )
 
     def __init__(self, *args, empresa=None, **kwargs):
         super().__init__(*args, **kwargs)
         if empresa:
             self.fields['horarios'].queryset = Horario.objects.filter(empresa=empresa)
-            self.fields['horario_semana_1'].queryset = Horario.objects.filter(empresa=empresa)
-            self.fields['horario_semana_2'].queryset = Horario.objects.filter(empresa=empresa)
-
-
             self.fields['horarios'].label_from_instance = self.horario_label
-            self.fields['horario_semana_1'].label_from_instance = self.horario_label
-            self.fields['horario_semana_2'].label_from_instance = self.horario_label
 
     def horario_label(self, obj):
-       
         return f"{obj.id} - {obj.nombre} ({obj.hora_entrada.strftime('%H:%M')} - {obj.hora_salida.strftime('%H:%M')})"
-    
+
     def clean(self):
         cleaned_data = super().clean()
         tipo_rotacion = cleaned_data.get('tipo_rotacion')
         horarios = cleaned_data.get('horarios')
-        horario_semana_1 = cleaned_data.get('horario_semana_1')
-        horario_semana_2 = cleaned_data.get('horario_semana_2')
-        secuencia = cleaned_data.get('secuencia')
-        repeticion = cleaned_data.get('repeticion')
+        dias_trabajo = cleaned_data.get('dias_trabajo')
+        dias_descanso = cleaned_data.get('dias_descanso')
 
-        if tipo_rotacion == '7x7' and (not horario_semana_1 or not horario_semana_2):
-            raise forms.ValidationError("Para el patrón 7x7, debe especificar los horarios de ambas semanas.")
-        if tipo_rotacion == 'personalizado' and (not secuencia or not repeticion):
-            raise forms.ValidationError("Para rotación personalizada, debe ingresar una secuencia y una frecuencia de repetición.")
+        if not horarios:
+            raise forms.ValidationError("Debe seleccionar al menos un horario.")
+        if tipo_rotacion == 'personalizado':
+            if not dias_trabajo or not dias_descanso:
+                raise forms.ValidationError("Para rotación personalizada, debe ingresar los días de trabajo y descanso.")
+            if dias_trabajo < 1 or dias_descanso < 1:
+                raise forms.ValidationError("Los días de trabajo y descanso deben ser al menos 1.")
         return cleaned_data
+
+
+
+
+
 
 
 

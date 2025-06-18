@@ -349,8 +349,8 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
 
 
 
+#GENERACIÓN DE ASIGNACIONES DIARIAS
 
-#Nueva vista para generar asignaciones masivas
 class GenerarAsignacionesView(LoginRequiredMixin, View):
     template_name = 'Supervisores/Modulo_asistencia/turno/generar_asignaciones.html'
 
@@ -395,75 +395,44 @@ class GenerarAsignacionesView(LoginRequiredMixin, View):
                         )
                     current += timedelta(days=2)
 
-            elif tipo_rotacion == '5x2':
+            elif 'x' in tipo_rotacion:
+                X, Y = map(int, tipo_rotacion.split('x'))
+                indice_horario = 0
                 while current <= fecha_fin:
-                    for _ in range(5):  # 5 días de trabajo
+                    for _ in range(X):
                         if current > fecha_fin:
                             break
-                        horario = horarios[0] if horarios else None
-                        if horario:
-                            AsignacionDiaria.objects.update_or_create(
-                                usuario=usuario, fecha=current, defaults={'horario': horario}
-                            )
-                        current += timedelta(days=1)
-                    current += timedelta(days=2)  # 2 días de descanso
-
-            elif tipo_rotacion == '4x3_12h':
-                while current <= fecha_fin:
-                    for _ in range(4):  # 4 días de trabajo
-                        if current > fecha_fin:
-                            break
-                        horario = horarios[0] if horarios else None
-                        if horario:
-                            AsignacionDiaria.objects.update_or_create(
-                                usuario=usuario, fecha=current, defaults={'horario': horario}
-                            )
-                        current += timedelta(days=1)
-                    current += timedelta(days=3)  # 3 días de descanso
-
-            elif tipo_rotacion == '7x7':
-                horario_semana_1 = form.cleaned_data['horario_semana_1']
-                horario_semana_2 = form.cleaned_data['horario_semana_2']
-                ciclo = 0
-                while current <= fecha_fin:
-                    if ciclo % 2 == 0:  # Primera semana (7 días a las 9 AM)
-                        for _ in range(7):
-                            if current > fecha_fin:
-                                break
-                            AsignacionDiaria.objects.update_or_create(
-                                usuario=usuario, fecha=current, defaults={'horario': horario_semana_1}
-                            )
-                            current += timedelta(days=1)
-                    else:  # Segunda semana (7 días a las 9 PM)
-                        for _ in range(7):
-                            if current > fecha_fin:
-                                break
-                            AsignacionDiaria.objects.update_or_create(
-                                usuario=usuario, fecha=current, defaults={'horario': horario_semana_2}
-                            )
-                            current += timedelta(days=1)
-                    current += timedelta(days=7)  # 7 días de descanso
-                    ciclo += 1
-
-            elif tipo_rotacion == 'personalizado':
-                secuencia = form.cleaned_data['secuencia'].split(',')
-                repeticion = form.cleaned_data['repeticion']
-                i = 0
-                while current <= fecha_fin:
-                    if i % repeticion == 0:
-                        idx = (i // repeticion) % len(secuencia)
-                        horario_id = secuencia[idx].strip()
-                        horario = Horario.objects.get(id=horario_id) if horario_id else None
-                    else:
-                        horario = None  # Descanso
-                    if horario:
+                        horario = horarios[indice_horario % len(horarios)]
                         AsignacionDiaria.objects.update_or_create(
                             usuario=usuario, fecha=current, defaults={'horario': horario}
                         )
-                    else:
+                        indice_horario += 1
+                        current += timedelta(days=1)
+                    for _ in range(Y):
+                        if current > fecha_fin:
+                            break
                         AsignacionDiaria.objects.filter(usuario=usuario, fecha=current).delete()
-                    i += 1
-                    current += timedelta(days=1)
+                        current += timedelta(days=1)
+
+            elif tipo_rotacion == 'personalizado':
+                X = form.cleaned_data['dias_trabajo']
+                Y = form.cleaned_data['dias_descanso']
+                indice_horario = 0
+                while current <= fecha_fin:
+                    for _ in range(X):
+                        if current > fecha_fin:
+                            break
+                        horario = horarios[indice_horario % len(horarios)]
+                        AsignacionDiaria.objects.update_or_create(
+                            usuario=usuario, fecha=current, defaults={'horario': horario}
+                        )
+                        indice_horario += 1
+                        current += timedelta(days=1)
+                    for _ in range(Y):
+                        if current > fecha_fin:
+                            break
+                        AsignacionDiaria.objects.filter(usuario=usuario, fecha=current).delete()
+                        current += timedelta(days=1)
 
             messages.success(request, f'Asignaciones generadas para {usuario.get_full_name()}.')
             return redirect('calendario_turno', user_id=user_id)
@@ -475,7 +444,6 @@ class GenerarAsignacionesView(LoginRequiredMixin, View):
                 'vigencia_plan_id': usuario.vigencia_plan.id,
             }
             return render(request, self.template_name, context)
-
 
 
 
