@@ -9,6 +9,24 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from ModuloAsistencia.models import RegistroEntrada
+import random
+import string
+from django.core.mail import send_mail
+from ModuloAsistencia.views.supervisores import get_today_assignment,generate_access_code, send_access_code_email
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+def validate_access_code(user, entered_code):
+    try:
+        access_code = AccessCode.objects.filter(user=user, code=entered_code).latest('created_at')
+        if access_code.is_valid():
+            access_code.delete()
+            return True
+    except AccessCode.DoesNotExist:
+        pass
+    return False
 
 
 def get_client_ip(request):
@@ -18,6 +36,20 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+def calcular_retraso(entrada, horario):
+    entrada_time = entrada.hora_entrada.time()
+    scheduled_start = horario.hora_entrada
+    tolerance = timedelta(minutes=horario.tolerancia_retraso)
+    scheduled_start_dt = timezone.make_aware(datetime.combine(entrada.hora_entrada.date(), scheduled_start))
+    if entrada.hora_entrada > scheduled_start_dt + tolerance:
+        entrada.es_retraso = True
+        retraso = (entrada.hora_entrada - scheduled_start_dt).total_seconds() / 60
+        entrada.minutos_retraso = int(retraso)
+
+
+
 
 def handle_entrada(request):
     context = {
@@ -33,8 +65,14 @@ def handle_entrada(request):
         messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
         return redirect('trabajador_home')
     
-    # Verificación con puede_trabajar
-    if not request.user.puede_trabajar(timezone.now().date()):
+    today = timezone.now().date()
+    assignment = get_today_assignment(request.user)
+    
+    if not assignment or not assignment.horario:
+        messages.error(request, "No tienes un horario asignado para hoy.")
+        return redirect('trabajador_home')
+    
+    if not request.user.puede_trabajar(today):
         messages.error(request, "No tienes permiso para trabajar hoy.")
         return redirect('trabajador_home')
     
@@ -42,20 +80,51 @@ def handle_entrada(request):
         messages.error(request, 'Debes registrar la salida de tu entrada anterior antes de una nueva entrada')
         return redirect('trabajador_home')
     
-    hoy = timezone.now().date()
     entradas_hoy = RegistroEntrada.objects.filter(
         trabajador=request.user,
-        hora_entrada__date=hoy
+        hora_entrada__date=today
     ).count()
    
     if entradas_hoy >= 3:
         messages.error(request, 'Máximo 3 entradas diarias alcanzado')
         return redirect('trabajador_home')
     
-    entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
-    form = RegistroEntradaForm(request.POST, request.FILES, instance=entrada)
+    now = timezone.now()
+    scheduled_start = datetime.combine(today, assignment.horario.hora_entrada)
+    scheduled_start = timezone.make_aware(scheduled_start)
+    tolerance = timedelta(minutes=assignment.horario.tolerancia_retraso)
     
-    if form.is_valid():
+    # Manejo de llegada temprana
+    if now < scheduled_start - tolerance:
+        if 'accept_early' not in request.POST:
+            messages.warning(request, "Estás llegando antes de tu horario. Esto no cuenta como horas extra.")
+            context['early_arrival'] = True
+            return render(request, 'home/users/trabajador_home.html', context)
+        # El usuario aceptó los términos
+    
+    # Manejo de retraso
+    elif now > scheduled_start + tolerance:
+        if 'access_code' not in request.POST and not request.session.get('late_entry_allowed', False):
+            LateArrivalNotification.objects.create(user=request.user)
+            code = generate_access_code(request.user)
+            send_access_code_email(request.user, code)
+            messages.warning(request, "Estás llegando tarde. Se ha enviado un código de acceso a tu correo.")
+            context['late_arrival'] = True
+            return render(request, 'home/users/trabajador_home.html', context)
+        elif 'access_code' in request.POST:
+            entered_code = request.POST['access_code']
+            if validate_access_code(request.user, entered_code):
+                request.session['late_entry_allowed'] = True
+            else:
+                messages.error(request, "Código de acceso inválido o expirado.")
+                context['late_arrival'] = True
+                return render(request, 'home/users/trabajador_home.html', context)
+    
+    # Si llegamos aquí, procesamos la entrada
+    entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
+    form = RegistroEntradaForm(request.POST or None, request.FILES or None, instance=entrada)
+    
+    if request.method == 'POST' and form.is_valid():
         metodo_seleccionado = form.cleaned_data['metodo']
         if metodo_seleccionado != request.user.metodo_registro_permitido:
             messages.error(request, 'No tienes habilitado este método de registro.')
@@ -69,9 +138,6 @@ def handle_entrada(request):
         if form.cleaned_data['metodo'] == 'geo':
             latitud = request.POST.get('latitud')
             longitud = request.POST.get('longitud')
-            print("Datos recibidos:", request.POST)
-            if not form.is_valid():
-                print("Errores del formulario:", form.errors)
             if latitud and longitud:
                 try:
                     latitud = float(latitud)
@@ -85,20 +151,15 @@ def handle_entrada(request):
                     context['form_entrada'] = form
                     return render(request, 'home/users/trabajador_home.html', context)
             else:
-                print("Errores del formulario:", form.errors)
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, f"Error en {field}: {error}")
                 messages.error(request, 'Geolocalización requerida')
                 context['form_entrada'] = form
                 return render(request, 'home/users/trabajador_home.html', context)
         
         entrada.save()
-        if request.user.horario:
-            calcular_retraso(entrada, request.user.horario)
+        if assignment.horario:
+            calcular_retraso(entrada, assignment.horario)
             entrada.save()
         
-        # Crear notificación para entrada o retraso
         ip = get_client_ip(request)
         tipo = 'retraso' if entrada.es_retraso else 'entrada'
         Notificacion.objects.create(
@@ -107,16 +168,33 @@ def handle_entrada(request):
             ip_address=ip
         )
         
+        if request.session.get('late_entry_allowed'):
+            del request.session['late_entry_allowed']
+        
         messages.success(request, 'Entrada registrada correctamente')
         return redirect('trabajador_home')
     else:
-        print("Errores del formulario:", form.errors)
-        messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
+        if request.method == 'POST':
+            messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
         context['form_entrada'] = form
         return render(request, 'home/users/trabajador_home.html', context)
 
 
 
+
+
+
+
+
+def calcular_horas_extra(entrada, horario):
+    if entrada.hora_salida:
+        scheduled_end = datetime.combine(entrada.hora_entrada.date(), horario.hora_salida)
+        scheduled_end = timezone.make_aware(scheduled_end)
+        tolerance_extra = timedelta(minutes=horario.tolerancia_horas_extra)
+        if entrada.hora_salida > scheduled_end + tolerance_extra:
+            entrada.es_horas_extra = True
+            extra = (entrada.hora_salida - scheduled_end).total_seconds() / 60
+            entrada.minutos_horas_extra = int(extra)
 
 
 def handle_salida(request):
@@ -131,7 +209,6 @@ def handle_salida(request):
     
     try:
         entrada_activa.hora_salida = timezone.now()
-        # Capturar ubicación de salida desde el formulario
         if 'latitud_salida' in request.POST and 'longitud_salida' in request.POST:
             try:
                 latitud_salida = float(request.POST['latitud_salida'])
@@ -144,11 +221,11 @@ def handle_salida(request):
             except ValueError:
                 messages.warning(request, 'Coordenadas de salida inválidas')
         
-        if request.user.horario:
-            calcular_horas_extra(entrada_activa, request.user.horario)
+        assignment = get_today_assignment(request.user)
+        if assignment and assignment.horario:
+            calcular_horas_extra(entrada_activa, assignment.horario)
         entrada_activa.save()
         
-        # Crear notificación para salida
         ip = get_client_ip(request)
         Notificacion.objects.create(
             worker=request.user,
@@ -160,7 +237,7 @@ def handle_salida(request):
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
     
-    return HttpResponseRedirect(reverse('trabajador_home'))
+    return redirect('trabajador_home')
 
 
 
@@ -192,6 +269,7 @@ def trabajador_home(request):
             return handle_salida(request)
     
     return render(request, 'home/users/trabajador_home.html', context)
+
 
 
 # Funciones auxiliares

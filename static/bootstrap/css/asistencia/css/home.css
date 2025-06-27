@@ -107,6 +107,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 500;
+
 }
 .form-floating { margin-bottom: 1.25rem; }
     .form-control:read-only { background-color: #f8f9fa !important; }

@@ -26,7 +26,7 @@
                 <div class="card-body p-2">
                     <div class="accordion" id="notificacionesAcordeon">
                         
-                        <!-- Notifications will be inserted here via JavaScript -->
+                        
                     </div>
                     <div class="text-center mt-3">
                         <div id="notificaciones-url" data-url="{% url 'notificaciones_supervisor_json' vigencia_plan.id %}" style="display: none;"></div>
@@ -36,6 +36,34 @@
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Notificaciones de llegadas tarde -->
+    <div class="late-arrivals-container position-absolute" style="z-index: 99998;  right: 1000px;margin-top: 40PX;">
+         <button class="btn btn-warning shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesRetraso">
+            <i class="bi bi-bell-fill me-2"></i>
+            <span id="notificacionesBadge" class="badge bg-danger ms-1">0</span>
+        </button>
+        <div class="collapse mt-2" id="notificacionesRetraso">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-bell"></i> RETRASOS</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div class="accordion" id="notificacionesAcordeon">
+                    </div>
+                        <div class="card shadow-lg border-0">
+                            <div class="card-header bg-warning text-white py-3">
+                                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Llegadas Tarde</h5>
+                            </div>
+                            <div class="card-body p-2">
+                                <div id="lateArrivals"></div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </div>
     <!-- Contenido Principal -->
     <main class="main-content">
@@ -496,6 +524,6 @@ style="display: none;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<div id="late-arrivals-url" data-url="{% url 'late_arrival_notifications_json' vigencia_plan.id %}" style="display: none;"></div>
 <script src="{% static 'bootstrap/js/asistencia/js/home.js' %}"></script>
 {% endblock %}

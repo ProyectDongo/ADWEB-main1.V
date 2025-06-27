@@ -9,7 +9,45 @@
 {% block sidebar %}{% endblock %}
 <link rel="stylesheet" href="{% static 'bootstrap/base/css/registroentrada.css' %}">
 <div class="container-fluid p-0 min-vh-100 bg-light">
+    
     <main class="container py-4">
+        <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Llegada Temprana -->
+            {% if early_arrival %}
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        Estás llegando antes de tu horario. Esto no cuenta como horas extra.
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="accept_early" value="true">
+                            <button type="submit" name="entrada" class="btn btn-primary mt-2">Aceptar términos</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Retraso -->
+            {% if late_arrival %}
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        Estás llegando tarde. Ingresa el código de acceso enviado a tu correo.
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="text" name="access_code" placeholder="Código de acceso" class="form-control mb-2" required>
+                            <button type="submit" name="entrada" class="btn btn-primary">Ingresar código</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
         {% block additional_content %}{% endblock %}
         <div class="row g-4">
             <!-- Sección de Entrada -->

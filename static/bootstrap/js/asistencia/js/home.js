@@ -489,5 +489,53 @@ async function actualizarNotificaciones() {
         });
     } catch (error) {
         console.error('Error actualizando notificaciones:', error);
+ 
     }
+
 }
+
+async function actualizarLateArrivals() {
+        try {
+            const lateArrivalsUrl = document.getElementById('late-arrivals-url').dataset.url;
+            const response = await fetch(lateArrivalsUrl);
+            const data = await response.json();
+
+            const lateArrivalsDiv = document.getElementById('lateArrivals');
+            lateArrivalsDiv.innerHTML = '';
+
+            data.notifications.forEach(noti => {
+                const itemHTML = `
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                        <span>${noti.user} intentó ingresar tarde a las ${new Date(noti.timestamp).toLocaleString()}</span>
+                        <button class="btn btn-sm btn-primary send-code-btn" data-noti-id="${noti.id}">Enviar Código</button>
+                    </div>
+                `;
+                lateArrivalsDiv.insertAdjacentHTML('beforeend', itemHTML);
+            });
+        } catch (error) {
+            console.error('Error actualizando llegadas tarde:', error);
+        }
+    }
+
+    document.getElementById('lateArrivals').addEventListener('click', function(event) {
+        if (event.target.classList.contains('send-code-btn')) {
+            const notiId = event.target.getAttribute('data-noti-id');
+            fetch(`/send_access_code/${notiId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Código enviado correctamente');
+                    actualizarLateArrivals();
+                } else {
+                    alert('Error al enviar código');
+                }
+            });
+        }
+    });
+

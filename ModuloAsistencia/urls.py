@@ -30,7 +30,8 @@ path('usuarios/<int:vigencia_plan_id>/crear/', supervisores.UserCreateUpdateView
     path('usuario/<int:user_id>/actualizar_dia/', supervisores.ActualizarDiaView.as_view(), name='actualizar_dia'),
     path('supervisor/asistencia/<int:empresa_id>/<int:vigencia_plan_id>/', supervisores.supervisor_home_asistencia, name='supervisor_home_asistencia'),
     path('generar-asignaciones/<int:user_id>/', supervisores.GenerarAsignacionesView.as_view(), name='generar_asignaciones'),
-
+    path('late_arrival_notifications_json/<int:vigencia_plan_id>/', supervisores.late_arrival_notifications_json, name='late_arrival_notifications_json'),
+    path('send_access_code/<int:notification_id>/', supervisores.send_access_code, name='send_access_code'),
 
 
     # URL para la vista de los Trabajadores de la empresa

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta  # Para operaciones con fechas y horas
 
 
 
+    
 
 class RegistroEntrada(models.Model):
     """

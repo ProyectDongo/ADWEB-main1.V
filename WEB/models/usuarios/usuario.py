@@ -9,7 +9,26 @@ from django.db.models import Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+class AccessCode(models.Model):
+    user = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
 
+    def is_valid(self):
+        return timezone.now() < self.expires_at
+
+    def __str__(self):
+        return f"Código {self.code} para {self.user}"
+
+class LateArrivalNotification(models.Model):
+    user = models.ForeignKey('Usuario', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    code_sent = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notificación de retraso para {self.user} - {self.timestamp}"
+    
 
 class Horario(models.Model):
     TIPO_HORARIO = [

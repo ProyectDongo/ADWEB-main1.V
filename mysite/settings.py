@@ -260,3 +260,23 @@ API_KEY =config('API_KEY')
 MAP_ID= config('MAP_ID')
 DATE_FORMAT = '%Y-%m-%d'
 DATE_INPUT_FORMATS = ['%Y-%m-%d']
+
+
+
+# Configuración de Celery
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Santiago'
+
+# Configuración de Celery Beat para tareas programadas
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'send-reports-daily': {
+        'task': 'WEB.tasks.send_reports_task',
+        'schedule': crontab(hour=0, minute=0),  # Ejecuta todos los días a medianoche
+    },
+}

@@ -22,3 +22,5 @@ django-session-timeout==0.1.0
 django-widget-tweaks==1.5.0
 django-ratelimit==4.1.0
 openpyxl==3.1.2
+celery==5.5.3
+redis==4.3.4

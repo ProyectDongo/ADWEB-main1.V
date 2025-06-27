@@ -22,8 +22,27 @@ from io import BytesIO
 from zipfile import ZipFile
 from django.conf import settings
 import json
+import random
+import string
 from ModuloAsistencia.models import RegistroEntrada
 from WEB.views.scripts.utils import hay_pagos_atrasados
+from django.views.decorators.http import require_POST
+from django.core.mail import send_mail
+
+def get_today_assignment(user):
+    today = timezone.now().date()
+    return AsignacionDiaria.objects.filter(usuario=user, fecha=today).first()
+
+def generate_access_code(user):
+    code = ''.join(random.choices(string.digits, k=6))
+    expires_at = timezone.now() + timedelta(minutes=5)
+    AccessCode.objects.create(user=user, code=code, expires_at=expires_at)
+    return code
+
+def send_access_code_email(user, code):
+    subject = "Código de acceso para entrada tardía"
+    message = f"Tu código de acceso es: {code}\nEste código expira en 5 minutos."
+    send_mail(subject, message, 'from@example.com', [user.email], fail_silently=False)
 
 
 
@@ -62,6 +81,122 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
 
 
 
+
+
+@login_required
+def late_arrival_notifications_json(request, vigencia_plan_id):
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    if request.user.role != 'supervisor' or request.user.vigencia_plan != vigencia_plan:
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+
+    notifications = LateArrivalNotification.objects.filter(
+        user__vigencia_plan=vigencia_plan,
+        code_sent=False
+    ).select_related('user').order_by('-timestamp')
+
+    data = {
+        'notifications': [
+            {
+                'id': n.id,
+                'user': n.user.get_full_name(),
+                'user_id': n.user.id,
+                'timestamp': n.timestamp.isoformat(),
+            } for n in notifications
+        ]
+    }
+    return JsonResponse(data)
+
+
+
+
+@require_POST
+def send_access_code(request, notification_id):
+    notification = get_object_or_404(LateArrivalNotification, id=notification_id)
+    if request.user.role != 'supervisor':
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+    code = generate_access_code(notification.user)
+    send_access_code_email(notification.user, code)
+    notification.code_sent = True
+    notification.save()
+    return JsonResponse({'success': True})
+
+
+
+
+# REPORTES DE ASISTENCIA
+def generate_daily_report(user, date):
+    entries = RegistroEntrada.objects.filter(
+        trabajador=user,
+        hora_entrada__date=date
+    ).order_by('hora_entrada')
+    report = f"Reporte diario para {date.strftime('%d/%m/%Y')}:\n"
+    for entry in entries:
+        report += f"Entrada: {entry.hora_entrada.strftime('%H:%M')}, Salida: {entry.hora_salida.strftime('%H:%M') if entry.hora_salida else 'Pendiente'}\n"
+    return report
+
+def generate_weekly_report(user, start_date):
+    end_date = start_date + timedelta(days=6)
+    entries = RegistroEntrada.objects.filter(
+        trabajador=user,
+        hora_entrada__date__range=(start_date, end_date)
+    ).order_by('hora_entrada')
+    report = f"Reporte semanal desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}:\n"
+    for entry in entries:
+        report += f"{entry.hora_entrada.strftime('%d/%m/%Y')}: Entrada: {entry.hora_entrada.strftime('%H:%M')}, Salida: {entry.hora_salida.strftime('%H:%M') if entry.hora_salida else 'Pendiente'}\n"
+    return report
+
+def generate_monthly_report(user, year, month):
+    entries = RegistroEntrada.objects.filter(
+        trabajador=user,
+        hora_entrada__year=year,
+        hora_entrada__month=month
+    ).order_by('hora_entrada')
+    report = f"Reporte mensual para {year}-{month:02d}:\n"
+    for entry in entries:
+        report += f"{entry.hora_entrada.strftime('%d/%m/%Y')}: Entrada: {entry.hora_entrada.strftime('%H:%M')}, Salida: {entry.hora_salida.strftime('%H:%M') if entry.hora_salida else 'Pendiente'}\n"
+    return report
+
+def send_reports():
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+    users = Usuario.objects.filter(email__isnull=False)
+    
+    # Reporte diario
+    for user in users:
+        report = generate_daily_report(user, yesterday)
+        send_mail(
+            f"Reporte diario de asistencia - {yesterday.strftime('%d/%m/%Y')}",
+            report,
+            'from@example.com',
+            [user.email],
+            fail_silently=True
+        )
+    
+    # Reporte semanal (si es lunes)
+    if today.weekday() == 0:
+        start_date = today - timedelta(days=7)
+        for user in users:
+            report = generate_weekly_report(user, start_date)
+            send_mail(
+                f"Reporte semanal de asistencia - {start_date.strftime('%d/%m/%Y')}",
+                report,
+                'from@example.com',
+                [user.email],
+                fail_silently=True
+            )
+    
+    # Reporte mensual (si es el primer día del mes)
+    if today.day == 1:
+        last_month = today - timedelta(days=1)
+        for user in users:
+            report = generate_monthly_report(user, last_month.year, last_month.month)
+            send_mail(
+                f"Reporte mensual de asistencia - {last_month.strftime('%Y-%m')}",
+                report,
+                'from@example.com',
+                [user.email],
+                fail_silently=True
+            )
 
 # nueva vista para manejar las notificaciones del supervisor
 @login_required
@@ -342,7 +477,7 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['object_type'] = 'Turno'
-        context['cancel_url'] = 'turnos_list'  # Nombre del patrón de URL para "Cancelar"
+        context['cancel_url'] = 'turnos_list'  
         return context
 
 
