@@ -1,0 +1,33 @@
+{% extends "central_user.html" %}
+{% load static %}
+
+{% block title %}Historial de Retrasos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Historial de Retrasos</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Fecha y Hora</th>
+                <th>Código Enviado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for notification in notifications %}
+            <tr>
+                <td>{{ notification.user.get_full_name }}</td>
+                <td>{{ notification.timestamp|date:"d/m/Y H:i" }}</td>
+                <td>{{ notification.code_sent|yesno:"Sí,No" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No hay retrasos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'supervisor_home_asistencia' empresa_id vigencia_plan_id %}"  class="btn btn-secondary">Volver</a>
+</div>
+{% endblock %}

@@ -2,52 +2,38 @@
 {% load static %}
 
 {% block title %}
-    {% block custom_title %}{% endblock %}
+    Registro de Asistencia
 {% endblock %}
 
 {% block content %}
 {% block sidebar %}{% endblock %}
 <link rel="stylesheet" href="{% static 'bootstrap/base/css/registroentrada.css' %}">
 <div class="container-fluid p-0 min-vh-100 bg-light">
-    
     <main class="container py-4">
-        <!-- Mensajes -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+    
+       
 
-            <!-- Llegada Temprana -->
-            {% if early_arrival %}
-                <div class="col-12">
-                    <div class="alert alert-warning">
-                        Estás llegando antes de tu horario. Esto no cuenta como horas extra.
-                        <form method="post">
-                            {% csrf_token %}
-                            <input type="hidden" name="accept_early" value="true">
-                            <button type="submit" name="entrada" class="btn btn-primary mt-2">Aceptar términos</button>
-                        </form>
-                    </div>
+        <!-- Llegada Temprana -->
+        {% if early_arrival %}
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    Estás llegando antes de tu horario. Esto no cuenta como horas extra.
+                    <p>¿Aceptas los términos para continuar?</p>
+                    <!-- Integramos el checkbox dentro del formulario principal -->
                 </div>
-            {% endif %}
+            </div>
+        {% endif %}
 
-            <!-- Retraso -->
-            {% if late_arrival %}
-                <div class="col-12">
-                    <div class="alert alert-danger">
-                        Estás llegando tarde. Ingresa el código de acceso enviado a tu correo.
-                        <form method="post">
-                            {% csrf_token %}
-                            <input type="text" name="access_code" placeholder="Código de acceso" class="form-control mb-2" required>
-                            <button type="submit" name="entrada" class="btn btn-primary">Ingresar código</button>
-                        </form>
-                    </div>
+        <!-- Retraso -->
+        {% if late_arrival %}
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    Estás llegando tarde. Ingresa el código de acceso enviado a tu correo.
+                    <!-- El campo de código se incluye en el formulario principal -->
                 </div>
-            {% endif %}
+            </div>
+        {% endif %}
+
         {% block additional_content %}{% endblock %}
         <div class="row g-4">
             <!-- Sección de Entrada -->
@@ -106,6 +92,22 @@
                                 <input type="hidden" name="precision" id="precisionInput">
                                 <div id="geoStatus"></div>
                             </div>
+                            <!-- Checkbox para llegada temprana -->
+                            {% if early_arrival %}
+                                <div class="mb-3">
+                                    <label class="form-check-label">
+                                        <input type="checkbox" name="accept_early" value="true" class="form-check-input">
+                                        Acepto los términos de llegada temprana
+                                    </label>
+                                </div>
+                            {% endif %}
+                            <!-- Campo para código de acceso en caso de retraso -->
+                            {% if late_arrival %}
+                                <div class="mb-3">
+                                    <input type="text" name="access_code" placeholder="Código de acceso" 
+                                           class="form-control" required>
+                                </div>
+                            {% endif %}
                             <button type="submit" name="entrada" 
                                     class="btn btn-primary btn-lg w-100 py-3 shadow-sm"
                                     {% if ultima_entrada_activa %}disabled{% endif %}>
@@ -116,8 +118,7 @@
                                         <i class="fas fa-fingerprint me-2"></i>Confirmar Entrada
                                     {% endif %}
                                 </span>
-                                <div class="spinner-border spinner-border-sm d-none" 
-                                     role="status"></div>
+                                <div class="spinner-border spinner-border-sm d-none" role="status"></div>
                             </button>
                         </form>
                     </div>
@@ -169,8 +170,7 @@
                                         <i class="fas fa-ban me-2"></i>No disponible
                                     {% endif %}
                                 </span>
-                                <div class="spinner-border spinner-border-sm d-none" 
-                                     role="status"></div>
+                                <div class="spinner-border spinner-border-sm d-none" role="status"></div>
                             </button>
                         </form>
                     </div>
@@ -188,6 +188,5 @@
 </div>
 
 <script src="{% static 'bootstrap/base/js/registroentrada.js' %}"></script>
-
 
 {% endblock %}

@@ -273,10 +273,28 @@ CELERY_TIMEZONE = 'America/Santiago'
 
 # Configuración de Celery Beat para tareas programadas
 from celery.schedules import crontab
+from datetime import timedelta
 
 CELERY_BEAT_SCHEDULE = {
     'send-reports-daily': {
         'task': 'WEB.tasks.send_reports_task',
-        'schedule': crontab(hour=0, minute=0),  # Ejecuta todos los días a medianoche
+        'schedule': timedelta(seconds=30),  # Ejecuta cada 30 segundos
+    },
+}
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
     },
 }

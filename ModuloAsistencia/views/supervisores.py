@@ -29,6 +29,11 @@ from WEB.views.scripts.utils import hay_pagos_atrasados
 from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
 
+
+
+
+
+
 def get_today_assignment(user):
     today = timezone.now().date()
     return AsignacionDiaria.objects.filter(usuario=user, fecha=today).first()
@@ -47,7 +52,6 @@ def send_access_code_email(user, code):
 
 
 logger = logging.getLogger(__name__)
-# Vista para el home del supervisor en el módulo de asistencia
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     if not request.user.is_authenticated:
@@ -65,8 +69,11 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     supervisores = usuarios.filter(role='supervisor')
     trabajadores = usuarios.filter(role='trabajador')
 
-    # Verificar si hay pagos atrasados
-    mostrar_mensaje = hay_pagos_atrasados(empresa, vigencia_plan)
+    # Obtener notificaciones de llegada tarde
+    notifications = LateArrivalNotification.objects.filter(
+        user__vigencia_plan=vigencia_plan,
+        code_sent=False
+    ).select_related('user').order_by('-timestamp')
 
     context = {
         'empresa': empresa,
@@ -74,11 +81,9 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'supervisores': supervisores,
         'trabajadores': trabajadores,
         'form': UsuarioForm(),
-        'mostrar_mensaje': mostrar_mensaje,
+        'notifications': notifications,
     }
     return render(request, 'Supervisores/Modulo_asistencia/home/supervisor_home_asistencia.html', context)
-
-
 
 
 
@@ -90,9 +95,9 @@ def late_arrival_notifications_json(request, vigencia_plan_id):
         return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
 
     notifications = LateArrivalNotification.objects.filter(
-        user__vigencia_plan=vigencia_plan,
-        code_sent=False
-    ).select_related('user').order_by('-timestamp')
+            user__vigencia_plan=vigencia_plan,
+            code_sent=False
+        ).select_related('user').order_by('-timestamp')[:5]
 
     data = {
         'notifications': [
@@ -106,19 +111,86 @@ def late_arrival_notifications_json(request, vigencia_plan_id):
     }
     return JsonResponse(data)
 
+@require_POST
+@login_required
+def clear_notifications(request, vigencia_plan_id):
+    if request.user.role != 'supervisor':
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+    
+    notifications = LateArrivalNotification.objects.filter(
+        user__vigencia_plan_id=vigencia_plan_id,
+        code_sent=False
+    )
+    notifications.update(code_sent=True)  # Marca todas como enviadas
+    return JsonResponse({'success': True})
+
+
 
 
 
 @require_POST
 def send_access_code(request, notification_id):
+    logger.info(f'Solicitud para enviar código, notificación ID: {notification_id}')
+    notification = get_object_or_404(LateArrivalNotification, id=notification_id)
+    if request.user.role != 'supervisor':
+        logger.warning(f'Acceso no autorizado por usuario: {request.user}')
+        return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
+    
+    try:
+        code = generate_access_code(notification.user)
+        send_access_code_email(notification.user, code)
+        notification.code_sent = True
+        notification.save()
+        logger.info(f'Código enviado para notificación ID: {notification_id}')
+        return JsonResponse({
+            'success': True,
+            'code': code,
+            'message': 'Código enviado al trabajador y registrado exitosamente'
+        })
+    except Exception as e:
+        logger.error(f'Error al enviar código: {e}')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+
+@require_POST
+@login_required
+def send_code_email(request, notification_id):
     notification = get_object_or_404(LateArrivalNotification, id=notification_id)
     if request.user.role != 'supervisor':
         return JsonResponse({'error': 'Acceso no autorizado'}, status=403)
-    code = generate_access_code(notification.user)
-    send_access_code_email(notification.user, code)
+    
+    code = request.POST.get('code')
+    if not code:
+        return JsonResponse({'error': 'Código no proporcionado'}, status=400)
+    
+    send_access_code_email(notification.user, code) 
     notification.code_sent = True
     notification.save()
-    return JsonResponse({'success': True})
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Código enviado al trabajador exitosamente'
+    })
+
+
+
+
+@login_required
+def late_arrival_history(request, vigencia_plan_id):
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
+    if request.user.role != 'supervisor' or request.user.vigencia_plan != vigencia_plan:
+        return render(request, 'error/error.html', {'message': 'Acceso no autorizado'})
+
+    notifications = LateArrivalNotification.objects.filter(
+        user__vigencia_plan=vigencia_plan
+    ).select_related('user').order_by('-timestamp')
+
+    context = {
+        'notifications': notifications,
+        'vigencia_plan': vigencia_plan,
+    }
+    return render(request, 'Supervisores/Modulo_asistencia/home/retrasos.html', context)
 
 
 
@@ -134,6 +206,8 @@ def generate_daily_report(user, date):
         report += f"Entrada: {entry.hora_entrada.strftime('%H:%M')}, Salida: {entry.hora_salida.strftime('%H:%M') if entry.hora_salida else 'Pendiente'}\n"
     return report
 
+
+
 def generate_weekly_report(user, start_date):
     end_date = start_date + timedelta(days=6)
     entries = RegistroEntrada.objects.filter(
@@ -144,6 +218,7 @@ def generate_weekly_report(user, start_date):
     for entry in entries:
         report += f"{entry.hora_entrada.strftime('%d/%m/%Y')}: Entrada: {entry.hora_entrada.strftime('%H:%M')}, Salida: {entry.hora_salida.strftime('%H:%M') if entry.hora_salida else 'Pendiente'}\n"
     return report
+
 
 def generate_monthly_report(user, year, month):
     entries = RegistroEntrada.objects.filter(
@@ -198,7 +273,18 @@ def send_reports():
                 fail_silently=True
             )
 
-# nueva vista para manejar las notificaciones del supervisor
+
+
+
+
+
+
+
+
+
+
+
+# vista que maneja ingerso y salidas normales 
 @login_required
 def notificaciones_supervisor_json(request, vigencia_plan_id):
     vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id)
@@ -240,6 +326,10 @@ def notificaciones_supervisor_json(request, vigencia_plan_id):
 
 
 
+
+
+
+
 # nueva vista para establecer el nombre de la ubicación
 @login_required
 def set_ubicacion_nombre(request, vigencia_plan_id, ip_address):
@@ -265,6 +355,10 @@ def set_ubicacion_nombre(request, vigencia_plan_id, ip_address):
         else:
             return JsonResponse({'error': 'Nombre requerido'}, status=400)
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+
+
 
 
 
@@ -319,6 +413,9 @@ def ver_mapa_registros(request, vigencia_plan_id):
 
 
 
+
+
+
 class ValidationView(View):
     def get(self, request):
         rut = request.GET.get('rut')
@@ -334,6 +431,9 @@ class ValidationView(View):
             
         return JsonResponse({'error': 'Campo inválido'}, status=400)
     
+
+
+
 class GetFormTemplateView(View):
     def get(self, request, action):
         form = UsuarioForm()
@@ -344,6 +444,9 @@ class GetFormTemplateView(View):
             return render(request, 'formularios/supervisor/supervisor.edit.html', {'form': form})
         return HttpResponse(status=404)
     
+
+
+
 
 
 @login_required

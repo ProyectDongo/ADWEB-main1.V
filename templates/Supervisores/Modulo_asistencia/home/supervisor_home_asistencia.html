@@ -38,11 +38,11 @@
         </div>
     </div>
     
-    <!-- Notificaciones de llegadas tarde -->
-    <div class="late-arrivals-container position-absolute" style="z-index: 99998;  right: 1000px;margin-top: 40PX;">
-         <button class="btn btn-warning shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesRetraso">
+     <!-- Notificaciones de llegadas tarde -->
+    <div class="late-arrivals-container position-absolute" style="z-index: 99998; right: 1000px; margin-top: 40px;">
+        <button class="btn btn-warning shadow-sm d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#notificacionesRetraso">
             <i class="bi bi-bell-fill me-2"></i>
-            <span id="notificacionesBadge" class="badge bg-danger ms-1">0</span>
+            <span id="notificacionesBadge" class="badge bg-danger ms-1">{{ notifications.count }}</span>
         </button>
         <div class="collapse mt-2" id="notificacionesRetraso">
             <div class="card shadow-lg border-0">
@@ -51,19 +51,27 @@
                 </div>
                 <div class="card-body p-2">
                     <div class="accordion" id="notificacionesAcordeon">
-                    </div>
-                        <div class="card shadow-lg border-0">
-                            <div class="card-header bg-warning text-white py-3">
-                                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Llegadas Tarde</h5>
+                        {% for notification in notifications %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ notification.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ notification.id }}" aria-expanded="false" aria-controls="collapse{{ notification.id }}">
+                                    {{ notification.user.get_full_name }} - {{ notification.timestamp|date:"d/m/Y H:i" }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ notification.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ notification.id }}" data-bs-parent="#notificacionesAcordeon">
+                                <div class="accordion-body">
+                                    <p>El trabajador {{ notification.user.get_full_name }} ha solicitado acceso para registrar una entrada tardía.</p>
+                                    <button class="btn btn-primary send-code-btn" data-noti-id="{{ notification.id }}">Enviar Código</button>
+                                    <div class="code-display mt-2" style="display: none;"></div>
+                                </div>
                             </div>
-                            <div class="card-body p-2">
-                                <div id="lateArrivals"></div>
-                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
-        
+        <div id="late-arrivals-url" data-url="{% url 'late_arrival_notifications_json' vigencia_plan.id %}" style="display: none;"></div>
     </div>
     <!-- Contenido Principal -->
     <main class="main-content">
@@ -525,5 +533,6 @@ style="display: none;"></div>
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div id="late-arrivals-url" data-url="{% url 'late_arrival_notifications_json' vigencia_plan.id %}" style="display: none;"></div>
+<script src="{% static 'bootstrap/js/asistencia/js/cookies.js' %}"></script>
 <script src="{% static 'bootstrap/js/asistencia/js/home.js' %}"></script>
 {% endblock %}

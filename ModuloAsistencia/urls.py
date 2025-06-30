@@ -4,7 +4,7 @@ from ModuloAsistencia.views import trabajadores,supervisores
 
 
 urlpatterns = [
-path('usuarios/<int:vigencia_plan_id>/crear/', supervisores.UserCreateUpdateView.as_view(), name='create_user'),
+    path('usuarios/<int:vigencia_plan_id>/crear/', supervisores.UserCreateUpdateView.as_view(), name='create_user'),
     path('usuarios/<int:vigencia_plan_id>/editar/<int:user_id>/', supervisores.UserCreateUpdateView.as_view(), name='update_user'),
     path('get_form_template/<str:action>/', supervisores.GetFormTemplateView.as_view(), name='get_form_template'),
     path('usuarios/validate/', supervisores.ValidationView.as_view(), name='validation'),
@@ -32,6 +32,7 @@ path('usuarios/<int:vigencia_plan_id>/crear/', supervisores.UserCreateUpdateView
     path('generar-asignaciones/<int:user_id>/', supervisores.GenerarAsignacionesView.as_view(), name='generar_asignaciones'),
     path('late_arrival_notifications_json/<int:vigencia_plan_id>/', supervisores.late_arrival_notifications_json, name='late_arrival_notifications_json'),
     path('send_access_code/<int:notification_id>/', supervisores.send_access_code, name='send_access_code'),
+    path('late_arrival_history/<int:vigencia_plan_id>/', supervisores.late_arrival_history, name='late_arrival_history'),
 
 
     # URL para la vista de los Trabajadores de la empresa

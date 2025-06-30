@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function() {
     const vigenciaPlanId = "{{ vigencia_plan.id }}";
     const empresaId = "{{ empresa.id }}";
@@ -492,50 +493,53 @@ async function actualizarNotificaciones() {
  
     }
 
+
+
+
 }
 
-async function actualizarLateArrivals() {
-        try {
-            const lateArrivalsUrl = document.getElementById('late-arrivals-url').dataset.url;
-            const response = await fetch(lateArrivalsUrl);
-            const data = await response.json();
-
-            const lateArrivalsDiv = document.getElementById('lateArrivals');
-            lateArrivalsDiv.innerHTML = '';
-
-            data.notifications.forEach(noti => {
-                const itemHTML = `
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
-                        <span>${noti.user} intentó ingresar tarde a las ${new Date(noti.timestamp).toLocaleString()}</span>
-                        <button class="btn btn-sm btn-primary send-code-btn" data-noti-id="${noti.id}">Enviar Código</button>
-                    </div>
-                `;
-                lateArrivalsDiv.insertAdjacentHTML('beforeend', itemHTML);
+document.addEventListener('DOMContentLoaded', function() {
+    const sendCodeButtons = document.querySelectorAll('.send-code-btn');
+    if (sendCodeButtons.length > 0) {
+        console.log('Botones "Enviar Código" encontrados:', sendCodeButtons.length);
+        sendCodeButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const notiId = button.getAttribute('data-noti-id');
+                console.log('Botón "Enviar Código" clicado, ID:', notiId);
+                const url = `/ModuloAsistencia/send_access_code/${notiId}/`;
+                console.log('Enviando solicitud a:', url);
+                console.log('Token CSRF:', getCookie('csrftoken'));
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    console.log('Respuesta del servidor:', response.status, response.ok);
+                    if (!response.ok) throw new Error('Error en la solicitud: ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    if (data.success) {
+                        const codeDisplay = button.nextElementSibling;
+                        codeDisplay.textContent = 'Código enviado con éxito al usuario.';
+                        codeDisplay.style.display = 'block';
+                        button.remove();
+                    } else {
+                        alert('Error al enviar código: ' + (data.error || 'Desconocido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en fetch:', error);
+                    alert('Ocurrió un error al enviar el código');
+                });
             });
-        } catch (error) {
-            console.error('Error actualizando llegadas tarde:', error);
-        }
+        });
+    } else {
+        console.error('No se encontraron botones "Enviar Código"');
     }
-
-    document.getElementById('lateArrivals').addEventListener('click', function(event) {
-        if (event.target.classList.contains('send-code-btn')) {
-            const notiId = event.target.getAttribute('data-noti-id');
-            fetch(`/send_access_code/${notiId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Código enviado correctamente');
-                    actualizarLateArrivals();
-                } else {
-                    alert('Error al enviar código');
-                }
-            });
-        }
-    });
-
+});

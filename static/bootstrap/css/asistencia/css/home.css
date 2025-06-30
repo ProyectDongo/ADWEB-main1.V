@@ -115,3 +115,109 @@
     .invalid-feedback { display: block; }
     .border-dark { border-color: #343a40 !important; }
     i { font-size: 20px; }
+
+
+/* Contenedor principal del panel de notificaciones de retraso */
+.late-arrivals-container {
+    position: absolute;
+    z-index: 99998;
+    right: 1000px;
+    margin-top: 40px;
+}
+
+/* Botón de notificaciones */
+.late-arrivals-container .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+    transition: all 0.3s ease;
+}
+
+.late-arrivals-container .btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+}
+
+/* Collapse del panel */
+.late-arrivals-container .collapse {
+    margin-top: 10px;
+}
+
+/* Tarjeta principal */
+.late-arrivals-container .card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Encabezado de la tarjeta (Retrasos) */
+.late-arrivals-container .card-header {
+    background-color: #dc3545;
+    color: white;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Cuerpo de la tarjeta */
+.late-arrivals-container .card-body {
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+/* Acordeón */
+.late-arrivals-container .accordion {
+    margin-bottom: 10px;
+}
+
+.late-arrivals-container .accordion-item {
+    border: none;
+    margin-bottom: 10px;
+    background-color: #fff;
+}
+
+.late-arrivals-container .accordion-header {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.late-arrivals-container .accordion-button {
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.late-arrivals-container .accordion-button:not(.collapsed) {
+    background-color: #e9ecef;
+    color: #000;
+}
+
+/* Cuerpo del acordeón */
+.late-arrivals-container .accordion-body {
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+/* Sección de llegadas tarde */
+.late-arrivals-container #lateArrivals {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.late-arrivals-container #lateArrivals .list-group-item {
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.late-arrivals-container #lateArrivals .list-group-item:hover {
+    background-color: #f1f3f5;
+}

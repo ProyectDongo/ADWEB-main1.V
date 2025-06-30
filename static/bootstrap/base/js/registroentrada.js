@@ -227,3 +227,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
 });
+document.querySelectorAll('.send-code-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const codeDisplay = this.nextElementSibling;
+                codeDisplay.style.display = 'block';
+                codeDisplay.textContent = `Código enviado: ${data.code} - Ingreso exitoso`;
+                codeDisplay.classList.add('alert', 'alert-success');
+            } else {
+                alert('Error al enviar el código');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});

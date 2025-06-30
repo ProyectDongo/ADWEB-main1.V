@@ -14,6 +14,10 @@ import string
 from django.core.mail import send_mail
 from ModuloAsistencia.views.supervisores import get_today_assignment,generate_access_code, send_access_code_email
 import logging
+from openpyxl import Workbook
+from openpyxl.styles import Alignment
+from io import BytesIO
+from django.core.mail import EmailMessage
 
 
 logger = logging.getLogger(__name__)
@@ -47,6 +51,9 @@ def calcular_retraso(entrada, horario):
         entrada.es_retraso = True
         retraso = (entrada.hora_entrada - scheduled_start_dt).total_seconds() / 60
         entrada.minutos_retraso = int(retraso)
+
+
+
 
 
 
@@ -95,32 +102,29 @@ def handle_entrada(request):
     tolerance = timedelta(minutes=assignment.horario.tolerancia_retraso)
     
     # Manejo de llegada temprana
-    if now < scheduled_start - tolerance:
-        if 'accept_early' not in request.POST:
-            messages.warning(request, "Estás llegando antes de tu horario. Esto no cuenta como horas extra.")
-            context['early_arrival'] = True
-            return render(request, 'home/users/trabajador_home.html', context)
-        # El usuario aceptó los términos
+    if now < scheduled_start - tolerance and 'accept_early' not in request.POST:
+        messages.warning(request, "Estás llegando antes de tu horario. Esto no cuenta como horas extra.")
+        context['early_arrival'] = True
+        return render(request, 'home/users/trabajador_home.html', context)
     
     # Manejo de retraso
     elif now > scheduled_start + tolerance:
         if 'access_code' not in request.POST and not request.session.get('late_entry_allowed', False):
             LateArrivalNotification.objects.create(user=request.user)
-            code = generate_access_code(request.user)
-            send_access_code_email(request.user, code)
-            messages.warning(request, "Estás llegando tarde. Se ha enviado un código de acceso a tu correo.")
+            messages.warning(request, "Estás llegando tarde. Tu solicitud está en proceso. Por favor, espera unos momentos.")
             context['late_arrival'] = True
             return render(request, 'home/users/trabajador_home.html', context)
         elif 'access_code' in request.POST:
             entered_code = request.POST['access_code']
             if validate_access_code(request.user, entered_code):
                 request.session['late_entry_allowed'] = True
+                messages.success(request, "Código de acceso validado correctamente. Revisa tu correo.")
             else:
                 messages.error(request, "Código de acceso inválido o expirado.")
                 context['late_arrival'] = True
                 return render(request, 'home/users/trabajador_home.html', context)
     
-    # Si llegamos aquí, procesamos la entrada
+    # Procesar la entrada
     entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
     form = RegistroEntradaForm(request.POST or None, request.FILES or None, instance=entrada)
     
@@ -171,6 +175,11 @@ def handle_entrada(request):
         if request.session.get('late_entry_allowed'):
             del request.session['late_entry_allowed']
         
+        # Enviar correo de bienvenida
+        subject = "Bienvenido - Registro de Entrada"
+        message = f"Hola {request.user.get_full_name()},\n\nUsted ha registrado una entrada a las {entrada.hora_entrada.strftime('%H:%M')}.\n\n¡Que tengas un buen día!"
+        send_mail(subject, message, 'from@example.com', [request.user.email], fail_silently=True)
+        
         messages.success(request, 'Entrada registrada correctamente')
         return redirect('trabajador_home')
     else:
@@ -195,6 +204,11 @@ def calcular_horas_extra(entrada, horario):
             entrada.es_horas_extra = True
             extra = (entrada.hora_salida - scheduled_end).total_seconds() / 60
             entrada.minutos_horas_extra = int(extra)
+
+
+
+
+
 
 
 def handle_salida(request):
@@ -232,6 +246,39 @@ def handle_salida(request):
             tipo='salida',
             ip_address=ip
         )
+        
+        # Generate Excel report
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Reporte de Asistencia"
+        ws.append(["Día", "Hora de Entrada", "Método de Entrada", "Hora de Salida", "Método de Salida", "Horas Trabajadas"])
+        
+        horas_trabajadas = (entrada_activa.hora_salida - entrada_activa.hora_entrada).total_seconds() / 3600
+        horas_trabajadas_redondeadas = round(horas_trabajadas)
+        
+        ws.append([
+            entrada_activa.hora_entrada.date().strftime("%d/%m/%Y"),
+            entrada_activa.hora_entrada.strftime("%H:%M"),
+            entrada_activa.metodo,
+            entrada_activa.hora_salida.strftime("%H:%M"),
+            entrada_activa.metodo,  # Assuming same method for exit
+            horas_trabajadas_redondeadas
+        ])
+        
+        for row in ws.iter_rows(min_row=1, max_row=2):
+            for cell in row:
+                cell.alignment = Alignment(horizontal='center')
+        
+        excel_file = BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+        
+        # Send email with report
+        subject = "Reporte de Asistencia - Salida Registrada"
+        message = f"Hola {request.user.get_full_name()},\n\nAdjunto tu reporte de asistencia de hoy.\n\nSaludos!"
+        email = EmailMessage(subject, message, 'from@example.com', [request.user.email])
+        email.attach('reporte_asistencia.xlsx', excel_file.getvalue(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        email.send()
         
         messages.success(request, f'Salida registrada a las {entrada_activa.hora_salida.strftime("%H:%M")}')
     except Exception as e:
