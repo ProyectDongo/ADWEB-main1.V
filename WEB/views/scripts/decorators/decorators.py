@@ -1,12 +1,9 @@
-from django.shortcuts import redirect
-from django.contrib import messages
+
 from django.shortcuts import render
-from django.contrib.auth.decorators import user_passes_test
 from functools import wraps
 from django.utils.crypto import get_random_string
-from django.db.models.signals import post_save,post_delete
-from django.dispatch import receiver
 from WEB.models import *
+from users.models import * 
 from django.db import models
 
 # Decorador para verificar si el usuario tiene un rol específico------------#

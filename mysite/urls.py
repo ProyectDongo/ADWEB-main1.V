@@ -1,5 +1,4 @@
-from site import venv
-from django.contrib.auth import views as auth_views
+
 from django.urls import path, include
 from django.contrib import admin
 from django.shortcuts import redirect
@@ -11,10 +10,8 @@ from WEB.views.admin.GestionPlanes.views import gestion_planes
 from WEB.views.autentificaion.views import autenticacion
 from WEB.views.admin.config.views import sofware
 from WEB.views.admin.estadisticas.views import estadisticas
-from WEB.views.tools.views import utilidades
-from WEB.views.admin.clientes.pagos.views import pagos
 from WEB.views.admin.clientes.empresa.views import empresas, planes
-from WEB.views.supervisor.modulos.views import almacen,contabilidad,selector
+
 
 
 
@@ -31,8 +28,6 @@ urlpatterns = [
     
     path('', RedirectView.as_view(url='/login/', permanent=True)),
     path('login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.LoginUnificado.as_view()), name='login'),
-    path('supervisor/selector/', selector.SupervisorSelectorView.as_view(), name='supervisor_selector'),
-    path('supervisor/register/<int:empresa_id>/<int:vigencia_plan_id>/', selector.supervisor_register, name='supervisor_register'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
 
@@ -42,8 +37,6 @@ urlpatterns = [
     path('admin_home/', autenticacion.admin_home, name='admin_home'),
     path('generar-reporte/', autenticacion.generar_reporte, name='generar_reporte'),
     path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
-    path('supervisor/contabilidad/<int:empresa_id>/<int:vigencia_plan_id>/', contabilidad.supervisor_home_contabilidad, name='supervisor_home_contabilidad'),
-    path('supervisor/almacen/<int:empresa_id>/<int:vigencia_plan_id>/', almacen.supervisor_home_almacen, name='supervisor_home_almacen'),
     path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
     # ------------------------------------------------------------------------------------ #
@@ -67,16 +60,7 @@ urlpatterns = [
     path('check-codigo-plan/', empresas.check_codigo_plan, name='check_codigo_plan'),
 
     # ------------------------------------------------------------------------------------ #
-    # Pagos
-    # ------------------------------------------------------------------------------------ #
-    path('empresa/<int:empresa_id>/pagos/', pagos.gestion_pagos, name='gestion_pagos'),
-    path('pago/actualizar/<int:pago_id>/', pagos.actualizar_estado_pago, name='actualizar_estado_pago'),
-    path('notificaciones/json/', pagos.notificaciones_json, name='notificaciones_json'),
-    path('empresa/<int:empresa_id>/cobros/registrar/', pagos.registrar_cobro, name='registrar_cobro'),
-    path('empresa/<int:empresa_id>/cobro/<int:cobro_id>/actualizar/', pagos.actualizar_cobro, name='actualizar_cobro'),
-    path('enviar-notificacion/<int:empresa_id>/', pagos.enviar_notificacion, name='enviar_notificacion'),
-
-    # ------------------------------------------------------------------------------------ #
+  
     # Planes
     # ------------------------------------------------------------------------------------ #
     path('listar_planes/', planes.listar_planes, name='listar_planes'),
@@ -106,17 +90,23 @@ urlpatterns = [
     path('eliminar_huella/<int:user_id>/', gestion_planes.eliminar_huella, name='eliminar_huella'),
 
 
+      # Pagos
+    # ------------------------------------------------------------------------------------ #
+    path('transacciones/', include('transacciones.urls')),
 
     # ------------------------------------------------------------------------------------ #
-    # Supervisor
+        # inventario
+    path('inventario/',include('inventario.urls')),
+    # ------------------------------------------------------------------------------------ #
+        # contabilidad
+    path('contabilidad/',include('contabilidad.urls')),
     # ------------------------------------------------------------------------------------ #
     
 
     # ------------------------------------------------------------------------------------ #
     # Utilidades y APIs
     # ------------------------------------------------------------------------------------ #
-    path('api/get_provincias/', utilidades.get_provincias, name='get_provincias'),
-    path('api/get_comunas/', utilidades.get_comunas, name='get_comunas'),
+    path('geografia/', include('geografia.urls')),
    
     # ------------------------------------------------------------------------------------ #
     path('biometrics/', include('biometrics.urls')),

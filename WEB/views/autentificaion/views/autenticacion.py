@@ -1,33 +1,24 @@
-from django.views.generic import TemplateView, FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
+
 from django.contrib.auth.views import LoginView
-from django.contrib.auth import login
 from django.contrib import messages
-from django.utils.decorators import method_decorator
-from django_ratelimit.decorators import ratelimit
-from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
 from django_recaptcha.fields import ReCaptchaField  
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum
 from django.utils import timezone
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse
 
-
-
-from WEB.models import  Usuario, RegistroEmpresas,  VigenciaPlan,Cobro,Transaccion
-from ModuloAsistencia.models import RegistroEntrada
+from inventario.models import *
+from contabilidad.models import *   
+from transacciones.models import *
+from WEB.models import *
+from ModuloAsistencia.models import *
 from WEB.forms import *
-from django.views import View
-from django.views.generic import DetailView
-import logging
-import datetime
-from datetime import timedelta, date
+from datetime import  date
 from io import BytesIO
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle

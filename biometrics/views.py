@@ -1,23 +1,19 @@
 
 from .models import *
 from WEB.models import  Usuario
-from WEB.forms import RegistroEntradaForm, RegistroForm
 from ModuloAsistencia.models import RegistroEntrada
-from django.urls import reverse_lazy, reverse
 import requests
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 from django.shortcuts import render,get_object_or_404
 from django.http import JsonResponse,HttpResponse
 from django.views import View
 from django.views.generic import ListView
-from django.views.generic.edit import UpdateView
+
 import json
 import base64
 from django.contrib.auth.mixins import LoginRequiredMixin

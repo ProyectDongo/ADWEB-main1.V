@@ -1,18 +1,16 @@
 from django.db.models import Sum, F
+from WEB.models import  *
+from users.models import *
+from notificaciones.models import *
+from ModuloAsistencia.forms import *
+from ModuloAsistencia.models import *
 from datetime import timedelta, datetime
-from WEB.models import  RegistroEmpresas, Usuario,Notificacion
-from WEB.forms.modulo_asistencia.forms import *
 from django.contrib.auth.decorators import login_required       
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.http import HttpResponseRedirect
 from django.utils import timezone
-from ModuloAsistencia.models import RegistroEntrada
-import random
-import string
 from django.core.mail import send_mail
-from ModuloAsistencia.views.supervisores import get_today_assignment,generate_access_code, send_access_code_email
+from ModuloAsistencia.views.supervisores import get_today_assignment
 import logging
 from openpyxl import Workbook
 from openpyxl.styles import Alignment

@@ -1,7 +1,6 @@
 # inicio de admin home
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.views.generic import ListView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import UpdateView, DeleteView
 from django.views.generic import CreateView, DetailView, TemplateView, View
 from django.shortcuts import get_object_or_404, redirect    
 from django.http import JsonResponse, Http404
@@ -9,10 +8,10 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from WEB.models import RegistroEmpresas, Usuario, VigenciaPlan
+from WEB.models import *
 from django.utils.safestring import mark_safe
 from biometrics.models import *
+from users.models import *
 from django import forms
 
 

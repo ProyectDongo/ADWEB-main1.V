@@ -47,7 +47,12 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 INSTALLED_APPS = [
     'biometrics.apps.BiometricsConfig',
+    'geografia.apps.GeografiaConfig',
+    'users.apps.UsersConfig',
     'WEB',
+    'historial',
+    'transacciones',
+    'notificaciones',
     'ModuloAsistencia',
     "anymail",
     'corsheaders',

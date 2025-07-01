@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group, Permission
 from django.utils.safestring import mark_safe
 from WEB.models import *
 from WEB.views.scripts import *
+from users.models import *
 
 
 #INDICE :
@@ -697,18 +698,4 @@ class PlanForm(forms.ModelForm):
 # FIN DE CREACION DE PLANES  ----------------------------------------------------------------------------------
 
 
-# FORMULARIOS DE PAGO ----------------------------------------------------------------------------------
-class TransaccionForm(forms.ModelForm):
-    class Meta:
-        model = Transaccion
-        fields = ['fecha', 'descripcion', 'tipo', 'monto']
-        widgets = {
-            'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'tipo': forms.Select(attrs={'class': 'form-control'}),
-            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
-        }
 
-
-
-# FIN DE FORMULARIOS DE PAGO ----------------------------------------------------------------------------------

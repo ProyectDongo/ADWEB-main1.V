@@ -1,5 +1,4 @@
 from django.urls import path
-from . import views
 from ModuloAsistencia.views import trabajadores,supervisores
 
 
@@ -34,6 +33,9 @@ urlpatterns = [
     path('send_access_code/<int:notification_id>/', supervisores.send_access_code, name='send_access_code'),
     path('late_arrival_history/<int:vigencia_plan_id>/', supervisores.late_arrival_history, name='late_arrival_history'),
 
+    #registro de supervisores 
+    path('supervisor/selector/', supervisores.SupervisorSelectorView.as_view(), name='supervisor_selector'),
+    path('supervisor/register/<int:empresa_id>/<int:vigencia_plan_id>/', supervisores.supervisor_register, name='supervisor_register'),
 
     # URL para la vista de los Trabajadores de la empresa
     path('trabajador_home/', trabajadores.trabajador_home, name='trabajador_home'),

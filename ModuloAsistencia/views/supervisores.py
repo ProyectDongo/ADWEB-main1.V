@@ -1,33 +1,32 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView,View
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView,View,TemplateView
 from django.views import View
 from django.urls import reverse,reverse_lazy
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse,HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from WEB.models import *
-from WEB.forms.modulo_asistencia.forms import *
+from ModuloAsistencia.forms import *
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from datetime import datetime, timedelta, date
-from calendar import monthrange
+from datetime import  timedelta, date
 import logging
-from django import template
-from django.db import DatabaseError
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
 from io import BytesIO
-from zipfile import ZipFile
 from django.conf import settings
 import json
 import random
 import string
-from ModuloAsistencia.models import RegistroEntrada
-from WEB.views.scripts.utils import hay_pagos_atrasados
 from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
+from WEB.models import *
+from users.models import *
+from geografia.models import *
+from ModuloAsistencia.models import *
+from notificaciones.models  import *
+from ModuloAsistencia.views.trabajadores import calcular_horas_extra, calcular_retraso
+
 
 
 
@@ -83,7 +82,7 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'form': UsuarioForm(),
         'notifications': notifications,
     }
-    return render(request, 'Supervisores/Modulo_asistencia/home/supervisor_home_asistencia.html', context)
+    return render(request, 'Modulo_asistencia/home/supervisor_home_asistencia.html', context)
 
 
 
@@ -190,7 +189,7 @@ def late_arrival_history(request, vigencia_plan_id):
         'notifications': notifications,
         'vigencia_plan': vigencia_plan,
     }
-    return render(request, 'Supervisores/Modulo_asistencia/home/retrasos.html', context)
+    return render(request, 'Modulo_asistencia/home/retrasos.html', context)
 
 
 
@@ -408,7 +407,7 @@ def ver_mapa_registros(request, vigencia_plan_id):
         'google_maps_api_key': settings.API_KEY,
         'google_maps_map_id': settings.MAP_ID
     }
-    return render(request, 'Supervisores/Modulo_asistencia/maps/mapa_registros.html', context)
+    return render(request, 'Modulo_asistencia/maps/mapa_registros.html', context)
 
 
 
@@ -470,7 +469,7 @@ def registros_entrada_vigencia(request, vigencia_plan_id):
         'empresa_id': empresa_id,
         'vigencia_plan_id': vigencia_plan_id,
     }
-    return render(request, 'Supervisores/Modulo_asistencia/registros_entrada/registros_entrada.html', context)
+    return render(request, 'Modulo_asistencia/registros_entrada/registros_entrada.html', context)
 
 
 
@@ -482,7 +481,7 @@ def registros_entrada_vigencia(request, vigencia_plan_id):
 
 class HorarioListView(LoginRequiredMixin, ListView):
     model = Horario
-    template_name = 'Supervisores/Modulo_asistencia/horario/horarios_list.html'
+    template_name = 'Modulo_asistencia/horario/horarios_list.html'
     context_object_name = 'horarios'
 
     def get_queryset(self):
@@ -499,7 +498,7 @@ class HorarioListView(LoginRequiredMixin, ListView):
 class HorarioCreateView(LoginRequiredMixin, CreateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'Supervisores/Modulo_asistencia/horario/horario_form.html'
+    template_name = 'Modulo_asistencia/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
     def form_valid(self, form):
@@ -509,7 +508,7 @@ class HorarioCreateView(LoginRequiredMixin, CreateView):
 class HorarioUpdateView(LoginRequiredMixin, UpdateView):
     model = Horario
     form_class = HorarioForm
-    template_name = 'Supervisores/Modulo_asistencia/horario/horario_form.html'
+    template_name = 'Modulo_asistencia/horario/horario_form.html'
     success_url = reverse_lazy('horarios_list')
 
 class HorarioDeleteView(LoginRequiredMixin, DeleteView):
@@ -536,7 +535,7 @@ class HorarioDeleteView(LoginRequiredMixin, DeleteView):
 
 class TurnoListView(LoginRequiredMixin, ListView):
     model = Turno
-    template_name = 'Supervisores/Modulo_asistencia/turno/turnos_list.html'
+    template_name = 'Modulo_asistencia/turno/turnos_list.html'
     context_object_name = 'turnos'
 
     def get_queryset(self):
@@ -559,7 +558,7 @@ class TurnoListView(LoginRequiredMixin, ListView):
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'Supervisores/Modulo_asistencia/turno/turno_form.html'
+    template_name = 'Modulo_asistencia/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
     def form_valid(self, form):
@@ -569,7 +568,7 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
 class TurnoUpdateView(LoginRequiredMixin, UpdateView):
     model = Turno
     form_class = TurnoForm
-    template_name = 'Supervisores/Modulo_asistencia/turno/turno_form.html'
+    template_name = 'Modulo_asistencia/turno/turno_form.html'
     success_url = reverse_lazy('turnos_list')
 
 class TurnoDeleteView(LoginRequiredMixin, DeleteView):
@@ -590,7 +589,7 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
 #GENERACIÓN DE ASIGNACIONES DIARIAS
 
 class GenerarAsignacionesView(LoginRequiredMixin, View):
-    template_name = 'Supervisores/Modulo_asistencia/turno/generar_asignaciones.html'
+    template_name = 'Modulo_asistencia/turno/generar_asignaciones.html'
 
     def get(self, request, user_id):
         usuario = get_object_or_404(Usuario, pk=user_id)
@@ -756,7 +755,7 @@ class UserCreateUpdateView(LoginRequiredMixin, View):
 
 # Manejo de Calendario de Turnos
 class CalendarioTurnoView(LoginRequiredMixin, View):
-    template_name = 'Supervisores/Modulo_asistencia/turno/calendario_turno.html'
+    template_name = 'Modulo_asistencia/turno/calendario_turno.html'
 
     def get(self, request, user_id):
         usuario = get_object_or_404(Usuario, pk=user_id)
@@ -1080,7 +1079,7 @@ def user_full_info(request, user_id):
         'licencias_medicas_formset': licencias_medicas_formset,
     }
     
-    return render(request, 'Supervisores/Modulo_asistencia/DatosCompletos/usuario_datos.html', context)
+    return render(request, 'Modulo_asistencia/DatosCompletos/usuario_datos.html', context)
 
 
 
@@ -1428,3 +1427,188 @@ def export_selected_tabs(request, user_id):
             return response
     else:
         return HttpResponse("Método no permitido", status=405)
+    
+
+
+
+
+
+#registro entrada del supervisor -----
+
+
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+def handle_entrada(request):
+    context = {
+        'form_entrada': RegistroEntradaForm(),
+        'ultima_entrada_activa': RegistroEntrada.objects.filter(
+            trabajador=request.user,
+            hora_salida__isnull=True
+        ).order_by('-hora_entrada').first(),
+        'ultima_entrada': RegistroEntrada.objects.filter(trabajador=request.user).last()
+    }
+    
+    if request.user.empresa is None:
+        messages.error(request, "No tienes una empresa asociada. Contacta al administrador.")
+        return redirect('supervisor_register')
+    
+    # Verificación con puede_trabajar
+    if not request.user.puede_trabajar(timezone.now().date()):
+        messages.error(request, "No tienes permiso para trabajar hoy.")
+        return redirect('supervisor_register')
+    
+    if RegistroEntrada.objects.filter(trabajador=request.user, hora_salida__isnull=True).exists():
+        messages.error(request, 'Debes registrar la salida de tu entrada anterior antes de una nueva entrada')
+        return redirect('supervisor_register')
+    
+    hoy = timezone.now().date()
+    entradas_hoy = RegistroEntrada.objects.filter(
+        trabajador=request.user,
+        hora_entrada__date=hoy
+    ).count()
+   
+    if entradas_hoy >= 3:
+        messages.error(request, 'Máximo 3 entradas diarias alcanzado')
+        return redirect('supervisor_register')
+    
+    entrada = RegistroEntrada(trabajador=request.user, empresa=request.user.empresa)
+    form = RegistroEntradaForm(request.POST, request.FILES, instance=entrada)
+    
+    if form.is_valid():
+        metodo_seleccionado = form.cleaned_data['metodo']
+        if metodo_seleccionado != request.user.metodo_registro_permitido:
+            messages.error(request, 'No tienes habilitado este método de registro.')
+            context['form_entrada'] = form
+            return render(request, 'home/supervisores/supervisor_register.html', context)
+        
+        entrada = form.save(commit=False)
+        entrada.trabajador = request.user
+        entrada.empresa = request.user.empresa
+        
+        if form.cleaned_data['metodo'] == 'geo':
+            latitud = request.POST.get('latitud')
+            longitud = request.POST.get('longitud')
+            if latitud and longitud:
+                try:
+                    latitud = float(latitud)
+                    longitud = float(longitud)
+                    if not (-90 <= latitud <= 90) or not (-180 <= longitud <= 180):
+                        raise ValueError("Coordenadas fuera de rango")
+                    entrada.latitud = latitud
+                    entrada.longitud = longitud
+                except ValueError:
+                    messages.error(request, 'Coordenadas inválidas')
+                    context['form_entrada'] = form
+                    return render(request, 'home/supervisores/supervisor_register.html', context)
+            else:
+                messages.error(request, 'Geolocalización requerida')
+                context['form_entrada'] = form
+                return render(request, 'home/supervisores/supervisor_register.html', context)
+        
+        entrada.save()
+        if request.user.horario:
+            calcular_retraso(entrada, request.user.horario)
+            entrada.save()
+        
+        # Crear notificación para entrada o retraso
+        ip = get_client_ip(request)
+        tipo = 'retraso' if entrada.es_retraso else 'entrada'
+        Notificacion.objects.create(
+            worker=request.user,
+            tipo=tipo,
+            ip_address=ip
+        )
+        
+        messages.success(request, 'Entrada registrada correctamente')
+        return redirect('supervisor_register')
+    else:
+        print("Errores del formulario:", form.errors)
+        messages.error(request, f'Error en el formulario: {form.errors.as_text()}')
+        context['form_entrada'] = form
+        return render(request, 'home/supervisores/supervisor_register.html', context)
+
+def handle_salida(request):
+    entrada_activa = RegistroEntrada.objects.filter(
+        trabajador=request.user,
+        hora_salida__isnull=True
+    ).order_by('-hora_entrada').first()
+    
+    if not entrada_activa:
+        messages.error(request, 'No hay entrada activa')
+        return redirect('supervisor_register')
+    
+    try:
+        entrada_activa.hora_salida = timezone.now()
+        if request.user.horario:
+            calcular_horas_extra(entrada_activa, request.user.horario)
+        entrada_activa.save()
+        
+        # Crear notificación para salida
+        ip = get_client_ip(request)
+        Notificacion.objects.create(
+            worker=request.user,
+            tipo='salida',
+            ip_address=ip
+        )
+        
+        messages.success(request, f'Salida registrada a las {entrada_activa.hora_salida.strftime("%H:%M")}')
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+    
+    return HttpResponseRedirect(reverse('supervisor_register'))
+
+
+
+
+
+# Vista para la selección de supervisores
+
+class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
+    template_name = 'login/supervisor/supervisor_selector_home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['empresa'] = self.request.user.empresa
+        return context
+    
+
+
+
+
+# Vista para registrar entradas y salidas para supervisores
+
+@login_required
+def supervisor_register(request,empresa_id, vigencia_plan_id):
+
+    empresa = get_object_or_404(RegistroEmpresas, id=empresa_id)
+    vigencia_plan = get_object_or_404(VigenciaPlan, id=vigencia_plan_id, empresa=empresa)
+
+    context = {
+        'empresa': empresa,
+        'vigencia_plan': vigencia_plan,
+        'form_entrada': RegistroEntradaForm(),
+        'ultima_entrada_activa': RegistroEntrada.objects.filter(
+            trabajador=request.user,
+            hora_salida__isnull=True
+        ).order_by('-hora_entrada').first(),
+     
+        'ultima_entrada': RegistroEntrada.objects.filter(trabajador=request.user).last()
+        
+    }
+
+    
+    if request.method == 'POST':
+        if 'entrada' in request.POST:
+            return handle_entrada(request)  # Reutilizamos la función existente
+        if 'salida' in request.POST:
+            return handle_salida(request)   # Reutilizamos la función existente
+    
+    return render(request, 'Supervisores/Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)

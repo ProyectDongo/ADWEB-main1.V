@@ -1,16 +1,18 @@
 from django.db import models
-from django.conf import settings  # Importa configuraciones globales de Django, como el modelo de usuario personalizado
-from django.db.models.signals import post_save  # Para conectar señales que se ejecutan tras guardar un objeto
-from django.dispatch import receiver  # Decorador para manejar señales
-from django.core.exceptions import ValidationError  # Excepción para validaciones personalizadas
-from django.core.validators import MinValueValidator, MaxValueValidator  # Importa validadores de valores mínimos y máximos
-from WEB.models import RegistroEmpresas,VigenciaPlan  # Importa el modelo RegistroEmpresas desde la app WEB
-from django.utils import timezone  # Utilidad para manejar zonas horarias
-from datetime import datetime, timedelta  # Para operaciones con fechas y horas
+from django.conf import settings  
+from django.db.models.signals import post_save 
+from django.dispatch import receiver  
+from django.core.exceptions import ValidationError  
+
+
+
 
 
 
     
+
+
+
 
 class RegistroEntrada(models.Model):
     """
@@ -170,6 +172,11 @@ class RegistroEntrada(models.Model):
         self.empresa = self.trabajador.empresa  # Asigna la empresa asociada al trabajador
         super().save(*args, **kwargs)  # Llama al método save() original para guardar el objeto
 
+
+
+
+
+
 @receiver(post_save, sender=RegistroEntrada)
 def notificar_registro_entrada(sender, instance, created, **kwargs):
     """
@@ -181,3 +188,24 @@ def notificar_registro_entrada(sender, instance, created, **kwargs):
     if created:  # Solo se ejecuta al crear un nuevo registro
         # Imprime un mensaje en la consola (esto podría ser un placeholder para una notificación real)
         print(f"Entrada registrada para {instance.trabajador.username} a las {instance.hora_entrada}")
+
+
+
+
+
+
+class Ubicacion(models.Model):
+    vigencia_plan = models.ForeignKey(
+        'VigenciaPlan',  
+        on_delete=models.CASCADE,
+        related_name='ubicaciones'
+    )
+    ip_address = models.GenericIPAddressField()
+    nombre = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('vigencia_plan', 'ip_address')
+
+    def __str__(self):
+        return f"{self.vigencia_plan} - {self.ip_address} - {self.nombre or 'Sin nombre'}"
+    
