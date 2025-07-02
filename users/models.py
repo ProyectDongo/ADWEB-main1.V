@@ -1,11 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.exceptions import ValidationError
-from geografia.models import Region, Provincia, Comuna
-from WEB.views.scripts import validar_rut
+from .validators import validar_rut
 from django.utils import timezone
-from django.db import transaction
-from django.db.models import Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -42,7 +39,7 @@ class Horario(models.Model):
     tolerancia_retraso = models.IntegerField(default=20, validators=[MinValueValidator(0), MaxValueValidator(60)])  # in minutes
     tolerancia_horas_extra = models.IntegerField(default=20, validators=[MinValueValidator(0), MaxValueValidator(60)])
     tipo_horario = models.CharField(max_length=20, choices=TIPO_HORARIO, default='diurno') 
-    empresa = models.ForeignKey('RegistroEmpresas', on_delete=models.CASCADE, related_name='horarios')
+    empresa = models.ForeignKey('WEB.RegistroEmpresas', on_delete=models.CASCADE, related_name='horarios')
 
     def __str__(self):
         return f"{self.nombre} ({self.hora_entrada} - {self.hora_salida}) - {self.get_tipo_horario_display()}"
@@ -55,7 +52,7 @@ class Turno(models.Model):
     dias_trabajo = models.IntegerField(null=True, blank=True)  # Opcional, para referencia
     dias_descanso = models.IntegerField(null=True, blank=True)  # Opcional, para referencia
     inicio_turno = models.DateField(null=True, blank=True)
-    empresa = models.ForeignKey('RegistroEmpresas', on_delete=models.CASCADE, related_name='turnos')
+    empresa = models.ForeignKey('WEB.RegistroEmpresas', on_delete=models.CASCADE, related_name='turnos')
 
     def __str__(self):
         return f"{self.nombre}"
@@ -91,7 +88,7 @@ class Usuario(AbstractUser):
     rut = models.CharField(max_length=12, unique=True, validators=[validar_rut])
     role = models.CharField(max_length=20, choices=ROLES, default='admin')
     empresa = models.ForeignKey(
-        'RegistroEmpresas', 
+        'WEB.RegistroEmpresas', 
         on_delete=models.CASCADE, 
         null=True, 
         blank=True, 
@@ -100,7 +97,7 @@ class Usuario(AbstractUser):
     celular = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     vigencia_plan = models.ForeignKey(
-        'VigenciaPlan', 
+        'WEB.VigenciaPlan', 
         on_delete=models.CASCADE, 
         related_name='usuarios', 
         null=True, 

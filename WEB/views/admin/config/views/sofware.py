@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from WEB.views.scripts import *
+from WEB.views.scripts import permiso_requerido
 from WEB.forms import AdminForm, SupervisorForm, TrabajadorForm
-from WEB.models import *
+from WEB.models import VigenciaPlan
 
 
 

@@ -3,7 +3,6 @@ from crispy_forms.layout import Submit
 from crispy_forms.helper import FormHelper
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
-from WEB.models import *
 from users.models import *
 from ModuloAsistencia.models import RegistroEntrada
 from django.forms import inlineformset_factory

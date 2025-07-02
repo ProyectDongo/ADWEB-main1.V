@@ -1,7 +1,6 @@
 
 from django.http import JsonResponse
-from WEB.forms import *
-from WEB.models import *
+from .models import Provincia,Comuna,Region
 
 
 

@@ -3,11 +3,9 @@ from django.urls import path, include
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
-from django_ratelimit.decorators import ratelimit
 from django.views.generic import RedirectView
 
 from WEB.views.admin.GestionPlanes.views import gestion_planes
-from WEB.views.autentificaion.views import autenticacion
 from WEB.views.admin.config.views import sofware
 from WEB.views.admin.estadisticas.views import estadisticas
 from WEB.views.admin.clientes.empresa.views import empresas, planes
@@ -24,20 +22,16 @@ urlpatterns = [
 
     # ------------------------------------------------------------------------------------ #
     # Autenticación y Selección de Roles
+    path('users/', include('users.urls')),
+
     # ------------------------------------------------------------------------------------ #
-    
-    path('', RedirectView.as_view(url='/login/', permanent=True)),
-    path('login/', ratelimit(key='post:username', method='POST', rate='5/h')(autenticacion.LoginUnificado.as_view()), name='login'),
+
+    path('', RedirectView.as_view(url='/users/login/', permanent=True)),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
-    path('redirect-after-login/', autenticacion.redirect_after_login, name='redirect_after_login'),
 
     # ------------------------------------------------------------------------------------ #
     # Homes según Rol
     # ------------------------------------------------------------------------------------ #
-    path('admin_home/', autenticacion.admin_home, name='admin_home'),
-    path('generar-reporte/', autenticacion.generar_reporte, name='generar_reporte'),
-    path('supervisor/selector/<int:empresa_id>/', autenticacion.supervisor_selector_modulo, name='supervisor_selector_modulo'),
-    path('configuracion_home/', autenticacion.configuracion_home, name='configuracion_home'),
 
     # ------------------------------------------------------------------------------------ #
     # Software (Creación de Usuarios y Vigencias)

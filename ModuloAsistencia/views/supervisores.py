@@ -20,12 +20,11 @@ import random
 import string
 from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
-from WEB.models import *
-from users.models import *
-from geografia.models import *
-from ModuloAsistencia.models import *
-from notificaciones.models  import *
-from ModuloAsistencia.views.trabajadores import calcular_horas_extra, calcular_retraso
+from WEB.models import VigenciaPlan,RegistroEmpresas
+from ModuloAsistencia.models import Ubicacion
+from notificaciones.models  import Notificacion
+
+
 
 
 
@@ -1612,3 +1611,29 @@ def supervisor_register(request,empresa_id, vigencia_plan_id):
             return handle_salida(request)   # Reutilizamos la función existente
     
     return render(request, 'Supervisores/Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)
+
+
+
+
+def calcular_retraso(entrada, horario):
+    from datetime import datetime
+    hora_entrada_real = entrada.hora_entrada.time()
+    hora_entrada_esperada = horario.hora_entrada
+    if hora_entrada_real > hora_entrada_esperada:
+        diferencia = (datetime.combine(datetime.min, hora_entrada_real) - 
+                      datetime.combine(datetime.min, hora_entrada_esperada)).total_seconds() / 60
+        if diferencia > horario.tolerancia_retraso:
+            entrada.es_retraso = True
+            entrada.minutos_retraso = int(diferencia - horario.tolerancia_retraso)
+
+
+def calcular_horas_extra(salida, horario):
+    from datetime import datetime
+    hora_salida_real = salida.hora_salida.time()
+    hora_salida_esperada = horario.hora_salida
+    if hora_salida_real > hora_salida_esperada:
+        diferencia = (datetime.combine(datetime.min, hora_salida_real) - 
+                      datetime.combine(datetime.min, hora_salida_esperada)).total_seconds() / 60
+        if diferencia > horario.tolerancia_horas_extra:
+            salida.es_horas_extra = True
+            salida.minutos_horas_extra = int(diferencia - horario.tolerancia_horas_extra)

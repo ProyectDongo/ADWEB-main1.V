@@ -1,18 +1,16 @@
-from WEB.models import *
-from WEB.forms import *
-from WEB.views.scripts import *
-from django.utils.crypto import get_random_string
+from WEB.models import RegistroEmpresas,VigenciaPlan,Plan
+from users.models import Usuario
+from transacciones.models import Cobro
+from historial.models import HistorialCambios
+from WEB.forms import EmpresaForm,PlanVigenciaForm
+from WEB.views.scripts import permiso_requerido
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import get_object_or_404,redirect,render
-from django.http import JsonResponse,HttpResponse
-from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 from django.db.models import Prefetch
-from django.forms.models import modelformset_factory
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.conf import settings
+
 
 
 

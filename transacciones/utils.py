@@ -1,8 +1,7 @@
 # your_app/utils.py
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
-from WEB.models.gestion_administrativa.empresa import  RegistroEmpresas, VigenciaPlan
-from WEB.models.gestion_administrativa.transacciones import  Pago, Cobro
+from transacciones.models import Cobro , Pago
 from django.db.models import Sum
 
 def hay_pagos_atrasados(empresa, vigencia_plan):

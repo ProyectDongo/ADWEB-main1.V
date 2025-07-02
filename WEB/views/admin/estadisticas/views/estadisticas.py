@@ -1,6 +1,7 @@
-from WEB.models import *
-from django.shortcuts import render, redirect
-from WEB.views.scripts import *
+from WEB.models import RegistroEmpresas
+from transacciones.models import Pago
+from django.shortcuts import render
+from WEB.views.scripts import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Sum

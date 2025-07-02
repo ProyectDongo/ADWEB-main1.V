@@ -1,5 +1,5 @@
 from django.db import models
-from WEB.models import *
+from WEB.models import RegistroEmpresas
 # Create your models here.
 # Modelo para representar una transacción financiera
 class Transaccion(models.Model):

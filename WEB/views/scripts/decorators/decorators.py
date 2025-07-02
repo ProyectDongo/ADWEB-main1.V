@@ -2,8 +2,7 @@
 from django.shortcuts import render
 from functools import wraps
 from django.utils.crypto import get_random_string
-from WEB.models import *
-from users.models import * 
+from users.models import Usuario
 from django.db import models
 
 # Decorador para verificar si el usuario tiene un rol específico------------#

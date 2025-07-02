@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from WEB.models import Region, Provincia, Comuna
-
+from geografia.models import Region,Provincia,Comuna
 class Command(BaseCommand):
     help = 'Carga datos de regiones, provincias y comunas de Chile'
 

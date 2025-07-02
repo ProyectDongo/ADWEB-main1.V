@@ -8,10 +8,10 @@ from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.decorators import login_required
-from WEB.models import *
+from WEB.models import RegistroEmpresas,VigenciaPlan
 from django.utils.safestring import mark_safe
-from biometrics.models import *
-from users.models import *
+from biometrics.models import huellas
+from users.models import Usuario
 from django import forms
 
 

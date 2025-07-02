@@ -1,6 +1,6 @@
 from django.contrib.auth.backends import BaseBackend
 from django.conf import settings
-from .models import *
+from .models import huellas
 import base64
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model

@@ -196,7 +196,7 @@ def notificar_registro_entrada(sender, instance, created, **kwargs):
 
 class Ubicacion(models.Model):
     vigencia_plan = models.ForeignKey(
-        'VigenciaPlan',  
+        'WEB.VigenciaPlan',  
         on_delete=models.CASCADE,
         related_name='ubicaciones'
     )

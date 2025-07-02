@@ -1,9 +1,7 @@
-import os
-import django
-from django.conf import settings
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
-from WEB.models import Usuario
+from users.models import Usuario
 
 def crear_admin_unico():
     # Crear o obtener el usuario admin

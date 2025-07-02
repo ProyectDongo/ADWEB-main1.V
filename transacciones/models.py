@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 from WEB.models import RegistroEmpresas,VigenciaPlan
-from WEB.models import Usuario    
+from users.models import Usuario
 
 
 class Cobro(models.Model):

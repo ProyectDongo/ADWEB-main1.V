@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from WEB.models import *
-from contabilidad.models import *
-from .forms import *
+from WEB.models import RegistroEmpresas,VigenciaPlan
+from .models import Transaccion
+from .forms import TransaccionForm
 
 
 

@@ -1,7 +1,7 @@
-
+import re
 from django.db import models
 from geografia.models import Region, Provincia, Comuna
-from WEB.views.scripts  import *
+from users.validators import validar_rut
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum
@@ -176,7 +176,7 @@ class RegistroEmpresas(models.Model):
     planes = models.ManyToManyField(Plan, through='VigenciaPlan', related_name='empresas')
 
     #representate
-    rut_representante = models.CharField(max_length=12, validators=[validar_rut],unique=True)
+    rut_representante = models.CharField(max_length=12, validators=[validar_rut],unique=False)
     nombre_representante = models.CharField(max_length=100)
 
     #contacto

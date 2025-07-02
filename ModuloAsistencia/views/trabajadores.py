@@ -1,9 +1,6 @@
 from django.db.models import Sum, F
-from WEB.models import  *
-from users.models import *
-from notificaciones.models import *
+from notificaciones.models import Notificacion
 from ModuloAsistencia.forms import *
-from ModuloAsistencia.models import *
 from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required       
 from django.contrib import messages
@@ -16,6 +13,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment
 from io import BytesIO
 from django.core.mail import EmailMessage
+
+from ModuloAsistencia.asistencia_utils import calcular_horas_extra,calcular_retraso
+
 
 
 logger = logging.getLogger(__name__)
@@ -40,15 +40,6 @@ def get_client_ip(request):
     return ip
 
 
-def calcular_retraso(entrada, horario):
-    entrada_time = entrada.hora_entrada.time()
-    scheduled_start = horario.hora_entrada
-    tolerance = timedelta(minutes=horario.tolerancia_retraso)
-    scheduled_start_dt = timezone.make_aware(datetime.combine(entrada.hora_entrada.date(), scheduled_start))
-    if entrada.hora_entrada > scheduled_start_dt + tolerance:
-        entrada.es_retraso = True
-        retraso = (entrada.hora_entrada - scheduled_start_dt).total_seconds() / 60
-        entrada.minutos_retraso = int(retraso)
 
 
 
@@ -191,17 +182,6 @@ def handle_entrada(request):
 
 
 
-
-
-def calcular_horas_extra(entrada, horario):
-    if entrada.hora_salida:
-        scheduled_end = datetime.combine(entrada.hora_entrada.date(), horario.hora_salida)
-        scheduled_end = timezone.make_aware(scheduled_end)
-        tolerance_extra = timedelta(minutes=horario.tolerancia_horas_extra)
-        if entrada.hora_salida > scheduled_end + tolerance_extra:
-            entrada.es_horas_extra = True
-            extra = (entrada.hora_salida - scheduled_end).total_seconds() / 60
-            entrada.minutos_horas_extra = int(extra)
 
 
 
@@ -421,32 +401,9 @@ def ver_registros(request):
 
 
 
-# DE AQUI EN ADELENTE ESTA TODO LO NUEVO 
 
 
 
-def calcular_retraso(entrada, horario):
-    from datetime import datetime
-    hora_entrada_real = entrada.hora_entrada.time()
-    hora_entrada_esperada = horario.hora_entrada
-    if hora_entrada_real > hora_entrada_esperada:
-        diferencia = (datetime.combine(datetime.min, hora_entrada_real) - 
-                      datetime.combine(datetime.min, hora_entrada_esperada)).total_seconds() / 60
-        if diferencia > horario.tolerancia_retraso:
-            entrada.es_retraso = True
-            entrada.minutos_retraso = int(diferencia - horario.tolerancia_retraso)
-
-
-def calcular_horas_extra(salida, horario):
-    from datetime import datetime
-    hora_salida_real = salida.hora_salida.time()
-    hora_salida_esperada = horario.hora_salida
-    if hora_salida_real > hora_salida_esperada:
-        diferencia = (datetime.combine(datetime.min, hora_salida_real) - 
-                      datetime.combine(datetime.min, hora_salida_esperada)).total_seconds() / 60
-        if diferencia > horario.tolerancia_horas_extra:
-            salida.es_horas_extra = True
-            salida.minutos_horas_extra = int(diferencia - horario.tolerancia_horas_extra)
 
 
 

@@ -1,10 +1,13 @@
 from django import forms
+import re
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import Group, Permission
 from django.utils.safestring import mark_safe
-from WEB.models import *
-from WEB.views.scripts import *
-from users.models import *
+from WEB.models import RegistroEmpresas,VigenciaPlan,Plan
+from users.models import Usuario
+from geografia.models import Provincia,Comuna
+from users.validators import validar_rut,mobile_validator,format_rut,phone_validator
+
 
 
 #INDICE :

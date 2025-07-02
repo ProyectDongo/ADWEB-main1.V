@@ -1,5 +1,5 @@
 from django import forms
-from inventario.models import *
+from inventario.models import ItemInventario
 
 class ItemInventarioForm(forms.ModelForm):
     class Meta:

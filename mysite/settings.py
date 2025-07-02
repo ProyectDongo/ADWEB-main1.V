@@ -48,7 +48,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 INSTALLED_APPS = [
     'biometrics.apps.BiometricsConfig',
     'geografia.apps.GeografiaConfig',
-    'users.apps.UsersConfig',
+    'users',
+    'contabilidad',
+    'inventario',
     'WEB',
     'historial',
     'transacciones',
@@ -212,7 +214,7 @@ LOGIN_REDIRECT_URL = 'redirect_after_login'  # Asegura que siempre pase por la f
 LOGOUT_REDIRECT_URL = 'login'  # Para que después del logout vuelva al login
 
 
-AUTH_USER_MODEL = 'WEB.Usuario'
+AUTH_USER_MODEL = 'users.Usuario'
 
 #envios de correo
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -259,7 +261,8 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-LOGIN_URL = '/login/'  # Apunta a tu vista de selección de login
+
+LOGIN_URL = '/users/login/'
 
 API_KEY =config('API_KEY')
 MAP_ID= config('MAP_ID')
@@ -283,7 +286,7 @@ from datetime import timedelta
 CELERY_BEAT_SCHEDULE = {
     'send-reports-daily': {
         'task': 'WEB.tasks.send_reports_task',
-        'schedule': timedelta(seconds=30),  # Ejecuta cada 30 segundos
+        'schedule': timedelta(seconds=10000000),  # Ejecuta cada 30 segundos
     },
 }
 

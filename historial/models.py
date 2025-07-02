@@ -1,8 +1,7 @@
 from django.db import models
 from django.conf import settings
 from WEB.models import RegistroEmpresas
-from users.models import Usuario
-from transacciones.models import Pago
+
 
 
 

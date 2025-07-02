@@ -17,10 +17,10 @@ from django.db.models import  Sum
 from django.views.decorators.http import require_POST
 from django.conf import settings
 import re
-
-from WEB.models import *
-from transacciones.models import *
-from notificaciones.models import *
+from WEB.views.scripts import permiso_requerido 
+from WEB.models import RegistroEmpresas
+from transacciones.models import Cobro,Pago,HistorialPagos
+from notificaciones.models import HistorialNotificaciones
 
 
 
@@ -178,7 +178,7 @@ def actualizar_cobro(request, empresa_id, cobro_id):
 
 
 #ESTA VISTA ES PARA LA GESTION DE PAGOS, DONDE SE MUESTRAN LOS PAGOS REALIZADOS Y LOS COBROS PENDIENTES
-from WEB.views.scripts.utils import hay_pagos_atrasados
+from transacciones.utils import hay_pagos_atrasados
 #----------------------------------------------------------------------------------------------------
 @login_required
 @permiso_requerido("WEB.Registrar_pago")

@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from WEB.views.scripts.utils import hay_pagos_atrasados
+from transacciones.utils import hay_pagos_atrasados
 
 class EmpresaStatusMiddleware:
     def __init__(self, get_response):

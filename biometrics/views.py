@@ -1,6 +1,6 @@
 
-from .models import *
-from WEB.models import  Usuario
+from .models import huellas
+from users.models import Usuario
 from ModuloAsistencia.models import RegistroEntrada
 import requests
 from reportlab.lib.pagesizes import letter, landscape
@@ -13,7 +13,6 @@ from django.shortcuts import render,get_object_or_404
 from django.http import JsonResponse,HttpResponse
 from django.views import View
 from django.views.generic import ListView
-
 import json
 import base64
 from django.contrib.auth.mixins import LoginRequiredMixin
