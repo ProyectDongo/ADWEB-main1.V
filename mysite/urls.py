@@ -90,10 +90,10 @@ urlpatterns = [
 
     # ------------------------------------------------------------------------------------ #
         # inventario
-    path('inventario/',include('inventario.urls')),
+    path('ModuloInventario/',include('ModuloInventario.urls')),
     # ------------------------------------------------------------------------------------ #
         # contabilidad
-    path('contabilidad/',include('contabilidad.urls')),
+    path('ModuloContabilidad/',include('ModuloContabilidad.urls')),
     # ------------------------------------------------------------------------------------ #
     
 

@@ -21,8 +21,8 @@ from transacciones.models import Cobro
 from users.models import Usuario
 from WEB.models import RegistroEmpresas,VigenciaPlan
 from ModuloAsistencia.models import RegistroEntrada
-from contabilidad.models import Transaccion
-from inventario.models import ItemInventario
+from ModuloContabilidad.models import Transaccion
+from ModuloInventario.models import ItemInventario
 
 
 

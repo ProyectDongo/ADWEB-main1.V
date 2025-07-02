@@ -1,5 +1,5 @@
 from django import forms
-from contabilidad.models import Transaccion
+from   .models import Transaccion
 
 # FORMULARIOS DE PAGO ----------------------------------------------------------------------------------
 class TransaccionForm(forms.ModelForm):
