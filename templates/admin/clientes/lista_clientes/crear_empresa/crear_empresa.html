@@ -414,7 +414,7 @@ document.addEventListener("DOMContentLoaded", function() {
     regionSelect.addEventListener('change', function() {
       const regionId = this.value;
       provinciaSelect.innerHTML = '<option value="">Cargando...</option>';
-      fetch(`/api/get_provincias/?region_id=${regionId}`)
+      fetch(`/geografia/api/get_provincias/?region_id=${regionId}`)
         .then(response => response.json())
         .then(data => {
           provinciaSelect.innerHTML = '<option value="">Seleccione Provincia</option>';
@@ -429,7 +429,7 @@ document.addEventListener("DOMContentLoaded", function() {
     provinciaSelect.addEventListener('change', function() {
       const provinciaId = this.value;
       comunaSelect.innerHTML = '<option value="">Cargando...</option>';
-      fetch(`/api/get_comunas/?provincia_id=${provinciaId}`)
+      fetch(`/geografia/api/get_comunas/?provincia_id=${provinciaId}`)
         .then(response => response.json())
         .then(data => {
           comunaSelect.innerHTML = '<option value="">Seleccione Comuna</option>';

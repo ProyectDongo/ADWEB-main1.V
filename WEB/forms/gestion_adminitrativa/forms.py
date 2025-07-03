@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.utils.safestring import mark_safe
 from WEB.models import RegistroEmpresas,VigenciaPlan,Plan
 from users.models import Usuario
-from geografia.models import Provincia,Comuna
+from geografia.models import Provincia,Comuna,Region
 from users.validators import validar_rut,mobile_validator,format_rut,phone_validator
 
 

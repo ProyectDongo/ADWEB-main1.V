@@ -438,7 +438,7 @@ class GetFormTemplateView(View):
         if action == 'create':
             return render(request, 'formularios/supervisor/supervisor.asistencia.html', {'form': form})
         elif action == 'edit':
-            form.fields['password'].required = False  # Hacer opcional el campo password
+            form.fields['password'].required = False 
             return render(request, 'formularios/supervisor/supervisor.edit.html', {'form': form})
         return HttpResponse(status=404)
     
@@ -1610,10 +1610,12 @@ def supervisor_register(request,empresa_id, vigencia_plan_id):
         if 'salida' in request.POST:
             return handle_salida(request)   # Reutilizamos la función existente
     
-    return render(request, 'Supervisores/Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)
+    return render(request, 'Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)
 
 
 
+
+#elimar a futuro usar la de asistencia_ultis
 
 def calcular_retraso(entrada, horario):
     from datetime import datetime
