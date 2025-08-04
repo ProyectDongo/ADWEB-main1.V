@@ -27,7 +27,7 @@
     <input type="hidden" name="año" value="{{ año }}">
 
     <div class="row">
-      {% for mes_num, celdas in meses.items %}
+      {% for mes_num, weeks in meses.items %}
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card shadow-sm">
           <div class="card-header bg-light d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#month-{{ mes_num }}">
@@ -43,9 +43,11 @@
                   </tr>
                 </thead>
                 <tbody>
+                  {% for week in weeks %}
                   <tr>
-                  {% for celda in celdas %}
-                    <td class="day-cell {% if celda.horario %}has-horario{% else %}no-horario{% endif %}">
+                    {% for celda in week %}
+                    <td class="day-cell {% if celda.fecha and celda.horario %}has-horario{% elif celda.fecha %}no-horario{% endif %}">
+                      {% if celda.fecha %}
                       <div class="date-number">{{ celda.fecha.day }}</div>
                       <select name="horario_{{ celda.fecha|date:'Y-m-d' }}" class="form-select form-select-sm">
                         <option value="" {% if not celda.horario %}selected{% endif %}>Descanso</option>
@@ -55,10 +57,13 @@
                           </option>
                         {% endfor %}
                       </select>
+                      {% else %}
+                      &nbsp;
+                      {% endif %}
                     </td>
-                    {% if forloop.counter|divisibleby:7 and not forloop.last %}</tr><tr>{% endif %}
-                  {% endfor %}
+                    {% endfor %}
                   </tr>
+                  {% endfor %}
                 </tbody>
               </table>
             </div>

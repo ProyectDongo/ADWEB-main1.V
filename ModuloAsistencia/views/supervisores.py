@@ -24,7 +24,7 @@ from WEB.models import VigenciaPlan,RegistroEmpresas
 from ModuloAsistencia.models import Ubicacion
 from notificaciones.models  import Notificacion
 from transacciones.utils import hay_pagos_atrasados
-
+from calendar import Calendar
 
 
 
@@ -779,23 +779,29 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
         año = int(request.GET.get('año', date.today().year))
         horarios = Horario.objects.filter(empresa=usuario.empresa)
 
-        # Generar todos los días del año
-        inicio_año = date(año, 1, 1)
-        fin_año = date(año, 12, 31)
-        dias = []
-        current = inicio_año
-        while current <= fin_año:
-            asignacion = AsignacionDiaria.objects.filter(usuario=usuario, fecha=current).first()
-            dias.append({
-                'fecha': current,
-                'horario': asignacion.horario if asignacion else None,
-                'mes': current.month,
-                'dia_semana': current.weekday(),
-            })
-            current += timedelta(days=1)
+        # Usar Calendar con domingo como primer día (firstweekday=6)
+        cal = Calendar(firstweekday=6)
 
-        # Organizar por meses
-        meses = {i: [d for d in dias if d['mes'] == i] for i in range(1, 13)}
+        # Generar calendario por meses
+        meses = {}
+        for mes in range(1, 13):
+            # Obtener las semanas del mes
+            month_days = cal.monthdayscalendar(año, mes)
+            weeks = []
+            for week in month_days:
+                week_days = []
+                for day in week:
+                    if day == 0:  # Día fuera del mes
+                        week_days.append({'fecha': None, 'horario': None})
+                    else:
+                        fecha = date(año, mes, day)
+                        asignacion = AsignacionDiaria.objects.filter(usuario=usuario, fecha=fecha).first()
+                        week_days.append({
+                            'fecha': fecha,
+                            'horario': asignacion.horario if asignacion else None,
+                        })
+                weeks.append(week_days)
+            meses[mes] = weeks
 
         context = {
             'usuario': usuario,
@@ -826,7 +832,6 @@ class CalendarioTurnoView(LoginRequiredMixin, View):
         return redirect('supervisor_home_asistencia', 
                         empresa_id=usuario.vigencia_plan.empresa.id, 
                         vigencia_plan_id=usuario.vigencia_plan.id)
-    
 
 
 
