@@ -23,7 +23,7 @@ from django.core.mail import send_mail
 from WEB.models import VigenciaPlan,RegistroEmpresas
 from ModuloAsistencia.models import Ubicacion
 from notificaciones.models  import Notificacion
-
+from transacciones.utils import hay_pagos_atrasados
 
 
 
@@ -49,7 +49,12 @@ def send_access_code_email(user, code):
 
 
 
+
+
+
+
 logger = logging.getLogger(__name__)
+
 @login_required
 def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     if not request.user.is_authenticated:
@@ -67,11 +72,13 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
     supervisores = usuarios.filter(role='supervisor')
     trabajadores = usuarios.filter(role='trabajador')
 
-    # Obtener notificaciones de llegada tarde
     notifications = LateArrivalNotification.objects.filter(
         user__vigencia_plan=vigencia_plan,
         code_sent=False
     ).select_related('user').order_by('-timestamp')
+
+    # Calcular si hay pagos atrasados
+    mostrar_mensaje = hay_pagos_atrasados(empresa, vigencia_plan)
 
     context = {
         'empresa': empresa,
@@ -80,9 +87,9 @@ def supervisor_home_asistencia(request, empresa_id, vigencia_plan_id):
         'trabajadores': trabajadores,
         'form': UsuarioForm(),
         'notifications': notifications,
+        'mostrar_mensaje': mostrar_mensaje,  
     }
     return render(request, 'Modulo_asistencia/home/supervisor_home_asistencia.html', context)
-
 
 
 
@@ -108,6 +115,9 @@ def late_arrival_notifications_json(request, vigencia_plan_id):
         ]
     }
     return JsonResponse(data)
+
+
+
 
 @require_POST
 @login_required
@@ -474,6 +484,10 @@ def registros_entrada_vigencia(request, vigencia_plan_id):
 
 
 
+
+
+
+
 # AQUI EN ADELANTE ESTA TODO LO NUEVO LA IMPLEMETNACION DE GESTION DE HORAIOS Y TURNOS Y BLOQUEOS ACCESO 
 
 # Manejo de Horarios,creación y edición
@@ -554,6 +568,8 @@ class TurnoListView(LoginRequiredMixin, ListView):
         return context
 
 
+
+
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     model = Turno
     form_class = TurnoForm
@@ -580,6 +596,8 @@ class TurnoDeleteView(LoginRequiredMixin, DeleteView):
         context['object_type'] = 'Turno'
         context['cancel_url'] = 'turnos_list'  
         return context
+
+
 
 
 
@@ -838,6 +856,7 @@ class ActualizarDiaView(LoginRequiredMixin, View):
 
 
 
+
 # Función para exportar querysets a Excel
 def export_queryset_to_excel(request, queryset, fields, filename):
     wb = Workbook()
@@ -858,6 +877,8 @@ def export_queryset_to_excel(request, queryset, fields, filename):
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
     return response
+
+
 
 
 
@@ -1079,6 +1100,7 @@ def user_full_info(request, user_id):
     }
     
     return render(request, 'Modulo_asistencia/DatosCompletos/usuario_datos.html', context)
+
 
 
 
@@ -1432,6 +1454,9 @@ def export_selected_tabs(request, user_id):
 
 
 
+
+
+
 #registro entrada del supervisor -----
 
 
@@ -1568,6 +1593,8 @@ def handle_salida(request):
 
 
 
+
+
 # Vista para la selección de supervisores
 
 class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
@@ -1578,6 +1605,10 @@ class SupervisorSelectorView(LoginRequiredMixin, TemplateView):
         context['empresa'] = self.request.user.empresa
         return context
     
+
+
+
+
 
 
 
@@ -1611,6 +1642,10 @@ def supervisor_register(request,empresa_id, vigencia_plan_id):
             return handle_salida(request)   # Reutilizamos la función existente
     
     return render(request, 'Modulo_asistencia/asistencia_supervisor/supervisor_register.html', context)
+
+
+
+
 
 
 

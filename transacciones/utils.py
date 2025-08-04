@@ -16,7 +16,7 @@ def hay_pagos_atrasados(empresa, vigencia_plan):
         # Verificar si el cobro tiene fecha_fin definida
         if cobro.fecha_fin:
             # Calcular la fecha límite (fecha_fin + 5 días)
-            fecha_limite = cobro.fecha_fin + relativedelta(days=5)
+            fecha_limite = cobro.fecha_fin + relativedelta(days=1)
             # Si la fecha actual es posterior a la fecha límite
             if timezone.now().date() > fecha_limite:
                 # Calcular el total de pagos asociados a este cobro

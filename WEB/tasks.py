@@ -8,5 +8,5 @@ def send_reports_task():
     subject = 'Reporte Automático Diario'
     message = 'Este es el reporte automático generado por Django.'
     from_email = settings.DEFAULT_FROM_EMAIL
-    recipient_list = ['anghello_md@hotmail.com']  # Cambia esto según tus necesidades
+    recipient_list = ['anghello_md@hotmail.com']  
     send_mail(subject, message, from_email, recipient_list, fail_silently=False)
